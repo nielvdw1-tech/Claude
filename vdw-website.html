@@ -233,18 +233,13 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 44px;
-      height: 44px;
-      background-color: var(--color-orange);
-      border-radius: 6px;
-      font-family: var(--font-headline);
-      font-size: 1.375rem;
-      font-weight: 800;
-      color: var(--color-white);
-      letter-spacing: 0.04em;
+      width: 48px;
+      height: 48px;
+      flex-shrink: 0;
     }
 
-    /* TODO: Replace .nav-logo-mark with actual logo: <img src="[LOGO_PATH]" alt="VDW Health & Safety Solutions" width="44" height="44"> */
+    /* TODO: Once logo file is available, replace the inline SVG below with:
+       <img src="vdw-logo.png" alt="VDW Health and Safety Solutions" height="48" width="auto"> */
 
     .nav-logo-text {
       display: flex;
@@ -894,7 +889,7 @@
     .step-number {
       width: 84px;
       height: 84px;
-      background-color: var(--color-orange);
+      background-color: var(--color-blue);
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -905,7 +900,7 @@
       font-weight: 800;
       color: var(--color-white);
       border: 4px solid var(--color-bg);
-      box-shadow: 0 0 0 3px var(--color-orange);
+      box-shadow: 0 0 0 3px var(--color-blue);
     }
 
     .step h3 {
@@ -1037,12 +1032,12 @@
       transition: border-color var(--transition);
     }
 
-    .credential-badge:hover { border-color: var(--color-orange); }
+    .credential-badge:hover { border-color: var(--color-blue); }
 
     .credential-icon {
       width: 32px;
       height: 32px;
-      background-color: var(--color-orange);
+      background-color: var(--color-blue);
       border-radius: 4px;
       display: flex;
       align-items: center;
@@ -1346,20 +1341,11 @@
     }
 
     .footer-logo-mark {
-      width: 40px;
-      height: 40px;
-      background-color: var(--color-orange);
-      border-radius: 6px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-family: var(--font-headline);
-      font-size: 1.25rem;
-      font-weight: 800;
-      color: var(--color-white);
+      flex-shrink: 0;
     }
-
-    /* TODO: Replace footer logo mark with: <img src="[LOGO_PATH]" alt="VDW" width="40" height="40"> */
 
     .footer-logo strong {
       font-family: var(--font-headline);
@@ -1587,9 +1573,24 @@
 
       <!-- Logo -->
       <a href="#hero" class="nav-logo" aria-label="VDW Health & Safety Solutions — Home">
-        <!-- TODO: Update src path once logo file is hosted -->
-        <img src="[LOGO_PATH]" alt="VDW Health and Safety Solutions" height="44" style="display:none" id="nav-logo-img" onload="this.style.display='block';document.getElementById('nav-logo-fallback').style.display='none'">
-        <div class="nav-logo-mark" aria-hidden="true" id="nav-logo-fallback">VDW</div>
+        <!-- TODO: Replace this SVG with <img src="vdw-logo.png" alt="VDW" height="48"> once logo file is placed next to the HTML -->
+        <div class="nav-logo-mark" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+            <!-- Gear (grey) -->
+            <path d="M24 14a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 16a6 6 0 1 1 0-12 6 6 0 0 1 0 12z" fill="#8C8C8C"/>
+            <path d="M22 8h4v4h-4zM22 36h4v4h-4zM8 22v4h4v-4zM36 22v4h4v-4z
+                     M11.51 13.34l2.83-2.83 2.83 2.83-2.83 2.83z
+                     M30.83 32.66l2.83-2.83 2.83 2.83-2.83 2.83z
+                     M11.51 34.66l2.83 2.83 2.83-2.83-2.83-2.83z
+                     M30.83 13.34l2.83 2.83 2.83-2.83-2.83-2.83z" fill="#8C8C8C"/>
+            <!-- Hard hat (orange) -->
+            <ellipse cx="24" cy="25" rx="7" ry="2.5" fill="#F0921A"/>
+            <path d="M17 25c0-3.87 3.13-7 7-7s7 3.13 7 7" fill="#F0921A"/>
+            <!-- Pickaxe (blue) -->
+            <line x1="20" y1="28" x2="28" y2="20" stroke="#3A9AD4" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M27 19l3-3 2 1-1 3z" fill="#3A9AD4"/>
+          </svg>
+        </div>
         <div class="nav-logo-text">
           <strong>VDW</strong>
           <span>Health &amp; Safety</span>
@@ -2079,8 +2080,19 @@
         <!-- Brand column -->
         <div class="footer-brand">
           <div class="footer-logo">
-            <div class="footer-logo-mark" aria-hidden="true">VDW</div>
-            <!-- TODO: Replace above with logo img when available -->
+            <!-- TODO: Replace SVG below with <img src="vdw-logo.png" alt="VDW" height="52"> once logo file is placed next to the HTML -->
+            <div class="footer-logo-mark" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52" width="52" height="52">
+                <path d="M26 15a11 11 0 1 0 0 22 11 11 0 0 0 0-22zm0 17a6 6 0 1 1 0-12 6 6 0 0 1 0 12z" fill="#8C8C8C"/>
+                <path d="M24 8h4v5h-4zM24 39h4v5h-4zM8 24v4h5v-4zM39 24v4h5v-4z
+                         M12.4 14.1l3-3 3 3-3 3z M33.6 35.3l3-3 3 3-3 3z
+                         M12.4 37.9l3 3 3-3-3-3z M33.6 16.7l3 3 3-3-3-3z" fill="#8C8C8C"/>
+                <ellipse cx="26" cy="27" rx="7.5" ry="2.8" fill="#F0921A"/>
+                <path d="M18.5 27c0-4.14 3.36-7.5 7.5-7.5s7.5 3.36 7.5 7.5" fill="#F0921A"/>
+                <line x1="22" y1="30" x2="30" y2="22" stroke="#3A9AD4" stroke-width="2.5" stroke-linecap="round"/>
+                <path d="M29 21l3.5-3.5 2.2 1-1 3.5z" fill="#3A9AD4"/>
+              </svg>
+            </div>
             <strong>VDW Health &amp; Safety Solutions</strong>
           </div>
           <p class="footer-tagline">Professional OHS compliance for South African SMEs. Serving Gauteng and Limpopo.</p>
