@@ -597,13 +597,55 @@
     .pain-close {
       margin-top: 32px;
       padding: 20px 24px;
-      background-color: rgba(232, 80, 10, 0.15);
-      border: 1px solid rgba(232, 80, 10, 0.35);
+      background-color: rgba(240, 146, 26, 0.15);
+      border: 1px solid rgba(240, 146, 26, 0.35);
       border-radius: var(--radius);
       color: var(--color-orange-light);
       font-size: 1.0625rem;
       font-weight: 700;
       line-height: 1.4;
+    }
+
+    .pain-story {
+      margin-top: 28px;
+      padding: 24px;
+      background: rgba(255,255,255,0.05);
+      border-radius: var(--radius);
+      border-left: 3px solid var(--color-blue);
+    }
+
+    .pain-story p {
+      font-size: 0.9375rem;
+      line-height: 1.75;
+      color: rgba(255,255,255,0.75);
+      margin: 0 0 12px;
+    }
+
+    .pain-story p:last-child { margin-bottom: 0; }
+
+    .service-benefits {
+      list-style: none;
+      padding: 0;
+      margin: 14px 0 20px;
+    }
+
+    .service-benefits li {
+      padding: 6px 0 6px 22px;
+      position: relative;
+      font-size: 0.875rem;
+      color: var(--color-gray-600);
+      line-height: 1.5;
+    }
+
+    .service-benefits li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 12px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--color-blue);
     }
 
     .pain-side-img {
@@ -1602,6 +1644,7 @@
         <a href="#services">Services</a>
         <a href="#how-it-works">How It Works</a>
         <a href="#about">About</a>
+        <a href="#guarantee">Guarantee</a>
         <a href="#contact">Contact</a>
       </nav>
 
@@ -1658,21 +1701,21 @@
         <div class="hero-eyebrow" aria-label="OHS Act compliance specialists">OHS Act Compliance Specialists</div>
 
         <h1 class="hero-h1">
-          Your DoL Audit Is Coming.<br>
-          <span>Is Your Business Ready?</span>
+          Non-Compliant?<br>
+          <span>We'll Fix It Fast.</span>
         </h1>
 
         <p class="hero-sub">
-          VDW Health &amp; Safety Solutions helps Gauteng and Limpopo manufacturers, warehouses, and engineering firms achieve full OHS Act compliance — fast. Avoid fines of up to <strong style="color: #ffa07a;">R100,000</strong> and protect your people.
+          Avoid fines of up to <strong style="color: #ffa07a;">R100,000</strong> and criminal liability. VDW gets Gauteng &amp; Limpopo manufacturers, warehouses, and engineering firms audit-ready — fast.
         </p>
 
         <div class="hero-actions">
           <a href="https://vdwassessment.zite.so" class="btn btn-primary btn-primary-lg" target="_blank" rel="noopener noreferrer">
-            Get Your Free Compliance Assessment
+            Get Your Free Compliance Assessment →
           </a>
           <!-- TODO: Update WHATSAPP_NUMBER -->
-          <a href="https://wa.me/[WHATSAPP_NUMBER]" class="hero-wa-link" target="_blank" rel="noopener noreferrer">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="#25D366" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.557 4.12 1.527 5.853L.057 23.943l6.225-1.435C7.9 23.46 9.913 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818c-1.95 0-3.77-.524-5.335-1.437l-.382-.227-3.694.851.88-3.588-.249-.39A9.808 9.808 0 0 1 2.182 12C2.182 6.58 6.58 2.182 12 2.182S21.818 6.58 21.818 12 17.42 21.818 12 21.818z"/></svg>
+          <a href="https://wa.me/[WHATSAPP_NUMBER]" class="hero-wa-link" target="_blank" rel="noopener noreferrer" style="font-size:0.9rem; opacity:0.85;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#25D366" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.557 4.12 1.527 5.853L.057 23.943l6.225-1.435C7.9 23.46 9.913 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818c-1.95 0-3.77-.524-5.335-1.437l-.382-.227-3.694.851.88-3.588-.249-.39A9.808 9.808 0 0 1 2.182 12C2.182 6.58 6.58 2.182 12 2.182S21.818 6.58 21.818 12 17.42 21.818 12 21.818z"/></svg>
             Or WhatsApp us now
           </a>
         </div>
@@ -1739,6 +1782,11 @@
             <div class="pain-close fade-up">
               If any of these sound familiar, you're in the right place.
             </div>
+
+            <div class="pain-story fade-up">
+              <p>Here's what usually happens: a business runs well for years — no incidents, no issues. Then one phone call changes everything. A DoL inspector is on his way. Or a contractor pulls out of a deal because your H&amp;S file doesn't exist. Or worse — someone gets hurt, and suddenly there's an investigation and your directors are personally liable.</p>
+              <p>It doesn't have to end badly. The businesses that come through these moments are the ones who got help <em>before</em> the inspector walked through the door. That's what VDW is here for.</p>
+            </div>
           </div>
 
           <div class="pain-side-img fade-up">
@@ -1783,7 +1831,12 @@
               </svg>
             </div>
             <h3>Legal Compliance &amp; Gap Analysis Audit</h3>
-            <p class="service-outcome">Know exactly where you stand legally — and what to fix before the inspector arrives. We audit your workplace against the full requirements of the OHS Act, Construction Regulations, and applicable industry standards.</p>
+            <p class="service-outcome">Know exactly where you stand legally — and what to fix before the inspector arrives. Most clients walk away with a prioritised action list that eliminates their top 3 legal risks within days.</p>
+            <ul class="service-benefits">
+              <li>Full OHS Act &amp; Construction Regulations audit</li>
+              <li>Written gap report with prioritised action plan</li>
+              <li>Delivered within 5 business days</li>
+            </ul>
             <a href="#contact" class="btn btn-primary" data-service="audit">Book an Audit</a>
           </article>
 
@@ -1798,7 +1851,12 @@
               </svg>
             </div>
             <h3>Health &amp; Safety File Build</h3>
-            <p class="service-outcome">A complete, branded, legally-compliant H&amp;S file — delivered ready for any DoL or client inspection. Includes all required appointments, registers, SOPs, emergency procedures, and risk assessments specific to your workplace.</p>
+            <p class="service-outcome">A complete, branded, legally-compliant H&amp;S file — delivered ready for any DoL or client inspection. Saves you 40–60 hours of documentation work and eliminates the risk of an incomplete or legally deficient file.</p>
+            <ul class="service-benefits">
+              <li>All appointments, registers &amp; SOPs included</li>
+              <li>Branded to your company, specific to your site</li>
+              <li>Ready to present within 10 business days</li>
+            </ul>
             <a href="#contact" class="btn btn-primary" data-service="file">Build My File</a>
           </article>
 
@@ -1813,7 +1871,12 @@
               </svg>
             </div>
             <h3>Ongoing H&amp;S Management</h3>
-            <p class="service-outcome">Outsource your entire H&amp;S function to a qualified consultant — at a fraction of the cost of a full-time employee. We attend toolbox talks, update your documentation, manage incidents, and keep you compliant month after month.</p>
+            <p class="service-outcome">Outsource your entire H&amp;S function at a fraction of the cost of a full-time employee — typically saving businesses R15,000–R30,000/month versus an in-house hire, with zero gaps in compliance coverage.</p>
+            <ul class="service-benefits">
+              <li>Monthly site visits, toolbox talks &amp; incident management</li>
+              <li>Documentation always current and inspection-ready</li>
+              <li>Direct access to your consultant — no call centres</li>
+            </ul>
             <a href="#contact" class="btn btn-primary" data-service="management">Explore Management</a>
           </article>
 
@@ -1956,6 +2019,102 @@
           </div>
         </div>
 
+      </div>
+    </section>
+
+    <!-- ============================================
+         TESTIMONIALS SECTION
+    ============================================ -->
+    <section id="testimonials" aria-labelledby="testimonials-heading" style="background:#f0f4f8; padding: 80px 0;">
+      <div class="container">
+        <div class="section-header" style="text-align:center; margin-bottom:48px;">
+          <p class="section-label">What clients say</p>
+          <h2 class="section-headline" id="testimonials-heading">Real Results for Real Businesses</h2>
+          <!-- TODO: Replace placeholder testimonials below with actual client quotes when available -->
+        </div>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px,1fr)); gap:28px; max-width:960px; margin:0 auto;">
+
+          <!-- TODO: Replace with real client testimonial -->
+          <blockquote style="background:#fff; border-radius:10px; padding:28px 28px 20px; box-shadow:0 2px 12px rgba(0,0,0,0.07); border-top: 4px solid var(--color-orange); margin:0; position:relative;">
+            <p style="font-size:1.05rem; line-height:1.7; color:#444; margin:0 0 20px; font-style:italic;">
+              <!-- TODO: Add real quote --> "[Client quote here — e.g. 'The DoL inspector arrived 3 days after VDW delivered our file. We passed without a single finding. Best investment we made all year.']"
+            </p>
+            <footer style="display:flex; align-items:center; gap:12px;">
+              <div style="width:40px;height:40px;border-radius:50%;background:var(--color-gear-grey);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:0.95rem;">
+                <!-- TODO: Client initials --> ?
+              </div>
+              <div>
+                <strong style="display:block;font-size:0.95rem;color:var(--color-charcoal);"><!-- TODO: Client name --> [Client Name]</strong>
+                <span style="font-size:0.8rem;color:#777;"><!-- TODO: Role & industry --> [Role], [Industry] — [City]</span>
+              </div>
+            </footer>
+          </blockquote>
+
+          <!-- TODO: Replace with real client testimonial -->
+          <blockquote style="background:#fff; border-radius:10px; padding:28px 28px 20px; box-shadow:0 2px 12px rgba(0,0,0,0.07); border-top: 4px solid var(--color-blue); margin:0; position:relative;">
+            <p style="font-size:1.05rem; line-height:1.7; color:#444; margin:0 0 20px; font-style:italic;">
+              <!-- TODO: Add real quote --> "[Client quote here — e.g. 'We'd been putting off H&S for two years. VDW sorted our entire compliance file in under two weeks. Wish we'd done it sooner.']"
+            </p>
+            <footer style="display:flex; align-items:center; gap:12px;">
+              <div style="width:40px;height:40px;border-radius:50%;background:var(--color-blue);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:0.95rem;">
+                <!-- TODO: Client initials --> ?
+              </div>
+              <div>
+                <strong style="display:block;font-size:0.95rem;color:var(--color-charcoal);"><!-- TODO: Client name --> [Client Name]</strong>
+                <span style="font-size:0.8rem;color:#777;"><!-- TODO: Role & industry --> [Role], [Industry] — [City]</span>
+              </div>
+            </footer>
+          </blockquote>
+
+          <!-- TODO: Replace with real client testimonial -->
+          <blockquote style="background:#fff; border-radius:10px; padding:28px 28px 20px; box-shadow:0 2px 12px rgba(0,0,0,0.07); border-top: 4px solid var(--color-orange); margin:0; position:relative;">
+            <p style="font-size:1.05rem; line-height:1.7; color:#444; margin:0 0 20px; font-style:italic;">
+              <!-- TODO: Add real quote --> "[Client quote here — e.g. 'A contractor demanded our H&S file before signing. VDW built it in 8 days. We closed the deal. That file paid for itself ten times over.']"
+            </p>
+            <footer style="display:flex; align-items:center; gap:12px;">
+              <div style="width:40px;height:40px;border-radius:50%;background:var(--color-orange);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:0.95rem;">
+                <!-- TODO: Client initials --> ?
+              </div>
+              <div>
+                <strong style="display:block;font-size:0.95rem;color:var(--color-charcoal);"><!-- TODO: Client name --> [Client Name]</strong>
+                <span style="font-size:0.8rem;color:#777;"><!-- TODO: Role & industry --> [Role], [Industry] — [City]</span>
+              </div>
+            </footer>
+          </blockquote>
+
+        </div>
+        <p style="text-align:center; margin-top:32px; font-size:0.9rem; color:#777;">
+          Ask us for references — we're happy to connect you directly with past clients. <a href="#contact" style="color:var(--color-orange); font-weight:600;">Contact us →</a>
+        </p>
+      </div>
+    </section>
+
+    <!-- ============================================
+         GUARANTEE SECTION
+    ============================================ -->
+    <section id="guarantee" aria-labelledby="guarantee-heading" style="background:var(--color-charcoal); padding:72px 0;">
+      <div class="container">
+        <div style="max-width:780px; margin:0 auto; text-align:center;">
+          <div style="width:72px;height:72px;border-radius:50%;background:var(--color-orange);display:flex;align-items:center;justify-content:center;margin:0 auto 24px;">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              <polyline points="9 12 11 14 15 10"/>
+            </svg>
+          </div>
+          <p class="section-label" style="color:var(--color-orange);" id="guarantee-heading">Our Guarantee</p>
+          <h2 style="font-family:var(--font-headline); font-size:clamp(1.75rem,4vw,2.75rem); font-weight:800; color:#fff; margin:0 0 20px; line-height:1.2;">
+            If Your H&amp;S File Fails a DoL Inspection — We Fix It Free.
+          </h2>
+          <p style="font-size:1.1rem; line-height:1.75; color:rgba(255,255,255,0.82); margin:0 0 16px;">
+            Every H&amp;S file we build is constructed to pass a full DoL inspection. If an inspector identifies a deficiency in documentation we created, we return to resolve it at no additional cost. No arguments. No invoices.
+          </p>
+          <p style="font-size:1rem; line-height:1.7; color:rgba(255,255,255,0.6); margin:0 0 36px;">
+            We've never had to invoke this guarantee — because we build files properly the first time. But it's there, in writing, because we stand behind our work unconditionally.
+          </p>
+          <a href="#contact" class="btn btn-primary btn-primary-lg">
+            Get a Guaranteed-Compliant H&amp;S File →
+          </a>
+        </div>
       </div>
     </section>
 
