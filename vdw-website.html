@@ -33,10 +33,13 @@
        CSS CUSTOM PROPERTIES
     ============================================ */
     :root {
-      --color-charcoal: #1E2328;
-      --color-orange: #E8500A;
-      --color-orange-dark: #c44209;
-      --color-orange-light: #ff6a25;
+      --color-charcoal: #404040;
+      --color-orange: #F0921A;
+      --color-orange-dark: #d07c10;
+      --color-orange-light: #f5a83a;
+      --color-blue: #3A9AD4;
+      --color-blue-dark: #2a7fb5;
+      --color-gear-grey: #8C8C8C;
       --color-bg: #F8F8F8;
       --color-white: #ffffff;
       --color-gray-100: #f0f0f0;
@@ -1584,8 +1587,9 @@
 
       <!-- Logo -->
       <a href="#hero" class="nav-logo" aria-label="VDW Health & Safety Solutions — Home">
-        <div class="nav-logo-mark" aria-hidden="true">VDW</div>
-        <!-- TODO: Replace above div with: <img src="[LOGO_PATH]" alt="" width="44" height="44"> when logo is ready -->
+        <!-- TODO: Update src path once logo file is hosted -->
+        <img src="[LOGO_PATH]" alt="VDW Health and Safety Solutions" height="44" style="display:none" id="nav-logo-img" onload="this.style.display='block';document.getElementById('nav-logo-fallback').style.display='none'">
+        <div class="nav-logo-mark" aria-hidden="true" id="nav-logo-fallback">VDW</div>
         <div class="nav-logo-text">
           <strong>VDW</strong>
           <span>Health &amp; Safety</span>
