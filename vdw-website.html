@@ -1615,27 +1615,46 @@
 
       <!-- Logo -->
       <a href="#hero" class="nav-logo" aria-label="VDW Health & Safety Solutions — Home">
-        <!-- TODO: Replace this SVG with <img src="vdw-logo.png" alt="VDW" height="48"> once logo file is placed next to the HTML -->
+        <!-- TODO: Replace this SVG with <img src="vdw-logo.png" alt="VDW Health and Safety Solutions" height="44"> once logo file is placed next to the HTML -->
         <div class="nav-logo-mark" aria-hidden="true">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
-            <!-- Gear (grey) -->
-            <path d="M24 14a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 16a6 6 0 1 1 0-12 6 6 0 0 1 0 12z" fill="#8C8C8C"/>
-            <path d="M22 8h4v4h-4zM22 36h4v4h-4zM8 22v4h4v-4zM36 22v4h4v-4z
-                     M11.51 13.34l2.83-2.83 2.83 2.83-2.83 2.83z
-                     M30.83 32.66l2.83-2.83 2.83 2.83-2.83 2.83z
-                     M11.51 34.66l2.83 2.83 2.83-2.83-2.83-2.83z
-                     M30.83 13.34l2.83 2.83 2.83-2.83-2.83-2.83z" fill="#8C8C8C"/>
-            <!-- Hard hat (orange) -->
-            <ellipse cx="24" cy="25" rx="7" ry="2.5" fill="#F0921A"/>
-            <path d="M17 25c0-3.87 3.13-7 7-7s7 3.13 7 7" fill="#F0921A"/>
-            <!-- Pickaxe (blue) -->
-            <line x1="20" y1="28" x2="28" y2="20" stroke="#3A9AD4" stroke-width="2.5" stroke-linecap="round"/>
-            <path d="M27 19l3-3 2 1-1 3z" fill="#3A9AD4"/>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 60" width="160" height="60">
+            <defs>
+              <clipPath id="nav-left-clip"><rect x="0" y="0" width="30" height="60"/></clipPath>
+              <clipPath id="nav-right-clip"><rect x="30" y="0" width="30" height="60"/></clipPath>
+            </defs>
+            <!-- Gear grey left half -->
+            <g clip-path="url(#nav-left-clip)">
+              <path d="M30 10 a20 20 0 0 0 0 40" fill="#A0A7B0"/>
+              <path d="M30 10 l-3-5 h6 l-3 5z M30 50 l-3 5 h6 l-3-5z
+                       M10 30 l-5-3 v6 l5-3z
+                       M13.8 13.8 l-4-4 l4.2 4.2-4.2-4.2 l-3.5 3.5 4 4z
+                       M13.8 46.2 l-4 4 l3.5 3.5 4-4z" fill="#A0A7B0"/>
+            </g>
+            <!-- Gear blue right half -->
+            <g clip-path="url(#nav-right-clip)">
+              <path d="M30 10 a20 20 0 0 1 0 40" fill="#3A9AD4"/>
+              <path d="M30 10 l3-5 h-6 l3 5z M30 50 l3 5 h-6 l3-5z
+                       M50 30 l5-3 v6 l-5-3z
+                       M46.2 13.8 l4-4 l-3.5 3.5-4 4z
+                       M46.2 46.2 l4 4 l-3.5-3.5z" fill="#3A9AD4"/>
+            </g>
+            <!-- Gear inner hole -->
+            <circle cx="30" cy="30" r="8" fill="white"/>
+            <!-- Hard hat (blue) -->
+            <path d="M22 28 Q22 18 30 18 Q38 18 38 28 Z" fill="#3A9AD4"/>
+            <rect x="21" y="27" width="18" height="3" rx="1.5" fill="#3A9AD4"/>
+            <rect x="23" y="24" width="8" height="2" rx="1" fill="white" opacity="0.6"/>
+            <!-- Pickaxe (orange) -->
+            <line x1="18" y1="38" x2="36" y2="20" stroke="#F0921A" stroke-width="3.5" stroke-linecap="round"/>
+            <path d="M34 18 l5-3 l1 5 l-4 1z" fill="#F0921A"/>
+            <path d="M16 40 l3-5 l3 1 l-2 4z" fill="#F0921A"/>
+            <!-- VDW text -->
+            <text x="65" y="42" font-family="Arial Black, sans-serif" font-size="28" font-weight="900" letter-spacing="-1" fill="#606060">V</text>
+            <text x="86" y="42" font-family="Arial Black, sans-serif" font-size="28" font-weight="900" letter-spacing="-1" fill="#787878">D</text>
+            <text x="107" y="42" font-family="Arial Black, sans-serif" font-size="28" font-weight="900" letter-spacing="-1" fill="#A0A0A0">W</text>
+            <!-- Tagline -->
+            <text x="65" y="54" font-family="Arial, sans-serif" font-size="7" fill="#A0A7B0" letter-spacing="1.2">HEALTH AND SAFETY SOLUTIONS</text>
           </svg>
-        </div>
-        <div class="nav-logo-text">
-          <strong>VDW</strong>
-          <span>Health &amp; Safety</span>
         </div>
       </a>
 
@@ -2239,20 +2258,40 @@
         <!-- Brand column -->
         <div class="footer-brand">
           <div class="footer-logo">
-            <!-- TODO: Replace SVG below with <img src="vdw-logo.png" alt="VDW" height="52"> once logo file is placed next to the HTML -->
+            <!-- TODO: Replace SVG below with <img src="vdw-logo.png" alt="VDW Health and Safety Solutions" height="56"> once logo file is placed next to the HTML -->
             <div class="footer-logo-mark" aria-hidden="true">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52" width="52" height="52">
-                <path d="M26 15a11 11 0 1 0 0 22 11 11 0 0 0 0-22zm0 17a6 6 0 1 1 0-12 6 6 0 0 1 0 12z" fill="#8C8C8C"/>
-                <path d="M24 8h4v5h-4zM24 39h4v5h-4zM8 24v4h5v-4zM39 24v4h5v-4z
-                         M12.4 14.1l3-3 3 3-3 3z M33.6 35.3l3-3 3 3-3 3z
-                         M12.4 37.9l3 3 3-3-3-3z M33.6 16.7l3 3 3-3-3-3z" fill="#8C8C8C"/>
-                <ellipse cx="26" cy="27" rx="7.5" ry="2.8" fill="#F0921A"/>
-                <path d="M18.5 27c0-4.14 3.36-7.5 7.5-7.5s7.5 3.36 7.5 7.5" fill="#F0921A"/>
-                <line x1="22" y1="30" x2="30" y2="22" stroke="#3A9AD4" stroke-width="2.5" stroke-linecap="round"/>
-                <path d="M29 21l3.5-3.5 2.2 1-1 3.5z" fill="#3A9AD4"/>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 60" width="160" height="60">
+                <defs>
+                  <clipPath id="ft-left-clip"><rect x="0" y="0" width="30" height="60"/></clipPath>
+                  <clipPath id="ft-right-clip"><rect x="30" y="0" width="30" height="60"/></clipPath>
+                </defs>
+                <g clip-path="url(#ft-left-clip)">
+                  <path d="M30 10 a20 20 0 0 0 0 40" fill="#A0A7B0"/>
+                  <path d="M30 10 l-3-5 h6 l-3 5z M30 50 l-3 5 h6 l-3-5z
+                           M10 30 l-5-3 v6 l5-3z
+                           M13.8 13.8 l-3.5-3.5 3.5 3.5z
+                           M13.8 46.2 l-4 4 l3.5 3.5 4-4z" fill="#A0A7B0"/>
+                </g>
+                <g clip-path="url(#ft-right-clip)">
+                  <path d="M30 10 a20 20 0 0 1 0 40" fill="#3A9AD4"/>
+                  <path d="M30 10 l3-5 h-6 l3 5z M30 50 l3 5 h-6 l3-5z
+                           M50 30 l5-3 v6 l-5-3z
+                           M46.2 13.8 l4-4 l-3.5 3.5z
+                           M46.2 46.2 l4 4 l-3.5-3.5z" fill="#3A9AD4"/>
+                </g>
+                <circle cx="30" cy="30" r="8" fill="#1E2530"/>
+                <path d="M22 28 Q22 18 30 18 Q38 18 38 28 Z" fill="#3A9AD4"/>
+                <rect x="21" y="27" width="18" height="3" rx="1.5" fill="#3A9AD4"/>
+                <rect x="23" y="24" width="8" height="2" rx="1" fill="white" opacity="0.6"/>
+                <line x1="18" y1="38" x2="36" y2="20" stroke="#F0921A" stroke-width="3.5" stroke-linecap="round"/>
+                <path d="M34 18 l5-3 l1 5 l-4 1z" fill="#F0921A"/>
+                <path d="M16 40 l3-5 l3 1 l-2 4z" fill="#F0921A"/>
+                <text x="65" y="42" font-family="Arial Black, sans-serif" font-size="28" font-weight="900" letter-spacing="-1" fill="#606060">V</text>
+                <text x="86" y="42" font-family="Arial Black, sans-serif" font-size="28" font-weight="900" letter-spacing="-1" fill="#787878">D</text>
+                <text x="107" y="42" font-family="Arial Black, sans-serif" font-size="28" font-weight="900" letter-spacing="-1" fill="#A0A0A0">W</text>
+                <text x="65" y="54" font-family="Arial, sans-serif" font-size="7" fill="#A0A7B0" letter-spacing="1.2">HEALTH AND SAFETY SOLUTIONS</text>
               </svg>
             </div>
-            <strong>VDW Health &amp; Safety Solutions</strong>
           </div>
           <p class="footer-tagline">Professional OHS compliance for South African SMEs. Serving Gauteng and Limpopo.</p>
           <div class="footer-service-areas" aria-label="Service areas">
