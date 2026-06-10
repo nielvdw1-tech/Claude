@@ -9,14 +9,17 @@ Views.users = function () {
 function render() {
   const users = DB.getAll('users');
   const branches = DB.getAll('branches');
+  const clients = DB.getAll('clients');
 
   const rows = users.map(u => {
     const branch = DB.getById('branches', u.branch_id);
+    const client = DB.getById('clients', u.client_id);
     return `
       <tr>
         <td><strong>${UI.escapeHtml(u.full_name)}</strong></td>
         <td>${UI.escapeHtml(u.email)}</td>
         <td><span class="badge badge-blue">${UI.escapeHtml(u.role)}</span></td>
+        <td>${client ? UI.escapeHtml(client.client_name) : '—'}</td>
         <td>${branch ? UI.escapeHtml(branch.branch_name) : '—'}</td>
         <td>${UI.statusBadge(u.active ? 'Active' : 'Inactive')}</td>
         <td>${UI.formatDateTime(u.last_login)}</td>
@@ -35,16 +38,16 @@ function render() {
     <div class="card">
       <div class="table-wrap">
         <table class="data-table">
-          <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Branch</th><th>Status</th><th>Last Login</th><th></th></tr></thead>
-          <tbody>${rows || '<tr><td colspan="7">No users yet.</td></tr>'}</tbody>
+          <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Client</th><th>Branch</th><th>Status</th><th>Last Login</th><th></th></tr></thead>
+          <tbody>${rows || '<tr><td colspan="8">No users yet.</td></tr>'}</tbody>
         </table>
       </div>
     </div>
   `);
 
-  document.getElementById('addUserBtn').addEventListener('click', () => openUserForm(null, branches));
+  document.getElementById('addUserBtn').addEventListener('click', () => openUserForm(null, branches, clients));
   document.querySelectorAll('[data-edit]').forEach(btn => {
-    btn.addEventListener('click', () => openUserForm(DB.getById('users', btn.dataset.edit), branches));
+    btn.addEventListener('click', () => openUserForm(DB.getById('users', btn.dataset.edit), branches, clients));
   });
   document.querySelectorAll('[data-toggle]').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -60,20 +63,22 @@ function render() {
   });
 }
 
-function openUserForm(user, branches) {
+function openUserForm(user, branches, clients) {
   const fields = [
     { name: 'full_name', label: 'Full Name', required: true },
     { name: 'email', label: 'Email', type: 'email', required: true },
     { name: 'password', label: user ? 'Password (leave blank to keep current)' : 'Password', type: 'password', required: !user },
     { name: 'role', label: 'Role', type: 'select', options: [
-      { value: 'Admin', label: 'Admin' }, { value: 'Manager', label: 'Manager' }, { value: 'Inspector', label: 'Inspector' }
+      { value: 'Owner', label: 'Owner' }, { value: 'Admin', label: 'Admin' }, { value: 'Manager', label: 'Manager' }, { value: 'Inspector', label: 'Inspector' }
     ], required: true },
-    { name: 'branch_id', label: 'Branch (for Manager / Inspector)', type: 'select', options: [{ value: '', label: 'None (Admin)' }, ...branches.map(b => ({ value: b.id, label: b.branch_name }))] },
+    { name: 'client_id', label: 'Client (for Admin / Manager)', type: 'select', options: [{ value: '', label: 'None (Owner)' }, ...clients.map(c => ({ value: c.id, label: c.client_name }))] },
+    { name: 'branch_id', label: 'Branch (for Manager / Inspector)', type: 'select', options: [{ value: '', label: 'None' }, ...branches.map(b => ({ value: b.id, label: b.branch_name }))] },
     { name: 'active', label: 'Active', type: 'checkbox' }
   ];
 
   UI.openFormModal(user ? 'Edit User' : 'Add User', fields, user ? { ...user, password: '' } : { role: 'Inspector', active: true }, (values) => {
     values.branch_id = values.branch_id ? Number(values.branch_id) : null;
+    values.client_id = values.client_id ? Number(values.client_id) : null;
     if (!values.password) delete values.password;
 
     if (user) {
@@ -87,5 +92,5 @@ function openUserForm(user, branches) {
   });
 }
 
-Router.add('users', Views.users, { roles: ['Admin'] });
+Router.add('users', Views.users, { roles: ['Owner', 'Admin'] });
 })();

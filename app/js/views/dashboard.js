@@ -5,7 +5,7 @@ Views.dashboard = function () {
   const user = Auth.currentUser();
   App.setTitle('Dashboard', `Welcome back, ${user.full_name.split(' ')[0]}`);
 
-  if (user.role === 'Admin') return renderAdminDashboard();
+  if (user.role === 'Admin' || user.role === 'Owner') return renderAdminDashboard();
   if (user.role === 'Manager') return renderManagerDashboard(user);
   return renderInspectorDashboard(user);
 };

@@ -10,7 +10,7 @@ function render(filters) {
   const user = Auth.currentUser();
   let docs = DB.getAll('documents').sort((a, b) => new Date(b.uploaded_at) - new Date(a.uploaded_at));
   let assets = DB.getAll('assets');
-  if (user.role !== 'Admin' && user.branch_id) assets = assets.filter(a => a.branch_id === user.branch_id);
+  if (user.role !== 'Admin' && user.role !== 'Owner' && user.branch_id) assets = assets.filter(a => a.branch_id === user.branch_id);
   const assetIds = assets.map(a => a.id);
   docs = docs.filter(d => !d.asset_id || assetIds.includes(d.asset_id));
 

@@ -26,14 +26,14 @@ function render() {
         <td>${manager ? UI.escapeHtml(manager.full_name) : '—'}</td>
         <td>${assets}</td>
         <td>${UI.statusBadge(b.status)}</td>
-        <td>${user.role === 'Admin' ? `<button class="btn btn-outline btn-sm" data-edit="${b.id}">Edit</button>` : ''}</td>
+        <td>${(user.role === 'Admin' || user.role === 'Owner') ? `<button class="btn btn-outline btn-sm" data-edit="${b.id}">Edit</button>` : ''}</td>
       </tr>`;
   }).join('');
 
   App.renderContent(`
     <div class="section-header">
       <h2>${user.role === 'Manager' ? 'My Branch' : 'All Branches / Sites'}</h2>
-      ${user.role === 'Admin' ? '<button class="btn btn-primary" id="addBranchBtn">+ Add Branch</button>' : ''}
+      ${(user.role === 'Admin' || user.role === 'Owner') ? '<button class="btn btn-primary" id="addBranchBtn">+ Add Branch</button>' : ''}
     </div>
     <div class="card">
       <div class="table-wrap">
@@ -45,7 +45,7 @@ function render() {
     </div>
   `);
 
-  if (user.role === 'Admin') {
+  if ((user.role === 'Admin' || user.role === 'Owner')) {
     document.getElementById('addBranchBtn').addEventListener('click', () => openBranchForm(null, clientOptions, managerOptions));
     document.querySelectorAll('[data-edit]').forEach(btn => {
       btn.addEventListener('click', () => openBranchForm(DB.getById('branches', btn.dataset.edit), clientOptions, managerOptions));
@@ -78,5 +78,5 @@ function openBranchForm(branch, clientOptions, managerOptions) {
   });
 }
 
-Router.add('branches', Views.branches, { roles: ['Admin', 'Manager'] });
+Router.add('branches', Views.branches, { roles: ['Owner', 'Admin', 'Manager'] });
 })();

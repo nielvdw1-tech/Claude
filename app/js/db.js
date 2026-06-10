@@ -31,11 +31,11 @@ function seedData() {
       { id: 3, client_id: 2, branch_name: 'City Deep Depot', branch_code: 'TRN-CD', address: '8 Rail Street, City Deep, Johannesburg', region: 'Gauteng', manager_id: 5, status: 'Active', created_at: nowISO(), updated_at: nowISO() }
     ],
     users: [
-      { id: 1, full_name: 'Niel van der Walt', email: 'admin@vdwsafety.com', password: 'admin123', role: 'Admin', branch_id: null, active: true, last_login: null, created_at: nowISO() },
-      { id: 2, full_name: 'Sarah Pretorius', email: 'sarah.manager@vdwsafety.com', password: 'manager123', role: 'Manager', branch_id: 1, active: true, last_login: null, created_at: nowISO() },
-      { id: 3, full_name: 'Thabo Mokoena', email: 'thabo.inspector@vdwsafety.com', password: 'inspect123', role: 'Inspector', branch_id: 1, active: true, last_login: null, created_at: nowISO() },
-      { id: 4, full_name: 'Lerato Dube', email: 'lerato.inspector@vdwsafety.com', password: 'inspect123', role: 'Inspector', branch_id: 2, active: true, last_login: null, created_at: nowISO() },
-      { id: 5, full_name: 'Pieter Botha', email: 'pieter.manager@vdwsafety.com', password: 'manager123', role: 'Manager', branch_id: 3, active: true, last_login: null, created_at: nowISO() }
+      { id: 1, full_name: 'Niel van der Walt', email: 'admin@vdwsafety.com', password: 'admin123', role: 'Owner', branch_id: null, client_id: null, active: true, last_login: null, created_at: nowISO() },
+      { id: 2, full_name: 'Sarah Pretorius', email: 'sarah.manager@vdwsafety.com', password: 'manager123', role: 'Manager', branch_id: 1, client_id: 1, active: true, last_login: null, created_at: nowISO() },
+      { id: 3, full_name: 'Thabo Mokoena', email: 'thabo.inspector@vdwsafety.com', password: 'inspect123', role: 'Inspector', branch_id: 1, client_id: 1, active: true, last_login: null, created_at: nowISO() },
+      { id: 4, full_name: 'Lerato Dube', email: 'lerato.inspector@vdwsafety.com', password: 'inspect123', role: 'Inspector', branch_id: 2, client_id: 1, active: true, last_login: null, created_at: nowISO() },
+      { id: 5, full_name: 'Pieter Botha', email: 'pieter.manager@vdwsafety.com', password: 'manager123', role: 'Manager', branch_id: 3, client_id: 2, active: true, last_login: null, created_at: nowISO() }
     ],
     inspection_templates: [
       { id: 1, template_name: 'Fire Extinguisher Monthly Check', asset_type: 'Fire Extinguisher', inspection_frequency: 30, active: true, created_at: nowISO() },

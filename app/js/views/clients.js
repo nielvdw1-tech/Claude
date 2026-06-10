@@ -70,5 +70,5 @@ function openClientForm(client) {
   });
 }
 
-Router.add('clients', Views.clients, { roles: ['Admin'] });
+Router.add('clients', Views.clients, { roles: ['Owner', 'Admin'] });
 })();

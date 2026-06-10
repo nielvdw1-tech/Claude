@@ -2,17 +2,17 @@
 
 const App = {
   navItems: [
-    { path: 'dashboard', label: 'Dashboard', icon: '&#128202;', roles: ['Admin', 'Manager', 'Inspector'] },
-    { path: 'assets', label: 'Assets', icon: '&#127981;', roles: ['Admin', 'Manager', 'Inspector'] },
-    { path: 'inspections', label: 'Inspection History', icon: '&#128203;', roles: ['Admin', 'Manager', 'Inspector'] },
-    { path: 'cars', label: 'Corrective Actions', icon: '&#9888;', roles: ['Admin', 'Manager', 'Inspector'] },
-    { path: 'documents', label: 'Documents', icon: '&#128193;', roles: ['Admin', 'Manager', 'Inspector'] },
-    { path: 'reports', label: 'Reports', icon: '&#128200;', roles: ['Admin', 'Manager'] },
+    { path: 'dashboard', label: 'Dashboard', icon: '&#128202;', roles: ['Owner', 'Admin', 'Manager', 'Inspector'] },
+    { path: 'assets', label: 'Assets', icon: '&#127981;', roles: ['Owner', 'Admin', 'Manager', 'Inspector'] },
+    { path: 'inspections', label: 'Inspection History', icon: '&#128203;', roles: ['Owner', 'Admin', 'Manager', 'Inspector'] },
+    { path: 'cars', label: 'Corrective Actions', icon: '&#9888;', roles: ['Owner', 'Admin', 'Manager', 'Inspector'] },
+    { path: 'documents', label: 'Documents', icon: '&#128193;', roles: ['Owner', 'Admin', 'Manager', 'Inspector'] },
+    { path: 'reports', label: 'Reports', icon: '&#128200;', roles: ['Owner', 'Admin', 'Manager'] },
     { section: 'Administration' },
-    { path: 'clients', label: 'Clients', icon: '&#127970;', roles: ['Admin'] },
-    { path: 'branches', label: 'Branches / Sites', icon: '&#128205;', roles: ['Admin', 'Manager'] },
-    { path: 'users', label: 'User Management', icon: '&#128100;', roles: ['Admin'] },
-    { path: 'settings', label: 'Settings', icon: '&#9881;', roles: ['Admin'] }
+    { path: 'clients', label: 'Clients', icon: '&#127970;', roles: ['Owner', 'Admin'] },
+    { path: 'branches', label: 'Branches / Sites', icon: '&#128205;', roles: ['Owner', 'Admin', 'Manager'] },
+    { path: 'users', label: 'User Management', icon: '&#128100;', roles: ['Owner', 'Admin'] },
+    { path: 'settings', label: 'Settings', icon: '&#9881;', roles: ['Owner', 'Admin'] }
   ],
 
   renderShell() {

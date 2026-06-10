@@ -122,5 +122,5 @@ Views.assetNew = function () {
   });
 };
 
-Router.add('assets/new', Views.assetNew, { roles: ['Admin', 'Manager'] });
+Router.add('assets/new', Views.assetNew, { roles: ['Owner', 'Admin', 'Manager'] });
 })();
