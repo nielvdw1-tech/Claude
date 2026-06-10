@@ -61,7 +61,6 @@ Views.inspectionForm = function (params) {
       </div>
 
       <div class="card" style="position:sticky;bottom:12px;display:flex;gap:10px;flex-wrap:wrap;">
-        <button class="btn btn-outline" id="saveProgressBtn">Save Progress</button>
         <button class="btn btn-success" id="completeBtn" ${allDone ? '' : 'disabled'}>Complete Inspection</button>
         ${!allDone ? '<span class="form-hint" style="align-self:center;">Answer all items to complete the inspection.</span>' : ''}
       </div>
@@ -95,10 +94,6 @@ Views.inspectionForm = function (params) {
           reader.readAsDataURL(file);
         });
       }
-    });
-
-    document.getElementById('saveProgressBtn').addEventListener('click', () => {
-      UI.toast('Progress saved', 'success');
     });
 
     const completeBtn = document.getElementById('completeBtn');

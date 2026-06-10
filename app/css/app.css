@@ -29,6 +29,8 @@ html, body {
   background: var(--grey-bg);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  max-width: 100vw;
 }
 
 a { color: var(--blue); text-decoration: none; }
@@ -586,4 +588,19 @@ textarea.form-control { resize: vertical; min-height: 80px; }
   .sidebar { transform: translateX(-100%); }
   .sidebar.open { transform: translateX(0); }
   .main-area { margin-left: 0; }
+}
+
+.app-shell-public .main-area { margin-left: 0; }
+
+@media (max-width: 480px) {
+  .content { padding: 14px; }
+  .topbar { padding: 10px 14px; }
+  .page-title { font-size: 1rem; }
+  .page-subtitle { font-size: .76rem; }
+  .card { padding: 14px; }
+  .checklist-item { padding: 12px; }
+  .result-options { gap: 6px; }
+  .result-option { min-width: 0; padding: 10px 4px; font-size: .78rem; }
+  .compliance-ring { font-size: 2rem; }
+  .btn-lg { padding: 12px 18px; min-height: 48px; font-size: .95rem; }
 }
