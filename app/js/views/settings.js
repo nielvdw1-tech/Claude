@@ -7,12 +7,14 @@ Views.settings = function () {
 };
 
 function render(tab, openTemplateId) {
-  const templates = DB.getAll('inspection_templates');
+  const user = Auth.currentUser();
+  const isOwner = user.role === 'Owner';
+  if (!isOwner) tab = 'templates';
 
   App.renderContent(`
     <div class="toolbar">
       <button class="btn ${tab === 'templates' ? 'btn-primary' : 'btn-outline'} btn-sm" data-tab="templates">Inspection Templates</button>
-      <button class="btn ${tab === 'system' ? 'btn-primary' : 'btn-outline'} btn-sm" data-tab="system">System</button>
+      ${isOwner ? `<button class="btn ${tab === 'system' ? 'btn-primary' : 'btn-outline'} btn-sm" data-tab="system">System</button>` : ''}
     </div>
     <div id="settingsTab"></div>
   `);
@@ -187,5 +189,5 @@ function renderSystem() {
   });
 }
 
-Router.add('settings', Views.settings, { roles: ['Owner'] });
+Router.add('settings', Views.settings, { roles: ['Owner', 'Admin'] });
 })();
