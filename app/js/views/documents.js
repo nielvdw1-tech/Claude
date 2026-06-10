@@ -78,6 +78,12 @@ function openUploadModal(assets) {
             <option value="Method Statement">Method Statement</option>
             <option value="Risk Assessment">Risk Assessment</option>
             <option value="Policy">Policy</option>
+            <option value="Appointment">Appointment</option>
+            <option value="Procedure">Procedure</option>
+            <option value="Safe Operating Procedure">Safe Operating Procedure</option>
+            <option value="Safe Work Procedure">Safe Work Procedure</option>
+            <option value="Legal Register">Legal Register</option>
+            <option value="Training Record">Training Record</option>
             <option value="Other">Other</option>
           </select>
         </div>
