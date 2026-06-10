@@ -5,7 +5,8 @@ Views.dashboard = function () {
   const user = Auth.currentUser();
   App.setTitle('Dashboard', `Welcome back, ${user.full_name.split(' ')[0]}`);
 
-  if (user.role === 'Admin' || user.role === 'Owner') return renderAdminDashboard();
+  if (user.role === 'Owner') return renderAdminDashboard({});
+  if (user.role === 'Admin') return renderAdminDashboard({ clientId: user.client_id });
   if (user.role === 'Manager') return renderManagerDashboard(user);
   return renderInspectorDashboard(user);
 };
@@ -18,13 +19,23 @@ function statCard(label, value, type = '') {
     </div>`;
 }
 
-function renderAdminDashboard() {
-  const m = Metrics.dashboardMetrics();
-  const branchPerf = Metrics.branchPerformance();
+function renderAdminDashboard(scope) {
+  const m = Metrics.dashboardMetrics(scope);
+  const branchPerf = Metrics.branchPerformance(scope);
+  const isOwner = !scope.clientId;
+  const expiring = Metrics.expiringClients(30, scope);
 
   const html = `
+    ${expiring.length ? `
+    <div class="card" style="border-color:var(--orange);background:var(--orange-bg);margin-bottom:16px;">
+      <div class="section-header"><h2>Contract Expiry Notice</h2></div>
+      <ul style="margin:0;padding-left:18px;">
+        ${expiring.map(e => `<li>${UI.escapeHtml(e.client.client_name)} &mdash; ${e.expired ? 'contract expired on' : 'contract expires on'} ${UI.formatDate(e.client.contract_end_date)}</li>`).join('')}
+      </ul>
+      <p style="margin:8px 0 0;"><a href="#/clients">View Clients</a></p>
+    </div>` : ''}
     <div class="grid grid-4">
-      ${statCard('Total Clients', m.totalClients)}
+      ${isOwner ? statCard('Total Clients', m.totalClients) : statCard('Total Branches', branchPerf.length)}
       ${statCard('Total Assets', m.totalAssets)}
       ${statCard('Open CARs', m.openCARs, m.openCARs > 0 ? 'warn' : 'good')}
       ${statCard('Overdue Inspections', m.overdueInspections, m.overdueInspections > 0 ? 'alert' : 'good')}

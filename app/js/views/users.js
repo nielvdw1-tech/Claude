@@ -7,9 +7,18 @@ Views.users = function () {
 };
 
 function render() {
-  const users = DB.getAll('users');
-  const branches = DB.getAll('branches');
-  const clients = DB.getAll('clients');
+  const currentUser = Auth.currentUser();
+  const isOwner = currentUser.role === 'Owner';
+
+  let users = DB.getAll('users');
+  let branches = DB.getAll('branches');
+  let clients = DB.getAll('clients');
+
+  if (!isOwner) {
+    users = users.filter(u => u.client_id === currentUser.client_id);
+    branches = branches.filter(b => b.client_id === currentUser.client_id);
+    clients = clients.filter(c => c.id === currentUser.client_id);
+  }
 
   const rows = users.map(u => {
     const branch = DB.getById('branches', u.branch_id);
@@ -45,9 +54,9 @@ function render() {
     </div>
   `);
 
-  document.getElementById('addUserBtn').addEventListener('click', () => openUserForm(null, branches, clients));
+  document.getElementById('addUserBtn').addEventListener('click', () => openUserForm(null, branches, clients, currentUser, isOwner));
   document.querySelectorAll('[data-edit]').forEach(btn => {
-    btn.addEventListener('click', () => openUserForm(DB.getById('users', btn.dataset.edit), branches, clients));
+    btn.addEventListener('click', () => openUserForm(DB.getById('users', btn.dataset.edit), branches, clients, currentUser, isOwner));
   });
   document.querySelectorAll('[data-toggle]').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -63,22 +72,24 @@ function render() {
   });
 }
 
-function openUserForm(user, branches, clients) {
+function openUserForm(user, branches, clients, currentUser, isOwner) {
+  const roleOptions = isOwner
+    ? [{ value: 'Owner', label: 'Owner' }, { value: 'Admin', label: 'Admin' }, { value: 'Manager', label: 'Manager' }, { value: 'Inspector', label: 'Inspector' }]
+    : [{ value: 'Admin', label: 'Admin' }, { value: 'Manager', label: 'Manager' }, { value: 'Inspector', label: 'Inspector' }];
+
   const fields = [
     { name: 'full_name', label: 'Full Name', required: true },
     { name: 'email', label: 'Email', type: 'email', required: true },
     { name: 'password', label: user ? 'Password (leave blank to keep current)' : 'Password', type: 'password', required: !user },
-    { name: 'role', label: 'Role', type: 'select', options: [
-      { value: 'Owner', label: 'Owner' }, { value: 'Admin', label: 'Admin' }, { value: 'Manager', label: 'Manager' }, { value: 'Inspector', label: 'Inspector' }
-    ], required: true },
-    { name: 'client_id', label: 'Client (for Admin / Manager)', type: 'select', options: [{ value: '', label: 'None (Owner)' }, ...clients.map(c => ({ value: c.id, label: c.client_name }))] },
+    { name: 'role', label: 'Role', type: 'select', options: roleOptions, required: true },
+    ...(isOwner ? [{ name: 'client_id', label: 'Client (for Admin / Manager)', type: 'select', options: [{ value: '', label: 'None (Owner)' }, ...clients.map(c => ({ value: c.id, label: c.client_name }))] }] : []),
     { name: 'branch_id', label: 'Branch (for Manager / Inspector)', type: 'select', options: [{ value: '', label: 'None' }, ...branches.map(b => ({ value: b.id, label: b.branch_name }))] },
     { name: 'active', label: 'Active', type: 'checkbox' }
   ];
 
   UI.openFormModal(user ? 'Edit User' : 'Add User', fields, user ? { ...user, password: '' } : { role: 'Inspector', active: true }, (values) => {
     values.branch_id = values.branch_id ? Number(values.branch_id) : null;
-    values.client_id = values.client_id ? Number(values.client_id) : null;
+    values.client_id = isOwner ? (values.client_id ? Number(values.client_id) : null) : currentUser.client_id;
     if (!values.password) delete values.password;
 
     if (user) {

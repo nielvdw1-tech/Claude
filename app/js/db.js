@@ -22,8 +22,8 @@ function seedData() {
       documents: 1, notifications: 1
     },
     clients: [
-      { id: 1, client_name: 'Sasol Polymers', client_code: 'SAS-001', contact_person: 'J. Naidoo', contact_email: 'j.naidoo@sasol.com', contact_phone: '011 555 0101', status: 'Active', created_at: nowISO(), updated_at: nowISO() },
-      { id: 2, client_name: 'Transnet Logistics', client_code: 'TRN-002', contact_person: 'M. van Wyk', contact_email: 'm.vanwyk@transnet.net', contact_phone: '012 555 0202', status: 'Active', created_at: nowISO(), updated_at: nowISO() }
+      { id: 1, client_name: 'Sasol Polymers', client_code: 'SAS-001', contact_person: 'J. Naidoo', contact_email: 'j.naidoo@sasol.com', contact_phone: '011 555 0101', status: 'Active', contract_end_date: todayISO(20), created_at: nowISO(), updated_at: nowISO() },
+      { id: 2, client_name: 'Transnet Logistics', client_code: 'TRN-002', contact_person: 'M. van Wyk', contact_email: 'm.vanwyk@transnet.net', contact_phone: '012 555 0202', status: 'Active', contract_end_date: todayISO(180), created_at: nowISO(), updated_at: nowISO() }
     ],
     branches: [
       { id: 1, client_id: 1, branch_name: 'Sasolburg Plant', branch_code: 'SAS-SB', address: '1 Sasol Road, Sasolburg, 1947', region: 'Free State', manager_id: 2, status: 'Active', created_at: nowISO(), updated_at: nowISO() },
@@ -358,8 +358,10 @@ const Metrics = {
     };
   },
 
-  branchPerformance() {
-    return DB.getAll('branches').map(branch => {
+  branchPerformance(scope = {}) {
+    let branches = DB.getAll('branches');
+    if (scope.clientId) branches = branches.filter(b => b.client_id === scope.clientId);
+    return branches.map(branch => {
       const assets = DB.query('assets', a => a.branch_id === branch.id);
       const inspections = DB.query('inspections', i => i.branch_id === branch.id);
       return {
@@ -369,6 +371,17 @@ const Metrics = {
         compliance: this.computeCompliancePercentage(inspections)
       };
     });
+  },
+
+  expiringClients(daysAhead = 30, scope = {}) {
+    let clients = DB.getAll('clients');
+    if (scope.clientId) clients = clients.filter(c => c.id === scope.clientId);
+    const cutoff = todayISO(daysAhead);
+    const today = todayISO();
+    return clients
+      .filter(c => c.contract_end_date && c.contract_end_date <= cutoff)
+      .map(c => ({ client: c, expired: c.contract_end_date < today }))
+      .sort((a, b) => a.client.contract_end_date.localeCompare(b.client.contract_end_date));
   }
 };
 

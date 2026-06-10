@@ -187,5 +187,5 @@ function renderSystem() {
   });
 }
 
-Router.add('settings', Views.settings, { roles: ['Owner', 'Admin'] });
+Router.add('settings', Views.settings, { roles: ['Owner'] });
 })();

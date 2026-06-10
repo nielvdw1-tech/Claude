@@ -10,8 +10,10 @@ function render() {
   const user = Auth.currentUser();
   let branches = DB.getAll('branches');
   if (user.role === 'Manager') branches = branches.filter(b => b.id === user.branch_id);
+  else if (user.role !== 'Owner' && user.client_id) branches = branches.filter(b => b.client_id === user.client_id);
 
-  const clientOptions = DB.getAll('clients').map(c => ({ value: c.id, label: c.client_name }));
+  const clientOptions = (user.role === 'Owner' ? DB.getAll('clients') : DB.query('clients', c => c.id === user.client_id))
+    .map(c => ({ value: c.id, label: c.client_name }));
   const managerOptions = DB.getAll('users').filter(u => u.role === 'Manager').map(u => ({ value: u.id, label: u.full_name }));
 
   const rows = branches.map(b => {

@@ -12,6 +12,9 @@ function carScope(user) {
   else if (user.role === 'Manager') {
     const assets = DB.query('assets', a => a.branch_id === user.branch_id).map(a => a.id);
     cars = cars.filter(c => assets.includes(c.asset_id));
+  } else if (user.role === 'Admin' && user.client_id) {
+    const assets = DB.query('assets', a => a.client_id === user.client_id).map(a => a.id);
+    cars = cars.filter(c => assets.includes(c.asset_id));
   }
   return cars;
 }

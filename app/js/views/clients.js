@@ -7,11 +7,21 @@ Views.clients = function () {
 };
 
 function render() {
-  const clients = DB.getAll('clients');
+  const user = Auth.currentUser();
+  const isOwner = user.role === 'Owner';
+  const clients = isOwner ? DB.getAll('clients') : DB.query('clients', c => c.id === user.client_id);
 
+  const today = Utils.todayISO();
   const rows = clients.map(c => {
     const branches = DB.query('branches', b => b.client_id === c.id).length;
     const assets = DB.query('assets', a => a.client_id === c.id).length;
+    let contractCell = '—';
+    if (c.contract_end_date) {
+      const expired = c.contract_end_date < today;
+      const expiringSoon = !expired && c.contract_end_date <= Utils.todayISO(30);
+      const badge = expired ? '<span class="badge badge-red">Expired</span>' : expiringSoon ? '<span class="badge badge-orange">Expiring Soon</span>' : '';
+      contractCell = `${UI.formatDate(c.contract_end_date)} ${badge}`;
+    }
     return `
       <tr>
         <td><strong>${UI.escapeHtml(c.client_name)}</strong></td>
@@ -20,6 +30,7 @@ function render() {
         <td>${UI.escapeHtml(c.contact_email)}<br><span class="form-hint">${UI.escapeHtml(c.contact_phone)}</span></td>
         <td>${branches}</td>
         <td>${assets}</td>
+        <td>${contractCell}</td>
         <td>${UI.statusBadge(c.status)}</td>
         <td>
           <button class="btn btn-outline btn-sm" data-edit="${c.id}">Edit</button>
@@ -27,22 +38,32 @@ function render() {
       </tr>`;
   }).join('');
 
+  const expiring = Metrics.expiringClients(30, isOwner ? {} : { clientId: user.client_id });
+
   App.renderContent(`
     <div class="section-header">
-      <h2>All Clients</h2>
-      <button class="btn btn-primary" id="addClientBtn">+ Add Client</button>
+      <h2>${isOwner ? 'All Clients' : 'My Client'}</h2>
+      ${isOwner ? '<button class="btn btn-primary" id="addClientBtn">+ Add Client</button>' : ''}
     </div>
+    ${expiring.length ? `
+    <div class="card" style="border-color:var(--orange);background:var(--orange-bg);">
+      <div class="section-header"><h2>Contract Expiry Notice</h2></div>
+      <ul style="margin:0;padding-left:18px;">
+        ${expiring.map(e => `<li>${UI.escapeHtml(e.client.client_name)} &mdash; ${e.expired ? 'contract expired on' : 'contract expires on'} ${UI.formatDate(e.client.contract_end_date)}</li>`).join('')}
+      </ul>
+    </div>` : ''}
     <div class="card">
       <div class="table-wrap">
         <table class="data-table">
-          <thead><tr><th>Client</th><th>Code</th><th>Contact</th><th>Email / Phone</th><th>Branches</th><th>Assets</th><th>Status</th><th></th></tr></thead>
-          <tbody>${rows || '<tr><td colspan="8">No clients yet.</td></tr>'}</tbody>
+          <thead><tr><th>Client</th><th>Code</th><th>Contact</th><th>Email / Phone</th><th>Branches</th><th>Assets</th><th>Contract End</th><th>Status</th><th></th></tr></thead>
+          <tbody>${rows || '<tr><td colspan="9">No clients yet.</td></tr>'}</tbody>
         </table>
       </div>
     </div>
   `);
 
-  document.getElementById('addClientBtn').addEventListener('click', () => openClientForm());
+  const addClientBtn = document.getElementById('addClientBtn');
+  if (addClientBtn) addClientBtn.addEventListener('click', () => openClientForm());
   document.querySelectorAll('[data-edit]').forEach(btn => {
     btn.addEventListener('click', () => openClientForm(DB.getById('clients', btn.dataset.edit)));
   });
@@ -55,6 +76,7 @@ function openClientForm(client) {
     { name: 'contact_person', label: 'Contact Person', required: true },
     { name: 'contact_email', label: 'Contact Email', type: 'email', required: true },
     { name: 'contact_phone', label: 'Contact Phone' },
+    { name: 'contract_end_date', label: 'Contract End Date', type: 'date' },
     { name: 'status', label: 'Status', type: 'select', options: [{ value: 'Active', label: 'Active' }, { value: 'Inactive', label: 'Inactive' }] }
   ];
 
