@@ -82,6 +82,7 @@ function render(user, isOwner, accessibleClients) {
     <div class="section-header">
       <h2>Compliance Reports</h2>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-primary btn-sm" id="exportFullReportBtn">Export Full Compliance Report PDF</button>
         <button class="btn btn-outline btn-sm" id="exportAssetsBtn">Export Assets PDF</button>
         <button class="btn btn-outline btn-sm" id="exportCarsBtn">Export CARs PDF</button>
         <button class="btn btn-outline btn-sm" id="exportInspectionsBtn">Export Inspections PDF</button>
@@ -206,6 +207,29 @@ function render(user, isOwner, accessibleClients) {
     render(user, isOwner, accessibleClients);
   });
 
+  document.getElementById('exportFullReportBtn').addEventListener('click', () => exportFullReport({
+    overallCompliance: Metrics.computeCompliancePercentage(inspections),
+    totalAssets: assets.length,
+    completed, inProgress, overdue,
+    openCars: cars.filter(c => c.status !== 'Closed').length,
+    overdueCars: cars.filter(c => c.status === 'Overdue').length,
+    branchRows, typeRows, carRows,
+    assets: assets.map(a => ({
+      ...a,
+      last_inspection_date: UI.formatDate(a.last_inspection_date),
+      next_inspection_date: UI.formatDate(a.next_inspection_date)
+    })),
+    inspectionRows: inspectionRows.map(i => ({
+      ...i,
+      asset_name: UI.assetName(i.asset_id),
+      branch_name: UI.branchName(i.branch_id),
+      client_name: UI.clientName(i.client_id),
+      inspector_name: UI.userName(i.inspector_id, i.inspector_name),
+      inspection_date: UI.formatDate(i.inspection_date),
+      compliance_score: i.compliance_score === null || i.compliance_score === undefined ? '—' : i.compliance_score + '%'
+    }))
+  }));
+
   document.getElementById('exportAssetsBtn').addEventListener('click', () => exportPDF('Asset Register', 'assets.pdf', [
     { key: 'asset_name', label: 'Asset' },
     { key: 'asset_tag', label: 'Tag' },
@@ -255,12 +279,9 @@ function render(user, isOwner, accessibleClients) {
   }))));
 }
 
-// Builds and downloads a PDF report, stamping the selected client's logo at the top if one is on file.
-function exportPDF(title, filename, columns, rows) {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ orientation: 'landscape' });
-  const client = state.clientId ? DB.getById('clients', state.clientId) : null;
-
+// Draws the logo (if the selected client has one), title and scope line at the top of the current page.
+// Returns the x-coordinate subsequent content should be aligned to.
+function drawReportHeader(doc, title, client) {
   let titleX = 14;
   if (client && client.logo_url) {
     const format = (client.logo_url.match(/^data:image\/(\w+);/) || [, 'PNG'])[1].toUpperCase();
@@ -271,6 +292,7 @@ function exportPDF(title, filename, columns, rows) {
   }
 
   doc.setFontSize(16);
+  doc.setTextColor(0);
   doc.text(title, titleX, 16);
 
   doc.setFontSize(10);
@@ -281,6 +303,17 @@ function exportPDF(title, filename, columns, rows) {
   doc.text(scope, titleX, 23);
   doc.setTextColor(0);
 
+  return titleX;
+}
+
+// Builds and downloads a PDF report, stamping the selected client's logo at the top if one is on file.
+function exportPDF(title, filename, columns, rows) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'landscape' });
+  const client = state.clientId ? DB.getById('clients', state.clientId) : null;
+
+  drawReportHeader(doc, title, client);
+
   doc.autoTable({
     startY: 30,
     head: [columns.map(c => c.label)],
@@ -290,6 +323,101 @@ function exportPDF(title, filename, columns, rows) {
   });
 
   doc.save(filename);
+}
+
+// Builds a single PDF combining the overall compliance score (page 1) followed by every other report section.
+function exportFullReport(data) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait' });
+  const client = state.clientId ? DB.getById('clients', state.clientId) : null;
+
+  // Page 1: overall compliance score and summary
+  let titleX = drawReportHeader(doc, 'Full Compliance Report', client);
+
+  doc.setFontSize(13);
+  doc.setTextColor(0);
+  doc.text('Overall Compliance Score', titleX, 42);
+
+  const score = data.overallCompliance;
+  const color = score === null ? [107, 119, 133] : score >= 90 ? [30, 142, 90] : score >= 70 ? [217, 119, 6] : [192, 57, 43];
+  doc.setFontSize(40);
+  doc.setTextColor(...color);
+  doc.text(score === null ? 'N/A' : `${score}%`, titleX, 58);
+  doc.setTextColor(0);
+  doc.setFontSize(10);
+  doc.text('Average compliance score across all completed inspections in this scope.', titleX, 66);
+
+  doc.autoTable({
+    startY: 76,
+    theme: 'grid',
+    head: [['Metric', 'Value']],
+    body: [
+      ['Total Assets', String(data.totalAssets)],
+      ['Inspections Completed', String(data.completed)],
+      ['Inspections In Progress', String(data.inProgress)],
+      ['Inspections Overdue', String(data.overdue)],
+      ['Open Corrective Actions', String(data.openCars)],
+      ['Overdue Corrective Actions', String(data.overdueCars)]
+    ],
+    styles: { fontSize: 10 },
+    headStyles: { fillColor: [16, 65, 110] }
+  });
+
+  // Compliance by branch / site
+  doc.addPage('a4', 'portrait');
+  drawReportHeader(doc, 'Compliance by Branch / Site', client);
+  doc.autoTable({
+    startY: 30,
+    head: [['Branch', 'Total Assets', 'Non-Compliant', 'Inspections', 'Avg Compliance']],
+    body: data.branchRows.map(r => [r.branch.branch_name, String(r.total), String(r.nonCompliant), String(r.inspections), r.compliance === null ? '—' : r.compliance + '%']),
+    styles: { fontSize: 9 },
+    headStyles: { fillColor: [16, 65, 110] }
+  });
+
+  // Compliance by asset type & CARs by priority
+  doc.addPage('a4', 'portrait');
+  drawReportHeader(doc, 'Compliance by Asset Type', client);
+  doc.autoTable({
+    startY: 30,
+    head: [['Asset Type', 'Assets', 'Avg Compliance']],
+    body: data.typeRows.map(r => [r.type, String(r.total), r.compliance === null ? '—' : r.compliance + '%']),
+    styles: { fontSize: 9 },
+    headStyles: { fillColor: [16, 65, 110] }
+  });
+
+  doc.addPage('a4', 'portrait');
+  drawReportHeader(doc, 'Corrective Actions by Priority', client);
+  doc.autoTable({
+    startY: 30,
+    head: [['Priority', 'Open', 'Overdue', 'Closed']],
+    body: data.carRows.map(r => [r.priority, String(r.open), String(r.overdue), String(r.closed)]),
+    styles: { fontSize: 9 },
+    headStyles: { fillColor: [16, 65, 110] }
+  });
+
+  // Asset register
+  doc.addPage('a4', 'landscape');
+  drawReportHeader(doc, 'Asset Register', client);
+  doc.autoTable({
+    startY: 30,
+    head: [['Asset', 'Tag', 'Serial', 'Type', 'Compliance', 'Last Inspection', 'Next Inspection']],
+    body: data.assets.map(a => [a.asset_name, a.asset_tag, a.serial_number, a.asset_type, a.compliance_status, a.last_inspection_date, a.next_inspection_date]),
+    styles: { fontSize: 8 },
+    headStyles: { fillColor: [16, 65, 110] }
+  });
+
+  // Inspection reports
+  doc.addPage('a4', 'landscape');
+  drawReportHeader(doc, 'Inspection Reports', client);
+  doc.autoTable({
+    startY: 30,
+    head: [['Inspection #', 'Asset', 'Branch', 'Client', 'Inspector', 'Date', 'Status', 'Score']],
+    body: data.inspectionRows.map(i => [i.inspection_number, i.asset_name, i.branch_name, i.client_name, i.inspector_name, i.inspection_date, i.status, i.compliance_score]),
+    styles: { fontSize: 8 },
+    headStyles: { fillColor: [16, 65, 110] }
+  });
+
+  doc.save('full_compliance_report.pdf');
 }
 
 Router.add('reports', Views.reports, { roles: ['Owner', 'Admin', 'Manager'] });
