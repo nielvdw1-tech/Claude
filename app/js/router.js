@@ -38,8 +38,9 @@ const Router = {
     const result = this.match(path);
 
     const user = Auth.currentUser();
+    const isPublic = !!(result && result.route.options.public);
 
-    if (path !== 'login' && !user) {
+    if (path !== 'login' && !user && !isPublic) {
       window.location.hash = '#/login';
       return;
     }
@@ -67,7 +68,11 @@ const Router = {
       return;
     }
 
-    App.renderShell();
+    if (!user && isPublic) {
+      App.renderPublicShell();
+    } else {
+      App.renderShell();
+    }
     route.view(params);
   },
 

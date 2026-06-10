@@ -81,6 +81,29 @@ const App = {
     });
   },
 
+  renderPublicShell() {
+    const root = document.getElementById('root');
+    root.innerHTML = `
+      <div class="app-shell app-shell-public">
+        <div class="main-area" id="mainArea">
+          <header class="topbar">
+            <div class="topbar-left">
+              <div>
+                <div class="sidebar-brand" style="margin-bottom:4px;">
+                  <span class="badge-dot"></span>
+                  VDW Compliance Control
+                </div>
+                <div class="page-title" id="pageTitle">Inspection</div>
+                <div class="page-subtitle" id="pageSubtitle"></div>
+              </div>
+            </div>
+          </header>
+          <main class="content" id="content"></main>
+        </div>
+      </div>
+    `;
+  },
+
   setTitle(title, subtitle = '') {
     const t = document.getElementById('pageTitle');
     const s = document.getElementById('pageSubtitle');

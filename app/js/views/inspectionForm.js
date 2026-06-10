@@ -15,6 +15,7 @@ Views.inspectionForm = function (params) {
   }
 
   const asset = DB.getById('assets', inspection.asset_id);
+  const isAuthenticated = !!Auth.currentUser();
   App.setTitle('Inspection Form', `${inspection.inspection_number} — ${asset.asset_name}`);
   render();
 
@@ -25,7 +26,7 @@ Views.inspectionForm = function (params) {
     const allDone = items.length > 0 && completedCount === items.length;
 
     App.renderContent(`
-      <div class="breadcrumbs"><a href="#/assets/${asset.id}">&larr; Back to Asset</a></div>
+      ${isAuthenticated ? `<div class="breadcrumbs"><a href="#/assets/${asset.id}">&larr; Back to Asset</a></div>` : ''}
 
       <div class="card">
         <div class="section-header">
@@ -130,5 +131,5 @@ Views.inspectionForm = function (params) {
   }
 };
 
-Router.add('inspections/:id/form', Views.inspectionForm);
+Router.add('inspections/:id/form', Views.inspectionForm, { public: true });
 })();

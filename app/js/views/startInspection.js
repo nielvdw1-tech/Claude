@@ -17,8 +17,16 @@ Views.startInspection = function (params) {
   const template = DB.getById('inspection_templates', asset.template_id);
   const questionCount = template ? DB.query('template_questions', q => q.template_id === template.id && q.active).length : 0;
 
+  let inspectors = [];
+  if (!user) {
+    inspectors = DB.query('users', u => u.active && (u.role === 'Inspector' || u.role === 'Manager') && u.branch_id === asset.branch_id);
+    if (!inspectors.length) {
+      inspectors = DB.query('users', u => u.active && (u.role === 'Inspector' || u.role === 'Manager'));
+    }
+  }
+
   App.renderContent(`
-    <div class="breadcrumbs"><a href="#/assets/${asset.id}">&larr; Back to Asset</a></div>
+    ${user ? `<div class="breadcrumbs"><a href="#/assets/${asset.id}">&larr; Back to Asset</a></div>` : ''}
     <div class="card" style="max-width:560px;">
       <div class="section-header"><h2>${UI.escapeHtml(asset.asset_name)}</h2></div>
       <div class="kv-list">
@@ -36,7 +44,16 @@ Views.startInspection = function (params) {
         </div>
         <a class="btn btn-primary btn-lg" style="margin-top:14px;" href="#/inspections/${inProgress.id}/form">Continue Inspection</a>
       ` : `
-        <button class="btn btn-primary btn-lg" id="startBtn" style="margin-top:18px;" ${!template ? 'disabled' : ''}>Start Inspection</button>
+        ${!user ? `
+          <div class="form-group" style="margin-top:18px;">
+            <label for="inspectorSelect">Your Name (Inspector)</label>
+            <select class="form-control" id="inspectorSelect" ${!template ? 'disabled' : ''}>
+              <option value="">Select your name&hellip;</option>
+              ${inspectors.map(i => `<option value="${i.id}">${UI.escapeHtml(i.full_name)}</option>`).join('')}
+            </select>
+          </div>
+        ` : ''}
+        <button class="btn btn-primary btn-lg" id="startBtn" style="margin-top:8px;" ${!template ? 'disabled' : ''}>Start Inspection</button>
         ${!template ? '<p class="form-hint" style="margin-top:8px;">This asset has no inspection template assigned. Contact your administrator.</p>' : ''}
       `}
     </div>
@@ -45,12 +62,21 @@ Views.startInspection = function (params) {
   const startBtn = document.getElementById('startBtn');
   if (startBtn) {
     startBtn.addEventListener('click', () => {
-      const inspection = Automations.startInspection(asset.id, user.id);
+      let inspectorId = user ? user.id : null;
+      if (!user) {
+        const select = document.getElementById('inspectorSelect');
+        inspectorId = select.value ? Number(select.value) : null;
+        if (!inspectorId) {
+          UI.toast('Please select your name before starting the inspection', 'error');
+          return;
+        }
+      }
+      const inspection = Automations.startInspection(asset.id, inspectorId);
       UI.toast('Inspection started', 'success');
       window.location.hash = `#/inspections/${inspection.id}/form`;
     });
   }
 };
 
-Router.add('start-inspection/:id', Views.startInspection);
+Router.add('start-inspection/:id', Views.startInspection, { public: true });
 })();

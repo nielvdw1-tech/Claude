@@ -10,6 +10,7 @@ Views.inspectionSummary = function (params) {
   }
 
   const asset = DB.getById('assets', inspection.asset_id);
+  const isAuthenticated = !!Auth.currentUser();
   App.setTitle('Inspection Summary', `${inspection.inspection_number} — ${asset.asset_name}`);
 
   const items = DB.query('inspection_items', i => i.inspection_id === inspection.id);
@@ -19,7 +20,7 @@ Views.inspectionSummary = function (params) {
   const scoreColor = score === null || score === undefined ? '#6b7785' : score >= 90 ? '#1e8e5a' : score >= 70 ? '#d97706' : '#c0392b';
 
   App.renderContent(`
-    <div class="breadcrumbs"><a href="#/assets/${asset.id}">&larr; Back to Asset</a></div>
+    ${isAuthenticated ? `<div class="breadcrumbs"><a href="#/assets/${asset.id}">&larr; Back to Asset</a></div>` : ''}
 
     <div class="grid grid-2">
       <div class="card">
@@ -82,12 +83,16 @@ Views.inspectionSummary = function (params) {
       </div>
     </div>` : ''}
 
+    ${isAuthenticated ? `
     <div style="display:flex;gap:10px;flex-wrap:wrap;">
       <a class="btn btn-outline" href="#/assets/${asset.id}">Back to Asset</a>
       <a class="btn btn-primary" href="#/inspections">View All Inspections</a>
-    </div>
+    </div>` : `
+    <div class="card" style="text-align:center;">
+      <p style="font-weight:700;color:var(--green);margin:0;">Thank you. Your inspection has been submitted.</p>
+    </div>`}
   `);
 };
 
-Router.add('inspections/:id/summary', Views.inspectionSummary);
+Router.add('inspections/:id/summary', Views.inspectionSummary, { public: true });
 })();
