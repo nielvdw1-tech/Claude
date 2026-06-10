@@ -120,6 +120,15 @@ const UI = {
     return window.location.origin + window.location.pathname + '#/start-inspection/' + assetId;
   },
 
+  readFileAsDataURL(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  },
+
   // Generic modal form. fields: [{name,label,type:'text'|'select'|'date'|'number'|'textarea'|'checkbox', required, options:[{value,label}]}]
   openFormModal(title, fields, initialValues = {}, onSubmit) {
     const backdrop = document.createElement('div');
@@ -146,6 +155,14 @@ const UI = {
           <label><input type="checkbox" id="f_${f.name}" name="${f.name}" ${val ? 'checked' : ''}> ${UI.escapeHtml(f.label)}</label>
         </div>`;
       }
+      if (f.type === 'file') {
+        return `<div class="form-group">
+          <label for="f_${f.name}">${UI.escapeHtml(f.label)}</label>
+          ${val ? `<div style="margin-bottom:8px;"><img src="${val}" alt="" style="max-height:60px;max-width:160px;display:block;border:1px solid var(--border);border-radius:4px;padding:4px;"></div>` : ''}
+          <input type="file" class="form-control" id="f_${f.name}" name="${f.name}" accept="${f.accept || '*'}">
+          ${f.hint ? `<p class="form-hint" style="margin:4px 0 0;">${UI.escapeHtml(f.hint)}</p>` : ''}
+        </div>`;
+      }
       return `<div class="form-group">
         <label for="f_${f.name}">${UI.escapeHtml(f.label)}</label>
         <input class="form-control" type="${f.type || 'text'}" id="f_${f.name}" name="${f.name}" value="${UI.escapeHtml(val)}" ${f.required ? 'required' : ''} ${f.step ? `step="${f.step}"` : ''}>
@@ -168,19 +185,21 @@ const UI = {
       if (e.target === backdrop || e.target.dataset.action === 'cancel') backdrop.remove();
     });
 
-    backdrop.querySelector('#modalForm').addEventListener('submit', (e) => {
+    backdrop.querySelector('#modalForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const result = {};
-      fields.forEach(f => {
+      for (const f of fields) {
         const el = backdrop.querySelector(`#f_${f.name}`);
         if (f.type === 'checkbox') {
           result[f.name] = el.checked;
         } else if (f.type === 'number') {
           result[f.name] = el.value === '' ? null : Number(el.value);
+        } else if (f.type === 'file') {
+          result[f.name] = el.files && el.files[0] ? await UI.readFileAsDataURL(el.files[0]) : (initialValues[f.name] || null);
         } else {
           result[f.name] = el.value;
         }
-      });
+      }
       backdrop.remove();
       onSubmit(result);
     });

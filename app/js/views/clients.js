@@ -78,7 +78,8 @@ function openClientForm(client) {
     { name: 'contact_email', label: 'Contact Email', type: 'email', required: true },
     { name: 'contact_phone', label: 'Contact Phone' },
     { name: 'contract_end_date', label: 'Contract End Date', type: 'date' },
-    { name: 'status', label: 'Status', type: 'select', options: [{ value: 'Active', label: 'Active' }, { value: 'Inactive', label: 'Inactive' }] }
+    { name: 'status', label: 'Status', type: 'select', options: [{ value: 'Active', label: 'Active' }, { value: 'Inactive', label: 'Inactive' }] },
+    { name: 'logo_url', label: 'Client Logo', type: 'file', accept: 'image/*', hint: 'Shown on PDF reports generated for this client.' }
   ];
 
   UI.openFormModal(client ? 'Edit Client' : 'Add Client', fields, client || { status: 'Active' }, (values) => {

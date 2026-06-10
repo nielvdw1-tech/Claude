@@ -82,9 +82,9 @@ function render(user, isOwner, accessibleClients) {
     <div class="section-header">
       <h2>Compliance Reports</h2>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="btn btn-outline btn-sm" id="exportAssetsBtn">Export Assets CSV</button>
-        <button class="btn btn-outline btn-sm" id="exportCarsBtn">Export CARs CSV</button>
-        <button class="btn btn-outline btn-sm" id="exportInspectionsBtn">Export Inspections CSV</button>
+        <button class="btn btn-outline btn-sm" id="exportAssetsBtn">Export Assets PDF</button>
+        <button class="btn btn-outline btn-sm" id="exportCarsBtn">Export CARs PDF</button>
+        <button class="btn btn-outline btn-sm" id="exportInspectionsBtn">Export Inspections PDF</button>
       </div>
     </div>
 
@@ -206,40 +206,90 @@ function render(user, isOwner, accessibleClients) {
     render(user, isOwner, accessibleClients);
   });
 
-  document.getElementById('exportAssetsBtn').addEventListener('click', () => exportCSV('assets.csv', assets, [
-    'id', 'asset_name', 'asset_tag', 'serial_number', 'asset_type', 'compliance_status', 'last_inspection_date', 'next_inspection_date'
-  ]));
+  document.getElementById('exportAssetsBtn').addEventListener('click', () => exportPDF('Asset Register', 'assets.pdf', [
+    { key: 'asset_name', label: 'Asset' },
+    { key: 'asset_tag', label: 'Tag' },
+    { key: 'serial_number', label: 'Serial' },
+    { key: 'asset_type', label: 'Type' },
+    { key: 'compliance_status', label: 'Compliance' },
+    { key: 'last_inspection_date', label: 'Last Inspection' },
+    { key: 'next_inspection_date', label: 'Next Inspection' }
+  ], assets.map(a => ({
+    ...a,
+    last_inspection_date: UI.formatDate(a.last_inspection_date),
+    next_inspection_date: UI.formatDate(a.next_inspection_date)
+  }))));
 
-  document.getElementById('exportCarsBtn').addEventListener('click', () => exportCSV('corrective_actions.csv', cars, [
-    'car_number', 'asset_id', 'priority', 'issue_description', 'status', 'due_date', 'completion_date'
-  ]));
+  document.getElementById('exportCarsBtn').addEventListener('click', () => exportPDF('Corrective Actions', 'corrective_actions.pdf', [
+    { key: 'car_number', label: 'CAR #' },
+    { key: 'asset_name', label: 'Asset' },
+    { key: 'priority', label: 'Priority' },
+    { key: 'issue_description', label: 'Issue' },
+    { key: 'status', label: 'Status' },
+    { key: 'due_date', label: 'Due' },
+    { key: 'completion_date', label: 'Completed' }
+  ], cars.map(c => ({
+    ...c,
+    asset_name: UI.assetName(c.asset_id),
+    due_date: UI.formatDate(c.due_date),
+    completion_date: UI.formatDate(c.completion_date)
+  }))));
 
-  document.getElementById('exportInspectionsBtn').addEventListener('click', () => exportCSV('inspections.csv', inspectionRows.map(i => ({
+  document.getElementById('exportInspectionsBtn').addEventListener('click', () => exportPDF('Inspection Reports', 'inspections.pdf', [
+    { key: 'inspection_number', label: 'Inspection #' },
+    { key: 'asset_name', label: 'Asset' },
+    { key: 'branch_name', label: 'Branch' },
+    { key: 'client_name', label: 'Client' },
+    { key: 'inspector_name', label: 'Inspector' },
+    { key: 'inspection_date', label: 'Date' },
+    { key: 'status', label: 'Status' },
+    { key: 'compliance_score', label: 'Score' }
+  ], inspectionRows.map(i => ({
     ...i,
     asset_name: UI.assetName(i.asset_id),
     branch_name: UI.branchName(i.branch_id),
     client_name: UI.clientName(i.client_id),
-    inspector_name: UI.userName(i.inspector_id, i.inspector_name)
-  })), [
-    'inspection_number', 'asset_name', 'branch_name', 'client_name', 'inspector_name',
-    'inspection_date', 'completion_date', 'status', 'compliance_score', 'total_items', 'pass_count', 'fail_count'
-  ]));
+    inspector_name: UI.userName(i.inspector_id, i.inspector_name),
+    inspection_date: UI.formatDate(i.inspection_date),
+    compliance_score: i.compliance_score === null || i.compliance_score === undefined ? '—' : i.compliance_score + '%'
+  }))));
 }
 
-function exportCSV(filename, rows, columns) {
-  const header = columns.join(',');
-  const body = rows.map(r => columns.map(c => {
-    const val = r[c] === null || r[c] === undefined ? '' : String(r[c]).replace(/"/g, '""');
-    return `"${val}"`;
-  }).join(',')).join('\n');
-  const csv = header + '\n' + body;
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
+// Builds and downloads a PDF report, stamping the selected client's logo at the top if one is on file.
+function exportPDF(title, filename, columns, rows) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'landscape' });
+  const client = state.clientId ? DB.getById('clients', state.clientId) : null;
+
+  let titleX = 14;
+  if (client && client.logo_url) {
+    const format = (client.logo_url.match(/^data:image\/(\w+);/) || [, 'PNG'])[1].toUpperCase();
+    try {
+      doc.addImage(client.logo_url, format, 14, 8, 28, 16, undefined, 'FAST');
+      titleX = 48;
+    } catch (e) { /* unsupported image format - skip logo */ }
+  }
+
+  doc.setFontSize(16);
+  doc.text(title, titleX, 16);
+
+  doc.setFontSize(10);
+  doc.setTextColor(100);
+  const scope = `Client: ${client ? client.client_name : 'All Clients'}` +
+    (state.branchId ? ` | Branch: ${UI.branchName(state.branchId)}` : '') +
+    ` | Generated: ${UI.formatDateTime(Utils.nowISO())}`;
+  doc.text(scope, titleX, 23);
+  doc.setTextColor(0);
+
+  doc.autoTable({
+    startY: 30,
+    head: [columns.map(c => c.label)],
+    body: rows.map(r => columns.map(c => r[c.key] === null || r[c.key] === undefined ? '' : String(r[c.key]))),
+    styles: { fontSize: 8 },
+    headStyles: { fillColor: [16, 65, 110] }
+  });
+
+  doc.save(filename);
 }
 
 Router.add('reports', Views.reports, { roles: ['Owner', 'Admin', 'Manager'] });
