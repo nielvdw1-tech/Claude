@@ -150,11 +150,12 @@ button { font-family: inherit; }
 .topbar-left { display: flex; align-items: center; gap: 12px; }
 
 .menu-toggle {
+  display: none;
   background: var(--blue-light);
   border: 1px solid var(--border);
   border-radius: 8px;
   width: 40px; height: 40px;
-  display: flex; align-items: center; justify-content: center;
+  align-items: center; justify-content: center;
   cursor: pointer;
   color: var(--navy);
   font-size: 1.1rem;
@@ -590,6 +591,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
   .sidebar { transform: translateX(-100%); }
   .sidebar.open { transform: translateX(0); }
   .main-area { margin-left: 0; }
+  .menu-toggle { display: flex; }
 }
 
 .app-shell-public .main-area { margin-left: 0; }
