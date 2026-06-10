@@ -8,14 +8,15 @@ Views.reports = function () {
 
   const user = Auth.currentUser();
   const isOwner = user.role === 'Owner';
-  const accessibleClients = isOwner ? DB.getAll('clients') : DB.query('clients', c => c.id === user.client_id);
+  const viewClientId = Auth.viewClientId();
+  const accessibleClients = viewClientId ? DB.query('clients', c => c.id === viewClientId) : DB.getAll('clients');
 
   state = {
-    clientId: isOwner ? null : (accessibleClients[0] ? accessibleClients[0].id : null),
+    clientId: viewClientId || (isOwner ? null : (accessibleClients[0] ? accessibleClients[0].id : null)),
     branchId: null
   };
 
-  render(user, isOwner, accessibleClients);
+  render(user, isOwner && !viewClientId, accessibleClients);
 };
 
 function render(user, isOwner, accessibleClients) {

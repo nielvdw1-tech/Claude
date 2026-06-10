@@ -9,7 +9,8 @@ Views.clients = function () {
 function render() {
   const user = Auth.currentUser();
   const isOwner = user.role === 'Owner';
-  const clients = isOwner ? DB.getAll('clients') : DB.query('clients', c => c.id === user.client_id);
+  const viewClientId = Auth.viewClientId();
+  const clients = viewClientId ? DB.query('clients', c => c.id === viewClientId) : DB.getAll('clients');
 
   const today = Utils.todayISO();
   const rows = clients.map(c => {
@@ -38,12 +39,12 @@ function render() {
       </tr>`;
   }).join('');
 
-  const expiring = Metrics.expiringClients(30, isOwner ? {} : { clientId: user.client_id });
+  const expiring = Metrics.expiringClients(30, viewClientId ? { clientId: viewClientId } : {});
 
   App.renderContent(`
     <div class="section-header">
-      <h2>${isOwner ? 'All Clients' : 'My Client'}</h2>
-      ${isOwner ? '<button class="btn btn-primary" id="addClientBtn">+ Add Client</button>' : ''}
+      <h2>${viewClientId ? 'My Client' : 'All Clients'}</h2>
+      ${isOwner && !viewClientId ? '<button class="btn btn-primary" id="addClientBtn">+ Add Client</button>' : ''}
     </div>
     ${expiring.length ? `
     <div class="card" style="border-color:var(--orange);background:var(--orange-bg);">

@@ -9,10 +9,11 @@ Views.branches = function () {
 function render() {
   const user = Auth.currentUser();
   let branches = DB.getAll('branches');
+  const viewClientId = Auth.viewClientId();
   if (user.role === 'Manager') branches = branches.filter(b => b.id === user.branch_id);
-  else if (user.role !== 'Owner' && user.client_id) branches = branches.filter(b => b.client_id === user.client_id);
+  else if (viewClientId) branches = branches.filter(b => b.client_id === viewClientId);
 
-  const clientOptions = (user.role === 'Owner' ? DB.getAll('clients') : DB.query('clients', c => c.id === user.client_id))
+  const clientOptions = (user.role === 'Owner' && !viewClientId ? DB.getAll('clients') : DB.query('clients', c => c.id === viewClientId))
     .map(c => ({ value: c.id, label: c.client_name }));
   const managerOptions = DB.getAll('users').filter(u => u.role === 'Manager').map(u => ({ value: u.id, label: u.full_name }));
 
@@ -34,7 +35,7 @@ function render() {
 
   App.renderContent(`
     <div class="section-header">
-      <h2>${user.role === 'Manager' ? 'My Branch' : 'All Branches / Sites'}</h2>
+      <h2>${user.role === 'Manager' ? 'My Branch' : viewClientId ? `Branches &mdash; ${UI.escapeHtml(UI.clientName(viewClientId))}` : 'All Branches / Sites'}</h2>
       ${(user.role === 'Admin' || user.role === 'Owner') ? '<button class="btn btn-primary" id="addBranchBtn">+ Add Branch</button>' : ''}
     </div>
     <div class="card">

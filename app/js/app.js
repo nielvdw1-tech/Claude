@@ -61,6 +61,11 @@ const App = {
               </div>
             </div>
             <div class="user-pill">
+              ${user.role === 'Owner' ? `
+              <select class="form-control" id="ownerClientFilter" style="max-width:200px;">
+                <option value="">All Clients</option>
+                ${DB.getAll('clients').map(c => `<option value="${c.id}" ${String(Auth.viewClientId()) === String(c.id) ? 'selected' : ''}>${UI.escapeHtml(c.client_name)}</option>`).join('')}
+              </select>` : ''}
               <span class="avatar">${initials}</span>
               <span>${UI.escapeHtml(user.full_name)}</span>
               <button class="btn btn-outline btn-sm" id="logoutBtn" style="margin-left:6px;">Logout</button>
@@ -79,6 +84,15 @@ const App = {
       Auth.logout();
       window.location.hash = '#/login';
     });
+
+    const ownerFilter = document.getElementById('ownerClientFilter');
+    if (ownerFilter) {
+      ownerFilter.addEventListener('change', (e) => {
+        if (e.target.value) sessionStorage.setItem('ownerClientFilter', e.target.value);
+        else sessionStorage.removeItem('ownerClientFilter');
+        Router.resolve();
+      });
+    }
   },
 
   renderPublicShell() {

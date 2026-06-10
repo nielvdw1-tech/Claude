@@ -14,10 +14,11 @@ function render() {
   let branches = DB.getAll('branches');
   let clients = DB.getAll('clients');
 
-  if (!isOwner) {
-    users = users.filter(u => u.client_id === currentUser.client_id);
-    branches = branches.filter(b => b.client_id === currentUser.client_id);
-    clients = clients.filter(c => c.id === currentUser.client_id);
+  const viewClientId = Auth.viewClientId();
+  if (viewClientId) {
+    users = users.filter(u => u.client_id === viewClientId);
+    branches = branches.filter(b => b.client_id === viewClientId);
+    clients = clients.filter(c => c.id === viewClientId);
   }
 
   const rows = users.map(u => {

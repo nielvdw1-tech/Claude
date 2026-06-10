@@ -153,6 +153,7 @@ const Auth = {
 
   logout() {
     sessionStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem('ownerClientFilter');
   },
 
   currentUser() {
@@ -164,6 +165,18 @@ const Auth = {
 
   isAuthenticated() {
     return !!this.currentUser();
+  },
+
+  // For Owners, returns the client they've chosen to focus on (or null for "All Clients").
+  // For other roles, returns their assigned client_id (or null).
+  viewClientId() {
+    const user = this.currentUser();
+    if (!user) return null;
+    if (user.role === 'Owner') {
+      const sel = sessionStorage.getItem('ownerClientFilter');
+      return sel ? Number(sel) : null;
+    }
+    return user.client_id || null;
   }
 };
 

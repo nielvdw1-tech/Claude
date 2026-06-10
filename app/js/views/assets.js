@@ -8,9 +8,9 @@ Views.assets = function () {
 
 function scopedAssets(user) {
   let assets = DB.getAll('assets');
-  if (user.role === 'Owner') return assets;
-  if (user.client_id) assets = assets.filter(a => a.client_id === user.client_id);
-  if (user.role !== 'Admin' && user.branch_id) {
+  const viewClientId = Auth.viewClientId();
+  if (viewClientId) assets = assets.filter(a => a.client_id === viewClientId);
+  if (user.role !== 'Owner' && user.role !== 'Admin' && user.branch_id) {
     assets = assets.filter(a => a.branch_id === user.branch_id);
   }
   return assets;
@@ -28,7 +28,9 @@ function render(filters) {
     assets = assets.filter(a => a.asset_name.toLowerCase().includes(q) || a.asset_tag.toLowerCase().includes(q) || a.serial_number.toLowerCase().includes(q));
   }
 
-  const branches = user.role === 'Owner' ? DB.getAll('branches')
+  const viewClientId = Auth.viewClientId();
+  const branches = user.role === 'Owner'
+    ? (viewClientId ? DB.query('branches', b => b.client_id === viewClientId) : DB.getAll('branches'))
     : user.role === 'Admin' ? DB.query('branches', b => b.client_id === user.client_id)
     : DB.query('branches', b => b.id === user.branch_id);
   const clients = DB.getAll('clients');
@@ -57,7 +59,7 @@ function render(filters) {
     <div class="card">
       <div class="toolbar">
         <input class="form-control" id="searchInput" placeholder="Search by name, tag or serial number..." value="${UI.escapeHtml(filters.search || '')}" style="min-width:240px;">
-        ${user.role === 'Owner' ? `
+        ${user.role === 'Owner' && !viewClientId ? `
         <select class="form-control" id="clientFilter">
           <option value="">All Clients</option>
           ${clients.map(c => `<option value="${c.id}" ${String(filters.clientId) === String(c.id) ? 'selected' : ''}>${UI.escapeHtml(c.client_name)}</option>`).join('')}

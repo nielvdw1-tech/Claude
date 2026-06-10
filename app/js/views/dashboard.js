@@ -6,10 +6,10 @@ Views.dashboard = function () {
   App.setTitle('Dashboard', `Welcome back, ${user.full_name.split(' ')[0]}`);
 
   if (user.role === 'Owner') {
-    const selected = sessionStorage.getItem('dashboardClientFilter') || '';
-    return renderAdminDashboard(selected ? { clientId: Number(selected) } : {}, true);
+    const clientId = Auth.viewClientId();
+    return renderAdminDashboard(clientId ? { clientId } : {});
   }
-  if (user.role === 'Admin') return renderAdminDashboard({ clientId: user.client_id }, false);
+  if (user.role === 'Admin') return renderAdminDashboard({ clientId: user.client_id });
   if (user.role === 'Manager') return renderManagerDashboard(user);
   return renderInspectorDashboard(user);
 };
@@ -22,24 +22,13 @@ function statCard(label, value, type = '') {
     </div>`;
 }
 
-function renderAdminDashboard(scope, isOwnerRole) {
+function renderAdminDashboard(scope) {
   const m = Metrics.dashboardMetrics(scope);
   const branchPerf = Metrics.branchPerformance(scope);
   const isOwner = !scope.clientId;
   const expiring = Metrics.expiringClients(30, scope);
-  const clients = isOwnerRole ? DB.getAll('clients') : [];
 
   const html = `
-    ${isOwnerRole ? `
-    <div class="card" style="margin-bottom:16px;">
-      <div class="toolbar">
-        <label for="dashClientFilter" style="font-weight:600;">Viewing:</label>
-        <select class="form-control" id="dashClientFilter" style="max-width:280px;">
-          <option value="">All Clients</option>
-          ${clients.map(c => `<option value="${c.id}" ${String(scope.clientId) === String(c.id) ? 'selected' : ''}>${UI.escapeHtml(c.client_name)}</option>`).join('')}
-        </select>
-      </div>
-    </div>` : ''}
     ${expiring.length ? `
     <div class="card" style="border-color:var(--orange);background:var(--orange-bg);margin-bottom:16px;">
       <div class="section-header"><h2>Contract Expiry Notice</h2></div>
@@ -93,14 +82,6 @@ function renderAdminDashboard(scope, isOwnerRole) {
     </div>
   `;
   App.renderContent(html);
-
-  if (isOwnerRole) {
-    document.getElementById('dashClientFilter').addEventListener('change', (e) => {
-      if (e.target.value) sessionStorage.setItem('dashboardClientFilter', e.target.value);
-      else sessionStorage.removeItem('dashboardClientFilter');
-      Views.dashboard();
-    });
-  }
 }
 
 function renderManagerDashboard(user) {
