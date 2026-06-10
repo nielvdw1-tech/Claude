@@ -15,6 +15,17 @@ const App = {
     { path: 'settings', label: 'Settings', icon: '&#9881;', roles: ['Owner', 'Admin'] }
   ],
 
+  scopeForUser(user) {
+    if (user.role === 'Manager') return { branchId: user.branch_id };
+    if (user.role === 'Admin') return { clientId: user.client_id };
+    const viewClientId = Auth.viewClientId();
+    return viewClientId ? { clientId: viewClientId } : {};
+  },
+
+  openCARsCount(user) {
+    return Metrics.dashboardMetrics(this.scopeForUser(user)).openCARs;
+  },
+
   renderShell() {
     const root = document.getElementById('root');
     const user = Auth.currentUser();
@@ -33,7 +44,9 @@ const App = {
       }
       if (!item.roles.includes(user.role)) return '';
       const active = item.path === currentPath ? 'active' : '';
-      return `<a href="#/${item.path}" class="${active}"><span aria-hidden="true">${item.icon}</span> ${item.label}</a>`;
+      const badge = item.path === 'cars' && this.openCARsCount(user) > 0
+        ? `<span class="badge badge-red" style="margin-left:auto;">${this.openCARsCount(user)}</span>` : '';
+      return `<a href="#/${item.path}" class="${active}" style="display:flex;align-items:center;"><span aria-hidden="true">${item.icon}</span> ${item.label} ${badge}</a>`;
     }).join('');
 
     const initials = user.full_name.split(' ').map(p => p[0]).join('').slice(0, 2).toUpperCase();

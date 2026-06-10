@@ -21,6 +21,19 @@ function statCard(label, value, type = '') {
     </div>`;
 }
 
+function newCarsNotice(scope) {
+  const newCars = Metrics.newCorrectiveActions(Auth.previousLogin(), scope);
+  if (!newCars.length) return '';
+  return `
+    <div class="card" style="border-color:var(--red);background:var(--red-bg);margin-bottom:16px;">
+      <div class="section-header"><h2>New Corrective Actions Since Your Last Login</h2></div>
+      <ul style="margin:0;padding-left:18px;">
+        ${newCars.map(c => `<li>${UI.priorityBadge(c.priority)} <a href="#/cars/${c.id}">${UI.escapeHtml(c.car_number)}</a> &mdash; ${UI.escapeHtml(UI.assetName(c.asset_id))}: ${UI.escapeHtml(c.issue_description)}</li>`).join('')}
+      </ul>
+      <p style="margin:8px 0 0;"><a href="#/cars">View Corrective Actions</a></p>
+    </div>`;
+}
+
 function renderAdminDashboard(scope) {
   const m = Metrics.dashboardMetrics(scope);
   const branchPerf = Metrics.branchPerformance(scope);
@@ -28,6 +41,7 @@ function renderAdminDashboard(scope) {
   const expiring = Metrics.expiringClients(30, scope);
 
   const html = `
+    ${newCarsNotice(scope)}
     ${expiring.length ? `
     <div class="card" style="border-color:var(--orange);background:var(--orange-bg);margin-bottom:16px;">
       <div class="section-header"><h2>Contract Expiry Notice</h2></div>
@@ -93,6 +107,7 @@ function renderManagerDashboard(user) {
   const dueSoon = branchAssets.filter(a => a.next_inspection_date <= Utils.todayISO(7));
 
   const html = `
+    ${newCarsNotice({ branchId: user.branch_id })}
     <div class="grid grid-4">
       ${statCard('Branch Assets', m.totalAssets)}
       ${statCard('Inspections', m.totalInspections)}

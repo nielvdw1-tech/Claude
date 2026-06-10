@@ -146,8 +146,9 @@ const Auth = {
   login(email, password) {
     const user = DB.query('users', u => u.email.toLowerCase() === email.toLowerCase() && u.password === password && u.active)[0];
     if (!user) return null;
+    const previousLogin = user.last_login;
     DB.update('users', user.id, { last_login: nowISO() });
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify({ userId: user.id }));
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify({ userId: user.id, previousLogin }));
     return user;
   },
 
@@ -161,6 +162,13 @@ const Auth = {
     if (!raw) return null;
     const { userId } = JSON.parse(raw);
     return DB.getById('users', userId);
+  },
+
+  // The signed-in user's last_login value before this session started (null on first-ever login).
+  previousLogin() {
+    const raw = sessionStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw).previousLogin || null;
   },
 
   isAuthenticated() {
@@ -384,6 +392,21 @@ const Metrics = {
         compliance: this.computeCompliancePercentage(inspections)
       };
     });
+  },
+
+  // Corrective actions raised since the given timestamp (e.g. the user's previous login), scoped by client/branch.
+  newCorrectiveActions(sinceISO, scope = {}) {
+    if (!sinceISO) return [];
+    let cars = DB.getAll('corrective_actions').filter(c => c.created_at > sinceISO);
+    if (scope.clientId) {
+      const assetIds = DB.query('assets', a => a.client_id === scope.clientId).map(a => a.id);
+      cars = cars.filter(c => assetIds.includes(c.asset_id));
+    }
+    if (scope.branchId) {
+      const assetIds = DB.query('assets', a => a.branch_id === scope.branchId).map(a => a.id);
+      cars = cars.filter(c => assetIds.includes(c.asset_id));
+    }
+    return cars.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   },
 
   expiringClients(daysAhead = 30, scope = {}) {
