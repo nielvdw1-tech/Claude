@@ -3,14 +3,26 @@
 
 Views.dashboard = function () {
   const user = Auth.currentUser();
+
+  if (user.role === 'Manager') {
+    App.setTitle('Dashboard', `Welcome back, ${user.full_name.split(' ')[0]}`);
+    return renderManagerDashboard(user.branch_id);
+  }
+
+  const viewBranchId = Auth.viewBranchId();
+  if (viewBranchId) {
+    const branch = DB.getById('branches', viewBranchId);
+    App.setTitle('Dashboard', `Viewing ${branch ? branch.branch_name : 'branch'} dashboard`);
+    return renderManagerDashboard(viewBranchId);
+  }
+
   App.setTitle('Dashboard', `Welcome back, ${user.full_name.split(' ')[0]}`);
 
   if (user.role === 'Owner') {
     const clientId = Auth.viewClientId();
     return renderAdminDashboard(clientId ? { clientId } : {});
   }
-  if (user.role === 'Admin') return renderAdminDashboard({ clientId: user.client_id });
-  return renderManagerDashboard(user);
+  return renderAdminDashboard({ clientId: user.client_id });
 };
 
 function statCard(label, value, type = '') {
@@ -97,17 +109,17 @@ function renderAdminDashboard(scope) {
   App.renderContent(html);
 }
 
-function renderManagerDashboard(user) {
-  const branch = DB.getById('branches', user.branch_id);
-  const m = Metrics.dashboardMetrics({ branchId: user.branch_id });
-  const inspections = DB.query('inspections', i => i.branch_id === user.branch_id);
+function renderManagerDashboard(branchId) {
+  const branch = DB.getById('branches', branchId);
+  const m = Metrics.dashboardMetrics({ branchId });
+  const inspections = DB.query('inspections', i => i.branch_id === branchId);
   const pending = inspections.filter(i => i.status === 'In Progress' || i.status === 'Overdue');
   const recent = [...inspections].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 5);
-  const branchAssets = DB.query('assets', a => a.branch_id === user.branch_id);
+  const branchAssets = DB.query('assets', a => a.branch_id === branchId);
   const dueSoon = branchAssets.filter(a => a.next_inspection_date <= Utils.todayISO(7));
 
   const html = `
-    ${newCarsNotice({ branchId: user.branch_id })}
+    ${newCarsNotice({ branchId })}
     <div class="grid grid-4">
       ${statCard('Branch Assets', m.totalAssets)}
       ${statCard('Inspections', m.totalInspections)}

@@ -16,6 +16,16 @@ function render(filters) {
   const assetIds = assets.map(a => a.id);
   docs = docs.filter(d => !d.asset_id || assetIds.includes(d.asset_id));
 
+  const branches = user.role === 'Owner'
+    ? (viewClientId ? DB.query('branches', b => b.client_id === viewClientId) : DB.getAll('branches'))
+    : user.role === 'Admin' ? DB.query('branches', b => b.client_id === user.client_id)
+    : [];
+
+  if (filters.branchId) {
+    assets = assets.filter(a => a.branch_id === Number(filters.branchId));
+    const branchAssetIds = assets.map(a => a.id);
+    docs = docs.filter(d => d.asset_id && branchAssetIds.includes(d.asset_id));
+  }
   if (filters.assetId) docs = docs.filter(d => d.asset_id === Number(filters.assetId));
   if (filters.type) docs = docs.filter(d => d.document_type === filters.type);
 
@@ -61,6 +71,11 @@ function render(filters) {
     </div>` : ''}
     <div class="card">
       <div class="toolbar">
+        ${branches.length ? `
+        <select class="form-control" id="branchFilter">
+          <option value="">All Branches</option>
+          ${branches.map(b => `<option value="${b.id}" ${String(filters.branchId) === String(b.id) ? 'selected' : ''}>${UI.escapeHtml(b.branch_name)}</option>`).join('')}
+        </select>` : ''}
         <select class="form-control" id="assetFilter">
           <option value="">All Assets</option>
           ${assets.map(a => `<option value="${a.id}" ${String(filters.assetId) === String(a.id) ? 'selected' : ''}>${UI.escapeHtml(a.asset_name)}</option>`).join('')}
@@ -81,6 +96,8 @@ function render(filters) {
 
   document.getElementById('assetFilter').addEventListener('change', (e) => render({ ...filters, assetId: e.target.value }));
   document.getElementById('typeFilter').addEventListener('change', (e) => render({ ...filters, type: e.target.value }));
+  const branchFilter = document.getElementById('branchFilter');
+  if (branchFilter) branchFilter.addEventListener('change', (e) => render({ ...filters, branchId: e.target.value }));
   document.getElementById('uploadBtn').addEventListener('click', () => openUploadModal(assets));
 }
 

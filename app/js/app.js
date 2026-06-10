@@ -26,6 +26,13 @@ const App = {
     return Metrics.dashboardMetrics(this.scopeForUser(user)).openCARs;
   },
 
+  // Branches the Owner/Admin can pick from for the dashboard branch switcher.
+  viewBranchOptions(user) {
+    if (user.role === 'Admin') return DB.query('branches', b => b.client_id === user.client_id);
+    const viewClientId = Auth.viewClientId();
+    return viewClientId ? DB.query('branches', b => b.client_id === viewClientId) : DB.getAll('branches');
+  },
+
   renderShell() {
     const root = document.getElementById('root');
     const user = Auth.currentUser();
@@ -79,6 +86,11 @@ const App = {
                 <option value="">All Clients</option>
                 ${DB.getAll('clients').map(c => `<option value="${c.id}" ${String(Auth.viewClientId()) === String(c.id) ? 'selected' : ''}>${UI.escapeHtml(c.client_name)}</option>`).join('')}
               </select>` : ''}
+              ${user.role === 'Owner' || user.role === 'Admin' ? `
+              <select class="form-control" id="viewBranchFilter" style="max-width:200px;">
+                <option value="">All Branches</option>
+                ${this.viewBranchOptions(user).map(b => `<option value="${b.id}" ${String(Auth.viewBranchId()) === String(b.id) ? 'selected' : ''}>${UI.escapeHtml(b.branch_name)}</option>`).join('')}
+              </select>` : ''}
               <span class="avatar">${initials}</span>
               <span>${UI.escapeHtml(user.full_name)}</span>
               <button class="btn btn-outline btn-sm" id="logoutBtn" style="margin-left:6px;">Logout</button>
@@ -103,6 +115,16 @@ const App = {
       ownerFilter.addEventListener('change', (e) => {
         if (e.target.value) sessionStorage.setItem('ownerClientFilter', e.target.value);
         else sessionStorage.removeItem('ownerClientFilter');
+        sessionStorage.removeItem('viewBranchFilter');
+        Router.resolve();
+      });
+    }
+
+    const branchFilter = document.getElementById('viewBranchFilter');
+    if (branchFilter) {
+      branchFilter.addEventListener('change', (e) => {
+        if (e.target.value) sessionStorage.setItem('viewBranchFilter', e.target.value);
+        else sessionStorage.removeItem('viewBranchFilter');
         Router.resolve();
       });
     }

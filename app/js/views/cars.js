@@ -25,6 +25,16 @@ function render(filters) {
   const user = Auth.currentUser();
   let cars = carScope(user).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
+  const viewClientId = Auth.viewClientId();
+  const branches = user.role === 'Owner'
+    ? (viewClientId ? DB.query('branches', b => b.client_id === viewClientId) : DB.getAll('branches'))
+    : user.role === 'Admin' ? DB.query('branches', b => b.client_id === user.client_id)
+    : [];
+
+  if (filters.branchId) {
+    const branchAssetIds = DB.query('assets', a => a.branch_id === Number(filters.branchId)).map(a => a.id);
+    cars = cars.filter(c => branchAssetIds.includes(c.asset_id));
+  }
   if (filters.status) cars = cars.filter(c => c.status === filters.status);
   if (filters.priority) cars = cars.filter(c => c.priority === filters.priority);
 
@@ -53,6 +63,11 @@ function render(filters) {
     <div class="card">
       <div class="section-header"><h2>Corrective Actions (${cars.length})</h2></div>
       <div class="toolbar">
+        ${branches.length ? `
+        <select class="form-control" id="branchFilter">
+          <option value="">All Branches</option>
+          ${branches.map(b => `<option value="${b.id}" ${String(filters.branchId) === String(b.id) ? 'selected' : ''}>${UI.escapeHtml(b.branch_name)}</option>`).join('')}
+        </select>` : ''}
         <select class="form-control" id="statusFilter">
           <option value="">All Statuses</option>
           <option value="Open" ${filters.status === 'Open' ? 'selected' : ''}>Open</option>
@@ -79,6 +94,8 @@ function render(filters) {
 
   document.getElementById('statusFilter').addEventListener('change', (e) => render({ ...filters, status: e.target.value }));
   document.getElementById('priorityFilter').addEventListener('change', (e) => render({ ...filters, priority: e.target.value }));
+  const branchFilter = document.getElementById('branchFilter');
+  if (branchFilter) branchFilter.addEventListener('change', (e) => render({ ...filters, branchId: e.target.value }));
 }
 
 Router.add('cars', Views.cars);

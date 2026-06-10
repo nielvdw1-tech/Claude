@@ -185,6 +185,14 @@ const Auth = {
       return sel ? Number(sel) : null;
     }
     return user.client_id || null;
+  },
+
+  // For Owners and Admins, returns the branch they've chosen to focus on (or null for "All Branches").
+  viewBranchId() {
+    const user = this.currentUser();
+    if (!user || (user.role !== 'Owner' && user.role !== 'Admin')) return null;
+    const sel = sessionStorage.getItem('viewBranchFilter');
+    return sel ? Number(sel) : null;
   }
 };
 

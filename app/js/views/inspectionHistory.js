@@ -20,6 +20,13 @@ function render(filters) {
   const user = Auth.currentUser();
   let inspections = inspectionScope(user).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
+  const viewClientId = Auth.viewClientId();
+  const branches = user.role === 'Owner'
+    ? (viewClientId ? DB.query('branches', b => b.client_id === viewClientId) : DB.getAll('branches'))
+    : user.role === 'Admin' ? DB.query('branches', b => b.client_id === user.client_id)
+    : [];
+
+  if (filters.branchId) inspections = inspections.filter(i => i.branch_id === Number(filters.branchId));
   if (filters.status) inspections = inspections.filter(i => i.status === filters.status);
   if (filters.search) {
     const q = filters.search.toLowerCase();
@@ -49,6 +56,11 @@ function render(filters) {
     <div class="card">
       <div class="toolbar">
         <input class="form-control" id="searchInput" placeholder="Search by inspection # or asset..." value="${UI.escapeHtml(filters.search || '')}" style="min-width:240px;">
+        ${branches.length ? `
+        <select class="form-control" id="branchFilter">
+          <option value="">All Branches</option>
+          ${branches.map(b => `<option value="${b.id}" ${String(filters.branchId) === String(b.id) ? 'selected' : ''}>${UI.escapeHtml(b.branch_name)}</option>`).join('')}
+        </select>` : ''}
         <select class="form-control" id="statusFilter">
           <option value="">All Statuses</option>
           <option value="In Progress" ${filters.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
@@ -68,6 +80,8 @@ function render(filters) {
 
   document.getElementById('searchInput').addEventListener('input', (e) => render({ ...filters, search: e.target.value }));
   document.getElementById('statusFilter').addEventListener('change', (e) => render({ ...filters, status: e.target.value }));
+  const branchFilter = document.getElementById('branchFilter');
+  if (branchFilter) branchFilter.addEventListener('change', (e) => render({ ...filters, branchId: e.target.value }));
 }
 
 Router.add('inspections', Views.inspectionHistory);
