@@ -17,14 +17,6 @@ Views.startInspection = function (params) {
   const template = DB.getById('inspection_templates', asset.template_id);
   const questionCount = template ? DB.query('template_questions', q => q.template_id === template.id && q.active).length : 0;
 
-  let inspectors = [];
-  if (!user) {
-    inspectors = DB.query('users', u => u.active && (u.role === 'Inspector' || u.role === 'Manager') && u.branch_id === asset.branch_id);
-    if (!inspectors.length) {
-      inspectors = DB.query('users', u => u.active && (u.role === 'Inspector' || u.role === 'Manager'));
-    }
-  }
-
   App.renderContent(`
     ${user ? `<div class="breadcrumbs"><a href="#/assets/${asset.id}">&larr; Back to Asset</a></div>` : ''}
     <div class="card" style="max-width:560px;">
@@ -46,11 +38,8 @@ Views.startInspection = function (params) {
       ` : `
         ${!user ? `
           <div class="form-group" style="margin-top:18px;">
-            <label for="inspectorSelect">Your Name (Inspector)</label>
-            <select class="form-control" id="inspectorSelect" ${!template ? 'disabled' : ''}>
-              <option value="">Select your name&hellip;</option>
-              ${inspectors.map(i => `<option value="${i.id}">${UI.escapeHtml(i.full_name)}</option>`).join('')}
-            </select>
+            <label for="inspectorName">Your Name (Inspector)</label>
+            <input type="text" class="form-control" id="inspectorName" placeholder="Enter your full name" ${!template ? 'disabled' : ''}>
           </div>
         ` : ''}
         <button class="btn btn-primary btn-lg" id="startBtn" style="margin-top:8px;" ${!template ? 'disabled' : ''}>Start Inspection</button>
@@ -63,15 +52,16 @@ Views.startInspection = function (params) {
   if (startBtn) {
     startBtn.addEventListener('click', () => {
       let inspectorId = user ? user.id : null;
+      let inspectorName = null;
       if (!user) {
-        const select = document.getElementById('inspectorSelect');
-        inspectorId = select.value ? Number(select.value) : null;
-        if (!inspectorId) {
-          UI.toast('Please select your name before starting the inspection', 'error');
+        const input = document.getElementById('inspectorName');
+        inspectorName = input.value.trim();
+        if (!inspectorName) {
+          UI.toast('Please enter your name before starting the inspection', 'error');
           return;
         }
       }
-      const inspection = Automations.startInspection(asset.id, inspectorId);
+      const inspection = Automations.startInspection(asset.id, inspectorId, inspectorName);
       UI.toast('Inspection started', 'success');
       window.location.hash = `#/inspections/${inspection.id}/form`;
     });

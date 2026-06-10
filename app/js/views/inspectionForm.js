@@ -19,6 +19,16 @@ Views.inspectionForm = function (params) {
   App.setTitle('Inspection Form', `${inspection.inspection_number} — ${asset.asset_name}`);
   render();
 
+  function renderPreservingScroll(itemId) {
+    const card = document.getElementById(`item-${itemId}`);
+    const before = card ? card.getBoundingClientRect().top : null;
+    render();
+    if (before !== null) {
+      const after = document.getElementById(`item-${itemId}`).getBoundingClientRect().top;
+      window.scrollTo(0, window.scrollY + (after - before));
+    }
+  }
+
   function render() {
     const items = DB.query('inspection_items', i => i.inspection_id === inspection.id);
     const completedCount = items.filter(i => i.result).length;
@@ -35,7 +45,7 @@ Views.inspectionForm = function (params) {
         </div>
         <div class="kv-list">
           <div class="k">Asset</div><div class="v">${UI.escapeHtml(asset.asset_name)} (${UI.escapeHtml(asset.asset_tag)})</div>
-          <div class="k">Inspector</div><div class="v">${UI.escapeHtml(UI.userName(inspection.inspector_id))}</div>
+          <div class="k">Inspector</div><div class="v">${UI.escapeHtml(UI.userName(inspection.inspector_id, inspection.inspector_name))}</div>
           <div class="k">Inspection Date</div><div class="v">${UI.formatDate(inspection.inspection_date)}</div>
         </div>
         <div style="margin-top:14px;">
@@ -63,7 +73,7 @@ Views.inspectionForm = function (params) {
         opt.addEventListener('click', () => {
           const result = opt.dataset.result;
           Automations.updateInspectionItem(item.id, { result });
-          render();
+          renderPreservingScroll(item.id);
         });
       });
 
@@ -80,7 +90,7 @@ Views.inspectionForm = function (params) {
           const reader = new FileReader();
           reader.onload = () => {
             Automations.updateInspectionItem(item.id, { photo: reader.result });
-            render();
+            renderPreservingScroll(item.id);
           };
           reader.readAsDataURL(file);
         });

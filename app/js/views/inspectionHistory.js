@@ -30,7 +30,7 @@ function render(filters) {
       <td>${UI.escapeHtml(i.inspection_number)}</td>
       <td>${UI.escapeHtml(UI.assetName(i.asset_id))}</td>
       <td>${UI.escapeHtml(UI.branchName(i.branch_id))}</td>
-      <td>${UI.escapeHtml(UI.userName(i.inspector_id))}</td>
+      <td>${UI.escapeHtml(UI.userName(i.inspector_id, i.inspector_name))}</td>
       <td>${UI.formatDate(i.inspection_date)}</td>
       <td>${UI.statusBadge(i.status)}</td>
       <td>${i.compliance_score === null || i.compliance_score === undefined ? '—' : i.compliance_score + '%'}</td>

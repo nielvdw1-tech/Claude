@@ -201,7 +201,7 @@ const Automations = {
   },
 
   // Start a new inspection for an asset (creates Inspection + triggers Automation A)
-  startInspection(assetId, inspectorId) {
+  startInspection(assetId, inspectorId, inspectorName) {
     const asset = DB.getById('assets', assetId);
     const template = DB.getById('inspection_templates', asset.template_id);
     const inspectionNumber = 'INS-' + String(DB.data.nextIds.inspections).padStart(5, '0');
@@ -210,7 +210,8 @@ const Automations = {
       asset_id: asset.id,
       branch_id: asset.branch_id,
       client_id: asset.client_id,
-      inspector_id: inspectorId,
+      inspector_id: inspectorId || null,
+      inspector_name: inspectorName || null,
       inspection_date: todayISO(),
       completion_date: null,
       due_date: todayISO(),

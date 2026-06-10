@@ -27,7 +27,7 @@ Views.inspectionSummary = function (params) {
         <div class="section-header"><h2>${UI.escapeHtml(inspection.inspection_number)}</h2>${UI.statusBadge(inspection.status)}</div>
         <div class="kv-list">
           <div class="k">Asset</div><div class="v">${UI.escapeHtml(asset.asset_name)}</div>
-          <div class="k">Inspector</div><div class="v">${UI.escapeHtml(UI.userName(inspection.inspector_id))}</div>
+          <div class="k">Inspector</div><div class="v">${UI.escapeHtml(UI.userName(inspection.inspector_id, inspection.inspector_name))}</div>
           <div class="k">Branch</div><div class="v">${UI.escapeHtml(UI.branchName(inspection.branch_id))}</div>
           <div class="k">Inspection Date</div><div class="v">${UI.formatDate(inspection.inspection_date)}</div>
           <div class="k">Completion Date</div><div class="v">${UI.formatDate(inspection.completion_date)}</div>

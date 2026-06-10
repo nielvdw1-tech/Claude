@@ -105,9 +105,10 @@ const UI = {
     return b ? b.branch_name : '—';
   },
 
-  userName(id) {
+  userName(id, fallback) {
     const u = DB.getById('users', id);
-    return u ? u.full_name : '—';
+    if (u) return u.full_name;
+    return fallback || '—';
   },
 
   assetName(id) {
