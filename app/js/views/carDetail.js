@@ -83,15 +83,15 @@ Views.carDetail = function (params) {
       const status = document.getElementById('statusSelect').value;
       const photoInput = document.getElementById('evidencePhoto');
       const patch = {
-        assigned_to: Number(document.getElementById('assignedTo').value),
+        assigned_to: document.getElementById('assignedTo').value || null,
         status,
         due_date: document.getElementById('dueDate').value,
         evidence: document.getElementById('evidenceNote').value,
         completion_date: status === 'Closed' ? (car.completion_date || Utils.todayISO()) : null
       };
 
-      const finish = () => {
-        DB.update('corrective_actions', car.id, patch);
+      const finish = async () => {
+        await DB.update('corrective_actions', car.id, patch);
         UI.toast('Corrective action updated', 'success');
         Views.carDetail({ id: car.id });
       };

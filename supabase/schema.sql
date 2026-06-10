@@ -70,6 +70,24 @@ alter table public.branches
   add constraint branches_manager_id_fkey
   foreign key (manager_id) references public.profiles(id) on delete set null;
 
+-- Automatically create a profile row whenever a new user is added in
+-- Supabase Auth (e.g. via Authentication > Users > Add user). New users
+-- default to the "Manager" role with no client/branch - an Owner/Admin
+-- should edit the profile afterwards via the Users page.
+create or replace function public.handle_new_user()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  insert into public.profiles (id, full_name, email, role, active)
+  values (new.id, coalesce(new.raw_user_meta_data->>'full_name', new.email), new.email, 'Manager', true)
+  on conflict (id) do nothing;
+  return new;
+end;
+$$;
+
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function public.handle_new_user();
+
 -- ---------------------------------------------------------------------
 -- 4. INSPECTION TEMPLATES (global, shared across clients)
 -- ---------------------------------------------------------------------

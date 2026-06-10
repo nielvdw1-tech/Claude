@@ -82,12 +82,12 @@ function openClientForm(client) {
     { name: 'logo_url', label: 'Client Logo', type: 'file', accept: 'image/*', hint: 'Shown on PDF reports generated for this client.' }
   ];
 
-  UI.openFormModal(client ? 'Edit Client' : 'Add Client', fields, client || { status: 'Active' }, (values) => {
+  UI.openFormModal(client ? 'Edit Client' : 'Add Client', fields, client || { status: 'Active' }, async (values) => {
     if (client) {
-      DB.update('clients', client.id, { ...values, updated_at: Utils.nowISO() });
+      await DB.update('clients', client.id, { ...values, updated_at: Utils.nowISO() });
       UI.toast('Client updated', 'success');
     } else {
-      DB.insert('clients', { ...values, created_at: Utils.nowISO(), updated_at: Utils.nowISO() });
+      await DB.insert('clients', { ...values, created_at: Utils.nowISO(), updated_at: Utils.nowISO() });
       UI.toast('Client created', 'success');
     }
     render();

@@ -97,9 +97,9 @@ Views.assetNew = function () {
   refreshTemplates();
   refreshBranches();
 
-  document.getElementById('assetForm').addEventListener('submit', (e) => {
+  document.getElementById('assetForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const asset = DB.insert('assets', {
+    const asset = await DB.insert('assets', {
       asset_name: document.getElementById('asset_name').value,
       asset_tag: document.getElementById('asset_tag').value,
       serial_number: document.getElementById('serial_number').value,
@@ -116,7 +116,7 @@ Views.assetNew = function () {
       created_at: Utils.nowISO(),
       updated_at: Utils.nowISO()
     });
-    DB.update('assets', asset.id, { qr_code_url: UI.qrUrl(asset.id) });
+    await DB.update('assets', asset.id, { qr_code_url: UI.qrUrl(asset.id) });
     UI.toast('Asset created successfully', 'success');
     window.location.hash = '#/assets/' + asset.id;
   });

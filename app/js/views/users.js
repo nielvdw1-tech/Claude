@@ -55,18 +55,27 @@ function render() {
     </div>
   `);
 
-  document.getElementById('addUserBtn').addEventListener('click', () => openUserForm(null, branches, clients, currentUser, isOwner));
+  document.getElementById('addUserBtn').addEventListener('click', () => {
+    UI.confirm(
+      'To add a user, create them in the Supabase dashboard under Authentication > Users (set their email and a temporary password). ' +
+      'A matching profile is created automatically with the "Manager" role - come back here afterwards (use "Reload" if needed) to edit their role, client and branch.',
+      async () => {
+        await DB.load();
+        render();
+      }
+    );
+  });
   document.querySelectorAll('[data-edit]').forEach(btn => {
     btn.addEventListener('click', () => openUserForm(DB.getById('users', btn.dataset.edit), branches, clients, currentUser, isOwner));
   });
   document.querySelectorAll('[data-toggle]').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       const u = DB.getById('users', btn.dataset.toggle);
       if (u.id === Auth.currentUser().id) {
         UI.toast("You can't deactivate your own account", 'error');
         return;
       }
-      DB.update('users', u.id, { active: !u.active });
+      await DB.update('users', u.id, { active: !u.active });
       UI.toast(`User ${u.active ? 'deactivated' : 'activated'}`, 'success');
       render();
     });
@@ -81,25 +90,18 @@ function openUserForm(user, branches, clients, currentUser, isOwner) {
   const fields = [
     { name: 'full_name', label: 'Full Name', required: true },
     { name: 'email', label: 'Email', type: 'email', required: true },
-    { name: 'password', label: user ? 'Password (leave blank to keep current)' : 'Password', type: 'password', required: !user },
     { name: 'role', label: 'Role', type: 'select', options: roleOptions, required: true },
     ...(isOwner ? [{ name: 'client_id', label: 'Client (for Admin / Manager)', type: 'select', options: [{ value: '', label: 'None (Owner)' }, ...clients.map(c => ({ value: c.id, label: c.client_name }))] }] : []),
     { name: 'branch_id', label: 'Branch (for Manager)', type: 'select', options: [{ value: '', label: 'None' }, ...branches.map(b => ({ value: b.id, label: b.branch_name }))] },
     { name: 'active', label: 'Active', type: 'checkbox' }
   ];
 
-  UI.openFormModal(user ? 'Edit User' : 'Add User', fields, user ? { ...user, password: '' } : { role: 'Manager', active: true }, (values) => {
+  UI.openFormModal('Edit User', fields, { ...user }, async (values) => {
     values.branch_id = values.branch_id ? Number(values.branch_id) : null;
     values.client_id = isOwner ? (values.client_id ? Number(values.client_id) : null) : currentUser.client_id;
-    if (!values.password) delete values.password;
 
-    if (user) {
-      DB.update('users', user.id, values);
-      UI.toast('User updated', 'success');
-    } else {
-      DB.insert('users', { ...values, last_login: null, created_at: Utils.nowISO() });
-      UI.toast('User created', 'success');
-    }
+    await DB.update('users', user.id, values);
+    UI.toast('User updated', 'success');
     render();
   });
 }

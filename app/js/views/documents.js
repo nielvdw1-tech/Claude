@@ -160,8 +160,8 @@ function openUploadModal(assets) {
     e.preventDefault();
     const file = document.getElementById('docFile').files[0];
     const reader = new FileReader();
-    reader.onload = () => {
-      DB.insert('documents', {
+    reader.onload = async () => {
+      await DB.insert('documents', {
         document_name: document.getElementById('docName').value,
         document_type: document.getElementById('docType').value,
         file_url: reader.result,
