@@ -75,8 +75,8 @@ function render() {
 
 function openUserForm(user, branches, clients, currentUser, isOwner) {
   const roleOptions = isOwner
-    ? [{ value: 'Owner', label: 'Owner' }, { value: 'Admin', label: 'Admin' }, { value: 'Manager', label: 'Manager' }, { value: 'Inspector', label: 'Inspector' }]
-    : [{ value: 'Admin', label: 'Admin' }, { value: 'Manager', label: 'Manager' }, { value: 'Inspector', label: 'Inspector' }];
+    ? [{ value: 'Owner', label: 'Owner' }, { value: 'Admin', label: 'Admin' }, { value: 'Manager', label: 'Manager' }]
+    : [{ value: 'Admin', label: 'Admin' }, { value: 'Manager', label: 'Manager' }];
 
   const fields = [
     { name: 'full_name', label: 'Full Name', required: true },
@@ -84,11 +84,11 @@ function openUserForm(user, branches, clients, currentUser, isOwner) {
     { name: 'password', label: user ? 'Password (leave blank to keep current)' : 'Password', type: 'password', required: !user },
     { name: 'role', label: 'Role', type: 'select', options: roleOptions, required: true },
     ...(isOwner ? [{ name: 'client_id', label: 'Client (for Admin / Manager)', type: 'select', options: [{ value: '', label: 'None (Owner)' }, ...clients.map(c => ({ value: c.id, label: c.client_name }))] }] : []),
-    { name: 'branch_id', label: 'Branch (for Manager / Inspector)', type: 'select', options: [{ value: '', label: 'None' }, ...branches.map(b => ({ value: b.id, label: b.branch_name }))] },
+    { name: 'branch_id', label: 'Branch (for Manager)', type: 'select', options: [{ value: '', label: 'None' }, ...branches.map(b => ({ value: b.id, label: b.branch_name }))] },
     { name: 'active', label: 'Active', type: 'checkbox' }
   ];
 
-  UI.openFormModal(user ? 'Edit User' : 'Add User', fields, user ? { ...user, password: '' } : { role: 'Inspector', active: true }, (values) => {
+  UI.openFormModal(user ? 'Edit User' : 'Add User', fields, user ? { ...user, password: '' } : { role: 'Manager', active: true }, (values) => {
     values.branch_id = values.branch_id ? Number(values.branch_id) : null;
     values.client_id = isOwner ? (values.client_id ? Number(values.client_id) : null) : currentUser.client_id;
     if (!values.password) delete values.password;

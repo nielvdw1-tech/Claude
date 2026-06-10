@@ -8,8 +8,7 @@ Views.inspectionHistory = function () {
 
 function inspectionScope(user) {
   let inspections = DB.getAll('inspections');
-  if (user.role === 'Inspector') inspections = inspections.filter(i => i.inspector_id === user.id);
-  else if (user.role === 'Manager') inspections = inspections.filter(i => i.branch_id === user.branch_id);
+  if (user.role === 'Manager') inspections = inspections.filter(i => i.branch_id === user.branch_id);
   else {
     const viewClientId = Auth.viewClientId();
     if (viewClientId) inspections = inspections.filter(i => i.client_id === viewClientId);

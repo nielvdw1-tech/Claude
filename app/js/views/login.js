@@ -24,9 +24,8 @@ Views.login = function () {
         </form>
         <div class="demo-creds">
           <strong>Demo accounts</strong> (password shown):<br>
-          Admin &mdash; admin@vdwsafety.com / admin123<br>
-          Manager &mdash; sarah.manager@vdwsafety.com / manager123<br>
-          Inspector &mdash; thabo.inspector@vdwsafety.com / inspect123
+          Owner &mdash; admin@vdwsafety.com / admin123<br>
+          Manager &mdash; sarah.manager@vdwsafety.com / manager123
         </div>
       </div>
     </div>

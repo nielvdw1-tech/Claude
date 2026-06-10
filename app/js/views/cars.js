@@ -8,8 +8,7 @@ Views.cars = function () {
 
 function carScope(user) {
   let cars = DB.getAll('corrective_actions');
-  if (user.role === 'Inspector') cars = cars.filter(c => c.assigned_to === user.id);
-  else if (user.role === 'Manager') {
+  if (user.role === 'Manager') {
     const assets = DB.query('assets', a => a.branch_id === user.branch_id).map(a => a.id);
     cars = cars.filter(c => assets.includes(c.asset_id));
   } else {

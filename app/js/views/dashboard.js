@@ -10,8 +10,7 @@ Views.dashboard = function () {
     return renderAdminDashboard(clientId ? { clientId } : {});
   }
   if (user.role === 'Admin') return renderAdminDashboard({ clientId: user.client_id });
-  if (user.role === 'Manager') return renderManagerDashboard(user);
-  return renderInspectorDashboard(user);
+  return renderManagerDashboard(user);
 };
 
 function statCard(label, value, type = '') {
@@ -88,19 +87,10 @@ function renderManagerDashboard(user) {
   const branch = DB.getById('branches', user.branch_id);
   const m = Metrics.dashboardMetrics({ branchId: user.branch_id });
   const inspections = DB.query('inspections', i => i.branch_id === user.branch_id);
-  const inspectors = DB.query('users', u => u.branch_id === user.branch_id && u.role === 'Inspector');
-
-  const teamRows = inspectors.map(insp => {
-    const their = inspections.filter(i => i.inspector_id === insp.id);
-    const completed = their.filter(i => i.status === 'Completed');
-    const compliance = Metrics.computeCompliancePercentage(their);
-    return `<tr>
-      <td>${UI.escapeHtml(insp.full_name)}</td>
-      <td>${their.length}</td>
-      <td>${completed.length}</td>
-      <td>${compliance === null ? '—' : compliance + '%'}</td>
-    </tr>`;
-  }).join('');
+  const pending = inspections.filter(i => i.status === 'In Progress' || i.status === 'Overdue');
+  const recent = [...inspections].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 5);
+  const branchAssets = DB.query('assets', a => a.branch_id === user.branch_id);
+  const dueSoon = branchAssets.filter(a => a.next_inspection_date <= Utils.todayISO(7));
 
   const html = `
     <div class="grid grid-4">
@@ -126,34 +116,6 @@ function renderManagerDashboard(user) {
           <a class="btn btn-outline" href="#/inspections">Inspection History</a>
         </div>
       </div>
-    </div>
-
-    <div class="card" style="margin-top:16px;">
-      <div class="section-header"><h2>Team Performance</h2></div>
-      <div class="table-wrap">
-        <table class="data-table">
-          <thead><tr><th>Inspector</th><th>Assigned Inspections</th><th>Completed</th><th>Avg Compliance</th></tr></thead>
-          <tbody>${teamRows || '<tr><td colspan="4">No inspectors assigned to this branch.</td></tr>'}</tbody>
-        </table>
-      </div>
-    </div>
-  `;
-  App.renderContent(html);
-}
-
-function renderInspectorDashboard(user) {
-  const myInspections = DB.query('inspections', i => i.inspector_id === user.id);
-  const pending = myInspections.filter(i => i.status === 'In Progress' || i.status === 'Overdue');
-  const recent = [...myInspections].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 5);
-
-  const myAssets = DB.query('assets', a => a.branch_id === user.branch_id);
-  const dueSoon = myAssets.filter(a => a.next_inspection_date <= Utils.todayISO(7));
-
-  const html = `
-    <div class="grid grid-3">
-      ${statCard('Pending Inspections', pending.length, pending.length > 0 ? 'warn' : 'good')}
-      ${statCard('Total Completed', myInspections.filter(i => i.status === 'Completed').length, 'good')}
-      ${statCard('Assets Due Soon', dueSoon.length, dueSoon.length > 0 ? 'warn' : 'good')}
     </div>
 
     <div class="card" style="margin-top:16px;">

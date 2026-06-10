@@ -2,11 +2,11 @@
 
 const App = {
   navItems: [
-    { path: 'dashboard', label: 'Dashboard', icon: '&#128202;', roles: ['Owner', 'Admin', 'Manager', 'Inspector'] },
-    { path: 'assets', label: 'Assets', icon: '&#127981;', roles: ['Owner', 'Admin', 'Manager', 'Inspector'] },
-    { path: 'inspections', label: 'Inspection History', icon: '&#128203;', roles: ['Owner', 'Admin', 'Manager', 'Inspector'] },
-    { path: 'cars', label: 'Corrective Actions', icon: '&#9888;', roles: ['Owner', 'Admin', 'Manager', 'Inspector'] },
-    { path: 'documents', label: 'Documents', icon: '&#128193;', roles: ['Owner', 'Admin', 'Manager', 'Inspector'] },
+    { path: 'dashboard', label: 'Dashboard', icon: '&#128202;', roles: ['Owner', 'Admin', 'Manager'] },
+    { path: 'assets', label: 'Assets', icon: '&#127981;', roles: ['Owner', 'Admin', 'Manager'] },
+    { path: 'inspections', label: 'Inspection History', icon: '&#128203;', roles: ['Owner', 'Admin', 'Manager'] },
+    { path: 'cars', label: 'Corrective Actions', icon: '&#9888;', roles: ['Owner', 'Admin', 'Manager'] },
+    { path: 'documents', label: 'Documents', icon: '&#128193;', roles: ['Owner', 'Admin', 'Manager'] },
     { path: 'reports', label: 'Reports', icon: '&#128200;', roles: ['Owner', 'Admin', 'Manager'] },
     { section: 'Administration' },
     { path: 'clients', label: 'Clients', icon: '&#127970;', roles: ['Owner', 'Admin'] },

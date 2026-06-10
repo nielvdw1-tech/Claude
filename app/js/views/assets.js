@@ -54,7 +54,7 @@ function render(filters) {
   App.renderContent(`
     <div class="section-header">
       <h2>Asset Register (${assets.length})</h2>
-      ${user.role !== 'Inspector' ? '<a class="btn btn-primary" href="#/assets/new">+ Add Asset</a>' : ''}
+      <a class="btn btn-primary" href="#/assets/new">+ Add Asset</a>
     </div>
     <div class="card">
       <div class="toolbar">

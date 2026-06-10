@@ -28,7 +28,7 @@ Views.assetDetail = function (params) {
       <div class="card">
         <div class="section-header">
           <h2>${UI.escapeHtml(asset.asset_name)}</h2>
-          ${user.role !== 'Inspector' ? `<button class="btn btn-outline btn-sm" id="editAssetBtn">Edit</button>` : ''}
+          <button class="btn btn-outline btn-sm" id="editAssetBtn">Edit</button>
         </div>
         <div class="kv-list">
           <div class="k">Asset Tag</div><div class="v">${UI.escapeHtml(asset.asset_tag)}</div>
