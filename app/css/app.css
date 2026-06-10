@@ -124,6 +124,7 @@ button { font-family: inherit; }
 
 .main-area {
   flex: 1;
+  min-width: 0;
   margin-left: 240px;
   display: flex;
   flex-direction: column;
@@ -183,6 +184,7 @@ button { font-family: inherit; }
 
 .content {
   flex: 1;
+  min-width: 0;
   padding: 22px;
   max-width: 1320px;
   width: 100%;
