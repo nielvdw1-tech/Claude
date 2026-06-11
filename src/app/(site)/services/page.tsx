@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { ArrowRight, CheckCircle2, Gavel, Users } from "lucide-react";
 import FadeIn from "@/components/FadeIn";
 import FAQAccordion from "@/components/FAQAccordion";
+import ComplianceLadder from "@/components/ComplianceLadder";
 import { SITE, SERVICES, SERVICES_FAQS } from "@/lib/data";
 
 export const metadata: Metadata = {
@@ -33,6 +34,9 @@ export default function ServicesPage() {
           </div>
         </div>
       </section>
+
+      {/* COMPLIANCE LADDER */}
+      <ComplianceLadder />
 
       {/* SERVICES DETAIL */}
       {SERVICES.map((service, index) => {

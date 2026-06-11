@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import FadeIn from "@/components/FadeIn";
 import FAQAccordion from "@/components/FAQAccordion";
+import ComplianceLadder from "@/components/ComplianceLadder";
 import {
   SITE,
   SERVICES,
@@ -238,6 +239,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* COMPLIANCE LADDER */}
+      <ComplianceLadder />
 
       {/* SECTION 4: HOW IT WORKS */}
       <section className="section-padding bg-navy-50">

@@ -4,6 +4,9 @@ import {
   ShieldAlert,
   UserCheck,
   GraduationCap,
+  Gift,
+  ShieldCheck,
+  Award,
   type LucideIcon,
 } from "lucide-react";
 
@@ -259,5 +262,79 @@ export const SERVICES_FAQS = [
     question: "What is a Section 37(2) agreement and do I need one?",
     answer:
       "Section 37(2) of the OHS Act allows an employer to enter into a written agreement with a contractor (such as VDW) to take over certain health and safety duties. It's the legal mechanism that underpins our outsourced safety officer service, giving you documented accountability without employing staff directly.",
+  },
+];
+
+export type LadderTier = {
+  tier: string;
+  icon: LucideIcon;
+  badge: string;
+  badgeStyle: "free" | "popular" | "premium";
+  headline: string;
+  subheadline?: string;
+  description: string;
+  price?: string;
+  features: string[];
+  cta: {
+    label: string;
+    type: "assessment" | "whatsapp";
+  };
+};
+
+export const COMPLIANCE_LADDER: LadderTier[] = [
+  {
+    tier: "Step 1",
+    icon: Gift,
+    badge: "FREE — No obligation",
+    badgeStyle: "free",
+    headline: "Free OHS Compliance Health Check",
+    description:
+      "A 30–45 minute assessment that scores your current compliance posture across 10 critical areas and gives you a written Compliance Gap Report showing your top 3 legal exposure points — at no cost.",
+    features: [
+      "Scored across 10 critical OHS compliance areas",
+      "Written Compliance Gap Report",
+      "Your top 3 legal exposure points, identified",
+      "No cost, no obligation, no sales call",
+    ],
+    cta: { label: "Get My Free Assessment", type: "assessment" },
+  },
+  {
+    tier: "Step 2",
+    icon: ShieldCheck,
+    badge: "Most Popular",
+    badgeStyle: "popular",
+    headline: "OHS Compliance Audit & Safety File Build",
+    subheadline: "Audit-ready in 10 working days. DoL-proof. Guaranteed.",
+    description:
+      "We build your complete H&S compliance system from scratch — legal appointments, full HIRA set, SOPs, emergency plan, safety file, and Section 37(2) agreement. Includes a DoL Inspection Response Guide and a 12-month Guarantee.",
+    price: "From R18,500",
+    features: [
+      "Full legal appointments register (16.2, 8.2 & more)",
+      "Complete HIRA set for every work area",
+      "SOPs, emergency plan & audit-ready safety file",
+      "Section 37(2) agreement included",
+      "DoL Inspection Response Guide",
+      "12-month compliance guarantee",
+    ],
+    cta: { label: "Request a Quote", type: "whatsapp" },
+  },
+  {
+    tier: "Step 3",
+    icon: Award,
+    badge: "Best Value",
+    badgeStyle: "premium",
+    headline: "Outsourced Safety Officer — Monthly Compliance Management",
+    subheadline: "Your dedicated external safety officer. Every month. Guaranteed.",
+    description:
+      "Monthly site visits, compliance reports, toolbox talks, training register monitoring, DoL inspection support, and on-call WhatsApp access. We manage your compliance so you never have to think about it again.",
+    price: "From R4,500/month",
+    features: [
+      "Monthly site visits & compliance reports",
+      "Toolbox talks & training register monitoring",
+      "DoL inspection support, on demand",
+      "On-call WhatsApp access to your safety officer",
+      "Section 37(2) agreement maintained & managed",
+    ],
+    cta: { label: "Request a Quote", type: "whatsapp" },
   },
 ];
