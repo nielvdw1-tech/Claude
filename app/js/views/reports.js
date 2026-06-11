@@ -39,6 +39,7 @@ function render(user, isOwner, accessibleClients) {
 
   const assetIds = assets.map(a => a.id);
   const cars = DB.query('corrective_actions', c => assetIds.includes(c.asset_id));
+  const documents = DB.query('documents', d => assetIds.includes(d.asset_id));
 
   // Compliance by branch / site
   const branchRows = accessibleBranches.map(b => {
@@ -81,11 +82,15 @@ function render(user, isOwner, accessibleClients) {
   App.renderContent(`
     <div class="section-header">
       <h2>Compliance Reports</h2>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="btn btn-primary btn-sm" id="exportFullReportBtn">Export Full Compliance Report PDF</button>
-        <button class="btn btn-outline btn-sm" id="exportAssetsBtn">Export Assets PDF</button>
-        <button class="btn btn-outline btn-sm" id="exportCarsBtn">Export CARs PDF</button>
-        <button class="btn btn-outline btn-sm" id="exportInspectionsBtn">Export Inspections PDF</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <select class="form-control" id="reportTypeSelect" style="width:auto;">
+          <option value="full">Full Compliance Report</option>
+          <option value="assets">Assets</option>
+          <option value="cars">Corrective Actions (CARs)</option>
+          <option value="inspections">Inspections</option>
+          <option value="documents">Documents</option>
+        </select>
+        <button class="btn btn-primary btn-sm" id="exportReportBtn">Download Report PDF</button>
       </div>
     </div>
 
@@ -207,76 +212,97 @@ function render(user, isOwner, accessibleClients) {
     render(user, isOwner, accessibleClients);
   });
 
-  document.getElementById('exportFullReportBtn').addEventListener('click', () => exportFullReport({
-    overallCompliance: Metrics.computeCompliancePercentage(inspections),
-    totalAssets: assets.length,
-    completed, inProgress, overdue,
-    openCars: cars.filter(c => c.status !== 'Closed').length,
-    overdueCars: cars.filter(c => c.status === 'Overdue').length,
-    branchRows, typeRows, carRows,
-    assets: assets.map(a => ({
-      ...a,
-      last_inspection_date: UI.formatDate(a.last_inspection_date),
-      next_inspection_date: UI.formatDate(a.next_inspection_date)
-    })),
-    inspectionRows: inspectionRows.map(i => ({
-      ...i,
-      asset_name: UI.assetName(i.asset_id),
-      branch_name: UI.branchName(i.branch_id),
-      client_name: UI.clientName(i.client_id),
-      inspector_name: UI.userName(i.inspector_id, i.inspector_name),
-      inspection_date: UI.formatDate(i.inspection_date),
-      compliance_score: i.compliance_score === null || i.compliance_score === undefined ? '—' : i.compliance_score + '%'
-    }))
-  }));
+  document.getElementById('exportReportBtn').addEventListener('click', () => {
+    const reportType = document.getElementById('reportTypeSelect').value;
 
-  document.getElementById('exportAssetsBtn').addEventListener('click', () => exportPDF('Asset Register', 'assets.pdf', [
-    { key: 'asset_name', label: 'Asset' },
-    { key: 'asset_tag', label: 'Tag' },
-    { key: 'serial_number', label: 'Serial' },
-    { key: 'asset_type', label: 'Type' },
-    { key: 'compliance_status', label: 'Compliance' },
-    { key: 'last_inspection_date', label: 'Last Inspection' },
-    { key: 'next_inspection_date', label: 'Next Inspection' }
-  ], assets.map(a => ({
-    ...a,
-    last_inspection_date: UI.formatDate(a.last_inspection_date),
-    next_inspection_date: UI.formatDate(a.next_inspection_date)
-  }))));
-
-  document.getElementById('exportCarsBtn').addEventListener('click', () => exportPDF('Corrective Actions', 'corrective_actions.pdf', [
-    { key: 'car_number', label: 'CAR #' },
-    { key: 'asset_name', label: 'Asset' },
-    { key: 'priority', label: 'Priority' },
-    { key: 'issue_description', label: 'Issue' },
-    { key: 'status', label: 'Status' },
-    { key: 'due_date', label: 'Due' },
-    { key: 'completion_date', label: 'Completed' }
-  ], cars.map(c => ({
-    ...c,
-    asset_name: UI.assetName(c.asset_id),
-    due_date: UI.formatDate(c.due_date),
-    completion_date: UI.formatDate(c.completion_date)
-  }))));
-
-  document.getElementById('exportInspectionsBtn').addEventListener('click', () => exportPDF('Inspection Reports', 'inspections.pdf', [
-    { key: 'inspection_number', label: 'Inspection #' },
-    { key: 'asset_name', label: 'Asset' },
-    { key: 'branch_name', label: 'Branch' },
-    { key: 'client_name', label: 'Client' },
-    { key: 'inspector_name', label: 'Inspector' },
-    { key: 'inspection_date', label: 'Date' },
-    { key: 'status', label: 'Status' },
-    { key: 'compliance_score', label: 'Score' }
-  ], inspectionRows.map(i => ({
-    ...i,
-    asset_name: UI.assetName(i.asset_id),
-    branch_name: UI.branchName(i.branch_id),
-    client_name: UI.clientName(i.client_id),
-    inspector_name: UI.userName(i.inspector_id, i.inspector_name),
-    inspection_date: UI.formatDate(i.inspection_date),
-    compliance_score: i.compliance_score === null || i.compliance_score === undefined ? '—' : i.compliance_score + '%'
-  }))));
+    if (reportType === 'full') {
+      exportFullReport({
+        overallCompliance: Metrics.computeCompliancePercentage(inspections),
+        totalAssets: assets.length,
+        completed, inProgress, overdue,
+        openCars: cars.filter(c => c.status !== 'Closed').length,
+        overdueCars: cars.filter(c => c.status === 'Overdue').length,
+        branchRows, typeRows, carRows,
+        assets: assets.map(a => ({
+          ...a,
+          last_inspection_date: UI.formatDate(a.last_inspection_date),
+          next_inspection_date: UI.formatDate(a.next_inspection_date)
+        })),
+        inspectionRows: inspectionRows.map(i => ({
+          ...i,
+          asset_name: UI.assetName(i.asset_id),
+          branch_name: UI.branchName(i.branch_id),
+          client_name: UI.clientName(i.client_id),
+          inspector_name: UI.userName(i.inspector_id, i.inspector_name),
+          inspection_date: UI.formatDate(i.inspection_date),
+          compliance_score: i.compliance_score === null || i.compliance_score === undefined ? '—' : i.compliance_score + '%'
+        }))
+      });
+    } else if (reportType === 'assets') {
+      exportPDF('Asset Register', 'assets.pdf', [
+        { key: 'asset_name', label: 'Asset' },
+        { key: 'asset_tag', label: 'Tag' },
+        { key: 'serial_number', label: 'Serial' },
+        { key: 'asset_type', label: 'Type' },
+        { key: 'compliance_status', label: 'Compliance' },
+        { key: 'last_inspection_date', label: 'Last Inspection' },
+        { key: 'next_inspection_date', label: 'Next Inspection' }
+      ], assets.map(a => ({
+        ...a,
+        last_inspection_date: UI.formatDate(a.last_inspection_date),
+        next_inspection_date: UI.formatDate(a.next_inspection_date)
+      })));
+    } else if (reportType === 'cars') {
+      exportPDF('Corrective Actions', 'corrective_actions.pdf', [
+        { key: 'car_number', label: 'CAR #' },
+        { key: 'asset_name', label: 'Asset' },
+        { key: 'priority', label: 'Priority' },
+        { key: 'issue_description', label: 'Issue' },
+        { key: 'status', label: 'Status' },
+        { key: 'due_date', label: 'Due' },
+        { key: 'completion_date', label: 'Completed' }
+      ], cars.map(c => ({
+        ...c,
+        asset_name: UI.assetName(c.asset_id),
+        due_date: UI.formatDate(c.due_date),
+        completion_date: UI.formatDate(c.completion_date)
+      })));
+    } else if (reportType === 'inspections') {
+      exportPDF('Inspection Reports', 'inspections.pdf', [
+        { key: 'inspection_number', label: 'Inspection #' },
+        { key: 'asset_name', label: 'Asset' },
+        { key: 'branch_name', label: 'Branch' },
+        { key: 'client_name', label: 'Client' },
+        { key: 'inspector_name', label: 'Inspector' },
+        { key: 'inspection_date', label: 'Date' },
+        { key: 'status', label: 'Status' },
+        { key: 'compliance_score', label: 'Score' }
+      ], inspectionRows.map(i => ({
+        ...i,
+        asset_name: UI.assetName(i.asset_id),
+        branch_name: UI.branchName(i.branch_id),
+        client_name: UI.clientName(i.client_id),
+        inspector_name: UI.userName(i.inspector_id, i.inspector_name),
+        inspection_date: UI.formatDate(i.inspection_date),
+        compliance_score: i.compliance_score === null || i.compliance_score === undefined ? '—' : i.compliance_score + '%'
+      })));
+    } else if (reportType === 'documents') {
+      exportPDF('Documents', 'documents.pdf', [
+        { key: 'document_name', label: 'Name' },
+        { key: 'document_type', label: 'Type' },
+        { key: 'asset_name', label: 'Asset' },
+        { key: 'uploaded_by_name', label: 'Uploaded By' },
+        { key: 'uploaded_at', label: 'Uploaded' },
+        { key: 'expiry_date', label: 'Expiry' }
+      ], documents.map(d => ({
+        ...d,
+        asset_name: UI.assetName(d.asset_id),
+        uploaded_by_name: UI.userName(d.uploaded_by),
+        uploaded_at: UI.formatDateTime(d.uploaded_at),
+        expiry_date: d.expiry_date ? UI.formatDate(d.expiry_date) : '—'
+      })));
+    }
+  });
 }
 
 // Draws the logo (if the selected client has one), title and scope line at the top of the current page.
