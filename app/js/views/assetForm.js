@@ -71,6 +71,39 @@ Views.assetNew = function () {
             <input class="form-control" type="date" id="next_inspection_date" value="${Utils.todayISO()}">
           </div>
         </div>
+        <div class="section-header" style="margin-top:8px;"><h2>Document (Optional)</h2></div>
+        <div class="form-group">
+          <label for="doc_name">Document Name</label>
+          <input class="form-control" id="doc_name" placeholder="e.g. Fire Extinguisher Service Certificate">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="doc_type">Document Type</label>
+            <select class="form-control" id="doc_type">
+              <option value="Certificate">Certificate</option>
+              <option value="Inspection Report">Inspection Report</option>
+              <option value="Method Statement">Method Statement</option>
+              <option value="Risk Assessment">Risk Assessment</option>
+              <option value="Policy">Policy</option>
+              <option value="Appointment">Appointment</option>
+              <option value="Procedure">Procedure</option>
+              <option value="Safe Operating Procedure">Safe Operating Procedure</option>
+              <option value="Safe Work Procedure">Safe Work Procedure</option>
+              <option value="Legal Register">Legal Register</option>
+              <option value="Training Record">Training Record</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="doc_expiry">Expiry Date</label>
+            <input type="date" class="form-control" id="doc_expiry">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="doc_file">File</label>
+          <input type="file" class="form-control" id="doc_file" accept="application/pdf,image/*">
+          <div class="form-hint">Optional. Upload a certificate or other supporting document for this asset, e.g. a test certificate.</div>
+        </div>
         <button type="submit" class="btn btn-primary btn-lg">Save Asset &amp; Generate QR Code</button>
       </form>
     </div>
@@ -97,7 +130,7 @@ Views.assetNew = function () {
   refreshTemplates();
   refreshBranches();
 
-  document.getElementById('assetForm').addEventListener('submit', (e) => {
+  document.getElementById('assetForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const asset = DB.insert('assets', {
       asset_name: document.getElementById('asset_name').value,
@@ -117,6 +150,23 @@ Views.assetNew = function () {
       updated_at: Utils.nowISO()
     });
     DB.update('assets', asset.id, { qr_code_url: UI.qrUrl(asset.id) });
+
+    const docFile = document.getElementById('doc_file').files[0];
+    if (docFile) {
+      const fileUrl = await UI.readFileAsDataURL(docFile);
+      DB.insert('documents', {
+        document_name: document.getElementById('doc_name').value || docFile.name,
+        document_type: document.getElementById('doc_type').value,
+        file_url: fileUrl,
+        file_type: docFile.type,
+        asset_id: asset.id,
+        expiry_date: document.getElementById('doc_expiry').value || null,
+        inspection_id: null,
+        uploaded_by: Auth.currentUser() ? Auth.currentUser().id : null,
+        uploaded_at: Utils.nowISO()
+      });
+    }
+
     UI.toast('Asset created successfully', 'success');
     window.location.hash = '#/assets/' + asset.id;
   });
