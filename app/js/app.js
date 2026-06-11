@@ -105,9 +105,8 @@ const App = {
       document.getElementById('sidebar').classList.toggle('open');
     });
 
-    document.getElementById('logoutBtn').addEventListener('click', async () => {
-      await Auth.logout();
-      await DB.load();
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      Auth.logout();
       window.location.hash = '#/login';
     });
 
@@ -174,11 +173,8 @@ const App = {
 
 window.App = App;
 
-document.addEventListener('DOMContentLoaded', async () => {
-  await Auth.restoreSession();
-  await DB.load();
-  if (Auth.isAuthenticated()) {
-    await Automations.runDailyChecks();
-  }
+document.addEventListener('DOMContentLoaded', () => {
+  DB.load();
+  Automations.runDailyChecks();
   Router.init();
 });

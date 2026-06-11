@@ -31,19 +31,14 @@ Views.login = function () {
     </div>
   `;
 
-  document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  document.getElementById('loginForm').addEventListener('submit', (e) => {
     e.preventDefault();
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
-    const submitBtn = e.target.querySelector('button[type=submit]');
-    submitBtn.disabled = true;
-    const user = await Auth.login(email, password);
+    const user = Auth.login(email, password);
     if (user) {
-      await DB.load();
-      await Automations.runDailyChecks();
       window.location.hash = '#/dashboard';
     } else {
-      submitBtn.disabled = false;
       document.getElementById('loginError').innerHTML = '<div class="error-banner">Invalid email or password. Please try again.</div>';
     }
   });

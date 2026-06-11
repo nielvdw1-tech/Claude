@@ -50,7 +50,7 @@ Views.startInspection = function (params) {
 
   const startBtn = document.getElementById('startBtn');
   if (startBtn) {
-    startBtn.addEventListener('click', async () => {
+    startBtn.addEventListener('click', () => {
       let inspectorId = user ? user.id : null;
       let inspectorName = null;
       if (!user) {
@@ -61,7 +61,7 @@ Views.startInspection = function (params) {
           return;
         }
       }
-      const inspection = await Automations.startInspection(asset.id, inspectorId, inspectorName);
+      const inspection = Automations.startInspection(asset.id, inspectorId, inspectorName);
       UI.toast('Inspection started', 'success');
       window.location.hash = `#/inspections/${inspection.id}/form`;
     });

@@ -141,10 +141,10 @@ function openEditAsset(asset) {
     { name: 'next_inspection_date', label: 'Next Inspection Date', type: 'date' }
   ];
 
-  UI.openFormModal('Edit Asset', fields, { ...asset }, async (values) => {
+  UI.openFormModal('Edit Asset', fields, { ...asset }, (values) => {
     values.branch_id = Number(values.branch_id);
     values.template_id = Number(values.template_id);
-    await DB.update('assets', asset.id, { ...values, updated_at: Utils.nowISO() });
+    DB.update('assets', asset.id, { ...values, updated_at: Utils.nowISO() });
     UI.toast('Asset updated', 'success');
     Views.assetDetail({ id: asset.id });
   });

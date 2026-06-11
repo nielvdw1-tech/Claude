@@ -322,29 +322,3 @@ create policy notifications_update on public.notifications for update using (
 );
 
 create policy notifications_insert on public.notifications for insert with check (true);
-
--- ---------------------------------------------------------------------
--- ANONYMOUS QR-CODE INSPECTION FLOW
--- ---------------------------------------------------------------------
--- The /start-inspection/:id and /inspections/:id/form routes are public
--- (no login) so that anyone scanning an asset's QR code can run an
--- inspection. Grant the anon role narrow access for that flow only.
-grant select on public.assets to anon;
-grant update (last_inspection_date, next_inspection_date, compliance_status, updated_at) on public.assets to anon;
-grant select, insert, update on public.inspections, public.inspection_items to anon;
-grant insert on public.corrective_actions to anon;
-grant usage on schema public to anon;
-grant usage, select on all sequences in schema public to anon;
-
-create policy assets_select_anon on public.assets for select to anon using (true);
-create policy assets_update_anon on public.assets for update to anon using (true);
-
-create policy inspections_anon_select on public.inspections for select to anon using (true);
-create policy inspections_anon_insert on public.inspections for insert to anon with check (inspector_id is null);
-create policy inspections_anon_update on public.inspections for update to anon using (inspector_id is null);
-
-create policy inspection_items_anon_select on public.inspection_items for select to anon using (true);
-create policy inspection_items_anon_insert on public.inspection_items for insert to anon with check (true);
-create policy inspection_items_anon_update on public.inspection_items for update to anon using (true);
-
-create policy cars_anon_insert on public.corrective_actions for insert to anon with check (assigned_to is null);

@@ -67,14 +67,14 @@ function openBranchForm(branch, clientOptions, managerOptions) {
     { name: 'status', label: 'Status', type: 'select', options: [{ value: 'Active', label: 'Active' }, { value: 'Inactive', label: 'Inactive' }] }
   ];
 
-  UI.openFormModal(branch ? 'Edit Branch' : 'Add Branch', fields, branch ? { ...branch } : { client_id: clientOptions[0]?.value, manager_id: managerOptions[0]?.value, status: 'Active' }, async (values) => {
+  UI.openFormModal(branch ? 'Edit Branch' : 'Add Branch', fields, branch ? { ...branch } : { client_id: clientOptions[0]?.value, manager_id: managerOptions[0]?.value, status: 'Active' }, (values) => {
     values.client_id = Number(values.client_id);
-    values.manager_id = values.manager_id || null;
+    values.manager_id = values.manager_id ? Number(values.manager_id) : null;
     if (branch) {
-      await DB.update('branches', branch.id, { ...values, updated_at: Utils.nowISO() });
+      DB.update('branches', branch.id, { ...values, updated_at: Utils.nowISO() });
       UI.toast('Branch updated', 'success');
     } else {
-      await DB.insert('branches', { ...values, created_at: Utils.nowISO(), updated_at: Utils.nowISO() });
+      DB.insert('branches', { ...values, created_at: Utils.nowISO(), updated_at: Utils.nowISO() });
       UI.toast('Branch created', 'success');
     }
     render();

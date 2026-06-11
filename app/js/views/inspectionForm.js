@@ -69,16 +69,16 @@ Views.inspectionForm = function (params) {
     items.forEach(item => {
       const card = document.getElementById(`item-${item.id}`);
       card.querySelectorAll('.result-option').forEach(opt => {
-        opt.addEventListener('click', async () => {
+        opt.addEventListener('click', () => {
           const result = opt.dataset.result;
-          await Automations.updateInspectionItem(item.id, { result });
+          Automations.updateInspectionItem(item.id, { result });
           renderPreservingScroll(item.id);
         });
       });
 
       const commentEl = card.querySelector('.comment-input');
-      commentEl.addEventListener('change', async () => {
-        await Automations.updateInspectionItem(item.id, { comment: commentEl.value });
+      commentEl.addEventListener('change', () => {
+        Automations.updateInspectionItem(item.id, { comment: commentEl.value });
       });
 
       const photoInput = card.querySelector('.photo-input');
@@ -87,8 +87,8 @@ Views.inspectionForm = function (params) {
           const file = photoInput.files[0];
           if (!file) return;
           const reader = new FileReader();
-          reader.onload = async () => {
-            await Automations.updateInspectionItem(item.id, { photo: reader.result });
+          reader.onload = () => {
+            Automations.updateInspectionItem(item.id, { photo: reader.result });
             renderPreservingScroll(item.id);
           };
           reader.readAsDataURL(file);
@@ -99,8 +99,8 @@ Views.inspectionForm = function (params) {
     const completeBtn = document.getElementById('completeBtn');
     if (!completeBtn.disabled) {
       completeBtn.addEventListener('click', () => {
-        UI.confirm('Complete this inspection? Failed items will generate corrective actions and the asset compliance score will be updated.', async () => {
-          await Automations.completeInspection(inspection.id);
+        UI.confirm('Complete this inspection? Failed items will generate corrective actions and the asset compliance score will be updated.', () => {
+          Automations.completeInspection(inspection.id);
           UI.toast('Inspection completed', 'success');
           window.location.hash = `#/inspections/${inspection.id}/summary`;
         });

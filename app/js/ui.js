@@ -85,11 +85,11 @@ const UI = {
           <button class="btn btn-danger" data-action="confirm">Confirm</button>
         </div>
       </div>`;
-    backdrop.addEventListener('click', async (e) => {
+    backdrop.addEventListener('click', (e) => {
       if (e.target === backdrop || e.target.dataset.action === 'cancel') backdrop.remove();
       if (e.target.dataset.action === 'confirm') {
         backdrop.remove();
-        await onConfirm();
+        onConfirm();
       }
     });
     document.body.appendChild(backdrop);
@@ -201,7 +201,7 @@ const UI = {
         }
       }
       backdrop.remove();
-      await onSubmit(result);
+      onSubmit(result);
     });
 
     document.body.appendChild(backdrop);

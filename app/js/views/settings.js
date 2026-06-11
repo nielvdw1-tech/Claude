@@ -62,8 +62,8 @@ function renderTemplates(openTemplateId) {
       { name: 'asset_type', label: 'Asset Type', required: true },
       { name: 'inspection_frequency', label: 'Inspection Frequency (days)', type: 'number', required: true, default: 30 },
       { name: 'active', label: 'Active', type: 'checkbox', default: true }
-    ], {}, async (values) => {
-      await DB.insert('inspection_templates', { ...values, created_at: Utils.nowISO() });
+    ], {}, (values) => {
+      DB.insert('inspection_templates', { ...values, created_at: Utils.nowISO() });
       UI.toast('Template created', 'success');
       render('templates');
     });
@@ -115,8 +115,8 @@ function renderQuestions(templateId) {
   });
   document.querySelectorAll('[data-del-q]').forEach(btn => {
     btn.addEventListener('click', () => {
-      UI.confirm('Delete this checklist question? This will not affect past inspections.', async () => {
-        await DB.remove('template_questions', btn.dataset.delQ);
+      UI.confirm('Delete this checklist question? This will not affect past inspections.', () => {
+        DB.remove('template_questions', btn.dataset.delQ);
         UI.toast('Question deleted', 'success');
         renderQuestions(templateId);
       });
@@ -139,12 +139,12 @@ function openQuestionForm(templateId, question) {
     { name: 'active', label: 'Active', type: 'checkbox', default: true }
   ];
 
-  UI.openFormModal(question ? 'Edit Question' : 'Add Question', fields, question || { risk_level: 'Medium' }, async (values) => {
+  UI.openFormModal(question ? 'Edit Question' : 'Add Question', fields, question || { risk_level: 'Medium' }, (values) => {
     if (question) {
-      await DB.update('template_questions', question.id, values);
+      DB.update('template_questions', question.id, values);
       UI.toast('Question updated', 'success');
     } else {
-      await DB.insert('template_questions', { ...values, template_id: templateId });
+      DB.insert('template_questions', { ...values, template_id: templateId });
       UI.toast('Question added', 'success');
     }
     renderQuestions(templateId);
@@ -169,21 +169,23 @@ function renderSystem() {
       <p style="color:var(--text-light);font-size:.85rem;">Run scheduled compliance jobs manually, or reset this demo environment back to its initial state.</p>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
         <button class="btn btn-outline" id="runChecksBtn">Run Overdue Checks Now</button>
-        <button class="btn btn-outline" id="reloadBtn">Reload Data from Database</button>
+        <button class="btn btn-danger" id="resetBtn">Reset Demo Data</button>
       </div>
     </div>
   `;
 
-  document.getElementById('runChecksBtn').addEventListener('click', async () => {
-    await Automations.runDailyChecks();
+  document.getElementById('runChecksBtn').addEventListener('click', () => {
+    Automations.runDailyChecks();
     UI.toast('Overdue inspections and corrective actions refreshed', 'success');
-    renderSystem();
   });
 
-  document.getElementById('reloadBtn').addEventListener('click', async () => {
-    await DB.load();
-    UI.toast('Data reloaded from database', 'success');
-    renderSystem();
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    UI.confirm('This will erase all data and restore the original demo dataset. Continue?', () => {
+      DB.reset();
+      UI.toast('Demo data reset', 'success');
+      window.location.hash = '#/dashboard';
+      window.location.reload();
+    });
   });
 }
 
