@@ -17,6 +17,9 @@ Views.startInspection = function (params) {
   const template = DB.getById('inspection_templates', asset.template_id);
   const questionCount = template ? DB.query('template_questions', q => q.template_id === template.id && q.active).length : 0;
 
+  const documents = DB.query('documents', d => d.asset_id === asset.id)
+    .sort((a, b) => new Date(b.uploaded_at) - new Date(a.uploaded_at));
+
   App.renderContent(`
     ${user ? `<div class="breadcrumbs"><a href="#/assets/${asset.id}">&larr; Back to Asset</a></div>` : ''}
     <div class="card" style="max-width:560px;">
@@ -46,6 +49,24 @@ Views.startInspection = function (params) {
         ${!template ? '<p class="form-hint" style="margin-top:8px;">This asset has no inspection template assigned. Contact your administrator.</p>' : ''}
       `}
     </div>
+
+    ${documents.length ? `
+    <div class="card" style="max-width:560px;">
+      <div class="section-header"><h2>Documents</h2></div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Name</th><th>Type</th><th></th></tr></thead>
+          <tbody>
+            ${documents.map(d => `
+              <tr>
+                <td>${UI.escapeHtml(d.document_name)}</td>
+                <td>${UI.escapeHtml(d.document_type)}</td>
+                <td><a class="btn btn-outline btn-sm" href="${d.file_url}" target="_blank" rel="noopener">View</a></td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>` : ''}
   `);
 
   const startBtn = document.getElementById('startBtn');

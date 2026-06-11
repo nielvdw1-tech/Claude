@@ -19,6 +19,9 @@ Views.assetDetail = function (params) {
   const cars = DB.query('corrective_actions', c => c.asset_id === asset.id)
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
+  const documents = DB.query('documents', d => d.asset_id === asset.id)
+    .sort((a, b) => new Date(b.uploaded_at) - new Date(a.uploaded_at));
+
   const overdue = asset.next_inspection_date < Utils.todayISO();
 
   App.renderContent(`
@@ -102,6 +105,28 @@ Views.assetDetail = function (params) {
         </table>
       </div>
     </div>
+
+    <div class="card">
+      <div class="section-header">
+        <h2>Documents</h2>
+        <button class="btn btn-primary btn-sm" id="uploadDocBtn">+ Upload Document</button>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Name</th><th>Type</th><th>Uploaded</th><th>Expiry</th><th></th></tr></thead>
+          <tbody>
+            ${documents.length ? documents.map(d => `
+              <tr>
+                <td>${UI.escapeHtml(d.document_name)}</td>
+                <td>${UI.escapeHtml(d.document_type)}</td>
+                <td>${UI.formatDateTime(d.uploaded_at)}</td>
+                <td>${d.expiry_date ? UI.formatDate(d.expiry_date) : '—'}</td>
+                <td><a class="btn btn-outline btn-sm" href="${d.file_url}" target="_blank" rel="noopener">View</a></td>
+              </tr>`).join('') : '<tr><td colspan="5">No documents uploaded for this asset.</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+    </div>
   `);
 
   UI.renderQR('qrCanvas', UI.qrUrl(asset.id));
@@ -124,6 +149,10 @@ Views.assetDetail = function (params) {
 
   const editBtn = document.getElementById('editAssetBtn');
   if (editBtn) editBtn.addEventListener('click', () => openEditAsset(asset));
+
+  document.getElementById('uploadDocBtn').addEventListener('click', () => {
+    UI.openDocumentUploadModal({ assetId: asset.id, onUploaded: () => Views.assetDetail({ id: asset.id }) });
+  });
 };
 
 function openEditAsset(asset) {

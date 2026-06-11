@@ -216,6 +216,91 @@ const UI = {
     } else {
       el.textContent = text;
     }
+  },
+
+  // Generic document upload modal. Pass `assetId` to upload straight against
+  // a known asset (hides the asset picker), or `assets` to let the user pick.
+  openDocumentUploadModal({ assets = [], assetId = null, onUploaded } = {}) {
+    const backdrop = document.createElement('div');
+    backdrop.className = 'modal-backdrop';
+    backdrop.innerHTML = `
+      <div class="modal">
+        <h3>Upload Document</h3>
+        <form id="uploadForm">
+          <div class="form-group">
+            <label for="docName">Document Name *</label>
+            <input class="form-control" id="docName" required placeholder="e.g. Fire Extinguisher Service Certificate">
+          </div>
+          <div class="form-group">
+            <label for="docType">Document Type *</label>
+            <select class="form-control" id="docType" required>
+              <option value="Certificate">Certificate</option>
+              <option value="Inspection Report">Inspection Report</option>
+              <option value="Method Statement">Method Statement</option>
+              <option value="Risk Assessment">Risk Assessment</option>
+              <option value="Policy">Policy</option>
+              <option value="Appointment">Appointment</option>
+              <option value="Procedure">Procedure</option>
+              <option value="Safe Operating Procedure">Safe Operating Procedure</option>
+              <option value="Safe Work Procedure">Safe Work Procedure</option>
+              <option value="Legal Register">Legal Register</option>
+              <option value="Training Record">Training Record</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          ${assetId === null ? `
+          <div class="form-group">
+            <label for="docAsset">Related Asset</label>
+            <select class="form-control" id="docAsset">
+              <option value="">None</option>
+              ${assets.map(a => `<option value="${a.id}">${UI.escapeHtml(a.asset_name)}</option>`).join('')}
+            </select>
+          </div>` : ''}
+          <div class="form-group">
+            <label for="docExpiry">Expiry Date</label>
+            <input type="date" class="form-control" id="docExpiry">
+            <p class="form-hint" style="margin:4px 0 0;">Optional. We'll flag this document when it's expiring soon.</p>
+          </div>
+          <div class="form-group">
+            <label for="docFile">File *</label>
+            <input type="file" class="form-control" id="docFile" accept="application/pdf,image/*" required>
+          </div>
+          <div style="display:flex;gap:10px;justify-content:flex-end;">
+            <button type="button" class="btn btn-outline" data-action="cancel">Cancel</button>
+            <button type="submit" class="btn btn-primary">Upload</button>
+          </div>
+        </form>
+      </div>`;
+
+    backdrop.addEventListener('click', (e) => {
+      if (e.target === backdrop || e.target.dataset.action === 'cancel') backdrop.remove();
+    });
+
+    backdrop.querySelector('#uploadForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const file = document.getElementById('docFile').files[0];
+      const reader = new FileReader();
+      reader.onload = () => {
+        const docAssetEl = document.getElementById('docAsset');
+        DB.insert('documents', {
+          document_name: document.getElementById('docName').value,
+          document_type: document.getElementById('docType').value,
+          file_url: reader.result,
+          file_type: file.type,
+          asset_id: assetId !== null ? assetId : (docAssetEl && docAssetEl.value ? Number(docAssetEl.value) : null),
+          expiry_date: document.getElementById('docExpiry').value || null,
+          inspection_id: null,
+          uploaded_by: Auth.currentUser() ? Auth.currentUser().id : null,
+          uploaded_at: Utils.nowISO()
+        });
+        backdrop.remove();
+        UI.toast('Document uploaded', 'success');
+        if (onUploaded) onUploaded();
+      };
+      reader.readAsDataURL(file);
+    });
+
+    document.body.appendChild(backdrop);
   }
 };
 
