@@ -19,7 +19,7 @@ function seedData() {
     nextIds: {
       clients: 3, branches: 4, users: 6, assets: 6, inspection_templates: 4,
       template_questions: 16, inspections: 3, inspection_items: 100, corrective_actions: 3,
-      documents: 1, notifications: 1
+      documents: 1, library_documents: 1, notifications: 1
     },
     clients: [
       { id: 1, client_name: 'Sasol Polymers', client_code: 'SAS-001', contact_person: 'J. Naidoo', contact_email: 'j.naidoo@sasol.com', contact_phone: '011 555 0101', status: 'Active', contract_end_date: todayISO(20), created_at: nowISO(), updated_at: nowISO() },
@@ -73,6 +73,7 @@ function seedData() {
     inspection_items: [],
     corrective_actions: [],
     documents: [],
+    library_documents: [],
     notifications: []
   };
 }
@@ -84,6 +85,8 @@ const DB = {
     const raw = localStorage.getItem(DB_KEY);
     if (raw) {
       this.data = JSON.parse(raw);
+      if (!this.data.library_documents) this.data.library_documents = [];
+      if (!this.data.nextIds.library_documents) this.data.nextIds.library_documents = 1;
     } else {
       this.data = seedData();
       this.save();
