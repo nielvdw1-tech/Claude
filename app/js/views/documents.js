@@ -57,7 +57,10 @@ function render(filters) {
   App.renderContent(`
     <div class="section-header">
       <h2>Documents (${docs.length})</h2>
-      <button class="btn btn-primary" id="uploadBtn">+ Upload Document</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        ${user.role === 'Owner' ? '<button class="btn btn-outline" id="addFromLibraryBtn">+ Add from Library</button>' : ''}
+        <button class="btn btn-primary" id="uploadBtn">+ Upload Document</button>
+      </div>
     </div>
     ${expiring.length ? `
     <div class="card" style="border-color:var(--orange);background:var(--orange-bg);">
@@ -99,6 +102,46 @@ function render(filters) {
   const branchFilter = document.getElementById('branchFilter');
   if (branchFilter) branchFilter.addEventListener('change', (e) => render({ ...filters, branchId: e.target.value }));
   document.getElementById('uploadBtn').addEventListener('click', () => UI.openDocumentUploadModal({ assets, onUploaded: () => render(filters) }));
+
+  const addFromLibraryBtn = document.getElementById('addFromLibraryBtn');
+  if (addFromLibraryBtn) {
+    addFromLibraryBtn.addEventListener('click', () => openAddFromLibraryModal(assets, filters));
+  }
+}
+
+function openAddFromLibraryModal(assets, filters) {
+  const libDocs = DB.getAll('library_documents').sort((a, b) => a.document_name.localeCompare(b.document_name));
+  if (!libDocs.length) {
+    UI.toast('The document library is empty. Upload documents to the library first.', 'info');
+    return;
+  }
+
+  const sortedAssets = [...assets].sort((a, b) => a.asset_name.localeCompare(b.asset_name));
+  const fields = [
+    { name: 'library_document_id', label: 'Library Document', type: 'select', required: true,
+      options: libDocs.map(d => ({ value: d.id, label: `${d.document_name} (${d.document_type})` })) },
+    { name: 'document_name', label: 'Document Name (optional override)' },
+    { name: 'asset_id', label: 'Asset', type: 'select',
+      options: [{ value: '', label: 'None (general document)' }, ...sortedAssets.map(a => ({ value: a.id, label: `${a.asset_name} (${a.asset_tag})` }))] },
+    { name: 'expiry_date', label: 'Expiry Date', type: 'date' }
+  ];
+
+  UI.openFormModal('Add Document from Library', fields, {}, (values) => {
+    const libDoc = DB.getById('library_documents', values.library_document_id);
+    DB.insert('documents', {
+      document_name: values.document_name || libDoc.document_name,
+      document_type: libDoc.document_type,
+      file_url: libDoc.file_url,
+      file_type: libDoc.file_type,
+      asset_id: values.asset_id ? Number(values.asset_id) : null,
+      expiry_date: values.expiry_date || null,
+      inspection_id: null,
+      uploaded_by: Auth.currentUser() ? Auth.currentUser().id : null,
+      uploaded_at: Utils.nowISO()
+    });
+    UI.toast('Document added', 'success');
+    render(filters);
+  });
 }
 
 Router.add('documents', Views.documents);
