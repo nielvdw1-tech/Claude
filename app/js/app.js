@@ -7,12 +7,12 @@ const App = {
     { path: 'inspections', label: 'Inspection History', icon: '&#128203;', roles: ['Owner', 'Admin', 'Manager'] },
     { path: 'cars', label: 'Corrective Actions', icon: '&#9888;', roles: ['Owner', 'Admin', 'Manager'] },
     { path: 'documents', label: 'Documents', icon: '&#128193;', roles: ['Owner', 'Admin', 'Manager'] },
-    { path: 'library', label: 'Document Library', icon: '&#128218;', roles: ['Owner'] },
     { path: 'reports', label: 'Reports', icon: '&#128200;', roles: ['Owner', 'Admin', 'Manager'] },
     { section: 'Administration' },
     { path: 'clients', label: 'Clients', icon: '&#127970;', roles: ['Owner', 'Admin'] },
     { path: 'branches', label: 'Branches / Sites', icon: '&#128205;', roles: ['Owner', 'Admin', 'Manager'] },
     { path: 'users', label: 'User Management', icon: '&#128100;', roles: ['Owner', 'Admin'] },
+    { path: 'library', label: 'Document Library', icon: '&#128218;', roles: ['Owner'] },
     { path: 'settings', label: 'Settings', icon: '&#9881;', roles: ['Owner', 'Admin'] }
   ],
 
