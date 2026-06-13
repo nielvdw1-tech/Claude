@@ -50,7 +50,10 @@ function render(filters) {
       <td>${UI.escapeHtml(UI.userName(d.uploaded_by))}</td>
       <td>${UI.formatDateTime(d.uploaded_at)}</td>
       <td>${expiryCell}</td>
-      <td><a class="btn btn-outline btn-sm" href="${d.file_url}" download="${UI.escapeHtml(d.document_name)}" target="_blank">Download</a></td>
+      <td>
+        <a class="btn btn-outline btn-sm" href="${d.file_url}" download="${UI.escapeHtml(d.document_name)}" target="_blank">Download</a>
+        <button class="btn btn-danger btn-sm" data-delete-doc="${d.id}">Delete</button>
+      </td>
     </tr>`;
   }).join('');
 
@@ -107,6 +110,16 @@ function render(filters) {
   if (addFromLibraryBtn) {
     addFromLibraryBtn.addEventListener('click', () => openAddFromLibraryModal(assets, filters));
   }
+
+  document.querySelectorAll('[data-delete-doc]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      UI.confirm('Delete this document? This cannot be undone.', () => {
+        DB.remove('documents', btn.dataset.deleteDoc);
+        UI.toast('Document deleted', 'success');
+        render(filters);
+      });
+    });
+  });
 }
 
 function openAddFromLibraryModal(assets, filters) {

@@ -121,7 +121,10 @@ Views.assetDetail = function (params) {
                 <td>${UI.escapeHtml(d.document_type)}</td>
                 <td>${UI.formatDateTime(d.uploaded_at)}</td>
                 <td>${d.expiry_date ? UI.formatDate(d.expiry_date) : '—'}</td>
-                <td><a class="btn btn-outline btn-sm" href="${d.file_url}" target="_blank" rel="noopener">View</a></td>
+                <td>
+                  <a class="btn btn-outline btn-sm" href="${d.file_url}" target="_blank" rel="noopener">View</a>
+                  <button class="btn btn-danger btn-sm" data-delete-doc="${d.id}">Delete</button>
+                </td>
               </tr>`).join('') : '<tr><td colspan="5">No documents uploaded for this asset.</td></tr>'}
           </tbody>
         </table>
@@ -152,6 +155,16 @@ Views.assetDetail = function (params) {
 
   document.getElementById('uploadDocBtn').addEventListener('click', () => {
     UI.openDocumentUploadModal({ assetId: asset.id, onUploaded: () => Views.assetDetail({ id: asset.id }) });
+  });
+
+  document.querySelectorAll('[data-delete-doc]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      UI.confirm('Delete this document? This cannot be undone.', () => {
+        DB.remove('documents', btn.dataset.deleteDoc);
+        UI.toast('Document deleted', 'success');
+        Views.assetDetail({ id: asset.id });
+      });
+    });
   });
 };
 
