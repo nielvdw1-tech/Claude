@@ -20,12 +20,12 @@ const LEGAL_LIBRARY = [
   { id: 'OHSA', type: 'Act', name: 'Occupational Health and Safety Act 85 of 1993', parts: [
     { id: 'OHSA-7', ref: 'Section 7', title: 'Health and safety policy', items: [
       { id: 'OHSA-7-1', ref: 's7', title: 'Written health and safety policy (where directed by the chief inspector; good practice for all)', text: 'Prepare a written policy on the protection of the health and safety of employees, signed by the CEO and displayed prominently.', freq: 12,
-        ob: [O('Signed HSEQ / H&S policy issued for use', 'doc', { cat: 'Policy' }), O('Policy displayed prominently at the workplace', 'manual')],
+        ob: [O('Signed HSEQ / H&S policy issued for use', 'doc', { cat: 'Policy', dt: 'HSEQ Policy' }), O('Policy displayed prominently at the workplace', 'manual')],
         mt: [O('Review the policy annually and re-sign', 'review', { every: 'Annually' })] }
     ] },
     { id: 'OHSA-8', ref: 'Section 8', title: 'General duties of employers to their employees', items: [
       { id: 'OHSA-8-2a', ref: 's8(2)(a)', title: 'Safe plant and systems of work', text: 'Provide and maintain systems of work, plant and machinery that are, as far as reasonably practicable, safe and without risks to health.', freq: 12,
-        ob: [O('Safe work procedures issued for high-risk tasks', 'doc', { cat: 'Safe Work Procedure' }), O('Plant and equipment certificates current', 'asset', { any: true }), O('Workplace inspections scheduled and up to date', 'insp', { tpl: 'TPL-WS' })],
+        ob: [O('Safe work procedures issued for high-risk tasks', 'doc', { cat: 'Safe Work Procedure', dt: 'Safe Work Procedure — high-risk tasks' }), O('Plant and equipment certificates current', 'asset', { any: true }), O('Workplace inspections scheduled and up to date', 'insp', { tpl: 'TPL-WS' })],
         mt: [O('Monthly workplace inspection', 'insp', { tpl: 'TPL-WS', every: 'Monthly', days: 30 }), O('Planned maintenance of plant', 'review', { every: 'Per maintenance plan' })] },
       { id: 'OHSA-8-2b', ref: 's8(2)(b)', title: 'Eliminate or mitigate hazards before resorting to PPE', text: 'Take steps to eliminate or mitigate any hazard or potential hazard before resorting to personal protective equipment.', freq: 12,
         ob: [O('Risk assessments approved and within review date', 'risk'), O('Additional controls implemented (no overdue corrective actions)', 'actions')],
@@ -34,23 +34,23 @@ const LEGAL_LIBRARY = [
         ob: [O('Baseline / issue-based risk assessments approved', 'risk'), O('Hazardous chemicals identified with current SDSs', 'chem')],
         mt: [O('Annual baseline risk assessment review', 'review', { every: 'Annually' })] },
       { id: 'OHSA-8-2e', ref: 's8(2)(e)', title: 'Information, instructions, training and supervision', text: 'Provide information, instructions, training and supervision necessary to ensure the health and safety of employees.', freq: 12,
-        ob: [O('HSEQ induction completed and current', 'training', { course: 'CRS-IND' }), O('Task-specific training per training matrix current', 'trainingAll'), O('Competency of operators verified', 'manual')],
+        ob: [O('HSEQ induction completed and current', 'training', { course: 'CRS-IND', roles: 'ALL' }), O('Task-specific training per training matrix current', 'trainingAll'), O('Competency of operators verified', 'manual')],
         mt: [O('Annual induction refresher', 'review', { every: 'Annually' }), O('Monitor training expiry (training matrix)', 'review', { every: 'Continuous' })] }
     ] },
     { id: 'OHSA-9', ref: 'Section 9', title: 'Duties to persons other than employees', items: [
       { id: 'OHSA-9-1', ref: 's9(1)', title: 'Contractors, visitors and the public', text: 'Conduct the undertaking so that persons other than employees who may be directly affected are not exposed to hazards.', freq: 12,
-        ob: [O('Contractor management procedure issued', 'doc', { kw: 'Contractor' }), O('Visitor induction / sign-in in place', 'manual')],
+        ob: [O('Contractor management procedure issued', 'doc', { kw: 'Contractor', ncat: 'Procedure', dt: 'Contractor Management Procedure' }), O('Visitor induction / sign-in in place', 'manual')],
         mt: [O('Annual review of contractor safety files', 'review', { every: 'Annually' })] }
     ] },
     { id: 'OHSA-16', ref: 'Section 16', title: 'Chief executive officer charged with certain duties', items: [
       { id: 'OHSA-16-1', ref: 's16(1)', title: 'CEO accountability', text: 'The CEO shall as far as is reasonably practicable ensure that the duties of the employer are properly discharged.', freq: 12,
         ob: [O('Management review of HSEQ performance held', 'manual')], mt: [O('Quarterly management review of compliance dashboard', 'review', { every: 'Quarterly' })] },
       { id: 'OHSA-16-2', ref: 's16(2)', title: 'Assignment of duties', text: 'The CEO may assign duties to persons under his or her control; assignment does not relieve the CEO of responsibility.', freq: 12,
-        ob: [O('Written 16(2) assignment, accepted by the assignee', 'appt', { kw: '16(2)' })], mt: [O('Renew assignment on change of person / expiry', 'review', { every: 'On change' })] }
+        ob: [O('Written 16(2) assignment, accepted by the assignee', 'appt', { kw: '16(2)', at: 'Section 16(2) assignee' })], mt: [O('Renew assignment on change of person / expiry', 'review', { every: 'On change' })] }
     ] },
     { id: 'OHSA-17', ref: 'Section 17', title: 'Health and safety representatives', items: [
       { id: 'OHSA-17-1', ref: 's17(1)', title: 'Designation of H&S representatives', text: 'An employer with more than 20 employees shall designate health and safety representatives in the prescribed ratio.', freq: 12,
-        ob: [O('H&S representative(s) designated in writing', 'appt', { kw: 'Health & safety representative' }), O('H&S representatives trained', 'training', { course: 'CRS-HSR' })],
+        ob: [O('H&S representative(s) designated in writing', 'appt', { kw: 'Health & safety representative', at: 'Health & safety representative' }), O('H&S representatives trained', 'training', { course: 'CRS-HSR' })],
         mt: [O('Representatives conduct monthly workplace inspections', 'insp', { tpl: 'TPL-WS', every: 'Monthly', days: 30 }), O('Re-designate on resignation / expiry', 'review', { every: 'On change' })] }
     ] },
     { id: 'OHSA-19', ref: 'Section 19', title: 'Health and safety committees', items: [
@@ -59,12 +59,12 @@ const LEGAL_LIBRARY = [
     ] },
     { id: 'OHSA-24', ref: 'Section 24', title: 'Report to inspector regarding certain incidents', items: [
       { id: 'OHSA-24-1', ref: 's24', title: 'Reporting qualifying incidents', text: 'Report qualifying incidents (e.g. death, serious injury, major incident) to an inspector within the prescribed period.', freq: 12,
-        ob: [O('Incident reporting procedure issued', 'doc', { kw: 'Incident' }), O('Incidents reported and investigated promptly', 'incident'), O('Competent incident investigator appointed', 'appt', { kw: 'Incident investigator' })],
+        ob: [O('Incident reporting procedure issued', 'doc', { kw: 'Incident', ncat: 'Procedure', dt: 'Incident Reporting and Investigation Procedure' }), O('Incidents reported and investigated promptly', 'incident'), O('Competent incident investigator appointed', 'appt', { kw: 'Incident investigator', at: 'Incident investigator' })],
         mt: [O('Monthly incident register review', 'review', { every: 'Monthly' })] }
     ] },
     { id: 'OHSA-37', ref: 'Section 37', title: 'Acts or omissions by employees or mandataries', items: [
       { id: 'OHSA-37-2', ref: 's37(2)', title: 'Written agreement with mandataries (contractors)', text: 'Enter into a written agreement with mandataries regarding arrangements and procedures to ensure compliance with the Act.', freq: 12,
-        ob: [O('Contractor management procedure incl. agreement template', 'doc', { kw: 'Contractor' }), O('Signed agreements on file for active contractors', 'manual')],
+        ob: [O('Contractor management procedure incl. agreement template', 'doc', { kw: 'Contractor', ncat: 'Procedure', dt: 'Contractor Management Procedure' }), O('Signed agreements on file for active contractors', 'manual')],
         mt: [O('Check agreements before each new contract', 'review', { every: 'Per contract' })] }
     ] }
   ] },
@@ -75,10 +75,10 @@ const LEGAL_LIBRARY = [
     ] },
     { id: 'GAR-I', ref: 'Incidents', title: 'Recording, investigation and reporting of incidents', items: [
       { id: 'GAR-8', ref: 'reg. 8 (verify)', title: 'Recording and investigation of incidents', text: 'Record and investigate incidents that must be reported, and keep the records available for inspection.', freq: 12,
-        ob: [O('Incident register maintained; incidents investigated', 'incident'), O('Incident investigator appointed', 'appt', { kw: 'Incident investigator' }), O('Investigation training completed', 'training', { course: 'CRS-INV' })],
+        ob: [O('Incident register maintained; incidents investigated', 'incident'), O('Incident investigator appointed', 'appt', { kw: 'Incident investigator', at: 'Incident investigator' }), O('Investigation training completed', 'training', { course: 'CRS-INV', roles: ['Branch Manager', 'Operations Manager', 'HSEQ Manager'] })],
         mt: [O('Monthly incident register review', 'review', { every: 'Monthly' })] },
       { id: 'GAR-9', ref: 'reg. 9 (verify)', title: 'Reporting of incidents to the inspector', text: 'Report qualifying incidents to the provincial director in the prescribed form and period.', freq: 12,
-        ob: [O('Reporting procedure issued', 'doc', { kw: 'Incident' }), O('Reportability assessed for each incident', 'manual')], mt: [O('Review reportability on every incident', 'review', { every: 'Per incident' })] }
+        ob: [O('Reporting procedure issued', 'doc', { kw: 'Incident', ncat: 'Procedure', dt: 'Incident Reporting and Investigation Procedure' }), O('Reportability assessed for each incident', 'manual')], mt: [O('Review reportability on every incident', 'review', { every: 'Per incident' })] }
     ] }
   ] },
   { id: 'GSR', type: 'Regulation', name: 'General Safety Regulations (OHS Act)', parts: [
@@ -93,7 +93,7 @@ const LEGAL_LIBRARY = [
     ] },
     { id: 'GSR-3', ref: 'reg. 3', title: 'First aid, emergency equipment and procedures', items: [
       { id: 'GSR-3-1', ref: 'reg. 3', title: 'Trained first aiders in the prescribed ratio', text: 'Where more than 10 employees are present, ensure a sufficient number of persons with a valid first aid certificate (ratio to be verified).', freq: 12,
-        ob: [O('First aiders appointed', 'appt', { kw: 'First aider' }), O('First aid certificates valid', 'training', { course: 'CRS-FA1' })],
+        ob: [O('First aiders appointed', 'appt', { kw: 'First aider', at: 'First aider' }), O('First aid certificates valid', 'training', { course: 'CRS-FA1' })],
         mt: [O('Renew first aid certificates before expiry', 'review', { every: 'Every 3 years' })] },
       { id: 'GSR-3-2', ref: 'reg. 3', title: 'First aid boxes and emergency equipment', text: 'Provide first aid boxes with prescribed contents, readily accessible, and keep them stocked.', freq: 12,
         ob: [O('First aid boxes checked and stocked', 'firstaid')], mt: [O('Monthly first aid box checks', 'firstaid', { every: 'Monthly' })] }
@@ -105,7 +105,7 @@ const LEGAL_LIBRARY = [
     ] },
     { id: 'GSR-8', ref: 'reg. 8', title: 'Stacking of articles', items: [
       { id: 'GSR-8-1', ref: 'reg. 8', title: 'Stacking and racking under supervision of a competent person', text: 'Stack articles safely, under supervision of a competent person, with racking suitable and not overloaded.', freq: 12,
-        ob: [O('Stacking supervisor appointed', 'appt', { kw: 'Stacking' }), O('Racking inspection certificates current', 'asset', { type: 'AT-RACK' }), O('Racking inspections up to date', 'insp', { tpl: 'TPL-RACK' })],
+        ob: [O('Stacking supervisor appointed', 'appt', { kw: 'Stacking', at: 'Stacking & storage supervisor' }), O('Racking inspection certificates current', 'asset', { type: 'AT-RACK' }), O('Racking inspections up to date', 'insp', { tpl: 'TPL-RACK' })],
         mt: [O('Six-monthly racking inspection', 'insp', { tpl: 'TPL-RACK', every: 'Six-monthly', days: 180 }), O('Annual competent-person racking inspection', 'review', { every: 'Annually' })] }
     ] },
     { id: 'GSR-13A', ref: 'reg. 13A', title: 'Ladders', items: [
@@ -123,7 +123,7 @@ const LEGAL_LIBRARY = [
         ob: [O('Fire equipment service certificates current', 'asset', { type: 'AT-FIRE' }), O('Monthly fire equipment inspections up to date', 'insp', { tpl: 'TPL-FE' })],
         mt: [O('Monthly fire equipment inspection', 'insp', { tpl: 'TPL-FE', every: 'Monthly', days: 30 }), O('Annual service by accredited provider', 'review', { every: 'Annually' })] },
       { id: 'ERW-9-2', ref: 'reg. 9', title: 'Escape routes, emergency plan and evacuation', text: 'Keep escape routes clear and marked, and ensure employees can evacuate safely.', freq: 12,
-        ob: [O('Emergency response plan issued for the site', 'doc', { cat: 'Emergency Plan' }), O('Evacuation drill completed in the last 12 months', 'drill'), O('Fire fighters / emergency team appointed and trained', 'appt', { kw: 'Fire fighter' })],
+        ob: [O('Emergency response plan issued for the site', 'doc', { cat: 'Emergency Plan', dt: 'Emergency Response Plan' }), O('Evacuation drill completed in the last 12 months', 'drill'), O('Fire fighters / emergency team appointed and trained', 'appt', { kw: 'Fire fighter', at: 'Fire fighter / emergency team member' })],
         mt: [O('Evacuation drill at least annually (6-monthly recommended)', 'drill', { every: 'Six-monthly', days: 182 }), O('Annual emergency plan review', 'review', { every: 'Annually' })] }
     ] }
   ] },
@@ -136,18 +136,18 @@ const LEGAL_LIBRARY = [
   { id: 'DMR', type: 'Regulation', name: 'Driven Machinery Regulations, 2015 (OHS Act)', parts: [
     { id: 'DMR-LM', ref: 'Lifting machines & tackle (verify reg. no.)', title: 'Lifting machines and lifting tackle', items: [
       { id: 'DMR-LM-1', ref: 'Lifting machines (verify)', title: 'Examination and load testing of lifting machines', text: 'Lifting machines (incl. forklifts and cranes) examined and load tested by a competent lifting machine inspector at prescribed intervals.', freq: 12,
-        ob: [O('Forklift load-test certificates current', 'asset', { type: 'AT-FL' }), O('Crane load-test certificates current', 'asset', { type: 'AT-CRANE' }), O('Lifting machinery supervisor appointed', 'appt', { kw: 'Lifting machinery' })],
+        ob: [O('Forklift load-test certificates current', 'asset', { type: 'AT-FL' }), O('Crane load-test certificates current', 'asset', { type: 'AT-CRANE' }), O('Lifting machinery supervisor appointed', 'appt', { kw: 'Lifting machinery', at: 'Lifting machinery supervisor' })],
         mt: [O('Monthly forklift inspection', 'insp', { tpl: 'TPL-FL', every: 'Monthly', days: 30 }), O('Annual examination & load test', 'review', { every: 'Annually' })] },
       { id: 'DMR-LM-2', ref: 'Lifting tackle (verify)', title: 'Lifting tackle register and inspection', text: 'Keep a register of lifting tackle; inspect at prescribed intervals; withdraw defective tackle.', freq: 12,
         ob: [O('Lifting tackle inspection certificates current', 'asset', { type: 'AT-TACKLE' })], mt: [O('Tackle inspections per register', 'review', { every: 'Quarterly / six-monthly' })] },
       { id: 'DMR-LM-3', ref: 'Operators (verify)', title: 'Trained and authorised operators', text: 'Only trained and authorised persons may operate lifting machines.', freq: 12,
-        ob: [O('Forklift operator training current', 'training', { course: 'CRS-FLT' }), O('Operator competency verified and authorised', 'manual')], mt: [O('Retraining before certificate expiry', 'review', { every: 'Every 2 years' })] }
+        ob: [O('Forklift operator training current', 'training', { course: 'CRS-FLT', roles: ['Forklift Operator', 'Warehouse Supervisor'] }), O('Operator competency verified and authorised', 'manual')], mt: [O('Retraining before certificate expiry', 'review', { every: 'Every 2 years' })] }
     ] }
   ] },
   { id: 'EIR', type: 'Regulation', name: 'Electrical Installation Regulations, 2009 (OHS Act)', parts: [
     { id: 'EIR-7', ref: 'reg. 7 (verify)', title: 'Certificate of compliance', items: [
       { id: 'EIR-7-1', ref: 'reg. 7 (verify)', title: 'Valid certificate of compliance for the installation', text: 'Hold a valid certificate of compliance for every electrical installation, issued by a registered person.', freq: 24,
-        ob: [O('Certificate of compliance on file in Document Control', 'doc', { cat: 'Certificate', kw: 'Compliance' })], mt: [O('New CoC after any alteration or addition', 'review', { every: 'On change' })] },
+        ob: [O('Certificate of compliance on file in Document Control', 'doc', { cat: 'Certificate', kw: 'Compliance', dt: 'Electrical Certificate of Compliance' })], mt: [O('New CoC after any alteration or addition', 'review', { every: 'On change' })] },
       { id: 'EIR-7-2', ref: 'Work by registered persons (verify)', title: 'Electrical work by registered persons only', text: 'Electrical installation work only by or under supervision of a registered person.', freq: 12,
         ob: [O('Contractor registration verified on file', 'manual')], mt: [O('Check registration before each job', 'review', { every: 'Per job' })] }
     ] }
@@ -161,11 +161,11 @@ const LEGAL_LIBRARY = [
   { id: 'HCA', type: 'Regulation', name: 'Hazardous Chemical Agents Regulations, 2021 (OHS Act)', parts: [
     { id: 'HCA-I', ref: 'Information & training (verify)', title: 'Information, instruction and training', items: [
       { id: 'HCA-I-1', ref: 'Information & training (verify)', title: 'Train exposed employees', text: 'Inform and train employees who may be exposed on hazards, precautions, PPE and emergency procedures.', freq: 12,
-        ob: [O('HCA awareness training current', 'training', { course: 'CRS-HCA' })], mt: [O('Refresher training', 'review', { every: 'Every 2 years' })] }
+        ob: [O('HCA awareness training current', 'training', { course: 'CRS-HCA', roles: ['Workshop Technician', 'Workshop Supervisor', 'Workshop Foreman'] })], mt: [O('Refresher training', 'review', { every: 'Every 2 years' })] }
     ] },
     { id: 'HCA-R', ref: 'Risk assessment (verify)', title: 'Risk assessment and control of exposure', items: [
       { id: 'HCA-R-1', ref: 'Risk assessment (verify)', title: 'Assess exposure to hazardous chemical agents', text: 'Assess the risk of exposure and record the assessment; review periodically and after changes.', freq: 12,
-        ob: [O('Chemical risk assessment approved and current', 'risk'), O('Chemical management procedure issued', 'doc', { kw: 'Chemical' })], mt: [O('Review assessment at prescribed interval / after change', 'review', { every: 'Per assessment' })] },
+        ob: [O('Chemical risk assessment approved and current', 'risk'), O('Chemical management procedure issued', 'doc', { kw: 'Chemical', ncat: 'Procedure', dt: 'Hazardous Chemical Agents Management Procedure' })], mt: [O('Review assessment at prescribed interval / after change', 'review', { every: 'Per assessment' })] },
       { id: 'HCA-R-2', ref: 'Control & PPE (verify)', title: 'Control of exposure and PPE', text: 'Control exposure using the hierarchy of controls; provide and maintain suitable PPE.', freq: 12,
         ob: [O('PPE issued and current', 'ppe'), O('Corrective actions for chemical controls on schedule', 'actions')], mt: [O('Quarterly chemical store inspection', 'insp', { tpl: 'TPL-CHEM', every: 'Quarterly', days: 90 })] }
     ] },
@@ -201,14 +201,14 @@ const LEGAL_LIBRARY = [
   { id: 'NEMA', type: 'Act', name: 'National Environmental Management Act 107 of 1998', parts: [
     { id: 'NEMA-28', ref: 'Section 28', title: 'Duty of care and remediation of environmental damage', items: [
       { id: 'NEMA-28-1', ref: 's28(1)', title: 'Reasonable measures to prevent pollution', text: 'Take reasonable measures to prevent pollution or degradation of the environment, or to minimise and rectify it.', freq: 12,
-        ob: [O('Environmental / waste procedure issued', 'doc', { cat: 'Environmental' }), O('Chemicals stored with current SDSs', 'chem'), O('Spill kits available and inspected', 'manual')],
+        ob: [O('Environmental / waste procedure issued', 'doc', { cat: 'Environmental', dt: 'Environmental Management Procedure' }), O('Chemicals stored with current SDSs', 'chem'), O('Spill kits available and inspected', 'manual')],
         mt: [O('Quarterly chemical store inspection', 'insp', { tpl: 'TPL-CHEM', every: 'Quarterly', days: 90 })] }
     ] }
   ] },
   { id: 'NEMWA', type: 'Act', name: 'National Environmental Management: Waste Act 59 of 2008', parts: [
     { id: 'NEMWA-16', ref: 'Section 16 (verify)', title: 'General duty in respect of waste management', items: [
       { id: 'NEMWA-16-1', ref: 's16 (verify)', title: 'Avoid, minimise and safely dispose of waste', text: 'Avoid and minimise waste, store it safely and dispose through authorised service providers.', freq: 12,
-        ob: [O('Waste management procedure issued', 'doc', { kw: 'Waste' }), O('Safe disposal certificates on file', 'manual')], mt: [O('Monthly reconciliation of disposal certificates', 'review', { every: 'Monthly' })] }
+        ob: [O('Waste management procedure issued', 'doc', { kw: 'Waste', ncat: 'Environmental', dt: 'Waste Management Procedure' }), O('Safe disposal certificates on file', 'manual')], mt: [O('Monthly reconciliation of disposal certificates', 'review', { every: 'Monthly' })] }
     ] }
   ] },
   { id: 'NRTA', type: 'Act', name: 'National Road Traffic Act 93 of 1996', parts: [
@@ -217,7 +217,7 @@ const LEGAL_LIBRARY = [
         ob: [O('Vehicle licence discs and fleet inspections current', 'asset', { type: 'AT-LDV' }), O('Monthly vehicle inspections up to date', 'insp', { tpl: 'TPL-VEH' })],
         mt: [O('Monthly vehicle inspection', 'insp', { tpl: 'TPL-VEH', every: 'Monthly', days: 30 }), O('Annual licence renewal', 'review', { every: 'Annually' })] },
       { id: 'NRTA-V-2', ref: 'Drivers (verify)', title: 'Drivers licensed (and PrDP where required)', text: 'Drivers hold valid licences and professional driving permits where required.', freq: 12,
-        ob: [O('Driver licence / PrDP copies on file', 'manual'), O('Defensive driving training', 'training', { course: 'CRS-DD' })], mt: [O('Check licence expiry dates', 'review', { every: 'Quarterly' })] }
+        ob: [O('Driver licence / PrDP copies on file', 'manual'), O('Defensive driving training', 'training', { course: 'CRS-DD', roles: ['Delivery Driver'] })], mt: [O('Check licence expiry dates', 'review', { every: 'Quarterly' })] }
     ] }
   ] },
   { id: 'ISO45001', type: 'Other requirement', name: 'ISO 45001:2018 (voluntary commitment)', parts: [
@@ -256,7 +256,7 @@ function oblCheck(o, siteId, l) {
     const as = S.appointments.filter(a => inOrgSite(a, siteId) && a.type.toLowerCase().includes(o.kw.toLowerCase()));
     const ok = as.filter(a => ['Valid', 'Expiring'].includes(apptStatus(a)));
     if (!as.length) return R(false, 'No appointment on file', '#/people/appointments');
-    return ok.length ? R(true, ok.map(a => pname(a.person)).join(', ') + (ok.some(a => apptStatus(a) === 'Expiring') ? ' (expiring soon)' : ''), '#/people/appointments') : R(false, `${as.map(a => pname(a.person) + ' — ' + apptStatus(a).toLowerCase()).join(', ')}`, '#/people/appointments');
+    return ok.length ? R(true, ok.map(a => pname(a.person)).join(', ') + (ok.some(a => apptStatus(a) === 'Expiring') ? ' (expiring soon)' : ''), '#/people/appointments') : R(false, `${as.map(a => (a.person ? pname(a.person) + ' — ' : '') + apptStatus(a).toLowerCase()).join(', ')}`, '#/people/appointments');
   }
   if (o.k === 'training' || o.k === 'trainingAll') {
     const ppl = S.people.filter(p => inOrgSite(p, siteId) && p.type !== 'Contractor');
@@ -332,6 +332,49 @@ function maintainNext(m, siteId) {
 }
 function oblIcon(met) { return met === true ? `<span style="color:var(--green)">${icon('checkCircle', 'sm')}</span>` : met === false ? `<span style="color:var(--red)">${icon('alert', 'sm')}</span>` : `<span style="color:var(--amber)">${icon('clock', 'sm')}</span>`; }
 
+/* ---------------- Operational set-up driven by the ticked requirement ----------------
+   Works out (plan) and creates (apply) the records the operational modules need:
+   document drafts, vacant appointments, training-matrix requirements, inspection
+   schedules, drills and first-aid checks. Nothing is created if it already exists. */
+function setupPlan(item, siteId) {
+  const actSite = siteId === 'ALL' ? defaultSite() : siteId, sn = siteId === 'ALL' ? '' : ' — ' + site(siteId).short, out = [];
+  item.ob.forEach(o => {
+    if (o.k === 'doc' && o.dt && oblCheck(o, siteId).met === false && !S.documents.some(d => inOrgSite(d, siteId) && docActive(d) && (!o.cat || d.category === o.cat) && (!o.kw || d.title.toLowerCase().includes(o.kw.toLowerCase()))))
+      out.push({ k: 'doc', o, label: `Document Control: draft "${o.dt}${sn}" (${o.cat || o.ncat})` });
+    if (o.k === 'appt' && o.at && !S.appointments.some(a => inOrgSite(a, siteId) && a.type.toLowerCase().includes(o.kw.toLowerCase())))
+      out.push({ k: 'appt', o, label: `People: vacant appointment "${o.at}" for ${site(actSite).short} — to be filled` });
+    if ((o.k === 'training') && o.roles) {
+      const roles = o.roles === 'ALL' ? Object.keys(S.roleReqs) : o.roles.filter(r => S.roleReqs[r]);
+      const missing = roles.filter(r => !S.roleReqs[r].includes(o.course));
+      if (missing.length) out.push({ k: 'train', o, roles: missing, label: `Training matrix: "${byId('courses', o.course).name}" required for ${missing.join(', ')}` });
+    }
+    if (o.k === 'firstaid' && !S.emergency.firstAid.some(f => f.site === actSite)) out.push({ k: 'fa', o, label: `Emergency: first aid box register for ${site(actSite).short}` });
+  });
+  item.mt.forEach(x => {
+    if (x.k === 'insp' && !maintainNext(x, siteId).exists) out.push({ k: 'insp', x, label: `Inspections: "${byId('templates', x.tpl).title}" every ${x.days || 30} days at ${site(actSite).short}` });
+    if (x.k === 'drill' && !maintainNext(x, siteId).exists) out.push({ k: 'drill', x, label: `Emergency: evacuation drill scheduled at ${site(actSite).short}` });
+  });
+  return out;
+}
+function applySetup(plan, l, siteId, resp, ins, item) {
+  const actSite = siteId === 'ALL' ? defaultSite() : siteId, sn = siteId === 'ALL' ? '' : ' — ' + site(siteId).short, done = [];
+  plan.forEach(s => {
+    if (s.k === 'doc') {
+      const id = nextId('DOC-', 'documents'), cat = s.o.cat || s.o.ncat;
+      S.documents.push({ id, number: suggestDocNumber(cat), title: s.o.dt + sn, category: cat, type: cat === 'Certificate' ? 'Controlled record' : 'Controlled document', org: siteOrgOf(siteId), site: siteId, dept: 'HSEQ', owner: resp, reviewMonths: cat === 'Certificate' ? 0 : 12, nextReview: null, access: 'Internal', related: [['Legal requirement', l.id, l.reference, '#/legal/' + l.id, '']],
+        revisions: [{ rev: 1, draft: 1, status: 'Draft', date: TODAY, effective: null, file: null, notes: `Required by ${l.id} (${item.ref}). To be drafted / obtained.`, author: resp, reviewer: 'P-002', approver: 'P-002', history: [{ ts: nowTs(), by: S.ui.user, action: `Draft placeholder created from legal requirement ${l.id}`, comment: '' }] }] });
+      l.docs.push(id); done.push('document draft');
+    }
+    if (s.k === 'appt') { S.appointments.push({ id: nextId('APP-', 'appointments'), person: '', type: s.o.at, legalRef: `${ins.name} — ${item.ref}`, site: actSite, appointedBy: resp, date: null, expiry: null, accepted: false, acceptedOn: null, letter: null, fromLegal: l.id }); done.push('vacant appointment'); }
+    if (s.k === 'train') { s.roles.forEach(r => S.roleReqs[r].push(s.o.course)); done.push('training requirement'); }
+    if (s.k === 'fa') { S.emergency.firstAid.push({ site: actSite, item: `First aid box — ${site(actSite).short}`, lastCheck: null, next: TODAY }); done.push('first aid check'); }
+    if (s.k === 'insp') { S.schedules.push({ id: nextId('ISCH-', 'schedules', 2), template: s.x.tpl, asset: null, site: actSite, target: `${byId('templates', s.x.tpl).title} — ${site(actSite).short}`, freqDays: s.x.days || 30, nextDue: addDays(TODAY, 7), assignee: resp }); done.push('inspection schedule'); }
+    if (s.k === 'drill') { S.drills.push({ id: nextId('DR-', 'drills', 3, 400), site: actSite, type: 'Full evacuation', scheduled: addDays(TODAY, 30), conducted: null, status: 'Scheduled', duration: '', participants: 0, result: '', findings: '', actions: [], observer: resp }); done.push('drill'); }
+  });
+  if (plan.length) { l.setup = plan.map(s => s.label); l.assessments[0].note += ` System set up: ${plan.map(s => s.label).join('; ')}.`; }
+  return done.length;
+}
+
 /* ---------------- "Add requirement" picker ---------------- */
 const PICK = { ins: '', open: {}, sel: {} };
 ACT.legalCustom = ACT.legalNew;   // keep the free-text form for requirements not in the library
@@ -381,18 +424,18 @@ function drawPicker(m) {
   const chosen = Object.keys(PICK.sel).filter(k => PICK.sel[k]).map(k => LIB_INDEX[k]).filter(Boolean);
   if (!chosen.length) { plan.innerHTML = '<p class="muted">Tick one or more sub-regulations to see what is required.</p>'; updAddBtn(m); return; }
   const anyGaps = chosen.some(c => c.item.ob.some(o => oblCheck(o, siteId).met === false));
-  const missingSched = chosen.some(c => c.item.mt.some(x => ['insp', 'drill'].includes(x.k) && !maintainNext(x, siteId).exists));
+  const nSetup = chosen.reduce((n, c) => n + setupPlan(c.item, siteId).length, 0);
   plan.innerHTML = `<h4 class="mb">What the system picked up for ${esc(siteId === 'ALL' ? 'all sites' : site(siteId).short)}</h4>${chosen.map(c => {
     const checks = c.item.ob.map(o => Object.assign({ o }, oblCheck(o, siteId)));
     const st = proposedStatus(checks);
     return `<div class="card mb"><div class="card-head"><div><h3>${esc(c.item.ref)} — ${esc(c.item.title)}</h3><span class="ch-sub">${esc(c.ins.name)}</span></div><div>Proposed status: ${sbadge(st)}</div></div><div class="card-body"><div class="grid g2">
       <div><h4>To be compliant</h4><ul class="link-list">${checks.map(ch => `<li><div class="ll-main" style="display:flex;gap:8px">${oblIcon(ch.met)}<div><b style="font-weight:600">${esc(ch.o.t)}</b><div>${esc(ch.detail)}</div></div></div></li>`).join('')}</ul></div>
       <div><h4>To maintain compliance</h4><ul class="link-list">${c.item.mt.map(x => { const n = maintainNext(x, siteId); return `<li><div class="ll-main"><b style="font-weight:600">${esc(x.t)}</b><div>${esc(x.every || '')}</div></div><span>${n.text}</span></li>`; }).join('')}<li><div class="ll-main"><b style="font-weight:600">Re-assess this requirement</b><div>Every ${c.item.freq} months</div></div></li></ul></div>
-    </div></div></div>`;
+    </div>${(() => { const sp = setupPlan(c.item, siteId); return sp.length ? `<div class="mt-s"><h4>The system will set up</h4><ul class="link-list">${sp.map(x => `<li><div class="ll-main" style="display:flex;gap:8px"><span style="color:var(--blue)">${icon('plus', 'sm')}</span><div>${esc(x.label)}</div></div></li>`).join('')}</ul></div>` : ''; })()}</div></div>`;
   }).join('')}
   <div class="fieldset"><legend>When adding</legend>
     <label class="check"><input type="checkbox" id="pkActions" ${anyGaps ? 'checked' : 'disabled'}> <span>Raise a corrective action for each gap found (${chosen.reduce((s, c) => s + c.item.ob.filter(o => oblCheck(o, siteId).met === false).length, 0)} gap(s)), assigned to the responsible person</span></label>
-    <label class="check mt-s"><input type="checkbox" id="pkSched" ${missingSched ? 'checked' : 'disabled'}> <span>Create missing recurring inspections / drills so compliance is maintained</span></label>
+    <label class="check mt-s"><input type="checkbox" id="pkSched" ${nSetup ? 'checked' : 'disabled'}> <span>Set up the operational records this legislation needs (${nSetup} item(s): document drafts, appointments to fill, training requirements, inspections, drills)</span></label>
     <p class="muted mt-s">Items marked ${oblIcon(null)} cannot be checked automatically — confirm them with evidence on the requirement page.</p></div>`;
   updAddBtn(m);
 }
@@ -415,14 +458,11 @@ function addFromLibrary(m) {
       assessments: [{ date: TODAY, by: S.ui.user, status, note: `Auto-assessed from existing records: ${checks.filter(x => x.met).length} met, ${gaps.length} gap(s), ${checks.filter(x => x.met === null).length} to confirm. Confirm with a competent-person assessment.` }] };
     S.legal.push(l); ids.push(id);
     if (doActs) gaps.forEach(g => { createAction({ source: 'Legal', sourceId: id, title: `${it.ref}: ${g.o.t}`, action: `Close gap — ${g.detail}`, owner: resp, priority: status === 'Non-Compliant' ? 'High' : 'Medium', site: actSite }); nActs++; });
-    if (doSched) it.mt.forEach(x => {
-      if (x.k === 'insp' && !maintainNext(x, siteId).exists) { S.schedules.push({ id: nextId('ISCH-', 'schedules', 2), template: x.tpl, asset: null, site: actSite, target: `${byId('templates', x.tpl).title} — ${site(actSite).short}`, freqDays: x.days || 30, nextDue: addDays(TODAY, 7), assignee: resp }); nSched++; }
-      if (x.k === 'drill' && !maintainNext(x, siteId).exists) { S.drills.push({ id: nextId('DR-', 'drills', 3, 400), site: actSite, type: 'Full evacuation', scheduled: addDays(TODAY, 30), conducted: null, status: 'Scheduled', duration: '', participants: 0, result: '', findings: '', actions: [], observer: resp }); nSched++; }
-    });
+    if (doSched) nSched += applySetup(setupPlan(it, siteId), l, siteId, resp, c.ins, it);
     log(`Added ${id} from legal library: ${it.ref} ${it.title} (${status})`, '#/legal/' + id);
   });
   save();
-  toast(`${ids.length} requirement(s) added to the register${nActs ? `, ${nActs} corrective action(s) raised` : ''}${nSched ? `, ${nSched} recurring task(s) scheduled` : ''}.`);
+  toast(`${ids.length} requirement(s) added to the register${nActs ? `, ${nActs} corrective action(s) raised` : ''}${nSched ? `, ${nSched} operational record(s) set up` : ''}.`);
   navigate(ids.length === 1 ? '#/legal/' + ids[0] : '#/legal');
 }
 
@@ -434,6 +474,7 @@ function legalObligationsHtml(l) {
   return `<div class="card"><div class="card-head"><div><h2>What is needed to be compliant</h2><span class="ch-sub">Checked live against existing records · library item ${esc(e.item.id)}</span></div><div>System view: ${sbadge(st)} ${st !== l.status && l.status !== 'Awaiting Verification' && can('legal.assess') ? `<button class="btn sm" data-act="oblApply" data-id="${l.id}">Apply</button>` : ''}</div></div><div class="card-body"><ul class="link-list">
     ${checks.map((c, i) => `<li><div class="ll-main" style="display:flex;gap:8px">${oblIcon(c.met)}<div><b style="font-weight:600">${esc(c.o.t)}</b><div>${c.link ? `<a href="${c.link}">${esc(c.detail)}</a>` : esc(c.detail)}</div></div></div><div class="btn-row">${(() => { const a = S.actions.find(x => x.source === 'Legal' && x.sourceId === l.id && actionOpen(x) && x.title.endsWith(c.o.t)); return a ? `<a href="#/actions/${a.id}">${a.id}</a> ${sbadge(a.status)}` : ''; })()}${c.met === false && !S.actions.some(x => x.source === 'Legal' && x.sourceId === l.id && actionOpen(x) && x.title.endsWith(c.o.t)) ? permBtn('action.create', `<button class="btn sm" data-act="oblAction" data-id="${l.id}" data-i="${i}">Raise action</button>`) : ''}${c.o.k === 'manual' && c.met === null ? permBtn('legal.assess', `<button class="btn sm primary" data-act="oblConfirm" data-id="${l.id}" data-i="${i}">Confirm with evidence</button>`) : ''}</div></li>`).join('')}
   </ul></div></div>
+  ${l.setup && l.setup.length ? `<div class="card"><div class="card-head"><h2>Set up in the operational modules</h2><span class="ch-sub">Created when this requirement was added</span></div><div class="card-body"><ul class="link-list">${l.setup.map(x => `<li><div class="ll-main" style="display:flex;gap:8px"><span style="color:var(--blue)">${icon('checkCircle', 'sm')}</span><div>${esc(x)}</div></div></li>`).join('')}</ul></div></div>` : ''}
   <div class="card"><div class="card-head"><h2>Maintaining compliance</h2><span class="ch-sub">Recurring activities</span></div><div class="card-body"><ul class="link-list">
     ${e.item.mt.map(x => { const n = maintainNext(x, l.site); return `<li><div class="ll-main"><b style="font-weight:600">${n.link ? `<a href="${n.link}">${esc(x.t)}</a>` : esc(x.t)}</b><div>${esc(x.every || '')}</div></div><span>${n.text}</span></li>`; }).join('')}
     <li><div class="ll-main"><b style="font-weight:600">Re-assess this requirement</b><div>Every ${l.freq} months</div></div><span>${dueText(l.nextReview)}</span></li>

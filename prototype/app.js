@@ -129,7 +129,7 @@ const STATUS_COLOURS = {
   'Reported': 'orange', 'Under Investigation': 'blue', 'Actions in Progress': 'blue', 'Awaiting Closure': 'purple',
   // misc
   'Planned': 'blue', 'Scheduled': 'blue', 'Completed': 'green', 'Reviewed': 'green', 'Overdue': 'red', 'Open': 'red', 'Action Raised': 'amber', 'Awaiting Approval': 'amber',
-  'Valid': 'green', 'Expiring': 'amber', 'Expired': 'red', 'Missing': 'red', 'Not accepted': 'amber', 'Superseded draft': 'grey', 'Repaired – awaiting verification': 'purple',
+  'Valid': 'green', 'Expiring': 'amber', 'Expired': 'red', 'Missing': 'red', 'Not accepted': 'amber', 'Vacant': 'red', 'Superseded draft': 'grey', 'Repaired – awaiting verification': 'purple',
   'Critical': 'red', 'High': 'orange', 'Medium': 'amber', 'Low': 'green', 'Major NC': 'red', 'Minor NC': 'amber', 'Observation': 'blue', 'OFI': 'grey', 'Major': 'orange', 'Minor': 'amber'
 };
 const STATUS_LABELS = { 'Rejected': 'Rejected', 'Submitted for Verification': 'Awaiting verification' };
@@ -294,7 +294,7 @@ function trainingStatus(personId, courseId) {
   return { status: validity(recs[0].expiry, S.config.notify.trainingLead), rec: recs[0] };
 }
 function requiredCourses(p) { return S.roleReqs[p.jobTitle] || []; }
-function apptStatus(a) { if (!a.accepted) return 'Not accepted'; return validity(a.expiry, S.config.notify.appointmentLead); }
+function apptStatus(a) { if (!a.person) return 'Vacant'; if (!a.accepted) return 'Not accepted'; return validity(a.expiry, S.config.notify.appointmentLead); }
 function scheduleFor(assetId) { return S.schedules.filter(s => s.asset === assetId); }
 function assetDocStatus(a) {
   const t = byId('assetTypes', a.type); if (!t) return [];
@@ -356,6 +356,7 @@ function buildNotifs() {
     const st = apptStatus(a);
     if (st === 'Expired') push({ key: 'app-ex-' + a.id + a.expiry, sev: 'red', cat: 'people', title: `Appointment expired: ${a.type}`, text: `${pname(a.person)} (${sname(a.site)}) — expired ${fmt(a.expiry)}.`, link: '#/people/appointments?id=' + a.id, date: a.expiry, site: a.site });
     else if (st === 'Expiring') push({ key: 'app-up-' + a.id + a.expiry, sev: 'amber', cat: 'people', title: `Appointment expiring: ${a.type}`, text: `${pname(a.person)} (${sname(a.site)}) — expires ${fmt(a.expiry)}.`, link: '#/people/appointments?id=' + a.id, date: a.expiry, site: a.site });
+    else if (st === 'Vacant') push({ key: 'app-va-' + a.id, sev: 'red', cat: 'people', title: `Appointment vacant: ${a.type}`, text: `${sname(a.site)} — nobody appointed yet${a.fromLegal ? ' (required by ' + a.fromLegal + ')' : ''}.`, link: '#/people/appointments?id=' + a.id, date: TODAY, site: a.site });
     else if (st === 'Not accepted') push({ key: 'app-na-' + a.id, sev: 'amber', cat: 'people', title: `Appointment not accepted: ${a.type}`, text: `${pname(a.person)} has not signed acceptance.`, link: '#/people/appointments?id=' + a.id, date: a.date, site: a.site });
   });
   S.people.filter(p => inSite(p, S.ui.site)).forEach(p => requiredCourses(p).forEach(c => {
