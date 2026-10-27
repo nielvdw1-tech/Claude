@@ -197,10 +197,26 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     ok('G7 SDS reviewed → new revision in Document Control, notification cleared', (await S(`docIssued(byId('documents','DOC-018')).rev`)) === 2 && !(await S(`buildNotifs().some(n=>n.key.startsWith('sds-od-CH-001'))`)));
   }
 
+  /* ---------------- Legal library: Act → regulation → sub-regulation ---------------- */
+  {
+    await asUser('P-002'); await go('#/legal'); await btn('Add requirement');
+    ok('L1 add button disabled until a sub-regulation is ticked', await p.isDisabled('#pickAdd'));
+    await msel('site', 'S-CPT'); await msel('ins', 'ERW'); await p.click('[data-pk=part][data-id="ERW-9"]'); await p.waitForTimeout(100);
+    await p.check('[data-pki="ERW-9-2"]'); await p.waitForTimeout(120);
+    const plan = (await p.innerText('#pickPlan')).toLowerCase();
+    ok('L2 system lists what is needed to comply and to maintain compliance, checked against records', plan.includes('to be compliant') && plan.includes('to maintain compliance') && plan.includes('no issued emergency plan'));
+    const before = await S('S.actions.length');
+    await p.click('#pickAdd'); await p.waitForTimeout(250);
+    const l = await S(`S.legal.find(x=>x.lib==='ERW-9-2'&&x.site==='S-CPT')`);
+    ok('L3 requirement added with auto-assessed status and gap actions raised', !!l && l.status === 'Partially Compliant' && (await S('S.actions.length')) - before === 2, l && l.id);
+    await go('#/legal'); await btn('Add requirement'); await msel('site', 'S-CPT'); await msel('ins', 'ERW'); await p.click('[data-pk=part][data-id="ERW-9"]'); await p.waitForTimeout(100);
+    ok('L4 duplicate sub-regulation for the same site cannot be added twice', await p.isDisabled('[data-pki="ERW-9-2"]')); await p.keyboard.press('Escape');
+  }
+
   /* ---------------- Other checks ---------------- */
   {
     // Validation
-    await go('#/legal'); await btn('Add requirement'); await mbtn('Add requirement');
+    await go('#/legal'); await btn('Add requirement'); await p.click('#pickCustom'); await p.waitForTimeout(150); await mbtn('Add requirement');
     ok('V1 form validation blocks empty required fields', await modalOpen() && (await p.$$('.modal .field.invalid')).length > 0); await p.keyboard.press('Escape');
     // Permissions: employee cannot approve docs / see medical
     await asUser('P-009'); await go('#/documents/DOC-005');

@@ -69,6 +69,7 @@ function legalDetail(id) {
       ${l.gaps ? `<div>Identified gaps</div><div style="color:var(--red);font-weight:600">${esc(l.gaps)}</div>` : ''}
       ${l.status === 'Not Applicable' ? `<div>N/A justification</div><div>${esc(l.naJustification)}</div>` : ''}
     </div></div></div>
+    ${typeof legalObligationsHtml === 'function' ? legalObligationsHtml(l) : ''}
     <div class="card"><div class="card-head"><h2>Compliance evidence</h2>${permBtn('legal.assess', `<button class="btn sm" data-act="legalEvidence" data-id="${l.id}">Add evidence</button>`)}</div><div class="card-body">${l.evidence.length ? `<ul class="link-list">${l.evidence.map(e => `<li><div class="ll-main">${fileChip({ name: e.name, seeded: true })}<div>${esc(e.note || '')} · ${esc(pname(e.by))} · ${fmt(e.date)}</div></div></li>`).join('')}</ul>` : '<p class="muted">No evidence recorded yet.</p>'}</div></div>
     <div class="card"><div class="card-head"><h2>Assessment history</h2></div><div class="card-body">${l.assessments.length ? `<ul class="timeline">${l.assessments.map(a => `<li class="t-${STATUS_COLOURS[a.status] === 'green' ? 'green' : STATUS_COLOURS[a.status] === 'red' ? 'red' : STATUS_COLOURS[a.status] === 'amber' ? 'amber' : 'grey'}"><b>${esc(a.status)}</b><div class="tl-meta">${esc(pname(a.by))} · ${fmt(a.date)}</div>${a.note ? `<div class="tl-comment">${esc(a.note)}</div>` : ''}</li>`).join('')}</ul>` : '<p class="muted">Not yet assessed.</p>'}</div></div>
   </div><div class="stack">

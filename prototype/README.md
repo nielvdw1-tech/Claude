@@ -59,6 +59,19 @@ All seven workflows use the same shared records you see in the individual module
 5. Switch back to Johan van Wyk (user menu) → **Review evidence & verify**. Accept the evidence, or return it to see the rejection loop. The requirement becomes **Compliant** and gets a new review date.
 6. **Close action**, then open the **Dashboard**: the legal compliance score has changed.
 
+### Adding legal requirements from the library
+1. **Legal Compliance** → **Add requirement**. Choose the **site** and the **responsible person**.
+2. Pick an **Act or Regulation** from the dropdown (Acts, Regulations and other requirements such as ISO 45001).
+3. Click a **section / regulation** to open it, then tick the **sub-regulations** that apply. Tick the box on the section row to select all of its sub-regulations.
+4. For each ticked item the system shows:
+   - **To be compliant:** each obligation, checked against existing records (documents, appointments, training, asset certificates, inspections, drills, SDSs, risk assessments, PPE, incidents, audits and actions). It is marked ✓ met, ⚠ gap (with the reason) or 🕒 needs confirming with evidence.
+   - **To maintain compliance:** the recurring activities and when each is next due.
+   - A **proposed status**.
+5. Leave the options ticked to **raise a corrective action for each gap** and **create any missing recurring inspections or drills**, then **Add to register**.
+6. On the requirement page, **What is needed to be compliant** stays live. Confirm manual items with evidence, raise actions for gaps, or **Apply** the system's view to update the status.
+
+Sub-regulations already in the register for that site are greyed out, so they can't be added twice. Requirements that aren't in the library can still be added with **Add a custom requirement instead**. The library is illustrative: references marked "(verify)" in particular need checking by a competent person.
+
 ### B. Document approval
 1. **Document Control** → **New / upload document**. Choose *Procedure*, enter a title, **select any file** and create the document (Draft, Rev 1).
 2. **Submit for review** → **Start review** → **Return for correction** (a comment is required).
@@ -152,12 +165,13 @@ prototype/
 ├── mod-operations.js             Assets, Maintenance & Defects, PPE, Chemicals, Emergency
 ├── mod-incidents-audits.js       Incidents, Audits & Inspections, controlled print report
 ├── mod-actions-reports-admin.js  Actions (CAPA), Management Reports, Administration
+├── mod-legal-library.js          Legal library picker (Act → regulation → sub-regulation) and live obligation checks
 ├── tests/workflows.test.js       Automated end-to-end test of Workflows A–G (developers)
 ├── CHECKLIST.md                  Requirements checklist with implementation status
 └── README.md                     This file
 ```
 
-**For developers:** the automated test drives the real interface in a headless browser and checks 52 workflow outcomes:
+**For developers:** the automated test drives the real interface in a headless browser and checks 56 workflow outcomes:
 
 ```bash
 cd prototype

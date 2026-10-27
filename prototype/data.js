@@ -15,7 +15,7 @@ function buildSeed() {
   const T = (n, h = 9, m = 0) => { const x = new Date(base); x.setDate(x.getDate() + n); x.setHours(h, m, 0, 0); return x.toISOString(); };
   const demoFile = (name, kb) => ({ name, size: kb * 1024, type: name.endsWith('.pdf') ? 'application/pdf' : 'application/octet-stream', demo: true, seeded: true });
 
-  const S = { version: 3, seededOn: D(0) };
+  const S = { version: 4, seededOn: D(0) };
 
   /* ---------------- Organisations, sites, departments ---------------- */
   S.orgs = [
@@ -303,6 +303,17 @@ function buildSeed() {
     L('LR-102', 'S-RPV', 'Driven Machinery Regulations, 2015 (OHS Act)', 'Lifting machines — inspection and load testing (regulation number to be verified)', 'Lifting machines examined and load tested at prescribed intervals.', 'Alrode: forklift FL-R1.', 'P-017', 'Certificate tracking.', 'Load-test certificate.', 'Compliant', 12, D(-100), D(265), [], [], { assessments: [asmt(D(-100), 'P-006', 'Compliant', '')] }),
     L('LR-103', 'S-RPV', 'Occupational Health and Safety Act 85 of 1993', 'Section 17 — Health and safety representatives', 'Designate H&S representatives where required.', 'Alrode: 18 employees — threshold to be confirmed.', 'P-017', '—', 'Headcount confirmation.', 'Not Assessed', 12, null, D(20), [], [], {})
   ];
+
+  // Link seeded requirements to the legal library (mod-legal-library.js) so obligations are checked live
+  const LIB_MAP = { 'LR-001': 'OHSA-8-2a', 'LR-002': 'OHSA-16-2', 'LR-003': 'OHSA-17-1', 'LR-004': 'OHSA-17-1', 'LR-005': 'OHSA-17-1', 'LR-006': 'OHSA-19-1', 'LR-007': 'GAR-8', 'LR-008': 'DMR-LM-1', 'LR-009': 'DMR-LM-1', 'LR-010': 'HCA-S-1', 'LR-011': 'HCA-S-1', 'LR-012': 'EIR-7-1', 'LR-013': 'EIR-7-1', 'LR-014': 'ERW-9-1', 'LR-015': 'GSR-3-1', 'LR-016': 'COIDA-R-1', 'LR-017': 'NEMA-28-1', 'LR-018': 'NEMWA-16-1', 'LR-020': 'ISO-9-2', 'LR-021': 'FAC-S-1', 'LR-022': 'GSR-3-1', 'LR-023': 'GSR-3-1', 'LR-101': 'OHSA-8-2a', 'LR-102': 'DMR-LM-1', 'LR-103': 'OHSA-17-1' };
+  S.legal.forEach(l => {
+    l.oblConfirm = {};
+    if (!LIB_MAP[l.id]) return;
+    l.lib = LIB_MAP[l.id];
+    // Requirements already assessed as Compliant have their manual (non-automatic) obligations confirmed
+    const e = typeof LIB_INDEX !== 'undefined' && LIB_INDEX[l.lib];
+    if (e && l.status === 'Compliant') e.item.ob.filter(o => o.k === 'manual').forEach(o => { l.oblConfirm[o.t] = { by: (l.assessments[0] || {}).by || 'P-002', date: l.lastReviewed, file: 'Evidence on file (demo)' }; });
+  });
 
   /* ---------------- Risk assessments ---------------- */
   const ctrl = (id, text, owner, due, status, action) => ({ id, text, owner, due, status, action: action || null });

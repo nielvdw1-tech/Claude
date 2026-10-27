@@ -2,7 +2,7 @@
 
 Status key: **Implemented** = works end-to-end in the prototype and was tested · **Partial** = present but limited or simulated (reason given) · **Not implemented**.
 
-A feature is only marked Implemented if it works, not just because its screen exists. "Tested" means it was exercised by the automated browser test (`tests/workflows.test.js`, 52/52 passing), by the route smoke test (89 routes, no JavaScript errors), or by manual screenshot review at desktop (1440 px), tablet (820 px) and mobile (390 px) widths.
+A feature is only marked Implemented if it works, not just because its screen exists. "Tested" means it was exercised by the automated browser test (`tests/workflows.test.js`, 56/56 passing), by the route smoke test (89 routes, no JavaScript errors), or by manual screenshot review at desktop (1440 px), tablet (820 px) and mobile (390 px) widths.
 
 ## Build & technical
 | Requirement | Status | Notes |
@@ -33,6 +33,7 @@ A feature is only marked Implemented if it works, not just because its screen ex
 | 2 | Draft → Submit → Under Review → Approved → Issued; reject, return, resubmit, obsolete, archive; comments, timestamps, revision numbering, reminders; no overwriting | Implemented | Tested (Workflow B); returned drafts kept as "Superseded draft" |
 | 3 | Legal register with all listed fields and all six statuses (N/A requires justification) | Implemented | Illustrative data, labelled "verify" throughout |
 | 3 | Assess, record evidence, identify gaps, generate central action | Implemented | Tested (Workflow A) |
+| 3 | Add requirements from a library: Act / Regulation dropdown → section → tickable sub-regulations; system derives obligations to comply and recurring tasks to maintain compliance, checks them against existing records, proposes a status, raises gap actions and schedules missing inspections / drills | Implemented | Tested (L1–L4). 16 instruments in the library; content is illustrative, and references marked "(verify)" need confirmation. Manual obligations need confirming with evidence |
 | 4 | Risk register with all listed fields; configurable matrix; create/edit; review; link legal/procedures/assets; actions for missing controls; upload existing assessments | Implemented | Matrix labels and band thresholds configurable; **matrix size fixed at 5×5** (Partial for size) |
 | 5 | Employee/contractor register, branch allocation, roles | Implemented | |
 | 5 | Legal appointments, letters, acceptance, validity/expiry | Implemented | |
