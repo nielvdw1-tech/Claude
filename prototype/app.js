@@ -23,7 +23,7 @@ function loadState() {
   S = buildSeed(); save();
 }
 function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); } catch (e) { console.warn('Local storage unavailable — changes will not persist.', e); } }
-function resetDemo() { S = buildSeed(); save(); }
+function resetDemo() { S = buildSeed(); save(); if (typeof idbClear === 'function') idbClear(); }
 
 /* ---------------- Utilities ---------------- */
 function isoDate(d) { const z = new Date(d.getTime() - d.getTimezoneOffset() * 60000); return z.toISOString().slice(0, 10); }
@@ -51,11 +51,13 @@ function nextId(prefix, coll, pad = 3, start = 1) {
 }
 function log(text, link) { S.activity.unshift({ ts: nowTs(), by: S.ui.user, text, link: link || '' }); S.activity = S.activity.slice(0, 200); }
 function addEvent(sev, cat, title, text, link, site) { S.events.unshift({ key: 'EV-' + Date.now() + '-' + Math.floor(Math.random() * 1000), sev, cat, title, text, link, date: TODAY, ts: nowTs(), site: site || 'ALL', org: S.ui.org }); }
-function fileMeta(f) { return f ? { name: f.name, size: f.size, type: f.type || 'unknown', demo: true, selectedOn: nowTs() } : null; }
+function fileMeta(f) { return f ? storeFile(f) : null; }   // storeFile (mod-files.js) keeps the content in browser storage for viewing
 function fsize(b) { if (!b && b !== 0) return ''; return b > 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB'; }
-function fileChip(f) {
+/* A clickable file chip; ctx = { doc, ri } ties it to a document revision so the viewer can show its header */
+function fileChip(f, ctx) {
   if (!f) return '<span class="muted">No file</span>';
-  return `<span class="file-chip" title="Demo file reference only — the file content is not stored by this prototype">${icon('file', 'sm')}<span class="fc-name">${esc(f.name)}</span><span class="muted">${fsize(f.size)}</span><span class="fc-note">${f.seeded ? 'Demo record' : 'Local demo file'}</span></span>`;
+  const attrs = `data-act="viewFile" data-name="${esc(f.name)}" data-type="${esc(f.type || '')}" data-size="${f.size || 0}"${f.blobId ? ` data-blob="${f.blobId}"` : ''}${f.seeded ? ' data-seeded="1"' : ''}${f.tooLarge ? ' data-too-large="1"' : ''}${ctx && ctx.doc ? ` data-doc="${ctx.doc}" data-ri="${ctx.ri}"` : ''}`;
+  return `<button type="button" class="file-chip" ${attrs} title="Open ${esc(f.name)}">${icon('file', 'sm')}<span class="fc-name">${esc(f.name)}</span><span class="muted">${fsize(f.size)}</span><span class="fc-note">${icon('eye', 'sm')}View</span></button>`;
 }
 function uniq(a) { return [...new Set(a)]; }
 function pct(n, d) { return d ? Math.round((n / d) * 100) : 100; }

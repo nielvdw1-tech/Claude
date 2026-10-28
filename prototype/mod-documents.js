@@ -111,6 +111,8 @@ function docDetail(id) {
   if (st === 'Approved') btn('doc.issue', 'docIssue', icon('checkCircle', 'sm') + ' Issue for use', 'success');
   if (st === 'Issued for Use') { btn('doc.create', 'docReviewed', 'Record periodic review'); btn('doc.create', 'docNewRevision', 'Start new revision', 'primary'); btn('doc.issue', 'docObsolete', 'Make obsolete', 'danger'); }
   if (st === 'Obsolete') btn('doc.issue', 'docArchive', 'Archive');
+  if (latest.file) B.unshift(`<button class="btn ${isApprover ? 'primary' : ''}" data-act="viewDocFile" data-id="${d.id}">${icon('eye', 'sm')} Open document</button>`);
+  if (issued && issued !== latest && issued.file) B.unshift(`<button class="btn" data-act="viewDocFile" data-id="${d.id}" data-ri="${d.revisions.indexOf(issued)}">${icon('eye', 'sm')} Open ${revLabel(issued)} (in use)</button>`);
   const rel = docRelated(d);
   const allHist = [];
   d.revisions.forEach(r => (r.history || []).forEach(h => allHist.push(Object.assign({ rev: revLabel(r) }, h))));
@@ -122,7 +124,7 @@ function docDetail(id) {
       <div class="btn-row">${sbadge(st)} <span class="tag">${revLabel(latest)}</span> ${issued && issued !== latest ? `<span class="badge b-green plain">Current issued: ${revLabel(issued)}</span>` : ''} ${badge(d.access, d.access === 'Confidential' || d.access === 'Restricted' ? 'orange' : 'grey', true)} ${docReviewOverdue(d) ? badge('Review overdue', 'red') : ''}</div></div>
     <div class="sh-actions">${B.join('')}</div>
   </div>
-  ${st === 'In Approval' ? `<div class="alert ${isApprover ? 'warn' : 'info'}">${icon(isApprover ? 'user' : 'clock')}<div>${isApprover ? `<b>It is your turn to approve</b> — ${esc(routeText(latest))}. Review the file, then approve, return for correction or reject.` : `Waiting for <b>${esc(pname(cur.person))}</b> — ${esc(routeText(latest))}. Approvers sign off one after another in the order shown.`}</div></div>` : ''}
+  ${st === 'In Approval' ? `<div class="alert ${isApprover ? 'warn' : 'info'}">${icon(isApprover ? 'user' : 'clock')}<div>${isApprover ? `<b>It is your turn to approve</b> — ${esc(routeText(latest))}. Open the document to read it, then approve, return for correction or reject.` : `Waiting for <b>${esc(pname(cur.person))}</b> — ${esc(routeText(latest))}. Approvers sign off one after another in the order shown.`}</div></div>` : ''}
   ${issued && issued !== latest && docActive(d) ? `<div class="alert info">${icon('info')}<div><b>${revLabel(issued)} remains the controlled version in use</b> until ${revLabel(latest)} completes approval and is issued. Previous revisions are retained below and never overwritten.</div></div>` : ''}
   ${(st === 'Returned for Correction' || st === 'Rejected') && lastDecision ? `<div class="alert ${st === 'Rejected' ? 'danger' : 'warn'}">${icon('alert')}<div><b>${st} by ${esc(pname(lastDecision.person))} (step ${lastDecision.step}: ${esc(lastDecision.label)}):</b> ${esc(lastDecision.comment)}${st === 'Returned for Correction' && isAuthor ? '<br>Revise the document and resubmit — the approval route restarts at step 1.' : ''}</div></div>` : ''}
   ${st === 'Draft' && !latest.file ? `<div class="alert warn">${icon('upload')}<div>No file attached yet. Attach the document file before submitting for approval.</div></div>` : ''}
@@ -143,10 +145,10 @@ function docDetail(id) {
         <div>Review frequency</div><div>${d.reviewMonths ? d.reviewMonths + ' months' : 'Not subject to periodic review'}</div>
         <div>Next review date</div><div>${docActive(d) && issued ? dueText(d.nextReview) : '—'}</div>
         <div>Access classification</div><div>${esc(d.access)}</div>
-        <div>File (${revLabel(latest)})</div><div>${fileChip(latest.file)}</div>
+        <div>File (${revLabel(latest)})</div><div>${fileChip(latest.file, { doc: d.id, ri: d.revisions.length - 1 })}</div>
       </div></div></div>
       <div class="card"><div class="card-head"><h2>Revision history</h2><span class="ch-sub">All revisions and draft iterations are retained</span></div><div class="card-body flush"><div class="table-wrap"><table class="tbl stackable"><thead><tr><th>Revision</th><th>Status</th><th>Date</th><th>Effective</th><th>Change summary</th><th>Author</th><th>Approvers</th><th>File</th></tr></thead><tbody>
-        ${d.revisions.slice().reverse().map(r => `<tr><td data-label="Revision"><b>${revLabel(r)}</b></td><td data-label="Status">${sbadge(r.status)}</td><td data-label="Date">${fmt(r.date)}</td><td data-label="Effective">${fmt(r.effective)}</td><td data-label="Changes">${esc(r.notes)}</td><td data-label="Author">${esc(pname(r.author))}</td><td data-label="Approvers">${(r.route || []).map(s => `${esc(pname(s.person))} <span class="t-sub">(${esc(s.status)})</span>`).join('<br>') || '—'}</td><td data-label="File">${fileChip(r.file)}</td></tr>`).join('')}
+        ${d.revisions.slice().reverse().map(r => `<tr><td data-label="Revision"><b>${revLabel(r)}</b></td><td data-label="Status">${sbadge(r.status)}</td><td data-label="Date">${fmt(r.date)}</td><td data-label="Effective">${fmt(r.effective)}</td><td data-label="Changes">${esc(r.notes)}</td><td data-label="Author">${esc(pname(r.author))}</td><td data-label="Approvers">${(r.route || []).map(s => `${esc(pname(s.person))} <span class="t-sub">(${esc(s.status)})</span>`).join('<br>') || '—'}</td><td data-label="File">${fileChip(r.file, { doc: d.id, ri: d.revisions.indexOf(r) })}</td></tr>`).join('')}
       </tbody></table></div></div></div>
       <div class="card"><div class="card-head"><h2>Approval trail</h2><span class="ch-sub">Every decision, comment and timestamp</span></div><div class="card-body"><ul class="timeline">
         ${allHist.map(h => `<li class="${/Approved|Issued|approved/.test(h.action) ? 't-green' : /Returned|Rejected|obsolete/i.test(h.action) ? 't-red' : ''}"><b>${esc(h.action)}</b> <span class="tag">${esc(h.rev)}</span><div class="tl-meta">${esc(pname(h.by))} · ${fmtTs(h.ts)}</div>${h.comment ? `<div class="tl-comment">${esc(h.comment)}</div>` : ''}</li>`).join('')}
@@ -158,7 +160,7 @@ function docDetail(id) {
         ${d.reviewMonths && issued && docActive(d) ? `<p>A reminder appears ${S.config.notify.docReviewLead} days before the review date for the document owner (${esc(pname(d.owner))}).</p><p>${dueText(d.nextReview)}</p>` : '<p class="muted">No periodic review scheduled.</p>'}
         ${permBtn('action.create', `<button class="btn sm" data-act="docRaiseAction" data-id="${d.id}">${icon('plus', 'sm')} Raise corrective action</button>`)}
       </div></div>
-      <div class="alert demo">${icon('info')}<div>Files shown are <b>demo references</b>. This prototype does not upload or permanently store documents; production uses secure, versioned document storage with access control.</div></div>
+      <div class="alert demo">${icon('info')}<div>Files you upload are kept <b>in this browser only</b> so they can be opened here. Production keeps them in secure, versioned document storage with access control.</div></div>
     </div>
   </div>`;
   return { title: d.number, nav: 'documents', crumbs: [['Document control', '#/documents'], [d.number, '#']], html };

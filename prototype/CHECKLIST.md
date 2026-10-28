@@ -8,14 +8,15 @@ Status key:
 - **Not implemented**
 
 "Tested" means one of the following:
-- the automated browser test (`tests/workflows.test.js`, **46/46 passing**, no JavaScript errors);
+- the automated browser test (`tests/workflows.test.js`, **53/53 passing**, no JavaScript errors);
 - the route smoke test (77 routes plus a second organisation, no errors);
 - the mobile layout check (31 routes at 390 px, no horizontal overflow).
 
 ## Document control
 | Requirement | Status | Notes |
 |---|---|---|
-| Upload documents with browser file selection | Partial | File picker works; only the name and size are kept (labelled "demo reference") |
+| Upload documents with browser file selection | Implemented | File content kept in browser storage (up to 20 MB) — production uses secure storage |
+| View documents and files in the system | Implemented | PDFs rendered page by page, images and text shown; issued revision and draft open separately; demo records open a generated sample sheet (F1–F7). Word/Excel: no in-app preview yet |
 | Document register: search, filter by category / status / branch / review date | Implemented | Includes an "Awaiting my approval" filter |
 | Approval by a number of people, **in sequence** | Implemented | Ordered route; only the current approver can decide; tested with a 3-step route (A1–A8) |
 | Default route per category, adjustable per document on submit | Implemented | Administration → Approval routes (A13) |

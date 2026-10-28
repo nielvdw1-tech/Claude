@@ -47,6 +47,13 @@ To start again, open the user menu (top right) and choose **Reset demo data**.
 8. Approve all three steps in turn. The document is **Approved**. As Johan, **Issue for use**.
 9. The **approval route**, **revision history** and **approval trail** show every decision, comment and timestamp.
 
+**Viewing documents:** use **Open document** on any document page, or click any file anywhere in the system: revisions, action evidence, inspection photos, certificates and incident attachments.
+- **PDFs** open page by page inside the system. **Images** and **text files** display directly.
+- **Approvers** see the button highlighted when it is their turn.
+- **Revision in use:** while a new draft is in approval, the issued revision can be opened separately with **Open Rev 1 (in use)**.
+- **Demo documents** have no real file content, so they open as a sample sheet built from the record: controlled header, change summary and approval route.
+- **Storage:** uploaded files are kept in your browser only (up to 20 MB each). Production uses secure document storage.
+
 Seeded examples:
 - **KIE-SWP-022** is waiting at step 2 for Johan. It is in his tasks, and on the Documents page under **Awaiting my approval**.
 - **KIE-MS-003** is at step 1 with Ayesha.
@@ -80,7 +87,7 @@ Defects can also be reported directly from the asset page or its **QR page** (e.
 
 | Works in the browser | Simulated / not provided |
 |---|---|
-| Upload form with file selection, sequential approval routes, return / reject / resubmit, issue, revisions | **Files:** only the name and size are kept; files are not stored |
+| Upload form with file selection, sequential approval routes, return / reject / resubmit, issue, revisions; **in-app viewing of PDFs, images and text files** | **Files:** kept in this browser only (up to 20 MB each); Word/Excel files have no in-app preview |
 | Asset register, QR pages, type-specific certificates, scheduled inspections, controlled templates, defects, out-of-service control | **QR codes:** a simulated pattern and a "scan" dialog |
 | Corrective actions with owner workflow, evidence, independent verification, rejection, reopening, escalation | **Sign-in & security:** user switching is a demo; permissions are applied in the browser only |
 | Incident reporting, investigation, root cause, actions, closure | **Email / SMS:** in-app notifications only |
@@ -110,11 +117,13 @@ prototype/
 ├── mod-operations.js             Assets, QR pages, maintenance & defects
 ├── mod-inspections-incidents.js  Inspections, controlled templates & print report, incidents
 ├── mod-actions-reports-admin.js  Corrective actions, reports, administration
+├── mod-files.js                  File storage (browser) and in-app file viewer
+├── vendor/pdfjs/                 PDF.js 3.11.174 (Apache-2.0) for viewing PDFs, works offline
 ├── tests/workflows.test.js       Automated end-to-end test (developers)
 ├── CHECKLIST.md                  Requirements checklist with status
 └── README.md                     This file
 ```
 
-**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 46 workflow outcomes.
+**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 53 workflow outcomes.
 
 The earlier full HSEQ prototype, with legal, risk, people, PPE, chemicals, emergency and audits, is preserved in git history at commit `26b59bc`.

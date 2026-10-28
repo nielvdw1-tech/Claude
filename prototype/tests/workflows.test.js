@@ -181,6 +181,37 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     ok('E11 reset demo data restores seed', (await S(`S.documents.length`)) === 29 && (await S(`byId('assets','AS-002').status`)) === 'In Service');
   }
 
+  /* ---------------- F. Viewing documents and files ---------------- */
+  {
+    // Use a real PDF produced earlier in this run (print of an inspection) — or build one now
+    await go('#/print/INS-1087'); await p.emulateMedia({ media: 'print' }); const pdfBuf = await p.pdf({ format: 'A4' }); await p.emulateMedia({ media: 'screen' });
+    await asUser('P-003'); await go('#/documents'); await btn('Upload document');
+    await mfill('title', 'Viewer test procedure'); await p.setInputFiles('.modal [name=file]', { name: 'viewer_test.pdf', mimeType: 'application/pdf', buffer: pdfBuf });
+    await mbtn('Save document'); await p.waitForTimeout(300);
+    const did = await S(`S.documents[S.documents.length-1].id`);
+    ok('F1 uploaded file content kept in browser storage', !!(await S(`docLatest(byId('documents','${did}')).file.blobId`)));
+    await asUser('P-006'); await go('#/documents/' + did);
+    await btn('Open document'); await p.waitForSelector('.fv-page canvas', { timeout: 15000 }).catch(() => {});
+    const pages = await p.$$eval('.fv-page canvas', c => c.filter(x => x.width > 100 && x.height > 100).length);
+    ok('F2 approver opens the PDF inside the system (pages rendered)', pages >= 1, `${pages} page(s)`);
+    const inked = await p.$eval('.fv-page canvas', c => { const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let n = 0; for (let i = 0; i < d.length; i += 4 * 97) if (d[i] < 200) n++; return n; }).catch(() => 0);
+    ok('F3 rendered page contains the document content (not blank)', inked > 50, `${inked} dark samples`);
+    await p.keyboard.press('Escape');
+    await p.reload(); await p.waitForTimeout(400); await go('#/documents/' + did); await btn('Open document'); await p.waitForSelector('.fv-page canvas', { timeout: 15000 }).catch(() => {});
+    ok('F4 file still opens after reloading the page', (await p.$$('.fv-page canvas')).length >= 1); await p.keyboard.press('Escape');
+    await go('#/documents/DOC-005'); await btn('Open document'); await p.waitForTimeout(200);
+    const sheet = await p.innerText('#fvBody');
+    ok('F5 demo document opens a sample sheet with its controlled header and approval route', sheet.includes('KIE-SWP-022') && sheet.includes('HSEQ approval') && sheet.includes('Sample sheet'));
+    await p.keyboard.press('Escape');
+    ok('F6 the revision in use can be opened separately from the draft under approval', await has('.sh-actions button:has-text("Open Rev 1 (in use)")'));
+    // Image evidence on a corrective action
+    await asUser('P-003'); await go('#/actions/ACT-1014'); await asUser(await S(`byId('actions','ACT-1014').owner`)); await go('#/actions/ACT-1014');
+    const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAFklEQVR42mNk+M9Qz0AEYBxVSF+FAP5FDvcfRYWgAAAAAElFTkSuQmCC', 'base64');
+    await btn('Upload evidence'); await p.setInputFiles('#f_ev', { name: 'repair_photo.png', mimeType: 'image/png', buffer: png }); await mbtn('Upload'); await p.waitForTimeout(250);
+    await p.click('button.file-chip:has-text("repair_photo.png")'); await p.waitForSelector('.fv-img img', { timeout: 5000 }).catch(() => {});
+    ok('F7 photo evidence opens in the viewer', await has('.fv-img img')); await p.keyboard.press('Escape');
+  }
+
   /* ---------------- Print output ---------------- */
   { await go('#/print/INS-1087'); await p.emulateMedia({ media: 'print' }); await p.pdf({ path: path.join(os.tmpdir(), 'vdw_inspection_report.pdf'), format: 'A4', printBackground: true }); await p.emulateMedia({ media: 'screen' }); }
 
