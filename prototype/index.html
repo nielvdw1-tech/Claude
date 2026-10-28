@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>VDW HSEQ Management System (Prototype)</title>
-  <meta name="description" content="Interactive prototype of the VDW HSEQ Management System — demonstration data only.">
+  <meta name="description" content="Interactive prototype of the VDW compliance control system: document approvals, asset inspections with corrective actions, and incident management. Demonstration data only.">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -15,7 +15,7 @@
       <header class="topbar" id="topbar"></header>
       <div class="demo-ribbon" role="note">
         <b>PROTOTYPE · DEMONSTRATION DATA.</b>
-        <span>Fictional companies and records. Data is stored only in this browser. No real sign-in, permanent document storage, email notifications or server-side security. Legal references are illustrative and require verification.</span>
+        <span>Fictional companies and records. Data is stored only in this browser. No real sign-in, permanent document storage, email notifications or server-side security.</span>
       </div>
       <main class="content" id="content" tabindex="-1">
         <noscript><div class="alert danger">This prototype needs JavaScript enabled in your browser.</div></noscript>
@@ -30,12 +30,8 @@
   <script src="app.js"></script>
   <!-- Modules -->
   <script src="mod-documents.js"></script>
-  <script src="mod-legal-risk.js"></script>
-  <script src="mod-people.js"></script>
   <script src="mod-operations.js"></script>
-  <script src="mod-incidents-audits.js"></script>
+  <script src="mod-inspections-incidents.js"></script>
   <script src="mod-actions-reports-admin.js"></script>
-  <!-- Legal library: Act/Regulation → section → sub-regulation picker with automatic obligation checks -->
-  <script src="mod-legal-library.js"></script>
 </body>
 </html>

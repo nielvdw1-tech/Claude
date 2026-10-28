@@ -8,7 +8,7 @@
    ========================================================================== */
 'use strict';
 
-const STORE_KEY = 'vdw-hseq-prototype-v4';
+const STORE_KEY = 'vdw-hseq-prototype-v5';
 let S = null;                        // application state (demo data)
 const TODAY = (() => { const d = new Date(); d.setHours(0, 0, 0, 0); return isoDate(d); })();
 const ROUTES = {};                   // page renderers registered by module files
@@ -18,7 +18,7 @@ const ACT = {};                      // click handlers: data-act="name"
 function loadState() {
   try {
     const raw = localStorage.getItem(STORE_KEY);
-    if (raw) { const parsed = JSON.parse(raw); if (parsed && parsed.version === 4) { S = parsed; return; } }
+    if (raw) { const parsed = JSON.parse(raw); if (parsed && parsed.version === 5) { S = parsed; return; } }
   } catch (e) { console.warn('Could not read local storage; using fresh demo data.', e); }
   S = buildSeed(); save();
 }
@@ -117,9 +117,9 @@ function icon(name, cls = '') { return `<svg class="ic ${cls}" viewBox="0 0 24 2
 
 /* ---------------- Status badges ---------------- */
 const STATUS_COLOURS = {
-  // legal
   'Compliant': 'green', 'Partially Compliant': 'amber', 'Non-Compliant': 'red', 'Not Assessed': 'grey', 'Not Applicable': 'navy', 'Awaiting Verification': 'purple',
   // documents
+  'In Approval': 'blue', 'Pending': 'grey', 'Current': 'blue', 'Returned': 'amber', 'Cancelled': 'grey',
   'Draft': 'grey', 'Submitted for Review': 'blue', 'Under Review': 'blue', 'Approved': 'green', 'Issued for Use': 'green', 'Returned for Correction': 'amber', 'Resubmitted': 'blue', 'Rejected': 'red', 'Obsolete': 'grey', 'Archived': 'grey', 'Superseded': 'grey',
   // actions
   'Created': 'grey', 'Assigned': 'blue', 'Acknowledged': 'blue', 'In Progress': 'blue', 'Submitted for Verification': 'purple', 'Verified': 'green', 'Closed': 'green', 'Reopened': 'orange',
@@ -163,10 +163,6 @@ function personOptions(sel, filter) { const list = S.people.filter(p => p.org ==
 function siteOptions(sel, includeAll = true) { return (includeAll ? `<option value="ALL" ${sel === 'ALL' ? 'selected' : ''}>All sites (organisation-wide)</option>` : '<option value="">— Select —</option>') + orgSites().map(s => `<option value="${s.id}" ${s.id === sel ? 'selected' : ''}>${esc(s.name)}</option>`).join(''); }
 function opts(list, sel, blank) { return (blank ? `<option value="">${esc(blank)}</option>` : '') + list.map(o => { const v = typeof o === 'object' ? o.value : o, l = typeof o === 'object' ? o.label : o; return `<option value="${esc(v)}" ${String(v) === String(sel) ? 'selected' : ''}>${esc(l)}</option>`; }).join(''); }
 function defaultSite() { return S.ui.site !== 'ALL' ? S.ui.site : (me() && me().org === S.ui.org ? me().site : orgSites()[0].id); }
-
-/* ---------------- Risk matrix ---------------- */
-function riskBand(score) { const b = S.config.riskMatrix.bands.find(x => score <= x.max) || S.config.riskMatrix.bands[S.config.riskMatrix.bands.length - 1]; return b; }
-function ratingChip(L, Sv) { if (!L || !Sv) return '<span class="muted">—</span>'; const sc = L * Sv, b = riskBand(sc); return `<span class="rating"><i class="r-${b.cls}">${sc}</i>${esc(b.name)}</span>`; }
 
 /* ---------------- Toasts / modal / confirm ---------------- */
 function toast(msg, type = 'success') {
@@ -280,7 +276,6 @@ function qrSvg(text) {
    COMPLIANCE ENGINE — indicative scores computed from the demo records
    ========================================================================== */
 function inSite(rec, siteId) { if (!rec) return false; const org = rec.org || (site(rec.site) || {}).org; if (org && org !== S.ui.org) return false; return !siteId || siteId === 'ALL' || !rec.site || rec.site === 'ALL' || rec.site === siteId; }
-const LEGAL_WEIGHT = { 'Compliant': 1, 'Awaiting Verification': .75, 'Partially Compliant': .5, 'Non-Compliant': 0, 'Not Assessed': 0 };
 function docIssued(d) { return d.revisions.find(r => r.status === 'Issued for Use'); }
 function docLatest(d) { return d.revisions[d.revisions.length - 1]; }
 function docStatus(d) { return docLatest(d).status; }
@@ -288,13 +283,6 @@ function docActive(d) { return !['Obsolete', 'Archived'].includes(docStatus(d));
 function docReviewOverdue(d) { return docActive(d) && docIssued(d) && d.nextReview && daysTo(d.nextReview) < 0; }
 function actionOpen(a) { return !['Verified', 'Closed'].includes(a.status); }
 function actionOverdue(a) { return actionOpen(a) && daysTo(a.due) < 0; }
-function trainingStatus(personId, courseId) {
-  const recs = S.training.filter(t => t.person === personId && t.course === courseId).sort((a, b) => b.date.localeCompare(a.date));
-  if (!recs.length) return { status: 'Missing', rec: null };
-  return { status: validity(recs[0].expiry, S.config.notify.trainingLead), rec: recs[0] };
-}
-function requiredCourses(p) { return S.roleReqs[p.jobTitle] || []; }
-function apptStatus(a) { if (!a.person) return 'Vacant'; if (!a.accepted) return 'Not accepted'; return validity(a.expiry, S.config.notify.appointmentLead); }
 function scheduleFor(assetId) { return S.schedules.filter(s => s.asset === assetId); }
 function assetDocStatus(a) {
   const t = byId('assetTypes', a.type); if (!t) return [];
@@ -308,26 +296,24 @@ function assetChecks(a) {
   checks.push(a.status !== 'Out of Service');
   return checks;
 }
+function incidentOnTrack(i) { return !(i.status === 'Reported' && daysTo(i.date) < -3) && !(i.status === 'Under Investigation' && i.invDue && daysTo(i.invDue) < 0); }
+/* Indicative control score per site: are documents current, assets inspected & certified,
+   corrective actions on time, incidents investigated promptly? Weights configurable in Administration. */
 function compliance(siteId) {
-  const legal = S.legal.filter(l => inSite(l, siteId) && l.status !== 'Not Applicable');
-  const legalScore = legal.length ? Math.round(legal.reduce((s, l) => s + (LEGAL_WEIGHT[l.status] || 0), 0) / legal.length * 100) : 100;
   const docs = S.documents.filter(d => inSite(d, siteId) && docActive(d) && docIssued(d) && d.reviewMonths);
   const docScore = pct(docs.filter(d => !docReviewOverdue(d)).length, docs.length);
-  let tReq = 0, tOk = 0;
-  S.people.filter(p => inSite(p, siteId) && p.type !== 'Contractor').forEach(p => requiredCourses(p).forEach(c => { tReq++; const st = trainingStatus(p.id, c).status; if (st === 'Valid' || st === 'Expiring') tOk++; }));
-  const appts = S.appointments.filter(a => inSite(a, siteId));
-  const apScore = pct(appts.filter(a => ['Valid', 'Expiring'].includes(apptStatus(a))).length, appts.length);
   let aTot = 0, aOk = 0; S.assets.filter(a => inSite(a, siteId) && a.status !== 'Decommissioned').forEach(a => assetChecks(a).forEach(c => { aTot++; if (c) aOk++; }));
   const acts = S.actions.filter(a => inSite(a, siteId) && actionOpen(a));
   const actScore = pct(acts.filter(a => !actionOverdue(a)).length, acts.length);
-  const parts = { legal: legalScore, documents: docScore, training: pct(tOk, tReq), appointments: apScore, assets: pct(aOk, aTot), actions: actScore };
-  const w = S.config.complianceWeights; let tw = 0, ts = 0; Object.keys(parts).forEach(k => { tw += Number(w[k]); ts += parts[k] * Number(w[k]); });
-  return { overall: Math.round(ts / tw), parts, legalCounts: countBy(legal, 'status'), openActions: acts.length, overdueActions: acts.filter(actionOverdue).length };
+  const incs = S.incidents.filter(i => inSite(i, siteId) && i.status !== 'Closed');
+  const parts = { documents: docScore, assets: pct(aOk, aTot), actions: actScore, incidents: pct(incs.filter(incidentOnTrack).length, incs.length) };
+  const w = S.config.complianceWeights; let tw = 0, ts = 0; Object.keys(parts).forEach(k => { tw += Number(w[k] || 0); ts += parts[k] * Number(w[k] || 0); });
+  return { overall: tw ? Math.round(ts / tw) : 100, parts, openActions: acts.length, overdueActions: acts.filter(actionOverdue).length, openIncidents: incs.length };
 }
 function countBy(arr, key) { const o = {}; arr.forEach(x => { const k = typeof key === 'function' ? key(x) : x[key]; o[k] = (o[k] || 0) + 1; }); return o; }
 function scoreColour(v) { return v >= 85 ? 'green' : v >= 70 ? 'amber' : 'red'; }
-const PART_LABELS = { legal: 'Legal compliance', documents: 'Document reviews current', training: 'Training valid', appointments: 'Appointments valid', assets: 'Asset certificates & inspections', actions: 'Actions on schedule' };
-const PART_LINKS = { legal: '#/legal', documents: '#/documents?review=overdue', training: '#/people/matrix', appointments: '#/people/appointments', assets: '#/assets', actions: '#/actions?status=overdue' };
+const PART_LABELS = { documents: 'Documents current (reviews)', assets: 'Assets inspected & certified', actions: 'Corrective actions on time', incidents: 'Incidents investigated on time' };
+const PART_LINKS = { documents: '#/documents?review=overdue', assets: '#/assets', actions: '#/actions?status=overdue', incidents: '#/incidents?status=open' };
 
 /* ==========================================================================
    NOTIFICATION ENGINE — rule-based alerts derived from the live demo data
@@ -335,36 +321,19 @@ const PART_LINKS = { legal: '#/legal', documents: '#/documents?review=overdue', 
 function buildNotifs() {
   const n = [], cfg = S.config.notify, cats = cfg.categories;
   const push = (o) => { if (cats[o.cat] !== false) n.push(o); };
-  // Documents
-  S.documents.filter(d => inSite(d, S.ui.site) && docActive(d) && docIssued(d) && d.nextReview).forEach(d => {
-    const dd = daysTo(d.nextReview);
-    if (dd < 0) push({ key: 'doc-od-' + d.id + d.nextReview, sev: 'red', cat: 'documents', title: `Document review overdue: ${d.number}`, text: `${d.title} was due for review ${-dd} days ago.`, link: '#/documents/' + d.id, date: d.nextReview, site: d.site });
-    else if (dd <= cfg.docReviewLead) push({ key: 'doc-up-' + d.id + d.nextReview, sev: 'amber', cat: 'documents', title: `Document review due: ${d.number}`, text: `${d.title} is due for review in ${dd} days.`, link: '#/documents/' + d.id, date: d.nextReview, site: d.site });
+  // Documents: approvals, issue, returns, periodic reviews
+  S.documents.filter(d => inSite(d, S.ui.site)).forEach(d => {
+    const r = docLatest(d), c = curStep(r);
+    if (r.status === 'In Approval' && c) push({ key: 'doc-ap-' + d.id + r.rev + '-' + r.draft + '-' + c.step, sev: 'blue', cat: 'documents', title: `Awaiting approval: ${d.number} (step ${c.step} of ${r.route.length})`, text: `${d.title} — waiting for ${pname(c.person)} (${c.label}).`, link: '#/documents/' + d.id, date: r.date, site: d.site, task: true, owner: c.person });
+    if (r.status === 'Approved') push({ key: 'doc-is-' + d.id + r.rev + '-' + r.draft, sev: 'blue', cat: 'documents', title: `Approved — ready to issue: ${d.number}`, text: `${d.title} completed its approval route.`, link: '#/documents/' + d.id, date: r.approvedOn || r.date, site: d.site });
+    if (r.status === 'Returned for Correction') push({ key: 'doc-rt-' + d.id + r.rev + '-' + r.draft, sev: 'amber', cat: 'documents', title: `Returned for correction: ${d.number}`, text: `${pname(r.author)} to revise and resubmit ${d.title}.`, link: '#/documents/' + d.id, date: r.date, site: d.site, owner: r.author });
+    if (docActive(d) && docIssued(d) && d.nextReview) {
+      const dd = daysTo(d.nextReview);
+      if (dd < 0) push({ key: 'doc-od-' + d.id + d.nextReview, sev: 'red', cat: 'documents', title: `Document review overdue: ${d.number}`, text: `${d.title} was due for review ${-dd} days ago.`, link: '#/documents/' + d.id, date: d.nextReview, site: d.site, owner: d.owner });
+      else if (dd <= cfg.docReviewLead) push({ key: 'doc-up-' + d.id + d.nextReview, sev: 'amber', cat: 'documents', title: `Document review due: ${d.number}`, text: `${d.title} is due for review in ${dd} days.`, link: '#/documents/' + d.id, date: d.nextReview, site: d.site, owner: d.owner });
+    }
   });
-  S.documents.filter(d => inSite(d, S.ui.site) && ['Submitted for Review', 'Under Review', 'Resubmitted', 'Approved'].includes(docStatus(d))).forEach(d => {
-    const r = docLatest(d);
-    push({ key: 'doc-ap-' + d.id + r.rev + '-' + r.draft + r.status, sev: 'blue', cat: 'documents', title: r.status === 'Approved' ? `Approved — awaiting issue: ${d.number}` : `Document awaiting ${r.status === 'Under Review' ? 'review decision' : 'review'}: ${d.number}`, text: `${d.title} — ${revLabel(r)}.`, link: '#/documents/' + d.id, date: r.date, site: d.site, task: true, owner: r.status === 'Approved' ? r.approver : r.reviewer });
-  });
-  // Legal
-  S.legal.filter(l => inSite(l, S.ui.site) && l.status !== 'Not Applicable').forEach(l => {
-    const dd = daysTo(l.nextReview);
-    if (dd != null && dd < 0) push({ key: 'leg-od-' + l.id + l.nextReview, sev: 'red', cat: 'legal', title: `Legal assessment overdue: ${l.id}`, text: `${l.reference} (${sname(l.site)}) — assessment was due ${fmt(l.nextReview)}.`, link: '#/legal/' + l.id, date: l.nextReview, site: l.site, owner: l.responsible });
-    else if (dd != null && dd <= cfg.legalLead) push({ key: 'leg-up-' + l.id + l.nextReview, sev: 'amber', cat: 'legal', title: `Legal assessment due: ${l.id}`, text: `${l.reference} (${sname(l.site)}) due ${fmt(l.nextReview)}.`, link: '#/legal/' + l.id, date: l.nextReview, site: l.site, owner: l.responsible });
-  });
-  // People
-  S.appointments.filter(a => inSite(a, S.ui.site)).forEach(a => {
-    const st = apptStatus(a);
-    if (st === 'Expired') push({ key: 'app-ex-' + a.id + a.expiry, sev: 'red', cat: 'people', title: `Appointment expired: ${a.type}`, text: `${pname(a.person)} (${sname(a.site)}) — expired ${fmt(a.expiry)}.`, link: '#/people/appointments?id=' + a.id, date: a.expiry, site: a.site });
-    else if (st === 'Expiring') push({ key: 'app-up-' + a.id + a.expiry, sev: 'amber', cat: 'people', title: `Appointment expiring: ${a.type}`, text: `${pname(a.person)} (${sname(a.site)}) — expires ${fmt(a.expiry)}.`, link: '#/people/appointments?id=' + a.id, date: a.expiry, site: a.site });
-    else if (st === 'Vacant') push({ key: 'app-va-' + a.id, sev: 'red', cat: 'people', title: `Appointment vacant: ${a.type}`, text: `${sname(a.site)} — nobody appointed yet${a.fromLegal ? ' (required by ' + a.fromLegal + ')' : ''}.`, link: '#/people/appointments?id=' + a.id, date: TODAY, site: a.site });
-    else if (st === 'Not accepted') push({ key: 'app-na-' + a.id, sev: 'amber', cat: 'people', title: `Appointment not accepted: ${a.type}`, text: `${pname(a.person)} has not signed acceptance.`, link: '#/people/appointments?id=' + a.id, date: a.date, site: a.site });
-  });
-  S.people.filter(p => inSite(p, S.ui.site)).forEach(p => requiredCourses(p).forEach(c => {
-    const t = trainingStatus(p.id, c); const crs = byId('courses', c);
-    if (t.status === 'Expired') push({ key: 'trn-ex-' + p.id + c + t.rec.expiry, sev: 'red', cat: 'people', title: `Training expired: ${crs.name}`, text: `${p.name} (${sname(p.site)}) — expired ${fmt(t.rec.expiry)}.`, link: '#/people/' + p.id, date: t.rec.expiry, site: p.site });
-    else if (t.status === 'Expiring') push({ key: 'trn-up-' + p.id + c + t.rec.expiry, sev: 'amber', cat: 'people', title: `Training expiring: ${crs.name}`, text: `${p.name} (${sname(p.site)}) — expires ${fmt(t.rec.expiry)}.`, link: '#/people/' + p.id, date: t.rec.expiry, site: p.site });
-  }));
-  // Assets: inspections, maintenance, defects, certificates
+  // Assets: inspections, maintenance, critical defects, certificates
   S.schedules.filter(s => inSite(s, S.ui.site)).forEach(s => {
     const dd = daysTo(s.nextDue), t = byId('templates', s.template);
     if (dd < 0) push({ key: 'ins-od-' + s.id + s.nextDue, sev: 'red', cat: 'assets', title: `Inspection overdue: ${s.target}`, text: `${t.title} was due ${fmt(s.nextDue)}.`, link: '#/inspect/' + s.id, date: s.nextDue, site: s.site, task: true, owner: s.assignee });
@@ -384,45 +353,32 @@ function buildNotifs() {
     else if (ds.status === 'Expiring') push({ key: 'cert-up-' + a.id + ds.req.name + ds.cert.expiry, sev: 'amber', cat: 'assets', title: `Certificate expiring: ${a.tag}`, text: `${ds.req.name} expires ${fmt(ds.cert.expiry)}.`, link: '#/assets/' + a.id + '?tab=documents', date: ds.cert.expiry, site: a.site });
     else if (ds.status === 'Missing' && ds.req.months > 0) push({ key: 'cert-mi-' + a.id + ds.req.name, sev: 'red', cat: 'assets', title: `Required document missing: ${a.tag}`, text: `${ds.req.name} not on file.`, link: '#/assets/' + a.id + '?tab=documents', date: TODAY, site: a.site });
   }));
-  // Chemicals
-  S.chemicals.filter(c => inSite(c, S.ui.site)).forEach(c => {
-    const dd = daysTo(c.sdsReviewDue);
-    if (!c.sds) push({ key: 'sds-mi-' + c.id + (c.sdsReviewDue || ''), sev: 'red', cat: 'chemicals', title: `SDS not on file: ${c.name}`, text: `${sname(c.site)} — obtain supplier SDS and link it in Document Control.`, link: '#/chemicals/' + c.id, date: c.sdsReviewDue || TODAY, site: c.site });
-    else if (dd < 0) push({ key: 'sds-od-' + c.id + c.sdsReviewDue, sev: 'red', cat: 'chemicals', title: `SDS review overdue: ${c.name}`, text: `${sname(c.site)} — SDS review was due ${fmt(c.sdsReviewDue)}.`, link: '#/chemicals/' + c.id, date: c.sdsReviewDue, site: c.site });
-    else if (dd <= cfg.docReviewLead) push({ key: 'sds-up-' + c.id + c.sdsReviewDue, sev: 'amber', cat: 'chemicals', title: `SDS review due: ${c.name}`, text: `${sname(c.site)} — due ${fmt(c.sdsReviewDue)}.`, link: '#/chemicals/' + c.id, date: c.sdsReviewDue, site: c.site });
-  });
-  // Emergency drills
-  S.drills.filter(d => d.status === 'Scheduled' && inSite(d, S.ui.site)).forEach(d => {
-    const dd = daysTo(d.scheduled);
-    if (dd < 0) push({ key: 'dr-od-' + d.id + d.scheduled, sev: 'red', cat: 'emergency', title: `Emergency drill overdue: ${sname(d.site)}`, text: `${d.type} drill was scheduled for ${fmt(d.scheduled)}.`, link: '#/emergency/drills?id=' + d.id, date: d.scheduled, site: d.site });
-    else if (dd <= cfg.drillLead) push({ key: 'dr-up-' + d.id + d.scheduled, sev: 'amber', cat: 'emergency', title: `Emergency drill due: ${sname(d.site)}`, text: `${d.type} drill scheduled for ${fmt(d.scheduled)}.`, link: '#/emergency/drills?id=' + d.id, date: d.scheduled, site: d.site });
-  });
   // Incidents
   S.incidents.filter(i => inSite(i, S.ui.site) && ['Reported', 'Under Investigation'].includes(i.status)).forEach(i => {
-    push({ key: 'inc-' + i.id + i.status, sev: i.status === 'Reported' ? 'red' : 'amber', cat: 'incidents', title: i.status === 'Reported' ? `Incident awaiting investigation: ${i.id}` : `Investigation in progress: ${i.id}`, text: `${i.title} (${sname(i.site)}).`, link: '#/incidents/' + i.id, date: i.date, site: i.site, task: true, owner: i.investigator });
+    push({ key: 'inc-' + i.id + i.status, sev: i.status === 'Reported' ? 'red' : 'amber', cat: 'incidents', title: i.status === 'Reported' ? `Incident awaiting investigation: ${i.id}` : `Investigation in progress: ${i.id}`, text: `${i.title} (${sname(i.site)}).`, link: '#/incidents/' + i.id, date: i.invDue || i.date, site: i.site, task: true, owner: i.investigator });
   });
-  // Actions
+  // Corrective actions
   S.actions.filter(a => inSite(a, S.ui.site)).forEach(a => {
     if (actionOverdue(a)) push({ key: 'act-od-' + a.id + a.due + a.status, sev: 'red', cat: 'actions', title: `Action overdue: ${a.id}${a.escalated ? ' (escalated)' : ''}`, text: `${a.title} — owner ${pname(a.owner)}, due ${fmt(a.due)}.`, link: '#/actions/' + a.id, date: a.due, site: a.site, task: true, owner: a.owner });
     if (a.status === 'Submitted for Verification') push({ key: 'act-ver-' + a.id + (a.history.length), sev: 'blue', cat: 'actions', title: `Action awaiting verification: ${a.id}`, text: `${a.title} — evidence submitted by ${pname(a.owner)}.`, link: '#/actions/' + a.id, date: a.due, site: a.site, task: true, verify: true });
   });
-  // Event notifications (from user activity)
-  S.events.filter(e => e.org === S.ui.org && (S.ui.site === 'ALL' || e.site === 'ALL' || e.site === S.ui.site)).forEach(e => n.push(e));
+  S.events.filter(e => e.org === S.ui.org && (S.ui.site === 'ALL' || e.site === 'ALL' || e.site === S.ui.site) && cats[e.cat] !== false).forEach(e => n.push(e));
   const sevRank = { red: 0, amber: 1, blue: 2, green: 3 };
   return n.sort((a, b) => (sevRank[a.sev] - sevRank[b.sev]) || String(a.date).localeCompare(String(b.date)));
 }
 function myTasks() {
   const uid = S.ui.user, out = [];
+  S.documents.filter(d => inSite(d, S.ui.site)).forEach(d => { const r = docLatest(d), c = curStep(r);
+    if (c && c.person === uid) out.push({ title: `Approve ${d.number}: ${d.title}`, sub: `Step ${c.step} of ${r.route.length} — ${c.label}`, link: '#/documents/' + d.id, sev: 'amber' });
+    if (r.status === 'Approved' && can('doc.issue')) out.push({ title: `Issue ${d.number}: ${d.title}`, sub: `${revLabel(r)} fully approved — not yet issued`, link: '#/documents/' + d.id, sev: 'blue' });
+    if (r.status === 'Returned for Correction' && r.author === uid) out.push({ title: `Correct & resubmit ${d.number}`, sub: 'Returned for correction', link: '#/documents/' + d.id, sev: 'amber' });
+    if (r.status === 'Draft' && r.author === uid) out.push({ title: `Submit ${d.number} for approval`, sub: 'Draft not yet submitted', link: '#/documents/' + d.id, sev: 'blue' });
+  });
   S.actions.filter(a => inSite(a, S.ui.site) && actionOpen(a) && a.owner === uid).forEach(a => out.push({ title: `${a.id}: ${a.title}`, sub: `Action · ${a.status} · due ${fmt(a.due)}`, link: '#/actions/' + a.id, sev: actionOverdue(a) ? 'red' : 'blue' }));
   if (can('action.verify')) S.actions.filter(a => inSite(a, S.ui.site) && a.status === 'Submitted for Verification' && a.owner !== uid).forEach(a => out.push({ title: `Verify ${a.id}: ${a.title}`, sub: `Evidence submitted by ${pname(a.owner)}`, link: '#/actions/' + a.id, sev: 'blue' }));
-  S.documents.filter(d => inSite(d, S.ui.site)).forEach(d => { const r = docLatest(d);
-    if (['Submitted for Review', 'Resubmitted', 'Under Review'].includes(r.status) && (r.reviewer === uid || r.approver === uid)) out.push({ title: `Review ${d.number}: ${d.title}`, sub: `${revLabel(r)} · ${r.status}`, link: '#/documents/' + d.id, sev: 'blue' });
-    if (r.status === 'Approved' && can('doc.issue')) out.push({ title: `Issue ${d.number}: ${d.title}`, sub: `${revLabel(r)} approved — not yet issued`, link: '#/documents/' + d.id, sev: 'blue' });
-    if (r.status === 'Returned for Correction' && r.author === uid) out.push({ title: `Correct ${d.number}`, sub: 'Returned for correction', link: '#/documents/' + d.id, sev: 'amber' });
-  });
   S.schedules.filter(s => inSite(s, S.ui.site) && s.assignee === uid && daysTo(s.nextDue) <= 7).forEach(s => out.push({ title: `Inspect: ${s.target}`, sub: `Due ${fmt(s.nextDue)}`, link: '#/inspect/' + s.id, sev: daysTo(s.nextDue) < 0 ? 'red' : 'amber' }));
   S.incidents.filter(i => inSite(i, S.ui.site) && i.investigator === uid && !['Closed'].includes(i.status)).forEach(i => out.push({ title: `Investigate ${i.id}: ${i.title}`, sub: i.status, link: '#/incidents/' + i.id, sev: 'amber' }));
-  S.legal.filter(l => inSite(l, S.ui.site) && l.responsible === uid && l.nextReview && daysTo(l.nextReview) < 30 && l.status !== 'Not Applicable').forEach(l => out.push({ title: `Assess ${l.id}: ${l.reference}`, sub: `Due ${fmt(l.nextReview)}`, link: '#/legal/' + l.id, sev: daysTo(l.nextReview) < 0 ? 'red' : 'amber' }));
+  if (can('incident.investigate')) S.incidents.filter(i => inSite(i, S.ui.site) && i.status === 'Reported').forEach(i => out.push({ title: `Assign investigator: ${i.id}`, sub: i.title, link: '#/incidents/' + i.id, sev: 'red' }));
   return out;
 }
 
@@ -432,16 +388,15 @@ function myTasks() {
    → Verified → Closed   (+ Rejected, Reopened, overdue escalation)
    ========================================================================== */
 const ACTION_FLOW = ['Created', 'Assigned', 'Acknowledged', 'In Progress', 'Submitted for Verification', 'Verified', 'Closed'];
-const SOURCE_MODULES = ['Legal', 'Risk Assessment', 'Audit', 'Inspection', 'Incident', 'Asset Defect', 'Maintenance', 'Training', 'Document Review', 'Chemical', 'Emergency Drill'];
+const SOURCE_MODULES = ['Inspection', 'Asset Defect', 'Maintenance', 'Incident', 'Document Review', 'Other'];
 function sourceLink(a) {
-  const m = { 'Legal': ['legal', '#/legal/'], 'Risk Assessment': ['risks', '#/risks/'], 'Inspection': ['inspections', '#/inspections/'], 'Incident': ['incidents', '#/incidents/'], 'Asset Defect': ['defects', null], 'Maintenance': ['maintenance', null], 'Training': ['people', '#/people/'], 'Document Review': ['documents', '#/documents/'], 'Chemical': ['chemicals', '#/chemicals/'], 'Emergency Drill': ['drills', null], 'Audit': ['findings', null] }[a.source];
-  if (!m) return esc(a.sourceId || '—');
-  let href = m[1] ? m[1] + a.sourceId : null;
+  let href = null;
+  if (a.source === 'Inspection' && byId('inspections', a.sourceId)) href = '#/inspections/' + a.sourceId;
+  if (a.source === 'Incident' && byId('incidents', a.sourceId)) href = '#/incidents/' + a.sourceId;
+  if (a.source === 'Document Review' && byId('documents', a.sourceId)) href = '#/documents/' + a.sourceId;
   if (a.source === 'Asset Defect') { const d = byId('defects', a.sourceId); href = d ? '#/assets/' + d.asset + '?tab=defects' : null; }
   if (a.source === 'Maintenance') { const d = byId('maintenance', a.sourceId); href = d ? '#/assets/' + d.asset + '?tab=maintenance' : null; }
-  if (a.source === 'Emergency Drill') href = '#/emergency/drills?id=' + a.sourceId;
-  if (a.source === 'Audit') { const f = byId('findings', a.sourceId); href = f ? '#/audits/' + f.audit : null; }
-  return href ? `<a href="${href}">${esc(a.sourceId)}</a>` : esc(a.sourceId);
+  return href ? `<a href="${href}">${esc(a.sourceId)}</a>` : esc(a.sourceId || '—');
 }
 function createAction(o) {
   const id = nextId('ACT-', 'actions', 4, 1000);
@@ -464,25 +419,6 @@ function actionTransition(a, to, comment, extra = {}) {
 /* Cross-module consequences of action status changes */
 function onActionStatus(a, to) {
   const otherOpen = (pred) => S.actions.some(x => x.id !== a.id && pred(x) && actionOpen(x));
-  if (a.source === 'Legal') {
-    const l = byId('legal', a.sourceId); if (!l) return;
-    if (to === 'Submitted for Verification' && l.status !== 'Awaiting Verification') { a.prevLegalStatus = l.status; l.status = 'Awaiting Verification'; l.assessments.unshift({ date: TODAY, by: S.ui.user, status: 'Awaiting Verification', note: `Evidence submitted on ${a.id}.` }); log(`${l.id} status → Awaiting Verification (evidence on ${a.id})`, '#/legal/' + l.id); }
-    if (to === 'Rejected' && l.status === 'Awaiting Verification') { l.status = a.prevLegalStatus || 'Partially Compliant'; l.assessments.unshift({ date: TODAY, by: S.ui.user, status: l.status, note: `Evidence on ${a.id} not accepted — status reverted.` }); }
-    if (to === 'Verified' && !otherOpen(x => x.source === 'Legal' && x.sourceId === l.id)) {
-      l.status = 'Compliant'; l.lastReviewed = TODAY; l.nextReview = addMonths(TODAY, l.freq || 12); l.gaps = '';
-      (a.evidence || []).forEach(e => l.evidence.unshift({ name: e.name, date: TODAY, by: a.owner, note: `Verified evidence from ${a.id}` }));
-      l.assessments.unshift({ date: TODAY, by: S.ui.user, status: 'Compliant', note: `Corrective action ${a.id} verified; requirement re-assessed as Compliant. Next review ${fmt(l.nextReview)}.` });
-      log(`${l.id} updated to Compliant following verification of ${a.id}`, '#/legal/' + l.id);
-      toast(`Linked requirement ${l.id} updated to <b>Compliant</b>; next review ${fmt(l.nextReview)}.`, 'info');
-    }
-    if (to === 'Reopened') { l.status = 'Partially Compliant'; l.assessments.unshift({ date: TODAY, by: S.ui.user, status: 'Partially Compliant', note: `${a.id} reopened.` }); }
-  }
-  if (a.source === 'Risk Assessment') {
-    const r = byId('risks', a.sourceId); if (!r) return;
-    const c = r.controls.find(x => x.action === a.id);
-    if (to === 'Verified' && c) { c.status = 'Implemented'; c.implemented = TODAY; r.needsReview = true; r.history.unshift({ ts: nowTs(), by: S.ui.user, action: `Control "${c.text}" implemented (verified via ${a.id})`, comment: 'Residual risk and review date to be re-assessed.' }); toast(`Control on ${r.id} marked <b>Implemented</b>. Review the assessment to update residual risk.`, 'info'); }
-    if (to === 'Reopened' && c) { c.status = 'Planned'; }
-  }
   if (a.source === 'Asset Defect' || a.source === 'Inspection' || a.source === 'Maintenance') {
     const d = S.defects.find(x => x.action === a.id);
     if (d && to === 'Submitted for Verification') d.status = 'Repaired – awaiting verification';
@@ -494,7 +430,6 @@ function onActionStatus(a, to) {
     if (to === 'Verified' && !otherOpen(x => x.source === 'Incident' && x.sourceId === i.id) && i.status === 'Actions in Progress') { i.status = 'Awaiting Closure'; i.history.push({ ts: nowTs(), by: S.ui.user, action: 'All corrective actions verified — awaiting closure review', comment: '' }); toast(`All actions for ${i.id} verified — incident ready for closure review.`, 'info'); }
     if (to === 'Reopened' && ['Awaiting Closure', 'Closed'].includes(i.status)) i.status = 'Actions in Progress';
   }
-  if (a.source === 'Chemical' && to === 'Verified') { const c = byId('chemicals', a.sourceId); if (c) log(`Chemical ${c.name}: action ${a.id} verified`, '#/chemicals/' + c.id); }
 }
 function assetHistory(asset, text) { asset.history = asset.history || []; asset.history.unshift({ ts: nowTs(), by: S.ui.user, text }); }
 
@@ -523,10 +458,11 @@ function raiseActionModal(o, after) {
    ========================================================================== */
 const NAV = [
   { group: 'Overview', items: [['dashboard', 'Dashboard', 'dashboard'], ['notifications', 'Notifications & Tasks', 'bell']] },
-  { group: 'Establish & control', items: [['documents', 'Document Control', 'docs'], ['legal', 'Legal Compliance', 'scale'], ['risks', 'Risk Management', 'risk'], ['people', 'People & Competency', 'people']] },
-  { group: 'Operational safety', items: [['assets', 'Assets & Equipment', 'forklift'], ['maintenance', 'Maintenance & Defects', 'wrench'], ['ppe', 'PPE Management', 'hardhat'], ['chemicals', 'Hazardous Chemicals', 'flask'], ['emergency', 'Emergency Preparedness', 'siren']] },
-  { group: 'Monitor & correct', items: [['incidents', 'Incidents & Injuries', 'alert'], ['audits', 'Audits & Inspections', 'clipboard'], ['actions', 'Actions (CAPA)', 'target']] },
-  { group: 'Assurance', items: [['reports', 'Management Reports', 'chart']] },
+  { group: 'Document control', items: [['documents', 'Documents & Approvals', 'docs']] },
+  { group: 'Assets & inspections', items: [['assets', 'Assets & Equipment', 'forklift'], ['inspections', 'Inspections', 'clipboard'], ['maintenance', 'Maintenance & Defects', 'wrench']] },
+  { group: 'Incidents', items: [['incidents', 'Incident Management', 'alert']] },
+  { group: 'Corrective actions', items: [['actions', 'Corrective Actions', 'target']] },
+  { group: 'Assurance', items: [['reports', 'Reports', 'chart']] },
   { group: 'Administration', items: [['admin', 'Administration', 'settings']] }
 ];
 function navCounts() {
@@ -534,7 +470,8 @@ function navCounts() {
   c.actions = S.actions.filter(a => inSite(a, S.ui.site) && actionOverdue(a)).length;
   c.notifications = buildNotifs().filter(n => !S.readNotifs[n.key]).length;
   c.incidents = S.incidents.filter(i => inSite(i, S.ui.site) && i.status === 'Reported').length;
-  c.documents = S.documents.filter(d => inSite(d, S.ui.site) && ['Submitted for Review', 'Under Review', 'Resubmitted'].includes(docStatus(d))).length;
+  c.documents = S.documents.filter(d => inSite(d, S.ui.site) && (curStep(docLatest(d)) || {}).person === S.ui.user).length;
+  c.inspections = S.schedules.filter(s => inSite(s, S.ui.site) && daysTo(s.nextDue) < 0).length;
   return c;
 }
 function renderSidebar(active) {
@@ -549,7 +486,7 @@ function renderSidebar(active) {
   </div>
   <nav class="sb-nav" aria-label="Main navigation">
     ${NAV.map((g, gi) => `<div class="nav-group ${S.ui.navCollapsed && S.ui.navCollapsed[gi] ? 'collapsed' : ''}"><button class="nav-group-title" data-act="toggleNavGroup" data-g="${gi}" aria-expanded="${!(S.ui.navCollapsed && S.ui.navCollapsed[gi])}">${esc(g.group)} ${icon('chevron')}</button><div class="nav-items">
-      ${g.items.map(([k, label, ic]) => `<a class="nav-item ${active === k ? 'active' : ''}" href="#/${k}">${icon(ic)}<span>${esc(label)}</span>${cnt[k] ? `<span class="count" title="${k === 'actions' ? 'Overdue actions' : k === 'notifications' ? 'Unread' : 'Requires attention'}">${cnt[k]}</span>` : ''}</a>`).join('')}
+      ${g.items.map(([k, label, ic]) => `<a class="nav-item ${active === k ? 'active' : ''}" href="#/${k}">${icon(ic)}<span>${esc(label)}</span>${cnt[k] ? `<span class="count" title="${k === 'actions' ? 'Overdue actions' : k === 'notifications' ? 'Unread' : k === 'documents' ? 'Awaiting your approval' : k === 'inspections' ? 'Overdue inspections' : 'Requires attention'}">${cnt[k]}</span>` : ''}</a>`).join('')}
     </div></div>`).join('')}
   </nav>
   <div class="sb-user"><div class="avatar">${initials(u.name)}</div><div class="who"><b>${esc(u.name)}</b><span>${esc(u.sysRole)}</span></div></div>`;
@@ -651,16 +588,12 @@ ACT.markRead = (el) => { S.readNotifs[el.dataset.key] = true; save(); };
 function searchIndex() {
   const ix = [];
   const add = (type, id, title, sub, link, rec) => { if (!rec || inScope(rec, { ignoreSite: true })) ix.push({ type, id, title, sub, link, text: (id + ' ' + title + ' ' + sub).toLowerCase() }); };
-  S.documents.forEach(d => add('Document', d.number, d.title, d.category, '#/documents/' + d.id, d));
-  S.legal.forEach(l => add('Legal', l.id, l.reference, l.source + ' · ' + sname(l.site), '#/legal/' + l.id, l));
-  S.risks.forEach(r => add('Risk', r.id, r.activity, r.hazard, '#/risks/' + r.id, r));
+  S.documents.forEach(d => add('Document', d.number, d.title, d.category + ' · ' + docStatus(d), '#/documents/' + d.id, d));
   S.assets.forEach(a => add('Asset', a.tag, a.name, a.serial + ' ' + a.qr, '#/assets/' + a.id, a));
-  S.people.forEach(p => add('Person', p.id, p.name, p.jobTitle, '#/people/' + p.id, p));
+  S.inspections.forEach(i => add('Inspection', i.id, i.template.title, i.target, '#/inspections/' + i.id, i));
+  S.defects.forEach(d => { const a = byId('assets', d.asset); add('Defect', d.id, d.description, a ? a.tag : '', '#/assets/' + d.asset + '?tab=defects', a); });
   S.incidents.forEach(i => add('Incident', i.id, i.title, i.type, '#/incidents/' + i.id, i));
   S.actions.forEach(a => add('Action', a.id, a.title, a.status + ' · ' + pname(a.owner), '#/actions/' + a.id, a));
-  S.chemicals.forEach(c => add('Chemical', c.id, c.name, c.supplier, '#/chemicals/' + c.id, c));
-  S.inspections.forEach(i => add('Inspection', i.id, i.template.title, i.target, '#/inspections/' + i.id, i));
-  S.audits.forEach(a => add('Audit', a.id, a.title, a.type, '#/audits/' + a.id, a));
   return ix;
 }
 function globalSearch(q) {
@@ -685,80 +618,67 @@ function kpi(label, value, sub, tone, href, ic) { return `<button class="kpi t-$
 
 ROUTES.dashboard = () => {
   const sid = S.ui.site, comp = compliance(sid);
-  const legal = S.legal.filter(l => inSite(l, sid));
-  const gaps = legal.filter(l => ['Non-Compliant', 'Partially Compliant'].includes(l.status));
-  const notAssessed = legal.filter(l => l.status === 'Not Assessed');
-  const risksHigh = S.risks.filter(r => inSite(r, sid) && ['High', 'Critical'].includes(riskBand(r.L2 * r.S2).name));
-  const risksHighInit = S.risks.filter(r => inSite(r, sid) && ['High', 'Critical'].includes(riskBand(r.L1 * r.S1).name) && r.controls.some(c => c.status !== 'Implemented'));
-  const acts = S.actions.filter(a => inSite(a, sid));
-  const overdue = acts.filter(actionOverdue), awaitingVer = acts.filter(a => a.status === 'Submitted for Verification');
   const docs = S.documents.filter(d => inSite(d, sid));
-  const docsAwait = docs.filter(d => ['Submitted for Review', 'Under Review', 'Resubmitted', 'Approved'].includes(docStatus(d)));
-  const docsDue = docs.filter(d => docActive(d) && docIssued(d) && d.nextReview && daysTo(d.nextReview) <= S.config.notify.docReviewLead);
-  const docsOver = docsDue.filter(d => daysTo(d.nextReview) < 0);
-  const appts = S.appointments.filter(a => inSite(a, sid)).filter(a => apptStatus(a) !== 'Valid');
-  let trnIssues = 0; S.people.filter(p => inSite(p, sid)).forEach(p => requiredCourses(p).forEach(c => { if (trainingStatus(p.id, c).status !== 'Valid') trnIssues++; }));
-  const sch = S.schedules.filter(s => inSite(s, sid)); const insOver = sch.filter(s => daysTo(s.nextDue) < 0);
-  const mtOver = S.maintenance.filter(m => !m.completed && daysTo(m.due) < 0 && inSite(byId('assets', m.asset), sid));
-  const oos = S.assets.filter(a => inSite(a, sid) && a.status === 'Out of Service');
-  const incOpen = S.incidents.filter(i => inSite(i, sid) && i.status !== 'Closed');
-  const fndOpen = S.findings.filter(f => { const a = byId('audits', f.audit); const act = f.action && byId('actions', f.action); return inSite(a, sid) && (!act || actionOpen(act)) && f.grade !== 'OFI'; });
-  const chems = S.chemicals.filter(c => inSite(c, sid)); const sdsBad = chems.filter(c => !c.sds || daysTo(c.sdsReviewDue) < 0);
-  const drills = S.drills.filter(d => inSite(d, sid)); const drillOver = drills.filter(d => d.status === 'Scheduled' && daysTo(d.scheduled) < 0);
+  const myAppr = docs.filter(d => (curStep(docLatest(d)) || {}).person === S.ui.user);
+  const inAppr = docs.filter(d => docStatus(d) === 'In Approval');
+  const toIssue = docs.filter(d => docStatus(d) === 'Approved');
+  const returned = docs.filter(d => docStatus(d) === 'Returned for Correction');
+  const docsOver = docs.filter(docReviewOverdue);
+  const assets = S.assets.filter(a => inSite(a, sid));
+  const oos = assets.filter(a => a.status === 'Out of Service');
+  const certBad = assets.filter(a => assetDocStatus(a).some(d => d.status === 'Expired' || d.status === 'Missing'));
+  const sch = S.schedules.filter(s => inSite(s, sid)); const insOver = sch.filter(s => daysTo(s.nextDue) < 0); const insDue = sch.filter(s => daysTo(s.nextDue) >= 0 && daysTo(s.nextDue) <= 7);
+  const defOpen = S.defects.filter(d => d.status !== 'Closed' && inSite(byId('assets', d.asset), sid));
+  const acts = S.actions.filter(a => inSite(a, sid)); const open = acts.filter(actionOpen), overdue = acts.filter(actionOverdue), awaitingVer = acts.filter(a => a.status === 'Submitted for Verification');
+  const incOpen = S.incidents.filter(i => inSite(i, sid) && i.status !== 'Closed'); const incNew = incOpen.filter(i => i.status === 'Reported');
   const notifs = buildNotifs();
-  const upcoming = notifs.filter(n => n.date && daysTo(n.date) >= 0 && daysTo(n.date) <= 30 && !n.key.startsWith('EV-') && !n.key.startsWith('cert-mi') && !n.key.startsWith('sds-mi')).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 8);
-  const sites = orgSites();
-  const branchRows = sites.map(s => ({ s, c: compliance(s.id) }));
-  const lc = comp.legalCounts;
-  const legalTotal = Object.values(lc).reduce((a, b) => a + b, 0) || 1;
-  const seg = (k, cls) => lc[k] ? `<span class="${cls}" style="width:${(lc[k] / legalTotal) * 100}%" title="${k}: ${lc[k]}"></span>` : '';
-
-  const html = `${pageHead('Executive compliance dashboard', 'Live view of compliance status, gaps, risks, overdue work and evidence across the organisation. Every tile opens the underlying filtered records.', `<a class="btn" href="#/reports">${icon('chart', 'sm')} Management reports</a><a class="btn primary" href="#/notifications/tasks">${icon('tasks', 'sm')} My tasks (${myTasks().length})</a>`, scopePill())}
-  <div class="alert demo">${icon('info')}<div><b>Demonstration data.</b> Kestrel Industrial Equipment and Ridgeway Pumps are fictional companies. Scores are <b>indicative</b> and calculated from the demo records using configurable weights (Administration → Compliance scoring). Legal entries are illustrative and require verification by a competent person.</div></div>
+  const upcoming = notifs.filter(n => n.date && daysTo(n.date) >= 0 && daysTo(n.date) <= 30 && !String(n.key).startsWith('EV-') && !String(n.key).startsWith('cert-mi')).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 8);
+  const branchRows = orgSites().map(s => ({ s, c: compliance(s.id) }));
+  const html = `${pageHead('Dashboard', 'Documents awaiting approval, asset inspections and defects, incidents and the corrective actions that close them — across all branches. Every tile opens the underlying records.', `<a class="btn" href="#/reports">${icon('chart', 'sm')} Reports</a><a class="btn primary" href="#/notifications/tasks">${icon('tasks', 'sm')} My tasks (${myTasks().length})</a>`, scopePill())}
+  <div class="alert demo">${icon('info')}<div><b>Demonstration data.</b> Kestrel Industrial Equipment and Ridgeway Pumps are fictional companies. The control score is <b>indicative</b>, calculated from the demo records with configurable weights (Administration → Scoring).</div></div>
+  <h4 class="mb">${icon('docs', 'sm')} Documents & approvals</h4>
+  <div class="kpis">
+    ${kpi('Awaiting my approval', myAppr.length, myAppr.length ? 'Your turn on the approval route' : 'Nothing waiting for you', myAppr.length ? 'amber' : 'green', '#/documents?status=mine', 'user')}
+    ${kpi('In approval', inAppr.length, 'Moving through approval routes', 'blue', '#/documents?status=In Approval', 'clock')}
+    ${kpi('Approved — not issued', toIssue.length, 'Ready to issue for use', toIssue.length ? 'blue' : 'green', '#/documents?status=Approved', 'checkCircle')}
+    ${kpi('Returned for correction', returned.length, 'Author must revise', returned.length ? 'amber' : 'green', '#/documents?status=Returned for Correction', 'refresh')}
+    ${kpi('Document reviews overdue', docsOver.length, 'Issued documents past review date', docsOver.length ? 'red' : 'green', '#/documents?review=overdue', 'file')}
+  </div>
+  <h4 class="mb">${icon('forklift', 'sm')} Assets, inspections & defects</h4>
+  <div class="kpis">
+    ${kpi('Out of service', oos.length, oos.length ? oos.map(a => a.tag).join(', ') : 'All assets in service', oos.length ? 'red' : 'green', '#/assets?status=Out of Service', 'power')}
+    ${kpi('Inspections overdue', insOver.length, `${insDue.length} due in the next 7 days`, insOver.length ? 'red' : 'green', '#/inspections/schedule?due=overdue', 'clipboard')}
+    ${kpi('Open defects', defOpen.length, `${defOpen.filter(d => d.severity === 'Critical').length} critical`, defOpen.some(d => d.severity === 'Critical') ? 'red' : defOpen.length ? 'amber' : 'green', '#/maintenance/defects', 'alert')}
+    ${kpi('Certificates expired / missing', certBad.length, 'Assets with non-compliant documents', certBad.length ? 'red' : 'green', '#/assets?issue=docs', 'file')}
+  </div>
+  <h4 class="mb">${icon('alert', 'sm')} Incidents & corrective actions</h4>
+  <div class="kpis">
+    ${kpi('Open incidents', incOpen.length, `${incNew.length} awaiting investigation`, incNew.length ? 'red' : incOpen.length ? 'amber' : 'green', '#/incidents?status=open', 'alert')}
+    ${kpi('Open corrective actions', open.length, `${open.filter(a => a.priority === 'Critical').length} critical · ${open.filter(a => a.priority === 'High').length} high`, 'blue', '#/actions?status=open', 'target')}
+    ${kpi('Actions overdue', overdue.length, `${overdue.filter(a => a.escalated).length} escalated`, overdue.length ? 'red' : 'green', '#/actions?status=overdue', 'clock')}
+    ${kpi('Awaiting verification', awaitingVer.length, 'Evidence submitted — verifier to decide', awaitingVer.length ? 'blue' : 'green', '#/actions?status=Submitted for Verification', 'checkCircle')}
+  </div>
   <div class="grid g-3-2 mb">
-    <div class="card"><div class="card-head"><h2>Overall compliance overview</h2><span class="ch-sub">${esc(scopeLabel())}</span></div><div class="card-body"><div class="score-wrap">${gaugeSvg(comp.overall)}<div class="bars">
+    <div class="card"><div class="card-head"><h2>Control status</h2><span class="ch-sub">${esc(scopeLabel())}</span></div><div class="card-body"><div class="score-wrap">${gaugeSvg(comp.overall)}<div class="bars">
       ${Object.keys(comp.parts).map(k => barRow(PART_LABELS[k], comp.parts[k], PART_LINKS[k])).join('')}
-    </div></div>
-    <div class="mt"><div class="section-title"><h4>Legal register status (${legalTotal} applicable)</h4><a href="#/legal" class="btn ghost sm">Open register</a></div>
-      <div class="stackbar">${seg('Compliant', 'fill-green')}${seg('Awaiting Verification', 'fill-blue')}${seg('Partially Compliant', 'fill-amber')}${seg('Non-Compliant', 'fill-red')}${seg('Not Assessed', 'fill-grey')}</div>
-      <div class="legend">${['Compliant', 'Awaiting Verification', 'Partially Compliant', 'Non-Compliant', 'Not Assessed'].map((k, i) => `<a href="#/legal?status=${encodeURIComponent(k)}"><i class="${['fill-green', 'fill-blue', 'fill-amber', 'fill-red', 'fill-grey'][i]}"></i>${k}: <b>${lc[k] || 0}</b></a>`).join('')}</div></div>
-    </div></div>
-    <div class="card"><div class="card-head"><h2>Compliance by branch</h2><span class="ch-sub">Click a branch to focus on it</span></div><div class="card-body"><div class="bars">
+    </div></div></div></div>
+    <div class="card"><div class="card-head"><h2>By branch</h2><span class="ch-sub">Click a branch to focus on it</span></div><div class="card-body"><div class="bars">
       ${branchRows.map(b => `<div class="bar-row clickable" data-act="focusSite" data-site="${b.s.id}"><span class="bar-label">${esc(b.s.short)}${S.ui.site === b.s.id ? ' ●' : ''}</span><div class="bar"><span class="fill-${scoreColour(b.c.overall)}" style="width:${b.c.overall}%"></span></div><span class="bar-val">${b.c.overall}%</span></div>`).join('')}
     </div>
-    <table class="tbl compact mt"><thead><tr><th>Branch</th><th>Legal</th><th>Open actions</th><th>Overdue</th></tr></thead><tbody>
-      ${branchRows.map(b => `<tr class="rowlink" data-href="#/reports/branches"><td>${esc(b.s.short)}</td><td>${b.c.parts.legal}%</td><td>${b.c.openActions}</td><td>${b.c.overdueActions ? `<b style="color:var(--red)">${b.c.overdueActions}</b>` : '0'}</td></tr>`).join('')}
-    </tbody></table>
+    <div class="table-wrap mt"><table class="tbl compact"><thead><tr><th>Branch</th><th>Open actions</th><th>Overdue</th><th>Open incidents</th></tr></thead><tbody>
+      ${branchRows.map(b => `<tr class="rowlink" data-href="#/reports/branches"><td>${esc(b.s.short)}</td><td>${b.c.openActions}</td><td>${b.c.overdueActions ? `<b style="color:var(--red)">${b.c.overdueActions}</b>` : '0'}</td><td>${b.c.openIncidents}</td></tr>`).join('')}
+    </tbody></table></div>
     ${S.ui.site !== 'ALL' ? `<button class="btn sm mt" data-act="focusSite" data-site="ALL">${icon('building', 'sm')} Return to organisation-wide view</button>` : ''}
     </div></div>
-  </div>
-  <h4 class="mb">Requires attention</h4>
-  <div class="kpis">
-    ${kpi('Legal compliance gaps', gaps.length, `${legal.filter(l => l.status === 'Non-Compliant').length} non-compliant · ${notAssessed.length} not assessed`, gaps.length ? 'red' : 'green', '#/legal?status=gaps', 'scale')}
-    ${kpi('High / critical risks', risksHighInit.length, `${risksHigh.length} remain high after controls`, risksHighInit.length ? 'amber' : 'green', '#/risks?band=high', 'risk')}
-    ${kpi('Overdue corrective actions', overdue.length, `${acts.filter(a => a.escalated && actionOpen(a)).length} escalated · ${acts.filter(actionOpen).length} open in total`, overdue.length ? 'red' : 'green', '#/actions?status=overdue', 'target')}
-    ${kpi('Actions awaiting verification', awaitingVer.length, 'Evidence submitted — verifier decision needed', awaitingVer.length ? 'blue' : 'green', '#/actions?status=Submitted for Verification', 'checkCircle')}
-    ${kpi('Documents awaiting approval', docsAwait.length, 'In review, resubmitted or approved-not-issued', docsAwait.length ? 'blue' : 'green', '#/documents?status=pending', 'docs')}
-    ${kpi('Documents due for review', docsDue.length, `${docsOver.length} overdue · next ${S.config.notify.docReviewLead} days`, docsOver.length ? 'red' : docsDue.length ? 'amber' : 'green', '#/documents?review=due', 'file')}
-    ${kpi('Appointments & training', appts.length + trnIssues, `${appts.length} appointment issues · ${trnIssues} training gaps/expiries`, appts.length + trnIssues ? 'amber' : 'green', '#/people/matrix', 'people')}
-    ${kpi('Overdue inspections', insOver.length, `${sch.length} scheduled inspections in scope`, insOver.length ? 'red' : 'green', '#/audits/schedule?due=overdue', 'clipboard')}
-    ${kpi('Maintenance & defects', mtOver.length + oos.length, `${mtOver.length} maintenance overdue · ${oos.length} asset(s) out of service`, oos.length ? 'red' : mtOver.length ? 'amber' : 'green', '#/maintenance', 'wrench')}
-    ${kpi('Open incidents', incOpen.length, `${incOpen.filter(i => i.status === 'Reported').length} awaiting investigation`, incOpen.filter(i => i.status === 'Reported').length ? 'red' : incOpen.length ? 'amber' : 'green', '#/incidents?status=open', 'alert')}
-    ${kpi('Open audit findings', fndOpen.length, 'NCs & observations without verified action', fndOpen.length ? 'amber' : 'green', '#/audits/findings', 'clipboard')}
-    ${kpi('Chemical SDS status', sdsBad.length ? sdsBad.length + ' / ' + chems.length : 'OK', sdsBad.length ? 'SDS missing or overdue for review' : 'All SDSs current', sdsBad.length ? 'red' : 'green', '#/chemicals?sds=attention', 'flask')}
-    ${kpi('Emergency drills', drillOver.length ? drillOver.length + ' overdue' : 'On track', `${drills.filter(d => d.status === 'Scheduled').length} scheduled · ${drills.filter(d => d.status === 'Completed').length} completed`, drillOver.length ? 'red' : 'green', '#/emergency/drills', 'siren')}
   </div>
   <div class="grid g2">
     <div class="card"><div class="card-head"><h2>Upcoming deadlines (next 30 days)</h2><a class="btn ghost sm" href="#/notifications">All notifications</a></div><div class="card-body flush">
       ${upcoming.length ? `<table class="tbl compact stackable"><tbody>${upcoming.map(n => `<tr class="rowlink" data-href="${n.link}"><td data-label="Due" class="nowrap">${dueText(n.date)}</td><td data-label="Item"><div class="t-title">${esc(n.title)}</div><div class="t-sub">${esc(n.text)}</div></td></tr>`).join('')}</tbody></table>` : '<div class="empty">No deadlines in the next 30 days.</div>'}
     </div></div>
     <div class="card"><div class="card-head"><h2>Recent activity</h2><span class="ch-sub">Simulated audit trail (browser-local)</span></div><div class="card-body">
-      <ul class="activity">${S.activity.filter(a => !a.link || true).slice(0, 9).map(a => `<li><span class="avatar sm">${initials(pname(a.by))}</span><div><div>${a.link ? `<a href="${a.link}">${esc(a.text)}</a>` : esc(a.text)}</div><div class="a-meta">${esc(pname(a.by))} · ${fmtTs(a.ts)}</div></div></li>`).join('')}</ul>
+      <ul class="activity">${S.activity.slice(0, 9).map(a => `<li><span class="avatar sm">${initials(pname(a.by))}</span><div><div>${a.link ? `<a href="${a.link}">${esc(a.text)}</a>` : esc(a.text)}</div><div class="a-meta">${esc(pname(a.by))} · ${fmtTs(a.ts)}</div></div></li>`).join('')}</ul>
     </div></div>
-  </div>
-  <div class="card mt"><div class="card-head"><h2>The VDW compliance lifecycle</h2><span class="ch-sub">Where each module fits</span></div><div class="card-body"><div class="stepper">
-    ${[['Establish compliance', '#/legal'], ['Implement controls', '#/documents'], ['Monitor performance', '#/audits'], ['Correct gaps', '#/actions'], ['Verify evidence', '#/actions?status=Submitted for Verification'], ['Maintain compliance', '#/notifications'], ['Report to management', '#/reports']].map((s, i) => `<a class="step done" href="${s[1]}" style="text-decoration:none"><span class="sd">${i + 1}</span><span class="sl" style="display:inline">${s[0]}</span></a>`).join('')}
-  </div></div></div>`;
+  </div>`;
   return { title: 'Dashboard', crumbs: [['Dashboard', '#/dashboard']], html };
 };
 ACT.focusSite = (el) => { S.ui.site = el.dataset.site; save(); toast(el.dataset.site === 'ALL' ? 'Organisation-wide view.' : `Focused on ${esc(site(el.dataset.site).name)}.`, 'info'); rerender(); };
@@ -766,7 +686,7 @@ ACT.focusSite = (el) => { S.ui.site = el.dataset.site; save(); toast(el.dataset.
 /* ==========================================================================
    NOTIFICATIONS & TASKS
    ========================================================================== */
-const CAT_LABEL = { documents: 'Documents', legal: 'Legal', people: 'People & training', assets: 'Assets & inspections', chemicals: 'Chemicals', emergency: 'Emergency', incidents: 'Incidents', actions: 'Actions' };
+const CAT_LABEL = { documents: 'Documents & approvals', assets: 'Assets & inspections', incidents: 'Incidents', actions: 'Corrective actions' };
 ROUTES.notifications = (p, q) => {
   const tab = p[0] || 'all';
   const all = buildNotifs(); const tasks = myTasks();
@@ -774,7 +694,7 @@ ROUTES.notifications = (p, q) => {
   let list = all;
   if (tab === 'unread') list = unread;
   if (q.cat) list = list.filter(n => n.cat === q.cat);
-  const icMap = { documents: 'docs', legal: 'scale', people: 'people', assets: 'forklift', chemicals: 'flask', emergency: 'siren', incidents: 'alert', actions: 'target' };
+  const icMap = { documents: 'docs', assets: 'forklift', incidents: 'alert', actions: 'target' };
   const body = tab === 'tasks'
     ? `<div class="card"><div class="card-head"><h2>My tasks — ${esc(me().name)}</h2><span class="ch-sub">${esc(myRole().name)} · ${esc(scopeLabel())}</span></div><div class="card-body flush">
       ${tasks.length ? tasks.map(t => `<div class="notif"><div class="n-ic ic-${t.sev}">${icon('tasks')}</div><div class="n-body"><div class="n-title">${esc(t.title)}</div><div class="n-text">${esc(t.sub)}</div></div><a class="btn sm primary" href="${t.link}">Open</a></div>`).join('') : `<div class="empty">${icon('checkCircle')}<div>No tasks assigned to you in this scope. Switch user from the user menu to see other people's tasks.</div></div>`}

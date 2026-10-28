@@ -1,4 +1,5 @@
-// End-to-end workflow tests for the VDW HSEQ prototype (drives the real UI in a headless browser).
+// End-to-end workflow tests for the VDW prototype (drives the real UI in a headless browser).
+// Scope: Document Control with sequential approvals · Assets & Inspections with corrective actions · Incident Management.
 // Usage (developers only):  npm install playwright  &&  node tests/workflows.test.js
 const { chromium } = require('playwright');
 const path = require('path'); const os = require('os');
@@ -22,13 +23,13 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
   const mfile = async (sel = '.modal input[type=file]', name = 'evidence.pdf') => { await p.setInputFiles(sel, { name, mimeType: 'application/pdf', buffer: Buffer.from('demo evidence') }); };
   const asUser = async (id) => { await act('[data-act=userMenu]'); await act(`.dropdown [data-act=switchUser][data-id="${id}"]`); };
   const modalOpen = async () => (await p.$('.modal')) !== null;
-  // Drive an action from its current state to Submitted for Verification as the owner
+  const has = async (sel) => (await p.$(sel)) !== null;
   const ownerCompletes = async (aid) => {
     await go('#/actions/' + aid);
     const owner = await S(`S.actions.find(a=>a.id==='${aid}').owner`);
     await asUser(owner); await go('#/actions/' + aid);
-    if (await p.$('.sh-actions button:has-text("Acknowledge")')) await btn('Acknowledge');
-    if (await p.$('.sh-actions button:has-text("Start work")')) await btn('Start work');
+    if (await has('.sh-actions button:has-text("Acknowledge")')) await btn('Acknowledge');
+    if (await has('.sh-actions button:has-text("Start work")')) await btn('Start work');
     await btn('Add progress note'); await mfill('note', 'Work underway'); await mbtn('Add note');
     await btn('Upload evidence'); await mfile('#f_ev', 'completion_photo.jpg'); await mbtn('Upload');
     await btn('Submit for verification'); await mfill('comment', 'Completed — see evidence.'); await mbtn('Submit for verification');
@@ -40,80 +41,61 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     if (extra) await extra(); await mbtn('Record decision');
     return S(`S.actions.find(a=>a.id==='${aid}').status`);
   };
+  const docSt = (id) => S(`docStatus(byId('documents','${id}'))`);
+  const curApprover = (id) => S(`(curStep(docLatest(byId('documents','${id}'))) || {}).person || null`);
 
-  /* ---------------- Workflow A — compliance gap ---------------- */
+  /* ---------------- A. Document upload and sequential multi-person approval ---------------- */
   {
-    await asUser('P-002');
-    const before = await S(`compliance('ALL').parts.legal`);
-    await go('#/legal/LR-013'); await btn('Assess requirement');
-    await msel('status', 'Non-Compliant'); await mfill('note', 'No CoC on file for leased premises.'); await mfill('gaps', 'Certificate of compliance not obtained from landlord.');
-    await mfill('aAction', 'Obtain electrical CoC from landlord / registered person and file it.'); await msel('aOwner', 'P-003'); await msel('aPriority', 'High');
-    await mbtn('Save assessment');
-    const st = await S(`S.legal.find(l=>l.id==='LR-013').status`);
-    const aid = await S(`S.actions.filter(a=>a.source==='Legal'&&a.sourceId==='LR-013').pop().id`);
-    ok('A1 assess requirement → Non-Compliant + action generated', st === 'Non-Compliant' && !!aid, aid);
-    ok('A2 action assigned to owner', (await S(`S.actions.find(a=>a.id==='${aid}').status`)) === 'Assigned' && (await S(`S.actions.find(a=>a.id==='${aid}').owner`)) === 'P-003');
-    const mid = await S(`compliance('ALL').parts.legal`);
-    const sub = await ownerCompletes(aid);
-    ok('A3 owner acknowledges, works, uploads evidence, submits', sub === 'Submitted for Verification');
-    ok('A4 legal status → Awaiting Verification', (await S(`S.legal.find(l=>l.id==='LR-013').status`)) === 'Awaiting Verification');
-    // Rejection path first
-    const rej = await verify(aid, 'P-002', false);
-    ok('A5 verifier can return evidence (Rejected) and legal status reverts', rej === 'Rejected' && (await S(`S.legal.find(l=>l.id==='LR-013').status`)) === 'Non-Compliant');
-    await ownerCompletes(aid);
-    const v = await verify(aid, 'P-002', true);
-    ok('A6 verifier accepts evidence → Verified', v === 'Verified');
-    ok('A7 legal requirement updated to Compliant with next review', (await S(`S.legal.find(l=>l.id==='LR-013').status`)) === 'Compliant' && !!(await S(`S.legal.find(l=>l.id==='LR-013').nextReview`)));
-    await go('#/actions/' + aid); await btn('Close action');
-    ok('A8 action closed separately after verification', (await S(`S.actions.find(a=>a.id==='${aid}').status`)) === 'Closed');
-    const after = await S(`compliance('ALL').parts.legal`);
-    await go('#/dashboard'); const dashTxt = await p.innerText('#content');
-    ok('A9 dashboard legal score reflects change', after > mid && dashTxt.includes(after + '%'), `legal ${before}% → gap ${mid}% → after ${after}%`);
-  }
-
-  /* ---------------- Workflow B — document approval ---------------- */
-  {
-    await asUser('P-002'); await go('#/documents'); await btn('New / upload document');
-    await msel('category', 'Procedure'); await mfill('title', 'Working at Height Procedure'); await mfile('.modal [name=file]', 'WAH_procedure_draft.docx');
-    await mbtn('Create document');
+    await asUser('P-003'); await go('#/documents'); await btn('Upload document');
+    await msel('category', 'Safe Work Procedure'); await p.waitForTimeout(80);
+    await mfill('title', 'Working at Height Safe Work Procedure'); await mfile('.modal [name=file]', 'WAH_SWP_draft.docx');
+    const route = await p.$$eval('#routeEd select', s => s.map(x => x.value));
+    ok('A1 category default route loaded in order (operational review → HSEQ → final)', route.join(',') === 'P-005,P-002,P-001', route.join(' → '));
+    await mbtn('Save document');
     const did = await S(`S.documents[S.documents.length-1].id`);
-    ok('B1 create procedure with selected file (Draft)', (await S(`docStatus(S.documents.find(d=>d.id==='${did}'))`)) === 'Draft', did);
-    await btn('Submit for review'); await mbtn('Submit for review');
-    ok('B2 submitted for review', (await S(`docStatus(byId('documents','${did}'))`)) === 'Submitted for Review');
-    await btn('Start review'); await btn('Return for correction'); await mfill('comment', 'Add rescue plan section.'); await mbtn('Return for correction');
-    ok('B3 returned for correction with comment', (await S(`docStatus(byId('documents','${did}'))`)) === 'Returned for Correction');
-    await btn('Revise & resubmit'); await mfile('.modal [name=file]', 'WAH_procedure_v2.docx'); await mfill('notes', 'Rescue plan added.'); await mbtn('Resubmit for review');
-    ok('B4 revised and resubmitted (new draft iteration, old retained)', (await S(`byId('documents','${did}').revisions.length`)) === 2 && (await S(`byId('documents','${did}').revisions[0].status`)) === 'Superseded draft');
-    await btn('Start review'); await btn('Approve'); await mfill('comment', 'OK'); await mbtn('Approve');
-    ok('B5 approved', (await S(`docStatus(byId('documents','${did}'))`)) === 'Approved');
-    await btn('Issue for use'); await mbtn('Issue for use');
-    ok('B6 issued for use with next review date', (await S(`docStatus(byId('documents','${did}'))`)) === 'Issued for Use' && !!(await S(`byId('documents','${did}').nextReview`)));
+    ok('A2 uploaded and submitted — step 1 approver is current', (await docSt(did)) === 'In Approval' && (await curApprover(did)) === 'P-005', did);
+    ok('A3 approver at step 1 notified (task in their task list)', await S(`(() => { S.ui.user='P-005'; const t = myTasks().some(x => x.link === '#/documents/${did}'); S.ui.user='P-003'; return t; })()`));
+    await go('#/documents/' + did);
+    ok('A4 author cannot approve — only the current approver sees the decision buttons', !(await has('.sh-actions button:has-text("Approve step")')) && await has('.sh-actions button:has-text("Act as current approver")'));
+    await btn('Act as current approver'); await go('#/documents/' + did); await btn('Approve step 1'); await mbtn('Approve');
+    ok('A5 step 1 approved → passes to step 2 (HSEQ)', (await curApprover(did)) === 'P-002' && (await docSt(did)) === 'In Approval');
+    await btn('Act as current approver'); await go('#/documents/' + did); await btn('Return for correction'); await mfill('comment', 'Add rescue plan section.'); await mbtn('Return for correction');
+    ok('A6 step 2 returns for correction with comment; remaining step cancelled', (await docSt(did)) === 'Returned for Correction' && (await S(`docLatest(byId('documents','${did}')).route[2].status`)) === 'Cancelled');
+    await asUser('P-003'); await go('#/documents/' + did); await btn('Revise & resubmit'); await mfile('.modal [name=file]', 'WAH_SWP_v2.docx'); await mfill('notes', 'Rescue plan added.'); await mbtn('Resubmit for approval');
+    ok('A7 resubmitted as new draft; route restarts at step 1; returned draft retained', (await curApprover(did)) === 'P-005' && (await S(`byId('documents','${did}').revisions.length`)) === 2 && (await S(`byId('documents','${did}').revisions[0].status`)) === 'Superseded draft');
+    for (const who of ['P-005', 'P-002', 'P-001']) { await asUser(who); await go('#/documents/' + did); await btn('Approve step'); await mfill('comment', 'OK'); await mbtn('Approve'); }
+    ok('A8 all three approvers signed off in sequence → Approved', (await docSt(did)) === 'Approved' && (await S(`docLatest(byId('documents','${did}')).route.every(s => s.status === 'Approved')`)));
+    await asUser('P-002'); await go('#/documents/' + did); await btn('Issue for use'); await mbtn('Issue for use');
+    ok('A9 issued for use with next review date', (await docSt(did)) === 'Issued for Use' && !!(await S(`byId('documents','${did}').nextReview`)));
+    const trail = await p.innerText('#content');
+    ok('A10 approval trail records every decision with names', ['Approved — step 1', 'Returned for correction — step 2', 'Approved — step 3', 'Issued for use'].every(t => trail.includes(t)));
     await btn('Start new revision'); await mfile('.modal [name=file]', 'WAH_rev2.docx'); await mfill('notes', 'Annual update'); await mbtn('Create draft revision');
-    const txt = await p.innerText('#content');
-    ok('B7 current revision stays issued while new revision drafted; history visible', txt.includes('Current issued: Rev 1') && txt.includes('Rev 2 (draft 1)') && txt.includes('Superseded draft'));
+    const t2 = await p.innerText('#content');
+    ok('A11 new revision drafted while Rev 1 stays current; history retained', t2.includes('Current issued: Rev 1') && t2.includes('Rev 2 (draft 1)') && t2.includes('Superseded draft'));
+    // Author cannot be placed on own route
+    await go('#/documents'); await btn('Upload document'); await mfill('title', 'Self-approval test'); await mfile('.modal [name=file]', 'x.pdf');
+    const me = await S('S.ui.user'); const offered = await p.$$eval('#routeEd select >> nth=0', s => [...s[0].options].map(o => o.value));
+    await p.selectOption('#routeEd select >> nth=0', { index: 0 }); await mbtn('Save document');
+    ok('A12 author is never offered as an approver; a step without an approver blocks submission', !offered.includes(me) && await modalOpen()); await p.keyboard.press('Escape');
+    // Admin changes a category route → used for new submissions
+    await asUser('P-002'); await go('#/admin/approvals'); await p.click('[data-act=routeEdit][data-cat="Policy"]'); await p.waitForTimeout(100);
+    await p.click('#routeEd [data-re=add]'); await p.selectOption('#routeEd select >> nth=2', 'P-006'); await p.fill('#routeEd input >> nth=2', 'Consultant check'); await mbtn('Save route');
+    ok('A13 administrator edits a category approval route', (await S(`S.config.approvalRoutes['Policy'].map(s=>s.person).join(',')`)) === 'P-002,P-001,P-006');
   }
 
-  /* ---------------- Workflow C — risk assessment ---------------- */
+  /* ---------------- B. Seeded approval in progress ---------------- */
   {
-    await asUser('P-002'); await go('#/risks'); await btn('New risk assessment');
-    await mfill('activity', 'Loading trucks at dispatch'); await mfill('hazard', 'Truck drive-away during loading'); await mfill('consequence', 'Crush injury');
-    await msel('L1', '4'); await msel('S1', '5'); await mfill('ctrl', 'Install dock interlock / wheel chocks procedure');
-    await mbtn('Save as draft');
-    const rid = await S(`S.risks[S.risks.length-1].id`); const aid = await S(`S.risks[S.risks.length-1].controls[0].action`);
-    ok('C1 risk created with missing control → action generated', !!aid, `${rid} / ${aid}`);
-    await ownerCompletes(aid);
-    const v = await verify(aid, 'P-006');
-    ok('C2 action completed and verified by independent verifier', v === 'Verified');
-    ok('C3 control marked Implemented and review flagged', (await S(`byId('risks','${rid}').controls[0].status`)) === 'Implemented' && (await S(`byId('risks','${rid}').needsReview`)) === true);
-    await asUser('P-002'); await go('#/risks/' + rid); await btn('Review assessment'); await msel('L2', '1'); await msel('S2', '5'); await mfill('note', 'Interlock fitted.'); await mbtn('Save review');
-    ok('C4 assessment reviewed: residual updated, review date set, approved', (await S(`byId('risks','${rid}').L2`)) === 1 && (await S(`byId('risks','${rid}').approval`)) === 'Approved' && (await S(`byId('risks','${rid}').needsReview`)) === false);
+    await asUser('P-002'); await go('#/documents?status=mine');
+    const n = await p.innerText('#lvn-docs');
+    ok('B1 "Awaiting my approval" filter lists documents where it is my turn', /^1 of/.test(n) && (await p.innerText('#lvb-docs')).includes('KIE-SWP-022'), n);
+    await go('#/documents/DOC-005'); await btn('Approve step 2'); await mbtn('Approve');
+    ok('B2 seeded SWP-022 moves from HSEQ (step 2) to MD (step 3)', (await curApprover('DOC-005')) === 'P-001');
   }
 
-  /* ---------------- Workflow D — asset inspection ---------------- */
+  /* ---------------- C. Asset inspection → defect → corrective action → verification ---------------- */
   {
     await asUser('P-007'); await go('#/assets/AS-002?tab=documents');
-    const docsTxt = await p.innerText('#content');
-    ok('D1 asset required documents shown by type', docsTxt.includes('Lifting machine examination & load test certificate'));
+    ok('C1 asset shows type-specific required documents', (await p.innerText('#content')).includes('Lifting machine examination & load test certificate'));
     await go('#/inspect/ISCH-02');
     const qs = await S(`tplCurrent(byId('templates','TPL-FL')).questions.map(q=>q.id)`);
     for (const q of qs) await p.click(`[data-act=qAns][data-q="${q}"][data-v="${q === 'q1' ? 'Fail' : 'Pass'}"]`);
@@ -121,23 +103,30 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     const oosChecked = await p.isChecked('[data-qf="q1"][data-k="oos"]');
     await p.check('[name=declare]'); await p.click('[data-act=inspSubmit]'); await p.waitForTimeout(200);
     const ins = await S(`S.inspections[S.inspections.length-1]`);
-    ok('D2 inspection submitted on current template revision', ins.template.rev === 3 && ins.results.find(r => r.qid === 'q1').result === 'Fail', ins.id);
-    ok('D3 failed critical item → action + defect, asset OUT OF SERVICE', oosChecked && ins.actions.length === 1 && (await S(`byId('assets','AS-002').status`)) === 'Out of Service');
-    ok('D4 schedule next due advanced', (await S(`byId('schedules','ISCH-02').nextDue`)) === (await S(`addDays(TODAY,30)`)));
+    ok('C2 inspection submitted on the current controlled template revision', ins.template.rev === 3 && ins.results.find(r => r.qid === 'q1').result === 'Fail', ins.id);
+    ok('C3 failed critical item → defect + corrective action; asset OUT OF SERVICE', oosChecked && ins.actions.length === 1 && ins.defects.length === 1 && (await S(`byId('assets','AS-002').status`)) === 'Out of Service');
+    ok('C4 next inspection scheduled automatically', (await S(`byId('schedules','ISCH-02').nextDue`)) === (await S(`addDays(TODAY,30)`)));
     await asUser('P-002'); await go('#/assets/AS-002'); await btn('Return to service');
-    const blocked = (await p.innerText('.modal')).includes('must be completed');
-    ok('D5 return to service blocked while corrective action unverified', blocked); await p.keyboard.press('Escape');
+    ok('C5 return to service blocked while action unverified', (await p.innerText('.modal')).includes('must be completed')); await p.keyboard.press('Escape');
     const aid = ins.actions[0];
+    ok('C6 owner works the action and submits evidence', (await ownerCompletes(aid)) === 'Submitted for Verification' && (await S(`S.defects.find(d=>d.action==='${aid}').status`)) === 'Repaired – awaiting verification');
+    ok('C7 verifier returns insufficient evidence (Rejected) — not closed', (await verify(aid, 'P-002', false)) === 'Rejected' && (await S(`byId('assets','AS-002').status`)) === 'Out of Service');
     await ownerCompletes(aid);
     const v = await verify(aid, 'P-002', true, async () => { await p.check('.modal [name=rts]'); });
-    ok('D6 verified with return-to-service authorisation', v === 'Verified' && (await S(`byId('assets','AS-002').status`)) === 'In Service');
+    ok('C8 verified with return-to-service authorisation', v === 'Verified' && (await S(`byId('assets','AS-002').status`)) === 'In Service' && (await S(`S.defects.find(d=>d.action==='${aid}').status`)) === 'Closed');
+    await go('#/actions/' + aid); await btn('Close action');
+    ok('C9 action closed only after verification', (await S(`byId('actions','${aid}').status`)) === 'Closed');
     await go('#/assets/AS-002?tab=history'); const h = await p.innerText('#content');
-    ok('D7 asset history shows inspection, out-of-service, defect closure and return', h.includes('OUT OF SERVICE') && h.includes('Returned to service') && h.includes(ins.id));
+    ok('C10 asset history: inspection, out of service, defect closed, returned to service', h.includes('OUT OF SERVICE') && h.includes('Returned to service') && h.includes(ins.id));
     await go('#/print/' + ins.id); const pr = await p.innerText('#content');
-    ok('D8 controlled report has header from template', pr.includes('KIE-FRM-031') && pr.includes('Revision no: 3'));
+    ok('C11 printable report carries controlled template header', pr.includes('KIE-FRM-031') && pr.includes('Revision no: 3'));
+    // Report a defect directly (e.g. from QR page)
+    await asUser('P-016'); await go('#/qr/AS-012'); await act('.big-actions button:has-text("Report defect")');
+    await mfill('description', 'Guard cracked on grinder'); await msel('severity', 'Critical'); await mbtn('Report defect');
+    ok('C12 defect reported from QR page: critical → out of service + action', (await S(`byId('assets','AS-012').status`)) === 'Out of Service' && (await S(`S.actions.some(a => a.source==='Asset Defect' && S.defects.find(d=>d.id===a.sourceId && d.asset==='AS-012'))`)));
   }
 
-  /* ---------------- Workflow E — incident investigation ---------------- */
+  /* ---------------- D. Incident management ---------------- */
   {
     await asUser('P-009'); await go('#/incidents/new');
     await p.selectOption('#incForm [name=type]', 'Injury'); await p.fill('#incForm [name=title]', 'Foot struck by pallet jack'); await p.fill('#incForm [name=location]', 'Aisle 3');
@@ -145,101 +134,56 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await p.setInputFiles('#incForm [name=photos]', { name: 'scene.jpg', mimeType: 'image/jpeg', buffer: Buffer.from('x') });
     await p.click('[data-act=incSubmit]'); await p.waitForTimeout(200);
     const iid = await S(`S.incidents[S.incidents.length-1].id`);
-    ok('E1 incident reported', (await S(`byId('incidents','${iid}').status`)) === 'Reported', iid);
-    await asUser('P-002'); await go('#/incidents/' + iid); await btn('Assign investigator'); await msel('inv', 'P-002'); await mbtn('Assign & start investigation');
+    ok('D1 incident reported by employee', (await S(`byId('incidents','${iid}').status`)) === 'Reported', iid);
+    await asUser('P-002'); await go('#/notifications/tasks');
+    ok('D2 investigator assignment appears in HSEQ manager task list', (await p.innerText('#content')).includes('Assign investigator: ' + iid));
+    await go('#/incidents/' + iid); await btn('Assign investigator'); await msel('inv', 'P-002'); await mbtn('Assign & start investigation');
     await btn('Record investigation'); await mfill('findings', 'Jack left on slope.'); await mfill('immediate', 'Jack rolled'); await mfill('underlying', 'No parking brake used'); await mfill('root', 'Pallet jacks not included in pre-use checks'); await p.check('.modal [name="cat_Procedure"]'); await p.check('.modal [name=complete]'); await mbtn('Save investigation');
     await p.waitForTimeout(200);
-    ok('E2 investigation with root cause recorded; action modal prompted', (await S(`!!byId('incidents','${iid}').investigation.completed`)) && await modalOpen());
+    ok('D3 investigation and root cause recorded; corrective action prompted', (await S(`!!byId('incidents','${iid}').investigation.completed`)) && await modalOpen());
     await mfill('action', 'Add pallet jacks to pre-use checklist and brief staff.'); await msel('owner', 'P-007'); await mbtn('Raise action');
     const aid = await S(`S.actions.filter(a=>a.source==='Incident'&&a.sourceId==='${iid}').pop().id`);
-    ok('E3 action generated from incident', !!aid && (await S(`byId('incidents','${iid}').status`)) === 'Actions in Progress', aid);
+    ok('D4 action raised from incident', !!aid && (await S(`byId('incidents','${iid}').status`)) === 'Actions in Progress', aid);
+    await go('#/incidents/' + iid); await btn('Review & close');
+    ok('D5 incident cannot close while actions are open', (await S(`byId('incidents','${iid}').status`)) !== 'Closed');
     await ownerCompletes(aid); await verify(aid, 'P-002');
-    ok('E4 action verified → incident awaiting closure', (await S(`byId('incidents','${iid}').status`)) === 'Awaiting Closure');
+    ok('D6 action verified → incident awaiting closure', (await S(`byId('incidents','${iid}').status`)) === 'Awaiting Closure');
     await go('#/incidents/' + iid); await btn('Review & close'); await mfill('comment', 'Effective.'); await mbtn('Close incident');
-    ok('E5 incident closed', (await S(`byId('incidents','${iid}').status`)) === 'Closed');
-    await go('#/reports/incidents'); ok('E6 incident appears in management reporting', (await p.innerText('#content')).includes(iid));
+    ok('D7 incident closed', (await S(`byId('incidents','${iid}').status`)) === 'Closed');
+    await go('#/reports/incidents'); ok('D8 incident appears in reporting', (await p.innerText('#content')).includes(iid));
   }
 
-  /* ---------------- Workflow F — branch comparison ---------------- */
+  /* ---------------- E. Branches, tasks, platform checks ---------------- */
   {
     await go('#/dashboard'); await p.selectOption('#siteSel', 'S-DBN'); await p.waitForTimeout(200);
-    const t1 = await p.innerText('#content');
-    await go('#/actions'); const aD = await p.innerText('#lvn-acts');
-    await p.selectOption('#siteSel', 'S-CPT'); await p.waitForTimeout(200); const aC = await p.innerText('#lvn-acts');
-    await go('#/dashboard'); const t2 = await p.innerText('#content');
-    ok('F1 branch selection scopes dashboard and lists', t1.includes('Kestrel Industrial — Pinetown') && t2.includes('Kestrel Industrial — Montague Gardens') && aD !== aC, `DBN ${aD} | CPT ${aC}`);
+    const t1 = await p.innerText('#content'); await go('#/actions');
+    const ids = () => p.$$eval('#lvb-acts .mono', e => e.map(x => x.textContent));
+    const aD = await ids();
+    await p.selectOption('#siteSel', 'S-CPT'); await p.waitForTimeout(200); const aC = await ids();
+    const okD = await S(`${JSON.stringify(aD)}.every(id => byId('actions', id).site === 'S-DBN')`), okC = await S(`${JSON.stringify(aC)}.every(id => byId('actions', id).site === 'S-CPT')`);
+    ok('E1 branch selection scopes dashboard and lists', t1.includes('Kestrel Industrial — Pinetown') && aD.length > 0 && aC.length > 0 && okD && okC && aD.join() !== aC.join(), `DBN ${aD.join(', ')} | CPT ${aC.join(', ')}`);
     await go('#/reports/branches'); const rb = await p.innerText('#content');
-    ok('F2 branch comparison report lists all branches', ['Germiston', 'Pinetown', 'Montague Gardens'].every(x => rb.includes(x)));
-    await go('#/dashboard'); await p.click('[data-act=focusSite][data-site=ALL]'); await p.waitForTimeout(200);
-    ok('F3 return to organisation-wide view', (await S(`S.ui.site`)) === 'ALL');
-  }
-
-  /* ---------------- Workflow G — maintained compliance ---------------- */
-  {
+    ok('E2 branch comparison report lists every branch', ['Germiston', 'Pinetown', 'Montague Gardens'].every(x => rb.includes(x)));
+    await p.selectOption('#siteSel', 'ALL'); await p.waitForTimeout(150);
     await asUser('P-007'); await go('#/notifications/tasks');
-    const tasks = await p.innerText('#content');
-    ok('G1 overdue inspection appears in task centre', tasks.includes('Inspect: Germiston warehouse & workshop'));
-    await p.click('a[href="#/inspect/ISCH-05"]'); await p.waitForTimeout(200);
-    const qs = await S(`tplCurrent(byId('templates','TPL-WS')).questions.map(q=>q.id)`);
-    for (const q of qs) await p.click(`[data-act=qAns][data-q="${q}"][data-v="${q === 'q3' ? 'Fail' : q === 'q7' ? 'N/A' : 'Pass'}"]`);
-    await p.fill('#c-q3', 'Housekeeping poor at returns bay.'); await p.setInputFiles('#ph-q3', { name: 'returns_bay.jpg', mimeType: 'image/jpeg', buffer: Buffer.from('x') });
-    await p.check('[name=declare]'); await p.click('[data-act=inspSubmit]'); await p.waitForTimeout(200);
-    const ins = await S(`S.inspections[S.inspections.length-1]`);
-    ok('G2 activity completed with evidence; gap → action', ins.actions.length === 1 && !!ins.results.find(r => r.qid === 'q3').photo);
-    ok('G3 next inspection scheduled', (await S(`byId('schedules','ISCH-05').nextDue`)) === (await S(`addDays(TODAY,30)`)));
-    ok('G4 overdue notification cleared, new action visible system-wide', !(await S(`buildNotifs().some(n=>n.key.startsWith('ins-od-ISCH-05'))`)) && (await S(`buildNotifs().some(n=>n.link==='#/actions/${ins.actions[0]}') || S.actions.some(a=>a.id==='${ins.actions[0]}')`)));
-    // Legal review due → reassess and schedule next
-    await asUser('P-002'); await go('#/legal/LR-007'); await btn('Assess requirement'); await msel('status', 'Compliant'); await mfill('note', 'Procedure reviewed; register complete.'); await mbtn('Save assessment');
-    ok('G5 overdue legal review completed and next review scheduled', (await S(`daysTo(byId('legal','LR-007').nextReview)`)) > 300);
-    // SDS overdue review → notification → review
-    ok('G6 overdue SDS raises notification', await S(`buildNotifs().some(n=>n.key.startsWith('sds-od-CH-001'))`));
-    await go('#/chemicals/CH-001'); await btn('Review / update SDS'); await mfile('.modal [name=file]', 'Solvex300_SDS_2026.pdf'); await mfill('note', 'Hazards unchanged.'); await mbtn('Save SDS review');
-    ok('G7 SDS reviewed → new revision in Document Control, notification cleared', (await S(`docIssued(byId('documents','DOC-018')).rev`)) === 2 && !(await S(`buildNotifs().some(n=>n.key.startsWith('sds-od-CH-001'))`)));
-  }
-
-  /* ---------------- Legal library: Act → regulation → sub-regulation ---------------- */
-  {
-    await asUser('P-002'); await go('#/legal'); await btn('Add requirement');
-    ok('L1 add button disabled until a sub-regulation is ticked', await p.isDisabled('#pickAdd'));
-    await msel('site', 'S-CPT'); await msel('ins', 'ERW'); await p.click('[data-pk=part][data-id="ERW-9"]'); await p.waitForTimeout(100);
-    await p.check('[data-pki="ERW-9-2"]'); await p.waitForTimeout(120);
-    const plan = (await p.innerText('#pickPlan')).toLowerCase();
-    ok('L2 system lists what is needed to comply and to maintain compliance, checked against records', plan.includes('to be compliant') && plan.includes('to maintain compliance') && plan.includes('no issued emergency plan'));
-    const before = await S('S.actions.length');
-    await p.click('#pickAdd'); await p.waitForTimeout(250);
-    const l = await S(`S.legal.find(x=>x.lib==='ERW-9-2'&&x.site==='S-CPT')`);
-    ok('L3 requirement added with auto-assessed status and gap actions raised', !!l && l.status === 'Partially Compliant' && (await S('S.actions.length')) - before === 2, l && l.id);
-    await go('#/legal'); await btn('Add requirement'); await msel('site', 'S-CPT'); await msel('ins', 'ERW'); await p.click('[data-pk=part][data-id="ERW-9"]'); await p.waitForTimeout(100);
-    ok('L4 duplicate sub-regulation for the same site cannot be added twice', await p.isDisabled('[data-pki="ERW-9-2"]')); await p.keyboard.press('Escape');
-  }
-
-  /* ---------------- Other checks ---------------- */
-  {
-    // Validation
-    await go('#/legal'); await btn('Add requirement'); await p.click('#pickCustom'); await p.waitForTimeout(150); await mbtn('Add requirement');
-    ok('V1 form validation blocks empty required fields', await modalOpen() && (await p.$$('.modal .field.invalid')).length > 0); await p.keyboard.press('Escape');
-    // Permissions: employee cannot approve docs / see medical
-    await asUser('P-009'); await go('#/documents/DOC-005');
-    ok('V2 role permissions disable approval for Employee', await p.isDisabled('.sh-actions button:has-text("Approve")'));
-    await go('#/people/medical'); ok('V3 medical records restricted for Employee', (await p.innerText('#content')).includes('Restricted information'));
-    await asUser('P-002'); await go('#/people/medical'); ok('V4 medical records visible to HSEQ Manager', (await p.innerText('#content')).includes('Fit with restrictions'));
-    // Persistence across reload
-    await p.reload(); await p.waitForTimeout(300); ok('V5 data persists in localStorage after reload', (await S(`byId('assets','AS-002').status`)) === 'In Service' && (await S(`S.documents.length`)) >= 30);
-    // CSV export
-    await go('#/reports/overdue'); const [dl] = await Promise.all([p.waitForEvent('download'), p.click('[data-act=repCsv]')]); ok('V6 CSV export downloads', /\.csv$/.test(dl.suggestedFilename()), dl.suggestedFilename());
-    // Search
-    await p.fill('#globalSearch', 'FL-07'); await p.waitForTimeout(150); ok('V7 global search finds records', (await p.innerText('#searchResults')).includes('FL-07'));
-    // Reset
+    ok('E3 overdue inspection appears in the assignee task centre', (await p.innerText('#content')).includes('Inspect: Germiston warehouse & workshop'));
+    await go('#/legal'); ok('E4 removed modules are no longer reachable', (await p.innerText('#content')).includes('Page not found'));
+    ok('E5 navigation shows only the focused modules', (await p.$$eval('.nav-item span:not(.count)', e => e.map(x => x.textContent))).join('|') === 'Dashboard|Notifications & Tasks|Documents & Approvals|Assets & Equipment|Inspections|Maintenance & Defects|Incident Management|Corrective Actions|Reports|Administration');
+    await asUser('P-002'); await go('#/incidents'); await go('#/actions'); await btn('New action'); await mbtn('Continue'); await p.waitForTimeout(100); await mbtn('Raise action');
+    ok('E6 form validation blocks empty required fields', await modalOpen() && (await p.$$('.modal .field.invalid')).length > 0); await p.keyboard.press('Escape');
+    await asUser('P-009'); await go('#/documents/DOC-007');
+    ok('E7 employee sees no approval buttons on a document not routed to them', !(await has('.sh-actions button:has-text("Approve step")')));
+    await asUser('P-002'); await p.reload(); await p.waitForTimeout(300);
+    ok('E8 data persists in local storage after reload', (await S(`byId('assets','AS-002').status`)) === 'In Service' && (await S(`S.documents.length`)) >= 30);
+    await go('#/reports/approvals'); const [dl] = await Promise.all([p.waitForEvent('download'), p.click('[data-act=repCsv]')]); ok('E9 CSV export downloads', /\.csv$/.test(dl.suggestedFilename()), dl.suggestedFilename());
+    await p.fill('#globalSearch', 'FL-07'); await p.waitForTimeout(150); ok('E10 global search finds records', (await p.innerText('#searchResults')).includes('FL-07'));
     await act('[data-act=userMenu]'); await act('.dropdown [data-act=resetDemo]'); await mbtn('Reset demo data');
-    ok('V8 reset demo data restores seed', (await S(`S.documents.length`)) === 29 && (await S(`byId('assets','AS-002').status`)) === 'In Service');
+    ok('E11 reset demo data restores seed', (await S(`S.documents.length`)) === 29 && (await S(`byId('assets','AS-002').status`)) === 'In Service');
   }
 
   /* ---------------- Print output ---------------- */
-  {
-    await go('#/print/INS-1087'); await p.emulateMedia({ media: 'print' });
-    await p.pdf({ path: path.join(os.tmpdir(), 'vdw_inspection_report.pdf'), format: 'A4', printBackground: true });
-    await p.emulateMedia({ media: 'screen' });
-  }
+  { await go('#/print/INS-1087'); await p.emulateMedia({ media: 'print' }); await p.pdf({ path: path.join(os.tmpdir(), 'vdw_inspection_report.pdf'), format: 'A4', printBackground: true }); await p.emulateMedia({ media: 'screen' }); }
+
   console.log(results.join('\n'));
   console.log(errs.length ? '\nJS ERRORS:\n' + errs.join('\n') : '\nNo JavaScript errors.');
   console.log(`\nPrint preview PDF written to ${path.join(os.tmpdir(), 'vdw_inspection_report.pdf')}`);
