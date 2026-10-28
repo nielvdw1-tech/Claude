@@ -54,6 +54,14 @@ To start again, open the user menu (top right) and choose **Reset demo data**.
 - **Demo documents** have no real file content, so they open as a sample sheet built from the record: controlled header, change summary and approval route.
 - **Storage:** uploaded files are kept in your browser only (up to 20 MB each). Production uses secure document storage.
 
+**Printing documents:** use **Print** on a document page, or in the file viewer.
+- Every page of the document prints, with a control stamp at the top of each page:
+  - **"UNCONTROLLED WHEN PRINTED"** for issued documents;
+  - **"DRAFT — NOT FOR USE"** for drafts and revisions still in approval.
+- The stamp also shows the document number, revision, who printed it and when, and each print is recorded in the document's approval trail.
+- PDFs, images, text files and demo sample sheets can be printed. Inspection reports and management reports have their own Print buttons.
+- **Note:** the online preview link (claude.ai) blocks the browser's print dialog for everyone. There, Print explains this. To print, open the prototype from its folder on your computer (double-click `index.html`).
+
 Seeded examples:
 - **KIE-SWP-022** is waiting at step 2 for Johan. It is in his tasks, and on the Documents page under **Awaiting my approval**.
 - **KIE-MS-003** is at step 1 with Ayesha.
@@ -124,6 +132,6 @@ prototype/
 └── README.md                     This file
 ```
 
-**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 53 workflow outcomes.
+**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 59 workflow outcomes.
 
 The earlier full HSEQ prototype, with legal, risk, people, PPE, chemicals, emergency and audits, is preserved in git history at commit `26b59bc`.

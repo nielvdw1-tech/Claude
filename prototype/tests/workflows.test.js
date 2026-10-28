@@ -212,6 +212,38 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     ok('F7 photo evidence opens in the viewer', await has('.fv-img img')); await p.keyboard.press('Escape');
   }
 
+  /* ---------------- G. Printing documents ---------------- */
+  {
+    await p.evaluate(() => { window.__printed = 0; window.print = () => { window.__printed++; }; });
+    // A 2-page PDF: print a long report to PDF first
+    await go('#/reports/documents'); await p.emulateMedia({ media: 'print' }); const pdf2 = await p.pdf({ format: 'A4' }); await p.emulateMedia({ media: 'screen' });
+    await asUser('P-003'); await go('#/documents'); await btn('Upload document');
+    await mfill('title', 'Print test procedure'); await p.setInputFiles('.modal [name=file]', { name: 'print_test.pdf', mimeType: 'application/pdf', buffer: pdf2 });
+    await mbtn('Save document'); await p.waitForTimeout(300);
+    const did = await S(`S.documents[S.documents.length-1].id`);
+    await btn('Print'); await p.waitForFunction(() => window.__printed > 0, null, { timeout: 15000 }).catch(() => {});
+    const srcPages = await S(`(async () => (await pdfjsLib.getDocument({ data: new Uint8Array(await (await idbGet(docLatest(byId('documents','${did}')).file.blobId)).arrayBuffer()) }).promise).numPages)()`);
+    const printPages = await p.$$eval('#printArea .pa-page canvas', c => c.length);
+    ok('G1 Print lays out every page of the PDF for the printer', (await S('window.__printed')) === 1 && printPages === srcPages && srcPages >= 1, `${printPages} of ${srcPages} pages`);
+    const stamp = await p.$eval('#printArea .pa-stamp', e => e.textContent);
+    ok('G2 draft copies are stamped DRAFT — NOT FOR USE with document number and printer', stamp.includes('DRAFT — NOT FOR USE') && stamp.includes(await S(`byId('documents','${did}').number`)) && stamp.includes('Sipho Ndlovu'));
+    await p.emulateMedia({ media: 'print' }); const out = await p.pdf({ format: 'A4' }); await p.emulateMedia({ media: 'screen' });
+    const outPages = (out.toString('latin1').match(/\/Type\s*\/Page[^s]/g) || []).length;
+    ok('G3 printed output contains only the document pages (no app screens)', outPages === srcPages, `${outPages} printed page(s)`);
+    ok('G4 the print is recorded in the document trail', await S(`docLatest(byId('documents','${did}')).history.some(h => /Draft printed/.test(h.action))`));
+    await p.evaluate(() => { document.body.classList.remove('printing-file'); });
+    await go('#/documents/DOC-001'); await btn('Print'); await p.waitForTimeout(400);
+    const st2 = await p.$eval('#printArea .pa-stamp', e => e.textContent);
+    ok('G5 issued documents are stamped UNCONTROLLED WHEN PRINTED', st2.includes('UNCONTROLLED WHEN PRINTED') && st2.includes('KIE-POL-001'));
+    await p.evaluate(() => { document.body.classList.remove('printing-file'); });
+    // Inside a frame (like the online preview) the print dialog is blocked → explanation instead
+    const wrap = path.join(os.tmpdir(), 'vdw_frame_test.html'); require('fs').writeFileSync(wrap, `<iframe src="${URL}#/documents/DOC-001" style="width:1300px;height:900px"></iframe>`);
+    const fp = await ctx.newPage(); await fp.goto('file://' + wrap); await fp.waitForTimeout(1000);
+    const fr = fp.frames().find(f => f.url().includes('index.html'));
+    await fr.click('.sh-actions button:has-text("Print")'); await fp.waitForTimeout(200);
+    ok('G6 in an embedded preview the user is told where to print from', (await fr.innerText('.modal')).includes('Printing is not available in the online preview')); await fp.close();
+  }
+
   /* ---------------- Print output ---------------- */
   { await go('#/print/INS-1087'); await p.emulateMedia({ media: 'print' }); await p.pdf({ path: path.join(os.tmpdir(), 'vdw_inspection_report.pdf'), format: 'A4', printBackground: true }); await p.emulateMedia({ media: 'screen' }); }
 

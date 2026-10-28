@@ -104,7 +104,7 @@ async function openFileViewer(o) {
   const kind = fileKind(o.type, o.name);
   const d = o.doc && byId('documents', o.doc), r = d && d.revisions[+o.ri];
   const sub = d ? `${esc(d.number)} · ${revLabel(r)} · ${esc(r.status)}` : `${fsize(+o.size)}${o.type ? ' · ' + esc(o.type) : ''}`;
-  const m = openModal({ title: o.name, sub, size: 'wide', body: `<div class="fv" id="fvBody"><div class="fv-msg">${icon('clock')} Opening…</div></div><div class="fv-foot muted" id="fvFoot"></div>`, buttons: [] });
+  const m = openModal({ title: o.name, sub, size: 'wide', body: `<div class="fv" id="fvBody"><div class="fv-msg">${icon('clock')} Opening…</div></div><div class="fv-foot muted" id="fvFoot"></div>`, buttons: kind === 'other' && !o.seeded && o.blob ? [] : [{ label: `${icon('print', 'sm')} Print`, cls: 'primary', id: 'fvPrint', onClick: () => { printFile(o); return false; } }] });
   const box = m.querySelector('#fvBody'), foot = m.querySelector('#fvFoot');
   const close = m.closest('.modal-back').querySelector('.modal-foot .btn'); if (close) close.textContent = 'Close';
   const msg = (ic, html) => { box.innerHTML = `<div class="fv-msg">${icon(ic)}<div>${html}</div></div>`; };
@@ -128,3 +128,65 @@ async function openFileViewer(o) {
 }
 ACT.viewFile = (el) => openFileViewer(Object.assign({}, el.dataset));
 ACT.viewDocFile = (el) => { const d = byId('documents', el.dataset.id), ri = el.dataset.ri != null ? +el.dataset.ri : d.revisions.length - 1, f = d.revisions[ri].file; if (!f) { toast('No file is attached to this revision yet.', 'error'); return; } openFileViewer({ name: f.name, type: f.type, size: f.size, blob: f.blobId, seeded: f.seeded ? '1' : '', tooLarge: f.tooLarge, doc: d.id, ri }); };
+
+/* ==========================================================================
+   Printing
+   --------------------------------------------------------------------------
+   The open file is laid out in #printArea (one printed page per document
+   page) and the browser's print dialog is opened. Every printed page carries
+   the document-control marking: "UNCONTROLLED WHEN PRINTED", or "DRAFT —
+   NOT FOR USE" for revisions that are not issued. The hosted online preview
+   blocks the print dialog, so there the viewer explains where to print from.
+   ========================================================================== */
+function inPreviewFrame() { try { return window.self !== window.top; } catch (e) { return true; } }
+function printBlockedNotice() {
+  openModal({ title: 'Printing is not available in the online preview', size: 'narrow', body: `<p>The online preview link blocks the print dialog for everyone.</p><p>To print, open the prototype from its folder on your computer (double-click <b>index.html</b>) and use the same Print button. In the production system printing works directly from the browser.</p>`, buttons: [] });
+}
+function printStamp(o) {
+  const d = o.doc && byId('documents', o.doc), r = d && d.revisions[+o.ri];
+  const who = `Printed by ${pname(S.ui.user)} on ${fmtTs(nowTs())}`;
+  if (!d) return { cls: 'pa-plain', text: `${o.name} · ${who}` };
+  const draft = r.status !== 'Issued for Use';
+  return { cls: draft ? 'pa-draft' : 'pa-unc', text: `${draft ? 'DRAFT — NOT FOR USE' : 'UNCONTROLLED WHEN PRINTED'} · ${d.number} ${revLabel(r)} · ${r.status} · ${who}`, d, r };
+}
+async function buildPrintArea(o) {
+  let area = document.getElementById('printArea');
+  if (!area) { area = document.createElement('div'); area.id = 'printArea'; document.body.appendChild(area); }
+  const st = printStamp(o), stamp = `<div class="pa-stamp ${st.cls}">${esc(st.text)}</div>`;
+  const page = (inner) => `<section class="pa-page">${stamp}<div class="pa-body">${inner}</div></section>`;
+  area.innerHTML = '';
+  const kind = fileKind(o.type, o.name);
+  if (o.seeded || (!o.blob && !o.tooLarge)) { area.innerHTML = page(sampleSheet(o)); return st; }
+  let blob = null; try { if (FILE_PENDING[o.blob]) await FILE_PENDING[o.blob]; blob = await idbGet(o.blob); } catch (e) { /* handled below */ }
+  if (!blob) throw new Error('The file content is not available in this browser.');
+  if (kind === 'pdf') {
+    const lib = await ensurePdfJs(); const pdf = await lib.getDocument({ data: new Uint8Array(await blob.arrayBuffer()), isEvalSupported: false }).promise;
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const pg = await pdf.getPage(i), vp = pg.getViewport({ scale: 2 });
+      const c = document.createElement('canvas'); c.width = vp.width; c.height = vp.height;
+      await pg.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+      area.insertAdjacentHTML('beforeend', page('')); area.lastElementChild.querySelector('.pa-body').appendChild(c);
+    }
+  } else if (kind === 'image') {
+    const url = URL.createObjectURL(blob);
+    area.innerHTML = page(`<img src="${url}" alt="${esc(o.name)}">`);
+    await new Promise(res => { const img = area.querySelector('img'); if (img.complete) res(); else { img.onload = res; img.onerror = res; } });
+  } else if (kind === 'text') {
+    area.innerHTML = page(`<pre>${esc(await blob.text())}</pre>`);
+  } else throw new Error('This file type cannot be printed from the prototype. PDFs, images and text files can.');
+  return st;
+}
+async function printFile(o) {
+  if (inPreviewFrame()) { printBlockedNotice(); return; }
+  try {
+    toast('Preparing the print copy…', 'info');
+    const st = await buildPrintArea(o);
+    if (st.d) { docLatestFor(st.d, st.r).history.push({ ts: nowTs(), by: S.ui.user, action: st.cls === 'pa-draft' ? 'Draft printed (marked DRAFT — NOT FOR USE)' : 'Printed copy made (marked UNCONTROLLED WHEN PRINTED)', comment: '' }); save(); }
+    document.body.classList.add('printing-file');
+    const done = () => { document.body.classList.remove('printing-file'); const a = document.getElementById('printArea'); if (a) a.innerHTML = ''; window.removeEventListener('afterprint', done); };
+    window.addEventListener('afterprint', done);
+    window.print();
+  } catch (e) { toast(esc(e.message || 'Could not prepare the print copy.'), 'error'); }
+}
+function docLatestFor(d, r) { return r || docLatest(d); }
+ACT.printDocFile = (el) => { const d = byId('documents', el.dataset.id), ri = el.dataset.ri != null ? +el.dataset.ri : d.revisions.length - 1, f = d.revisions[ri].file; if (!f) { toast('No file is attached to this revision yet.', 'error'); return; } printFile({ name: f.name, type: f.type, size: f.size, blob: f.blobId, seeded: f.seeded ? '1' : '', doc: d.id, ri }); };

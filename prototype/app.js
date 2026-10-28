@@ -568,7 +568,7 @@ ACT.toggleNavGroup = (el) => { const g = el.dataset.g; S.ui.navCollapsed = S.ui.
 ACT.openNotifs = () => navigate('#/notifications');
 ACT.openTasks = () => navigate('#/notifications/tasks');
 ACT.go = (el) => navigate(el.dataset.href);
-ACT.print = () => window.print();
+ACT.print = () => { if (typeof inPreviewFrame === 'function' && inPreviewFrame()) printBlockedNotice(); else window.print(); };
 ACT.userMenu = (el) => {
   document.querySelectorAll('.dropdown').forEach(d => d.remove());
   const r = el.getBoundingClientRect(); const dd = document.createElement('div'); dd.className = 'dropdown';

@@ -645,6 +645,22 @@ button.file-chip svg.ic.sm { width: 13px; height: 13px; }
   #routeEd > div > select { grid-column: 2 / -1; }
 }
 
+/* ---------- Printed document copies (#printArea) ---------- */
+#printArea { display: none; }
+@media print {
+  body.printing-file .shell, body.printing-file .modal-back, body.printing-file .toasts { display: none !important; }
+  body.printing-file #printArea { display: block; }
+  .pa-page { break-after: page; display: flex; flex-direction: column; gap: 4mm; }
+  .pa-page:last-child { break-after: auto; }
+  .pa-stamp { font: 700 8pt Arial, sans-serif; letter-spacing: .04em; padding: 1.5mm 3mm; border: 0.4mm solid #000; text-align: center; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .pa-unc { color: #8A3A00; border-color: #8A3A00; }
+  .pa-draft { color: #B00020; border-color: #B00020; }
+  .pa-body { text-align: center; }
+  .pa-body canvas, .pa-body img { max-width: 100%; max-height: 245mm; width: auto !important; height: auto !important; object-fit: contain; }
+  .pa-body pre { text-align: left; white-space: pre-wrap; font: 9pt/1.45 "IBM Plex Mono", Consolas, monospace; margin: 0; }
+  .pa-body .sample-sheet { text-align: left; box-shadow: none; border: 0; padding: 0; max-width: none; }
+}
+
 /* ---------- Print (always light) ---------- */
 @page {
   size: A4;
