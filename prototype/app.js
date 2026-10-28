@@ -519,7 +519,7 @@ function rerender(keepScroll = true) {
   document.getElementById('sidebar').innerHTML = renderSidebar(page.nav || key);
   document.getElementById('topbar').innerHTML = renderTopbar(page.crumbs || [[page.title, '#']]);
   document.getElementById('content').innerHTML = page.html;
-  document.title = (page.title ? page.title + ' · ' : '') + 'VDW HSEQ (Prototype)';
+  document.title = (page.title ? page.title + ' · ' : '') + 'VDW HSEQ';
   if (page.after) page.after();
   if (routeId !== lastRoute) { window.scrollTo(0, 0); lastRoute = routeId; } else if (keepScroll) window.scrollTo(0, y);
   document.body.classList.remove('nav-open');
@@ -610,8 +610,8 @@ function globalSearch(q) {
    DASHBOARD
    ========================================================================== */
 function gaugeSvg(v) {
-  const r = 58, c = 2 * Math.PI * r, col = { green: '#12805C', amber: '#F2A100', red: '#C8281E' }[scoreColour(v)];
-  return `<div class="gauge"><svg viewBox="0 0 140 140"><circle cx="70" cy="70" r="${r}" stroke="#E5E7EB" stroke-width="14" fill="none"/><circle cx="70" cy="70" r="${r}" stroke="${col}" stroke-width="14" fill="none" stroke-dasharray="${(v / 100) * c} ${c}" stroke-linecap="round"/></svg><div class="g-val"><div><b>${v}%</b><span>indicative score</span></div></div></div>`;
+  const r = 58, c = 2 * Math.PI * r, col = { green: 'var(--ok)', amber: 'var(--warn-solid)', red: 'var(--bad)' }[scoreColour(v)];
+  return `<div class="gauge"><svg viewBox="0 0 140 140"><circle cx="70" cy="70" r="${r}" style="stroke:var(--surface-3)" stroke-width="12" fill="none"/><circle cx="70" cy="70" r="${r}" style="stroke:${col}" stroke-width="12" fill="none" stroke-dasharray="${(v / 100) * c} ${c}" stroke-linecap="round"/></svg><div class="g-val"><div><b>${v}%</b><span>control score</span></div></div></div>`;
 }
 function barRow(label, v, href, colour) { return `<div class="bar-row ${href ? 'clickable' : ''}" ${href ? `data-act="go" data-href="${href}"` : ''}><span class="bar-label" title="${esc(label)}">${esc(label)}</span><div class="bar"><span class="fill-${colour || scoreColour(v)}" style="width:${v}%"></span></div><span class="bar-val" style="color:var(--${scoreColour(v) === 'amber' ? 'amber' : scoreColour(v)})">${v}%</span></div>`; }
 function kpi(label, value, sub, tone, href, ic) { return `<button class="kpi t-${tone}" data-act="go" data-href="${href}"><div class="k-label">${ic ? icon(ic, 'sm') : ''}${esc(label)}</div><div class="k-value">${value}</div><div class="k-sub">${sub}</div><span class="k-go">${icon('arrowR', 'sm')}</span></button>`; }
