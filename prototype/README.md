@@ -105,6 +105,14 @@ Other pages are closed to employees. An inspection can only be started from the 
 - **Tracking:** the publisher sees, for each notice, who has read it and who has acknowledged it, with times. They can send a reminder (simulated, in-app only) or withdraw the notice.
 - **Example:** switch to **Tebogo Molefe** (Employee, Germiston) to see the *New pedestrian walkways* notice waiting for acknowledgement.
 
+**Incident safety alerts.** When an incident is reported, the system drafts a safety alert notice automatically. The alert gives the type, place and date, what happened and the immediate action taken. It leaves out names and injury details.
+- Staff **do not see the alert until it has been approved in sequence**: first by the **HSEQ Manager**, then by the **Safety Consultant**.
+- Each approver can edit the wording, audience, priority and acknowledgement before approving. Either approver can choose **Do not share**, giving a reason.
+- The final approval publishes the alert to the incident's branch, or to all staff if the approver chooses that.
+- Approvers get a task. The incident page shows the alert's status, and every decision is recorded in the incident history.
+- For incidents without an alert, **Prepare alert** on the incident page creates one.
+- **Example:** *NT-004* (from INC-2026-007) was approved by Johan and is waiting for Ayesha. Open it from **Company Notices** and use **Act as current approver**.
+
 ### D. Branches and tasks
 - Use the **Branch / site** selector to scope everything to one branch. **Reports → Branch comparison** shows them side by side.
 - **Notifications & Tasks → My tasks** shows each person their own work: documents awaiting their approval, actions to complete or verify, inspections due and investigations.
@@ -151,6 +159,6 @@ prototype/
 └── README.md                     This file
 ```
 
-**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 75 workflow outcomes.
+**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 83 workflow outcomes.
 
 The earlier full HSEQ prototype, with legal, risk, people, PPE, chemicals, emergency and audits, is preserved in git history at commit `26b59bc`.

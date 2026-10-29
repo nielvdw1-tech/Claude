@@ -8,7 +8,7 @@ Status key:
 - **Not implemented**
 
 "Tested" means one of the following:
-- the automated browser test (`tests/workflows.test.js`, **75/75 passing**, no JavaScript errors);
+- the automated browser test (`tests/workflows.test.js`, **83/83 passing**, no JavaScript errors);
 - the route smoke test (77 routes plus a second organisation, no errors);
 - the mobile layout check (31 routes at 390 px, no horizontal overflow).
 
@@ -64,6 +64,7 @@ Status key:
 | Reports with print and CSV | Implemented | E9 |
 | Safety Consultant has full access; Employee limited to QR inspections and incident reporting | Implemented | H1–H9 (client-side demonstration of the intended permissions) |
 | Company notices (memos) to all staff or a branch, with optional attachment and read-and-understood acknowledgement; read/acknowledgement tracking | Implemented | N1–N7; reminders are in-app only (email/SMS simulated) |
+| Incident safety alerts: draft notice created on each incident, published only after sequential approval by the HSEQ Manager and the Safety Consultant; approvers can edit or decline | Implemented | S1–S8 |
 | Roles and permissions | Partial | Client-side demonstration only; production must enforce them on the server |
 | Persistence and reset | Implemented | E8, E11 |
 | Out-of-scope modules removed (legal, risk, people, PPE, chemicals, emergency, audits) | Implemented | E4–E5; preserved in git history (commit `26b59bc`) |

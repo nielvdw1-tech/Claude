@@ -302,6 +302,27 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     ok('N7 notices awaiting acknowledgement appear in a manager or supervisor task list', (await p.innerText('#content')).includes('Acknowledge notice: Hearing protection in the workshop'));
   }
 
+  /* ---------------- S. Incident safety alerts (approval before staff see them) ---------------- */
+  {
+    const iid = await S("S.incidents.find(i=>i.title==='Oil on floor at bay 4').id");
+    const aid = await S(`S.notices.find(n=>n.source&&n.source.id==='${iid}').id`);
+    ok('S1 reporting an incident creates a draft safety alert awaiting HSEQ Manager approval', (await S(`S.notices.find(n=>n.id==='${aid}').status`)) === 'Pending approval' && (await S(`S.notices.find(n=>n.id==='${aid}').approvals.map(s=>s.person+':'+s.status).join()`)) === 'P-002:Current,P-006:Pending', aid);
+    await asUser('P-014'); await go('#/notices');
+    ok('S2 staff cannot see the alert before approval', !(await p.innerText('#content')).includes('Oil on floor at bay 4'));
+    await asUser('P-002'); await go('#/notifications/tasks');
+    ok('S3 the HSEQ Manager gets an approval task', (await p.innerText('#content')).includes('Approve safety alert: Oil on floor at bay 4'));
+    await go('#/notices/' + aid); await btn('Review & approve'); await mfill('body', 'Oil was spilled at bay 4. Report spills immediately.'); await mbtn('Approve');
+    ok('S4 after the HSEQ Manager approves it goes to the Safety Consultant, still hidden from staff', (await S(`S.notices.find(n=>n.id==='${aid}').approvals.map(s=>s.status).join()`)) === 'Approved,Current' && (await S(`S.notices.find(n=>n.id==='${aid}').status`)) === 'Pending approval');
+    await asUser('P-006'); await go('#/notices/' + aid); await btn('Review & approve'); await mbtn('Approve & publish');
+    ok('S5 after the Safety Consultant approves, the edited alert is published', (await S(`S.notices.find(n=>n.id==='${aid}').status`)) === 'Published' && (await S(`S.notices.find(n=>n.id==='${aid}').body`)).startsWith('Oil was spilled'));
+    await asUser('P-014'); await p.waitForTimeout(150);
+    ok('S6 employees at the branch now see the alert on their home screen', (await p.innerText('#content')).includes('Safety alert: Oil on floor at bay 4'));
+    await asUser('P-006'); await go('#/notices/NT-004'); await btn('Do not share'); await mfill('comment', 'Already covered in the toolbox talk.'); await mbtn('Do not share');
+    ok('S7 an approver can decide not to share an alert; recorded on the incident', (await S("S.notices.find(n=>n.id==='NT-004').status")) === 'Not shared' && (await S("S.incidents.find(i=>i.id==='INC-2026-007').history.some(h=>h.action.includes('not shared'))")));
+    await go('#/incidents/INC-2026-007');
+    ok('S8 the incident page shows the alert status', (await p.innerText('#content')).includes('Safety alert to staff'));
+  }
+
   /* ---------------- Print output ---------------- */
   { await go('#/print/INS-1087'); await p.emulateMedia({ media: 'print' }); await p.pdf({ path: path.join(os.tmpdir(), 'vdw_inspection_report.pdf'), format: 'A4', printBackground: true }); await p.emulateMedia({ media: 'screen' }); }
 

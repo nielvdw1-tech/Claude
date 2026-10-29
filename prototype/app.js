@@ -8,7 +8,7 @@
    ========================================================================== */
 'use strict';
 
-const STORE_KEY = 'vdw-hseq-prototype-v7';
+const STORE_KEY = 'vdw-hseq-prototype-v8';
 let S = null;                        // application state (demo data)
 const TODAY = (() => { const d = new Date(); d.setHours(0, 0, 0, 0); return isoDate(d); })();
 const ROUTES = {};                   // page renderers registered by module files
@@ -18,7 +18,7 @@ const ACT = {};                      // click handlers: data-act="name"
 function loadState() {
   try {
     const raw = localStorage.getItem(STORE_KEY);
-    if (raw) { const parsed = JSON.parse(raw); if (parsed && parsed.version === 7) { S = parsed; return; } }
+    if (raw) { const parsed = JSON.parse(raw); if (parsed && parsed.version === 8) { S = parsed; return; } }
   } catch (e) { console.warn('Could not read local storage; using fresh demo data.', e); }
   S = buildSeed(); save();
 }
@@ -383,6 +383,7 @@ function myTasks() {
   S.schedules.filter(s => inSite(s, S.ui.site) && s.assignee === uid && daysTo(s.nextDue) <= 7).forEach(s => out.push({ title: `Inspect: ${s.target}`, sub: `Due ${fmt(s.nextDue)}`, link: '#/inspect/' + s.id, sev: daysTo(s.nextDue) < 0 ? 'red' : 'amber' }));
   S.incidents.filter(i => inSite(i, S.ui.site) && i.investigator === uid && !['Closed'].includes(i.status)).forEach(i => out.push({ title: `Investigate ${i.id}: ${i.title}`, sub: i.status, link: '#/incidents/' + i.id, sev: 'amber' }));
   if (can('incident.investigate')) S.incidents.filter(i => inSite(i, S.ui.site) && i.status === 'Reported').forEach(i => out.push({ title: `Assign investigator: ${i.id}`, sub: i.title, link: '#/incidents/' + i.id, sev: 'red' }));
+  (S.notices || []).filter(n => n.status === 'Pending approval' && n.org === S.ui.org && (noticeCurStep(n) || {}).person === uid).forEach(n => { const c = noticeCurStep(n); out.push({ title: `Approve safety alert: ${n.title.replace(/^Safety alert:\s*/, '')}`, sub: `From ${n.source.id} · step ${c.step} of ${n.approvals.length} — ${c.label}`, link: '#/notices/' + n.id, sev: 'amber' }); });
   if (typeof myNotices === 'function') myNotices().filter(n => noticeNeedsAck(n)).forEach(n => out.push({ title: `Acknowledge notice: ${n.title}`, sub: `From ${pname(n.publishedBy)} · ${fmt(n.publishedOn)}`, link: '#/notices/' + n.id, sev: n.priority === 'Important' ? 'red' : 'amber' }));
   return out;
 }
@@ -478,7 +479,7 @@ function navCounts() {
   c.notifications = buildNotifs().filter(n => !S.readNotifs[n.key]).length;
   c.incidents = S.incidents.filter(i => inSite(i, S.ui.site) && i.status === 'Reported').length;
   c.documents = S.documents.filter(d => inSite(d, S.ui.site) && (curStep(docLatest(d)) || {}).person === S.ui.user).length;
-  c.notices = typeof myUnreadNotices === 'function' ? myUnreadNotices().length : 0;
+  c.notices = typeof myUnreadNotices === 'function' ? myUnreadNotices().length + (S.notices || []).filter(n => n.status === 'Pending approval' && n.org === S.ui.org && (noticeCurStep(n) || {}).person === S.ui.user).length : 0;
   c.inspections = S.schedules.filter(s => inSite(s, S.ui.site) && daysTo(s.nextDue) < 0).length;
   return c;
 }

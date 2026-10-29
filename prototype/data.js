@@ -15,7 +15,7 @@ function buildSeed() {
   const T = (n, h = 9, m = 0) => { const x = new Date(base); x.setDate(x.getDate() + n); x.setHours(h, m, 0, 0); return x.toISOString(); };
   const demoFile = (name, kb) => ({ name, size: kb * 1024, type: name.endsWith('.pdf') ? 'application/pdf' : 'application/octet-stream', demo: true, seeded: true });
 
-  const S = { version: 7, seededOn: D(0) };
+  const S = { version: 8, seededOn: D(0) };
 
   /* ---------------- Organisations, sites, departments ---------------- */
   S.orgs = [
@@ -346,7 +346,13 @@ function buildSeed() {
       attachment: null, publishedBy: 'P-001', publishedOn: T(-5, 11, 0), reads: { 'P-001': T(-5, 11, 0), 'P-002': T(-5, 12, 0), 'P-003': T(-4, 8, 0) }, acks: {} },
     { id: 'NT-003', org: 'ORG-1', title: 'Water supply interruption at Pinetown on Friday', priority: 'Normal', audience: 'S-DBN', ackRequired: false, expires: D(3),
       body: 'The municipality will interrupt the water supply on Friday from 08:00 to 14:00. Bottled drinking water will be provided in the canteen, and the eyewash station has its own reserve tank.',
-      attachment: null, publishedBy: 'P-003', publishedOn: T(-1, 14, 30), reads: { 'P-003': T(-1, 14, 30) }, acks: {} }
+      attachment: null, publishedBy: 'P-003', publishedOn: T(-1, 14, 30), reads: { 'P-003': T(-1, 14, 30) }, acks: {} },
+    // Incident safety alert: approved by the HSEQ Manager, waiting for the Safety Consultant (not yet visible to staff)
+    { id: 'NT-004', org: 'ORG-1', title: 'Safety alert: Air receiver over-pressure — safety valve failed to lift', priority: 'Important', audience: 'S-DBN', ackRequired: true, expires: null,
+      body: 'Near miss at Pinetown (workshop).\n\nWhat happened: the compressor pressure switch failed and the air receiver went above its working pressure. The safety valve did not lift.\n\nImmediate action taken: the compressor was isolated and taken out of service.\n\nDo not use any compressor or air receiver with an overdue inspection or a damaged gauge or safety valve. Report any concern to your supervisor.',
+      attachment: null, status: 'Pending approval', source: { type: 'Incident', id: 'INC-2026-007' }, createdBy: 'P-010', createdOn: T(-9, 9, 30), publishedBy: null, publishedOn: T(-9, 9, 30),
+      approvals: [{ step: 1, label: 'HSEQ Manager approval', person: 'P-002', status: 'Approved', ts: T(-8, 10, 0), comment: 'Removed the name of the person involved.' }, { step: 2, label: 'Safety Consultant approval', person: 'P-006', status: 'Current', ts: null, comment: '' }],
+      reads: {}, acks: {} }
   ];
 
   /* ---------------- Activity & notification state ---------------- */
