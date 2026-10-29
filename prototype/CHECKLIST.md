@@ -8,7 +8,7 @@ Status key:
 - **Not implemented**
 
 "Tested" means one of the following:
-- the automated browser test (`tests/workflows.test.js`, **88/88 passing**, no JavaScript errors);
+- the automated browser test (`tests/workflows.test.js`, **96/96 passing**, no JavaScript errors);
 - the route smoke test (77 routes plus a second organisation, no errors);
 - the mobile layout check (31 routes at 390 px, no horizontal overflow).
 
@@ -54,6 +54,7 @@ Status key:
 | Closure only when all actions are verified | Implemented | D5, D7 |
 | External reporting status | Implemented | Reportability is decided by a competent person |
 | Incident trends in reporting | Implemented | D8 |
+| Injury classification (first aid, medical treatment, restricted work, lost time, fatality) set by the HSEQ team from recorded facts; system suggestion, override with reason, reclassification history; required before closure; company-defined definitions | Implemented | J1–J8 |
 
 ## Supporting features
 | Requirement | Status | Notes |

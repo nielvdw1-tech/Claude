@@ -17,9 +17,9 @@ ROUTES.incidents = (p, q) => {
   const rows = scoped('incidents').sort((a, b) => b.date.localeCompare(a.date));
   const lv = listView('inc', { rows, initial: { status: q.status || '', type: q.type || '' }, resetState: !!(q.status || q.type), search: i => [i.id, i.title, i.type, i.location, pname(i.reporter)].join(' '), href: i => '#/incidents/' + i.id, rowClass: i => i.status === 'Reported' ? 'row-red' : '',
     filters: [{ id: 'status', label: 'All statuses', options: [{ value: 'open', label: 'Open (not closed)' }, 'Reported', 'Under Investigation', 'Actions in Progress', 'Awaiting Closure', 'Closed'], test: (i, v) => v === 'open' ? i.status !== 'Closed' : i.status === v }, { id: 'type', label: 'All types', options: INC_TYPES, test: (i, v) => i.type === v }, { id: 'site', label: 'All sites', options: orgSites().map(s => ({ value: s.id, label: s.short })), test: (i, v) => i.site === v }],
-    columns: [{ label: 'Incident', render: i => `<span class="mono">${i.id}</span><div class="t-title">${esc(i.title)}</div>` }, { label: 'Type', render: i => badge(i.type, i.type === 'Injury' ? 'red' : i.type === 'Environmental' ? 'green' : i.type === 'Property Damage' ? 'orange' : 'blue', true) }, { label: 'Date / site', render: i => `${fmt(i.date)} ${esc(i.time)}<div class="t-sub">${esc(sname(i.site))} · ${esc(i.location)}</div>` }, { label: 'Actual / potential', render: i => `${sevChip(i.actualSev)}<div class="mt-s">${sevChip(i.potentialSev)}</div>` }, { label: 'Investigator', render: i => i.investigator ? esc(pname(i.investigator)) : '<span class="due red">Not assigned</span>' }, { label: 'Actions', render: i => { const a = incActions(i); return a.length ? `${a.filter(x => !actionOpen(x)).length}/${a.length} verified` : '—'; } }, { label: 'Status', render: i => sbadge(i.status) }] });
+    columns: [{ label: 'Incident', render: i => `<span class="mono">${i.id}</span><div class="t-title">${esc(i.title)}</div>` }, { label: 'Type', render: i => badge(i.type, i.type === 'Injury' ? 'red' : i.type === 'Environmental' ? 'green' : i.type === 'Property Damage' ? 'orange' : 'blue', true) + (i.injury ? `<div class="mt-s">${injClassBadge(i)}</div>` : '') }, { label: 'Date / site', render: i => `${fmt(i.date)} ${esc(i.time)}<div class="t-sub">${esc(sname(i.site))} · ${esc(i.location)}</div>` }, { label: 'Actual / potential', render: i => `${sevChip(i.actualSev)}<div class="mt-s">${sevChip(i.potentialSev)}</div>` }, { label: 'Investigator', render: i => i.investigator ? esc(pname(i.investigator)) : '<span class="due red">Not assigned</span>' }, { label: 'Actions', render: i => { const a = incActions(i); return a.length ? `${a.filter(x => !actionOpen(x)).length}/${a.length} verified` : '—'; } }, { label: 'Status', render: i => sbadge(i.status) }] });
   const html = `${pageHead('Incidents & injuries', 'Report near misses, injuries, property damage and environmental events; investigate root causes; drive corrective actions through verification to closure.', `<a class="btn accent" href="#/incidents/new">${icon('plus', 'sm')} Report incident</a>`, scopePill())}
-    <div class="kpis">${kpi('Open incidents', rows.filter(i => i.status !== 'Closed').length, 'Not yet closed', 'amber', '#/incidents?status=open', 'alert')}${kpi('Awaiting investigation', rows.filter(i => i.status === 'Reported').length, 'Investigator to be assigned', rows.some(i => i.status === 'Reported') ? 'red' : 'green', '#/incidents?status=Reported', 'clock')}${kpi('Injuries (12 months)', rows.filter(i => i.type === 'Injury' && daysTo(i.date) > -365).length, `${rows.filter(i => i.type === 'Injury' && i.injury && i.injury.daysLost > 0).length} lost-time`, 'red', '#/incidents?type=Injury', 'alert')}${kpi('High-potential events', rows.filter(i => i.potentialSev >= 4).length, 'Potential severity major or worse', 'amber', '#/incidents', 'risk')}</div>${lv}`;
+    <div class="kpis">${kpi('Open incidents', rows.filter(i => i.status !== 'Closed').length, 'Not yet closed', 'amber', '#/incidents?status=open', 'alert')}${kpi('Awaiting investigation', rows.filter(i => i.status === 'Reported').length, 'Investigator to be assigned', rows.some(i => i.status === 'Reported') ? 'red' : 'green', '#/incidents?status=Reported', 'clock')}${kpi('Injuries (12 months)', rows.filter(i => i.type === 'Injury' && daysTo(i.date) > -365).length, `${rows.filter(i => injClass(i) === 'Lost Time Injury' && daysTo(i.date) > -365).length} lost-time · ${rows.filter(i => i.injury && !injClass(i) && i.status !== 'Closed').length} to classify`, 'red', '#/incidents?type=Injury', 'alert')}${kpi('High-potential events', rows.filter(i => i.potentialSev >= 4).length, 'Potential severity major or worse', 'amber', '#/incidents', 'risk')}</div>${lv}`;
   return { title: 'Incidents', crumbs: [['Incidents & injuries', '#/incidents']], html };
 };
 
@@ -33,7 +33,7 @@ function incidentForm(q) {
     ${fld({ name: 'person', label: 'Person involved', type: 'select', options: personOptions('') })}${fld({ name: 'others', label: 'Other persons involved (names)' })}
     ${fld({ name: 'description', label: 'What happened?', type: 'textarea', required: true, full: true, rows: 4 })}
     ${fld({ name: 'immediate', label: 'Immediate response / actions taken', type: 'textarea', required: true, full: true })}
-    <fieldset class="fieldset full hidden" id="injBox"><legend>Injury details</legend><div class="form-grid">${fld({ name: 'nature', label: 'Nature of injury', placeholder: 'e.g. laceration, sprain' })}${fld({ name: 'body', label: 'Body part' })}${fld({ name: 'treatment', label: 'Treatment', type: 'select', options: opts(['First aid case', 'Medical treatment case', 'Lost time injury', 'Fatality']) })}${fld({ name: 'daysLost', label: 'Days lost (if known)', type: 'number', value: 0, min: 0 })}</div><p class="muted mt-s">${icon('lock', 'sm')} Medical details are restricted to authorised roles in production.</p></fieldset>
+    <fieldset class="fieldset full hidden" id="injBox"><legend>Injury details</legend><div class="form-grid">${fld({ name: 'nature', label: 'Nature of injury', placeholder: 'e.g. laceration, sprain' })}${fld({ name: 'body', label: 'Body part' })}${fld({ name: 'firstAid', label: 'First aid given', placeholder: 'e.g. wound cleaned, ice pack' })}${fld({ name: 'sentForMedical', label: 'Sent to a doctor, nurse or clinic?', type: 'select', options: opts(['Not known', 'Yes', 'No']) })}</div><p class="muted mt-s">${icon('info', 'sm')} You only describe the injury. The HSEQ team classifies it (first aid, medical treatment, lost time and so on) during the investigation.</p><p class="muted mt-s">${icon('lock', 'sm')} Medical details are restricted to authorised roles in production.</p></fieldset>
     ${fld({ name: 'actualSev', label: 'Actual severity', type: 'select', options: opts([1, 2, 3, 4, 5].map(n => ({ value: n, label: SEV_LABELS[n] })), 1), required: true })}${fld({ name: 'potentialSev', label: 'Potential severity (worst credible)', type: 'select', options: opts([1, 2, 3, 4, 5].map(n => ({ value: n, label: SEV_LABELS[n] })), 3), required: true })}
     ${fld({ name: 'asset', label: 'Equipment involved', type: 'select', options: opts(scoped('assets').map(a => ({ value: a.id, label: `${a.tag} — ${a.name}` })), q.asset || '', '— None —') })}${fld({ name: 'witnesses', label: 'Witnesses' })}
     <div class="field full"><label for="f_photos">Photographs / attachments</label><input id="f_photos" name="photos" type="file" multiple accept="image/*,.pdf" capture="environment"><div class="file-note">${icon('info', 'sm')} Prototype: file names only are kept as demo references.</div></div>
@@ -46,7 +46,7 @@ ACT.incSubmit = () => {
   const v = readForm(f); const files = [...f.querySelector('[name=photos]').files].map(fileMeta);
   const yr = v.date.slice(0, 4); let max = 0; S.incidents.forEach(i => { const m = i.id.match(new RegExp('INC-' + yr + '-(\\d+)')); if (m) max = Math.max(max, +m[1]); });
   const id = `INC-${yr}-${String(max + 1).padStart(3, '0')}`;
-  const i = { id, org: siteOrgOf(v.site), type: v.type, title: v.title, date: v.date, time: v.time, site: v.site, location: v.location, reporter: S.ui.user, persons: v.person ? [v.person] : [], others: v.others, description: v.description, immediate: v.immediate, injury: v.type === 'Injury' ? { nature: v.nature, body: v.body, treatment: v.treatment, daysLost: +v.daysLost || 0 } : null, actualSev: +v.actualSev, potentialSev: +v.potentialSev, witnesses: v.witnesses, attachments: files, investigator: null, status: 'Reported', investigation: null, links: { assets: v.asset ? [v.asset] : [], docs: [] }, reporting: { required: 'To be determined', status: 'Not assessed', ref: '' }, closure: null, actions: [], history: [{ ts: nowTs(), by: S.ui.user, action: 'Incident reported', comment: '' }] };
+  const i = { id, org: siteOrgOf(v.site), type: v.type, title: v.title, date: v.date, time: v.time, site: v.site, location: v.location, reporter: S.ui.user, persons: v.person ? [v.person] : [], others: v.others, description: v.description, immediate: v.immediate, injury: v.type === 'Injury' ? { nature: v.nature, body: v.body, firstAid: v.firstAid, sentForMedical: v.sentForMedical, medical: v.sentForMedical === 'Yes', fatal: false, daysLost: 0, restrictedDays: 0, rtw: null, classification: null, classHistory: [] } : null, actualSev: +v.actualSev, potentialSev: +v.potentialSev, witnesses: v.witnesses, attachments: files, investigator: null, status: 'Reported', investigation: null, links: { assets: v.asset ? [v.asset] : [], docs: [] }, reporting: { required: 'To be determined', status: 'Not assessed', ref: '' }, closure: null, actions: [], history: [{ ts: nowTs(), by: S.ui.user, action: 'Incident reported', comment: '' }] };
   S.incidents.push(i);
   createIncidentAlert(i);   // draft safety alert for staff — published only after HSEQ Manager + Safety Consultant approval
   addEvent('red', 'incidents', `New incident reported: ${id}`, `${v.type} at ${sname(v.site)} — ${v.title}. Investigator to be assigned.`, '#/incidents/' + id, v.site);
@@ -72,12 +72,12 @@ function incidentDetail(id) {
       <div>Description</div><div>${esc(i.description)}</div><div>Immediate response</div><div>${esc(i.immediate)}</div><div>Witnesses</div><div>${esc(i.witnesses || '—')}</div>
       <div>Attachments</div><div>${i.attachments.length ? i.attachments.map(fileChip).join(' ') : '—'}</div>
     </div></div></div>
-    ${i.injury ? `<div class="card"><div class="card-head"><h2>${icon('lock', 'sm')} Injury details</h2><span class="ch-sub">Restricted personal information</span></div><div class="card-body">${can('incident.investigate') ? `<div class="kv"><div>Nature of injury</div><div>${esc(i.injury.nature)}</div><div>Body part</div><div>${esc(i.injury.body)}</div><div>Treatment</div><div>${esc(i.injury.treatment)}</div><div>Days lost</div><div>${i.injury.daysLost}</div></div>` : `<p class="muted">${icon('lock', 'sm')} Visible to investigators and HSEQ roles only.</p>`}</div></div>` : ''}
+    ${i.injury ? injuryCard(i) : ''}
     <div class="card"><div class="card-head"><h2>Investigation & root-cause analysis</h2>${i.investigator ? `<span class="ch-sub">Investigator: ${esc(pname(i.investigator))}</span>` : ''}</div><div class="card-body">${inv ? `<div class="kv"><div>Findings</div><div>${esc(inv.findings)}</div><div>Immediate cause</div><div>${esc(inv.immediate)}</div><div>Underlying cause</div><div>${esc(inv.underlying)}</div><div>Root cause</div><div><b>${esc(inv.root)}</b></div><div>Cause categories</div><div>${(inv.categories || []).map(c => `<span class="tag">${esc(c)}</span>`).join(' ')}</div><div>Completed</div><div>${inv.completed ? fmt(inv.completed) : '<span class="due amber">In progress</span>'}</div></div>` : `<p class="muted">${i.investigator ? 'Investigation not yet recorded.' : 'No investigator assigned yet.'}</p>`}</div></div>
     <div class="card"><div class="card-head"><h2>Corrective actions</h2>${inv ? permBtn('action.create', `<button class="btn sm" data-act="incAction" data-id="${i.id}">Add</button>`) : ''}</div><div class="card-body flush">${actionsMiniTable(acts)}</div></div>
     <div class="card"><div class="card-head"><h2>History</h2></div><div class="card-body"><ul class="timeline">${i.history.slice().reverse().map(h => `<li><b>${esc(h.action)}</b><div class="tl-meta">${esc(pname(h.by))} · ${fmtTs(h.ts)}</div>${h.comment ? `<div class="tl-comment">${esc(h.comment)}</div>` : ''}</li>`).join('')}${i.closure ? `<li class="t-green"><b>Closed</b><div class="tl-meta">${esc(pname(i.closure.by))} · ${fmt(i.closure.date)}</div>${i.closure.comment ? `<div class="tl-comment">${esc(i.closure.comment)}</div>` : ''}</li>` : ''}</ul></div></div>
   </div><div class="stack">
-    <div class="card"><div class="card-head"><h2>External reporting</h2>${permBtn('incident.investigate', `<button class="btn sm" data-act="incReporting" data-id="${i.id}">Update</button>`)}</div><div class="card-body"><div class="kv"><div>Reportable?</div><div>${esc(i.reporting.required)}</div><div>Status</div><div>${esc(i.reporting.status)}</div><div>Reference</div><div>${esc(i.reporting.ref || '—')}</div></div><p class="muted mt-s">Whether an incident must be reported to the authorities (e.g. under section 24 of the OHS Act or COIDA) must be determined by a competent person.</p></div></div>
+    <div class="card"><div class="card-head"><h2>External reporting</h2>${permBtn('incident.investigate', `<button class="btn sm" data-act="incReporting" data-id="${i.id}">Update</button>`)}</div><div class="card-body"><div class="kv"><div>Reportable?</div><div>${esc(i.reporting.required)}</div><div>Status</div><div>${esc(i.reporting.status)}</div><div>Reference</div><div>${esc(i.reporting.ref || '—')}</div></div>${['Lost Time Injury', 'Fatality'].includes(injClass(i)) && i.reporting.required === 'To be determined' ? `<div class="alert warn mt-s">${icon('alert')}<div><b>${esc(injClass(i))}:</b> check whether this incident must be reported to the authorities, and record the decision here.</div></div>` : ''}<p class="muted mt-s">Whether an incident must be reported to the authorities (e.g. under section 24 of the OHS Act or COIDA) must be determined by a competent person.</p></div></div>
     ${incidentAlertCard(i)}
     <div class="card"><div class="card-head"><h2>Linked records</h2>${permBtn('incident.investigate', `<button class="btn sm" data-act="incLink" data-id="${i.id}">Link</button>`)}</div><div class="card-body"><ul class="link-list">
       ${i.links.assets.map(x => { const a = byId('assets', x); return `<li><div class="ll-main"><a href="#/assets/${a.id}">${esc(a.tag)}</a><div>Asset · ${esc(a.name)}</div></div>${sbadge(a.status)}</li>`; }).join('')}
@@ -109,6 +109,7 @@ ACT.incInvestigate = (el) => {
 ACT.incAction = (el) => { const i = byId('incidents', el.dataset.id); raiseActionModal({ source: 'Incident', sourceId: i.id, title: `${i.id}: ${i.investigation ? i.investigation.root : i.title}`, site: i.site, owner: i.investigator, priority: i.potentialSev >= 4 ? 'High' : 'Medium' }, a => { if (!i.actions.includes(a.id)) i.actions.push(a.id); if (i.status === 'Under Investigation' || i.status === 'Awaiting Closure') i.status = 'Actions in Progress'; i.history.push({ ts: nowTs(), by: S.ui.user, action: `Corrective action ${a.id} raised`, comment: a.title }); save(); rerender(); }); };
 ACT.incClose = (el) => { const i = byId('incidents', el.dataset.id); const open = incActions(i).filter(actionOpen);
   if (!i.investigation || !i.investigation.completed) { toast('Complete the investigation before closing.', 'error'); return; }
+  if (i.injury && !i.injury.classification) { toast('Classify the injury before closing the incident.', 'error'); return; }
   if (open.length) { toast(`Cannot close: ${open.length} corrective action(s) not yet verified (${open.map(a => a.id).join(', ')}).`, 'error'); return; }
   openModal({ title: 'Review & close incident', sub: i.id, body: fld({ name: 'comment', label: 'Closure review comments', type: 'textarea', required: true }), buttons: [{ label: 'Close incident', cls: 'success', onClick: m => { if (!validateForm(m)) return false; i.status = 'Closed'; i.closure = { by: S.ui.user, date: TODAY, comment: readForm(m).comment }; log(`Closed ${i.id}`, '#/incidents/' + i.id); save(); toast(`${i.id} closed.`); rerender(); } }] }); };
 ACT.incReporting = (el) => { const i = byId('incidents', el.dataset.id); openModal({ title: 'External reporting status', sub: i.id, body: `<div class="form-grid">${fld({ name: 'required', label: 'Reportable to authorities?', type: 'select', options: opts(['To be determined', 'Yes', 'No'], i.reporting.required) })}${fld({ name: 'status', label: 'Status', value: i.reporting.status })}${fld({ name: 'ref', label: 'Reference', value: i.reporting.ref })}</div>`, buttons: [{ label: 'Save', cls: 'primary', onClick: m => { i.reporting = readForm(m); i.history.push({ ts: nowTs(), by: S.ui.user, action: 'Reporting status updated: ' + i.reporting.status, comment: '' }); save(); rerender(); } }] }); };
@@ -244,4 +245,76 @@ ROUTES.print = (p) => {
     <p class="muted" style="font-size:10px;margin-top:10px">Generated by the VDW HSEQ Management System prototype from demonstration data. Controlled header taken from approved template ${esc(i.template.docNumber)} Rev ${i.template.rev}; electronic signatures are simulated.</p>
   </td></tr></tbody></table></div>`;
   return { title: 'Report ' + i.id, nav: 'inspections', crumbs: [['Inspections', '#/inspections/records'], [i.id, '#/inspections/' + i.id], ['Controlled report', '#']], html };
+};
+
+/* ---------------- Injury classification ----------------
+   The reporter only describes the injury. An investigator / HSEQ role classifies it from the facts
+   (medical treatment, days lost, restricted work); the system suggests a class and an override needs a reason.
+   Definitions come from S.config.injuryClasses and are set by the company in Administration. */
+function injClasses() { return S.config.injuryClasses || []; }
+function injClass(i) { return i.injury ? i.injury.classification || null : null; }
+function injClassDef(name) { return injClasses().find(c => c.name === name) || { name, short: name, colour: 'grey', desc: '' }; }
+function injClassBadge(i) { const c = injClass(i); return c ? badge(`${injClassDef(c).short} · ${c}`, injClassDef(c).colour) : badge('Not yet classified', 'grey'); }
+function suggestInjuryClass(f) {
+  if (f.fatal) return 'Fatality';
+  if (+f.daysLost > 0) return 'Lost Time Injury';
+  if (+f.restrictedDays > 0) return 'Restricted Work Case';
+  if (f.medical) return 'Medical Treatment Case';
+  return 'First Aid Case';
+}
+function injuryCard(i) {
+  const j = i.injury, inv = can('incident.investigate'), c = j.classification;
+  const head = `<div class="card-head"><h2>${icon('lock', 'sm')} Injury details & classification</h2>${inv && i.status !== 'Closed' ? `<button class="btn sm ${c ? '' : 'primary'}" data-act="injClassify" data-id="${i.id}">${c ? 'Reclassify' : 'Classify injury'}</button>` : ''}</div>`;
+  if (!inv) return `<div class="card">${head}<div class="card-body"><div class="kv"><div>Classification</div><div>${injClassBadge(i)}</div></div><p class="muted mt-s">${icon('lock', 'sm')} Medical details are visible to investigators and HSEQ roles only.</p></div></div>`;
+  return `<div class="card">${head}<div class="card-body">
+    <h4>Reported by ${esc(pname(i.reporter))}</h4>
+    <div class="kv"><div>Nature of injury</div><div>${esc(j.nature || '—')}</div><div>Body part</div><div>${esc(j.body || '—')}</div><div>First aid given</div><div>${esc(j.firstAid || '—')}</div><div>Sent for medical treatment</div><div>${esc(j.sentForMedical || 'Not known')}</div></div>
+    <h4 class="mt">Classification</h4>
+    <div class="kv"><div>Classification</div><div>${injClassBadge(i)}${c ? '' : ' <span class="due red">Required before the incident can be closed</span>'}</div>
+      ${c ? `<div>Treated beyond first aid</div><div>${j.medical ? 'Yes' : 'No'}</div><div>Full shifts lost</div><div>${j.daysLost}</div><div>Shifts on restricted work</div><div>${j.restrictedDays || 0}</div><div>Back at normal work</div><div>${j.rtw ? fmt(j.rtw) : '<span class="due amber">Not yet</span>'}</div>
+      <div>Classified by</div><div>${esc(pname(j.classifiedBy))} · ${fmtTs(j.classifiedOn)}</div>${j.suggested && j.suggested !== c ? `<div>System suggestion</div><div>${esc(j.suggested)} <span class="muted">(overridden: ${esc(j.reason || '')})</span></div>` : ''}` : ''}</div>
+    ${c ? `<p class="muted mt-s">${esc(injClassDef(c).desc)}</p>` : ''}
+    ${(j.classHistory || []).length > 1 ? `<h4 class="mt">Classification history</h4><ul class="timeline">${j.classHistory.slice().reverse().map(h => `<li><b>${h.from ? `${esc(h.from)} → ${esc(h.to)}` : esc(h.to)}</b><div class="tl-meta">${esc(pname(h.by))} · ${fmtTs(h.ts)}</div>${h.reason ? `<div class="tl-comment">${esc(h.reason)}</div>` : ''}</li>`).join('')}</ul>` : ''}
+  </div></div>`;
+}
+ACT.injClassify = (el) => {
+  const i = byId('incidents', el.dataset.id), j = i.injury, prev = j.classification;
+  openModal({ title: prev ? 'Reclassify injury' : 'Classify injury', sub: `${i.id} — record the facts; the system suggests the class from your company's definitions.`, size: 'wide',
+    body: `<div class="form-grid">
+      ${fld({ name: 'medical', label: 'Treated by a doctor, nurse or clinic beyond first aid', type: 'checkbox', value: j.medical, full: true })}
+      ${fld({ name: 'daysLost', label: 'Full shifts lost after the day of the injury', type: 'number', value: j.daysLost || 0, min: 0, required: true })}
+      ${fld({ name: 'restrictedDays', label: 'Shifts on restricted or alternative work', type: 'number', value: j.restrictedDays || 0, min: 0, required: true })}
+      ${fld({ name: 'rtw', label: 'Back at normal work on', type: 'date', value: j.rtw || '', hint: 'Leave empty if the person is not back yet.' })}
+      ${fld({ name: 'fatal', label: 'The injury resulted in death', type: 'checkbox', value: j.fatal, full: true })}
+      <div class="field full"><div class="alert info" id="injSug" style="margin:0"></div></div>
+      ${fld({ name: 'classification', label: 'Classification', type: 'select', options: opts(injClasses().map(c => c.name), prev || suggestInjuryClass(j)), required: true })}
+      ${fld({ name: 'reason', label: 'Reason / notes', type: 'textarea', value: '', rows: 2, hint: 'Required when you choose a class other than the suggestion, or change an earlier classification.' })}
+      <details class="field full"><summary class="muted">Your company's definitions</summary><ul class="link-list">${injClasses().map(c => `<li><div class="ll-main"><b>${esc(c.name)} (${esc(c.short)})</b><div>${esc(c.desc)}</div></div></li>`).join('')}</ul></details>
+    </div>`,
+    onOpen: m => {
+      const facts = () => { const v = readForm(m); return { medical: v.medical, fatal: v.fatal, daysLost: v.daysLost, restrictedDays: v.restrictedDays }; };
+      let last = suggestInjuryClass(j);
+      const upd = (e) => { const s = suggestInjuryClass(facts()), sel = m.querySelector('[name=classification]');
+        if (e && e.target !== sel && sel.value === last) sel.value = s;   // follow the suggestion until the user picks something else
+        last = s; m.querySelector('#injSug').innerHTML = `${icon('info')}<div>System suggestion: <b>${esc(s)}</b> — ${esc(injClassDef(s).desc)}${sel.value !== s ? ' <b>You have chosen a different class, so a reason is required.</b>' : ''}</div>`; };
+      m.addEventListener('input', upd); m.addEventListener('change', upd); upd();
+    },
+    buttons: [{ label: 'Save classification', cls: 'primary', onClick: m => {
+      const v = readForm(m), sug = suggestInjuryClass(v);
+      if (!validateForm(m, fail => {
+        if (+v.daysLost < 0) fail(m.querySelector('[name=daysLost]'), 'Cannot be negative.');
+        if (+v.restrictedDays < 0) fail(m.querySelector('[name=restrictedDays]'), 'Cannot be negative.');
+        if (v.rtw && v.rtw < i.date) fail(m.querySelector('[name=rtw]'), 'Cannot be before the incident date.');
+        if (v.rtw && v.rtw > TODAY) fail(m.querySelector('[name=rtw]'), 'Cannot be in the future.');
+        if ((v.classification !== sug || (prev && prev !== v.classification)) && !v.reason.trim()) fail(m.querySelector('[name=reason]'), 'Give a reason.');
+      })) return false;
+      Object.assign(j, { medical: v.medical, fatal: v.fatal, daysLost: +v.daysLost, restrictedDays: +v.restrictedDays, rtw: v.rtw || null, classification: v.classification, suggested: sug, reason: v.reason.trim(), classifiedBy: S.ui.user, classifiedOn: nowTs() });
+      j.classHistory = j.classHistory || [];
+      j.classHistory.push({ ts: nowTs(), by: S.ui.user, from: prev, to: v.classification, reason: v.reason.trim() });
+      const what = !prev ? `Injury classified as ${v.classification}` : prev !== v.classification ? `Injury reclassified from ${prev} to ${v.classification}` : `Injury classification details updated (${v.classification})`;
+      i.history.push({ ts: nowTs(), by: S.ui.user, action: what, comment: v.reason.trim() });
+      log(`${what} — ${i.id}`, '#/incidents/' + i.id); save();
+      toast(['Lost Time Injury', 'Fatality'].includes(v.classification) && i.reporting.required === 'To be determined' ? `${what}. Check whether it must be reported to the authorities.` : what + '.');
+      rerender();
+    } }] });
 };

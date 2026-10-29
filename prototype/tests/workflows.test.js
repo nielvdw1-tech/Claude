@@ -148,9 +148,27 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     ok('D5 incident cannot close while actions are open', (await S(`byId('incidents','${iid}').status`)) !== 'Closed');
     await ownerCompletes(aid); await verify(aid, 'P-002');
     ok('D6 action verified → incident awaiting closure', (await S(`byId('incidents','${iid}').status`)) === 'Awaiting Closure');
+    // Injury classification (J): the reporter only described the injury; the HSEQ team classifies it.
+    ok('J1 the reporter does not classify the injury', !(await S(`byId('incidents','${iid}').injury.classification`)) && (await S(`byId('incidents','${iid}').injury.nature`)) === 'Bruising');
+    await go('#/notifications/tasks');
+    ok('J2 an unclassified injury appears as a task', (await p.innerText('#content')).includes('Classify injury: ' + iid));
+    await go('#/incidents/' + iid); await btn('Review & close');
+    ok('J3 the incident cannot close until the injury is classified', (await S(`byId('incidents','${iid}').status`)) === 'Awaiting Closure' && !(await modalOpen()));
+    await act('[data-act=injClassify]'); await mfill('daysLost', '2'); await p.waitForTimeout(100);
+    const sug = await p.$eval('.modal [name=classification]', e => e.value);
+    await mfill('rtw', await S('TODAY')); await mbtn('Save classification');
+    ok('J4 the system suggests Lost Time Injury from the facts and it is saved', sug === 'Lost Time Injury' && (await S(`byId('incidents','${iid}').injury.classification`)) === 'Lost Time Injury', sug);
+    ok('J5 a lost time injury prompts a check on external reporting', (await p.innerText('#content')).includes('check whether this incident must be reported'));
+    await act('[data-act=injClassify]'); await msel('classification', 'Medical Treatment Case'); await mbtn('Save classification');
+    const blocked = await modalOpen();
+    await mfill('reason', 'Shifts lost were for an unrelated illness, confirmed by the doctor.'); await mbtn('Save classification');
+    ok('J6 overriding the suggestion needs a reason; the change is kept in the history', blocked && (await S(`byId('incidents','${iid}').injury.classification`)) === 'Medical Treatment Case' && (await S(`byId('incidents','${iid}').injury.classHistory.length`)) === 2 && (await p.innerText('#content')).includes('Lost Time Injury → Medical Treatment Case'));
     await go('#/incidents/' + iid); await btn('Review & close'); await mfill('comment', 'Effective.'); await mbtn('Close incident');
     ok('D7 incident closed', (await S(`byId('incidents','${iid}').status`)) === 'Closed');
     await go('#/reports/incidents'); ok('D8 incident appears in reporting', (await p.innerText('#content')).includes(iid));
+    ok('J7 the incident report counts injuries by final classification', /Lost Time Injury\s*1/.test(await p.innerText('#content')) && (await p.innerText('#content')).includes('Medical Treatment Case'));
+    await go('#/admin/injury'); await p.fill('#injForm [name=d3]', 'Our definition: off work for a full shift after the injury day.'); await act('[data-act=saveInjDefs]');
+    ok('J8 the company sets its own definitions in Administration', (await S("S.config.injuryClasses[3].desc")).startsWith('Our definition'));
   }
 
   /* ---------------- E. Branches, tasks, platform checks ---------------- */

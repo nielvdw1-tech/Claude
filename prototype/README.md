@@ -91,6 +91,16 @@ Defects can also be reported directly from the asset page or its **QR page** (e.
 3. Work and verify the action as above. The incident moves to **Awaiting closure**.
 4. **Review & close**. The incident can't be closed while any action is still open. Check **Reports → Incident trends**.
 
+**Injury classification.** The person reporting an injury only describes it: what the injury is, the body part, the first aid given, and whether the person was sent for medical treatment. **They do not classify it.**
+- An investigator or HSEQ role uses **Classify injury** on the incident to record the facts: treated beyond first aid, full shifts lost, shifts on restricted work, the date back at normal work, and whether the injury was fatal.
+- **The system suggests the class** from those facts, in this order: Fatality → Lost Time Injury → Restricted Work Case → Medical Treatment Case → First Aid Case.
+- Choosing a different class needs a reason. Reclassifying, for example when a first aid case later needs a doctor, also needs a reason, and every change is kept in the classification history.
+- **An injury must be classified before the incident can close.** Unclassified injuries appear in the HSEQ team's tasks.
+- **Lost time injuries and fatalities** prompt a check on external reporting. Whether to report remains a decision for a competent person.
+- The **definitions** of each class are set by the company in **Administration → Injury classification**. The default wording is the system's suggestion, not a legal definition.
+- Reports and incident totals count injuries by the final classification.
+- **Example:** INC-2026-005 was first classified as a Medical Treatment Case and later reclassified as a Lost Time Injury.
+
 ### Employees (field access)
 Switch to **Tebogo Molefe** (Employee). The menu shows only **Scan & inspect** and **Report incident**.
 1. **Scan asset QR code**, then choose **LDV-03**. The asset's QR page shows its safety status with two buttons: **Start inspection** and **Report incident**.
@@ -163,6 +173,6 @@ prototype/
 └── README.md                     This file
 ```
 
-**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 88 workflow outcomes.
+**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 96 workflow outcomes.
 
 The earlier full HSEQ prototype, with legal, risk, people, PPE, chemicals, emergency and audits, is preserved in git history at commit `26b59bc`.
