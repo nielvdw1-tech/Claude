@@ -460,7 +460,7 @@ function raiseActionModal(o, after) {
    ========================================================================== */
 const NAV = [
   { group: 'Overview', items: [['dashboard', 'Dashboard', 'dashboard'], ['notifications', 'Notifications & Tasks', 'bell']] },
-  { group: 'Document control', items: [['documents', 'Documents & Approvals', 'docs']] },
+  { group: 'Document control', items: [['documents', 'Document Manager', 'docs']] },
   { group: 'Assets & inspections', items: [['assets', 'Assets & Equipment', 'forklift'], ['inspections', 'Inspections', 'clipboard'], ['maintenance', 'Maintenance & Defects', 'wrench']] },
   { group: 'Incidents', items: [['incidents', 'Incident Management', 'alert']] },
   { group: 'Corrective actions', items: [['actions', 'Corrective Actions', 'target']] },
@@ -638,7 +638,7 @@ ROUTES.dashboard = () => {
   const branchRows = orgSites().map(s => ({ s, c: compliance(s.id) }));
   const html = `${pageHead('Dashboard', 'Documents awaiting approval, asset inspections and defects, incidents and the corrective actions that close them — across all branches. Every tile opens the underlying records.', `<a class="btn" href="#/reports">${icon('chart', 'sm')} Reports</a><a class="btn primary" href="#/notifications/tasks">${icon('tasks', 'sm')} My tasks (${myTasks().length})</a>`, scopePill())}
   <div class="alert demo">${icon('info')}<div><b>Demonstration data.</b> Kestrel Industrial Equipment and Ridgeway Pumps are fictional companies. The control score is <b>indicative</b>, calculated from the demo records with configurable weights (Administration → Scoring).</div></div>
-  <h4 class="mb">${icon('docs', 'sm')} Documents & approvals</h4>
+  <h4 class="mb">${icon('docs', 'sm')} Document Manager</h4>
   <div class="kpis">
     ${kpi('Awaiting my approval', myAppr.length, myAppr.length ? 'Your turn on the approval route' : 'Nothing waiting for you', myAppr.length ? 'amber' : 'green', '#/documents?status=mine', 'user')}
     ${kpi('In approval', inAppr.length, 'Moving through approval routes', 'blue', '#/documents?status=In Approval', 'clock')}
@@ -688,7 +688,7 @@ ACT.focusSite = (el) => { S.ui.site = el.dataset.site; save(); toast(el.dataset.
 /* ==========================================================================
    NOTIFICATIONS & TASKS
    ========================================================================== */
-const CAT_LABEL = { documents: 'Documents & approvals', assets: 'Assets & inspections', incidents: 'Incidents', actions: 'Corrective actions' };
+const CAT_LABEL = { documents: 'Document Manager', assets: 'Assets & inspections', incidents: 'Incidents', actions: 'Corrective actions' };
 ROUTES.notifications = (p, q) => {
   const tab = p[0] || 'all';
   const all = buildNotifs(); const tasks = myTasks();

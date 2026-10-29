@@ -64,7 +64,7 @@ ROUTES.documents = (p, q) => {
       { label: 'Next review', render: d => docActive(d) && docIssued(d) ? dueText(d.nextReview) : '<span class="muted">—</span>' }
     ]
   });
-  const html = `${pageHead('Document control', 'Upload controlled documents and route them through a set sequence of approvers. Each approver signs off in turn; any approver can return the document for correction. Issued revisions are controlled and reviewed periodically.', permBtn('doc.create', `<button class="btn primary" data-act="newDoc">${icon('upload', 'sm')} Upload document</button>`), scopePill())}
+  const html = `${pageHead('Document Manager', 'Upload controlled documents and route them through a set sequence of approvers. Each approver signs off in turn; any approver can return the document for correction. Issued revisions are controlled and reviewed periodically.', permBtn('doc.create', `<button class="btn primary" data-act="newDoc">${icon('upload', 'sm')} Upload document</button>`), scopePill())}
     <div class="kpis">
       ${kpi('Awaiting my approval', mine.length, mine.length ? 'It is your turn on the approval route' : 'Nothing waiting for you', mine.length ? 'amber' : 'green', '#/documents?status=mine', 'user')}
       ${kpi('In approval', inAppr.length, 'Moving through approval routes', 'blue', '#/documents?status=In Approval', 'clock')}
@@ -74,7 +74,7 @@ ROUTES.documents = (p, q) => {
       ${kpi('Review overdue', over.length, 'Issued documents past review date', over.length ? 'red' : 'green', '#/documents?review=overdue', 'alert')}
     </div>
     ${lv}`;
-  return { title: 'Document control', crumbs: [['Document control', '#/documents']], html };
+  return { title: 'Document Manager', crumbs: [['Document Manager', '#/documents']], html };
 };
 
 /* ---------------- Approval route display ---------------- */
@@ -164,7 +164,7 @@ function docDetail(id) {
       <div class="alert demo">${icon('info')}<div>Files you upload are kept <b>in this browser only</b> so they can be opened here. Production keeps them in secure, versioned document storage with access control.</div></div>
     </div>
   </div>`;
-  return { title: d.number, nav: 'documents', crumbs: [['Document control', '#/documents'], [d.number, '#']], html };
+  return { title: d.number, nav: 'documents', crumbs: [['Document Manager', '#/documents'], [d.number, '#']], html };
 }
 
 /* ---------------- Approval route editor (used on submit / resubmit) ---------------- */

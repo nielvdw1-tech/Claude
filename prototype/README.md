@@ -20,7 +20,7 @@ To start again, open the user menu (top right) and choose **Reset demo data**.
 
 ## 2. Finding your way around
 
-- **Sidebar:** organisation and branch selectors, plus the pages: Dashboard, Notifications & Tasks, Documents & Approvals, Assets & Equipment, Inspections, Maintenance & Defects, Incident Management, Corrective Actions, Reports and Administration.
+- **Sidebar:** organisation and branch selectors, plus the pages: Dashboard, Notifications & Tasks, Document Manager, Assets & Equipment, Inspections, Maintenance & Defects, Incident Management, Corrective Actions, Reports and Administration.
 - **Top bar:** global search (press `/`), **My tasks** (✓ icon), notifications and the user menu.
 - **Switch demo user:** use the user menu to act as someone else. Approvals and corrective actions depend on *who* you are, so this is how you see each step. Where a step belongs to someone else, the page offers **Act as current approver** or **Act as owner** to switch in one click.
 
@@ -37,7 +37,7 @@ To start again, open the user menu (top right) and choose **Reset demo data**.
 ## 3. Guided demonstrations
 
 ### A. Upload a document and route it through several approvers
-1. Switch to **Sipho Ndlovu**. Go to **Documents & Approvals → Upload document**.
+1. Switch to **Sipho Ndlovu**. Go to **Document Manager → Upload document**.
 2. Choose category **Safe Work Procedure**, enter a title and **select a file**.
 3. The **approval route** loads from the category default: *Operational review (Pieter Botha) → HSEQ approval (Johan van Wyk) → Final approval (Thandi Mokoena)*. You can rename, reorder, add or remove steps. The author can never be an approver on their own document.
 4. Save. The document is **In Approval at step 1**, and Pieter Botha gets a task.
