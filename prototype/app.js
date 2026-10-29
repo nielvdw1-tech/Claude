@@ -8,7 +8,7 @@
    ========================================================================== */
 'use strict';
 
-const STORE_KEY = 'vdw-hseq-prototype-v5';
+const STORE_KEY = 'vdw-hseq-prototype-v6';
 let S = null;                        // application state (demo data)
 const TODAY = (() => { const d = new Date(); d.setHours(0, 0, 0, 0); return isoDate(d); })();
 const ROUTES = {};                   // page renderers registered by module files
@@ -18,7 +18,7 @@ const ACT = {};                      // click handlers: data-act="name"
 function loadState() {
   try {
     const raw = localStorage.getItem(STORE_KEY);
-    if (raw) { const parsed = JSON.parse(raw); if (parsed && parsed.version === 5) { S = parsed; return; } }
+    if (raw) { const parsed = JSON.parse(raw); if (parsed && parsed.version === 6) { S = parsed; return; } }
   } catch (e) { console.warn('Could not read local storage; using fresh demo data.', e); }
   S = buildSeed(); save();
 }
@@ -45,6 +45,8 @@ function initials(name) { return String(name || '?').split(' ').map(x => x[0]).s
 function me() { return person(S.ui.user); }
 function myRole() { const p = me(); return S.roles.find(r => r.name === (p && p.sysRole)) || S.roles[S.roles.length - 1]; }
 function can(perm) { return myRole().perms.includes(perm); }
+function isFieldUser() { return !!myRole().fieldOnly; }   // e.g. Employee: QR inspections and incident reporting only
+function canOwnActions(p) { const r = S.roles.find(x => x.name === p.sysRole); return !(r && r.fieldOnly); }
 function nextId(prefix, coll, pad = 3, start = 1) {
   let max = start - 1; (S[coll] || []).forEach(x => { const m = String(x.id).match(/(\d+)$/); if (m && x.id.startsWith(prefix)) max = Math.max(max, Number(m[1])); });
   return prefix + String(max + 1).padStart(pad, '0');
@@ -443,7 +445,7 @@ function raiseActionModal(o, after) {
       ${fld({ name: 'action', label: 'Required corrective action', type: 'textarea', value: o.action || '', required: true, full: true })}
       ${fld({ name: 'priority', label: 'Priority', type: 'select', options: opts(pri.map(p => ({ value: p.name, label: `${p.name} (${p.days} days)` })), o.priority || 'Medium'), required: true })}
       ${fld({ name: 'site', label: 'Site', type: 'select', options: siteOptions(o.site || defaultSite(), false), required: true })}
-      ${fld({ name: 'owner', label: 'Responsible owner', type: 'select', options: personOptions(o.owner), required: true, hint: 'The owner is notified (simulated in-app notification).' })}
+      ${fld({ name: 'owner', label: 'Responsible owner', type: 'select', options: personOptions(o.owner, canOwnActions), required: true, hint: 'The owner is notified (simulated in-app notification).' })}
       ${fld({ name: 'due', label: 'Due date', type: 'date', value: o.due || addDays(TODAY, 30), required: true })}
     </div>`,
     onOpen: (m) => { m.querySelector('[name=priority]').addEventListener('change', e => { const p = pri.find(x => x.name === e.target.value); m.querySelector('[name=due]').value = addDays(TODAY, p.days); }); },
@@ -467,6 +469,8 @@ const NAV = [
   { group: 'Assurance', items: [['reports', 'Reports', 'chart']] },
   { group: 'Administration', items: [['admin', 'Administration', 'settings']] }
 ];
+const NAV_FIELD = [{ group: 'Field', items: [['field', 'Scan & inspect', 'qr'], ['report', 'Report incident', 'alert']] }];
+const FIELD_ROUTES = ['field', 'report', 'qr', 'inspect', 'notfound'];
 function navCounts() {
   const c = {};
   c.actions = S.actions.filter(a => inSite(a, S.ui.site) && actionOverdue(a)).length;
@@ -487,7 +491,7 @@ function renderSidebar(active) {
     <select id="siteSel"><option value="ALL">All branches (organisation view)</option>${sites.map(s => `<option value="${s.id}" ${s.id === S.ui.site ? 'selected' : ''}>${esc(s.short)}</option>`).join('')}</select>
   </div>
   <nav class="sb-nav" aria-label="Main navigation">
-    ${NAV.map((g, gi) => `<div class="nav-group ${S.ui.navCollapsed && S.ui.navCollapsed[gi] ? 'collapsed' : ''}"><button class="nav-group-title" data-act="toggleNavGroup" data-g="${gi}" aria-expanded="${!(S.ui.navCollapsed && S.ui.navCollapsed[gi])}">${esc(g.group)} ${icon('chevron')}</button><div class="nav-items">
+    ${(isFieldUser() ? NAV_FIELD : NAV).map((g, gi) => `<div class="nav-group ${S.ui.navCollapsed && S.ui.navCollapsed[gi] ? 'collapsed' : ''}"><button class="nav-group-title" data-act="toggleNavGroup" data-g="${gi}" aria-expanded="${!(S.ui.navCollapsed && S.ui.navCollapsed[gi])}">${esc(g.group)} ${icon('chevron')}</button><div class="nav-items">
       ${g.items.map(([k, label, ic]) => `<a class="nav-item ${active === k ? 'active' : ''}" href="#/${k}">${icon(ic)}<span>${esc(label)}</span>${cnt[k] ? `<span class="count" title="${k === 'actions' ? 'Overdue actions' : k === 'notifications' ? 'Unread' : k === 'documents' ? 'Awaiting your approval' : k === 'inspections' ? 'Overdue inspections' : 'Requires attention'}">${cnt[k]}</span>` : ''}</a>`).join('')}
     </div></div>`).join('')}
   </nav>
@@ -497,9 +501,9 @@ function renderTopbar(crumbs) {
   const notifs = buildNotifs(); const unread = notifs.filter(n => !S.readNotifs[n.key]).length; const tasks = myTasks().length; const u = me();
   return `<button class="icon-btn menu-btn" data-act="toggleNav" aria-label="Open menu">${icon('menu')}</button>
   <div class="crumbs">${crumbs.map((c, i) => i < crumbs.length - 1 ? `<a href="${c[1]}">${esc(c[0])}</a>${icon('chevronR', 'sm')}` : `<b>${esc(c[0])}</b>`).join('')}</div>
-  <div class="top-search">${icon('search', 'sm')}<input id="globalSearch" type="search" placeholder="Search records, IDs, people, assets…" autocomplete="off" aria-label="Global search"><div class="search-results hidden" id="searchResults"></div></div>
+  ${isFieldUser() ? '<span style="margin-left:auto"></span>' : `<div class="top-search">${icon('search', 'sm')}<input id="globalSearch" type="search" placeholder="Search records, IDs, people, assets…" autocomplete="off" aria-label="Global search"><div class="search-results hidden" id="searchResults"></div></div>
   <button class="icon-btn" data-act="openTasks" title="My tasks requiring attention" aria-label="My tasks">${icon('tasks')}${tasks ? `<span class="dot orange">${tasks}</span>` : ''}</button>
-  <button class="icon-btn" data-act="openNotifs" title="Notifications" aria-label="Notifications">${icon('bell')}${unread ? `<span class="dot">${unread > 99 ? '99+' : unread}</span>` : ''}</button>
+  <button class="icon-btn" data-act="openNotifs" title="Notifications" aria-label="Notifications">${icon('bell')}${unread ? `<span class="dot">${unread > 99 ? '99+' : unread}</span>` : ''}</button>`}
   <button class="user-menu-btn" data-act="userMenu" aria-label="User menu"><span class="avatar sm">${initials(u.name)}</span><span class="um-text">${esc(u.name)}<span>${esc(u.sysRole)}</span></span>${icon('chevron', 'sm')}</button>`;
 }
 function parseHash() {
@@ -512,7 +516,9 @@ function navigate(h) { if (location.hash === h) rerender(); else location.hash =
 let lastRoute = '';
 function rerender(keepScroll = true) {
   const { parts, q } = parseHash(); const key = parts[0] || 'dashboard';
-  const fn = ROUTES[key] || ROUTES.notfound;
+  let fn = ROUTES[key] || ROUTES.notfound;
+  // Field users (e.g. Employee) only see the field screens: QR inspections and incident reporting
+  if (isFieldUser() && !FIELD_ROUTES.includes(key)) fn = (pp, qq) => ROUTES.field(pp, key === 'dashboard' ? {} : Object.assign({}, qq, { blocked: key }));
   let page;
   try { page = fn(parts.slice(1), q); }
   catch (e) { console.error(e); page = { title: 'Error', crumbs: [['Error', '#']], html: `<div class="alert danger">${icon('alert')}<div>Something went wrong rendering this page: ${esc(e.message)}</div></div>` }; }
@@ -582,7 +588,7 @@ ACT.userMenu = (el) => {
   dd.style.maxHeight = '75vh'; dd.style.overflowY = 'auto';
   document.body.appendChild(dd);
 };
-ACT.switchUser = (el) => { const p = person(el.dataset.id); S.ui.user = p.id; if (p.org !== S.ui.org) { S.ui.org = p.org; S.ui.site = 'ALL'; } save(); document.querySelectorAll('.dropdown').forEach(d => d.remove()); toast(`Now acting as <b>${esc(p.name)}</b> (${esc(p.sysRole)}).`, 'info'); rerender(); };
+ACT.switchUser = (el) => { const p = person(el.dataset.id); S.ui.user = p.id; if (p.org !== S.ui.org) { S.ui.org = p.org; S.ui.site = 'ALL'; } save(); document.querySelectorAll('.dropdown').forEach(d => d.remove()); toast(`Now acting as <b>${esc(p.name)}</b> (${esc(p.sysRole)}).`, 'info'); if (isFieldUser()) navigate('#/field'); else rerender(); };
 ACT.resetDemo = () => confirmBox('Reset demo data?', 'This restores all demonstration records to their original state and discards changes made in this browser.', 'Reset demo data', () => { resetDemo(); LV.state = {}; toast('Demo data has been reset.'); navigate('#/dashboard'); }, 'danger solid');
 ACT.markRead = (el) => { S.readNotifs[el.dataset.key] = true; save(); };
 

@@ -8,7 +8,7 @@ Status key:
 - **Not implemented**
 
 "Tested" means one of the following:
-- the automated browser test (`tests/workflows.test.js`, **59/59 passing**, no JavaScript errors);
+- the automated browser test (`tests/workflows.test.js`, **68/68 passing**, no JavaScript errors);
 - the route smoke test (77 routes plus a second organisation, no errors);
 - the mobile layout check (31 routes at 390 px, no horizontal overflow).
 
@@ -62,6 +62,7 @@ Status key:
 | Branch / organisation selection and comparison | Implemented | E1–E2 |
 | Task centre per user | Implemented | E3 |
 | Reports with print and CSV | Implemented | E9 |
+| Safety Consultant has full access; Employee limited to QR inspections and incident reporting | Implemented | H1–H9 (client-side demonstration of the intended permissions) |
 | Roles and permissions | Partial | Client-side demonstration only; production must enforce them on the server |
 | Persistence and reset | Implemented | E8, E11 |
 | Out-of-scope modules removed (legal, risk, people, PPE, chemicals, emergency, audits) | Implemented | E4–E5; preserved in git history (commit `26b59bc`) |

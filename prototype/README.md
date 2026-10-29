@@ -29,10 +29,10 @@ To start again, open the user menu (top right) and choose **Reset demo data**.
 | Johan van Wyk (default) | HSEQ Manager | Approver, issues documents, verifies actions, investigates incidents |
 | Thandi Mokoena | Managing Director | Final approver for policies and safe work procedures |
 | Pieter Botha | Operations Manager | Operational reviewer on approval routes |
-| Ayesha Khan | VDW Safety Consultant | Technical reviewer; verifier |
+| Ayesha Khan | VDW Safety Consultant | **Full access** (same as HSEQ Manager): approvals, issuing, verification, investigations, administration |
 | Sipho Ndlovu / Lerato Dlamini | Branch Managers | Document authors; action owners |
 | Bongani Zulu / Fatima Patel | Supervisors | Inspections; action owners |
-| Nomvula Sithole | Employee | Reports incidents |
+| Nomvula Sithole, Tebogo Molefe | Employee | **Field access only:** scans an asset's QR code to inspect it, and reports incidents |
 
 ## 3. Guided demonstrations
 
@@ -87,6 +87,14 @@ Defects can also be reported directly from the asset page or its **QR page** (e.
 3. Work and verify the action as above. The incident moves to **Awaiting closure**.
 4. **Review & close**. The incident can't be closed while any action is still open. Check **Reports → Incident trends**.
 
+### Employees (field access)
+Switch to **Tebogo Molefe** (Employee). The menu shows only **Scan & inspect** and **Report incident**.
+1. **Scan asset QR code**, then choose **LDV-03**. The asset's QR page shows its safety status with two buttons: **Start inspection** and **Report incident**.
+2. Complete the inspection. Any failed items still raise defects and corrective actions, which go to managers and supervisors.
+3. **Report incident** opens the phone-friendly form. Reported incidents are listed on the employee's home screen.
+
+Other pages are closed to employees. An inspection can only be started from the QR page of that asset. Employees are not offered as owners of corrective actions.
+
 ### D. Branches and tasks
 - Use the **Branch / site** selector to scope everything to one branch. **Reports → Branch comparison** shows them side by side.
 - **Notifications & Tasks → My tasks** shows each person their own work: documents awaiting their approval, actions to complete or verify, inspections due and investigations.
@@ -132,6 +140,6 @@ prototype/
 └── README.md                     This file
 ```
 
-**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 59 workflow outcomes.
+**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 68 workflow outcomes.
 
 The earlier full HSEQ prototype, with legal, risk, people, PPE, chemicals, emergency and audits, is preserved in git history at commit `26b59bc`.

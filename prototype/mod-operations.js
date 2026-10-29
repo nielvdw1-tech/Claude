@@ -99,6 +99,7 @@ function defectTable(dfs) { return dfs.length ? `<table class="tbl stackable"><t
 function actionsMiniTable(acts) { return acts.length ? `<table class="tbl stackable"><thead><tr><th>Action</th><th>Source</th><th>Owner</th><th>Due</th><th>Status</th></tr></thead><tbody>${acts.map(a => `<tr class="rowlink" data-href="#/actions/${a.id}"><td data-label="Action"><span class="mono">${a.id}</span><div class="t-title">${esc(a.title)}</div></td><td data-label="Source">${esc(a.source)} · ${esc(a.sourceId)}</td><td data-label="Owner">${esc(pname(a.owner))}</td><td data-label="Due">${dueText(a.due, !actionOpen(a))}</td><td data-label="Status">${sbadge(a.status)}</td></tr>`).join('')}</tbody></table>` : '<div class="empty">No actions linked.</div>'; }
 
 /* ---------- QR quick view (mobile-first) ---------- */
+const QR_ACCESS = { asset: null };
 ROUTES.qr = (p) => {
   const a = byId('assets', p[0]); if (!a) return ROUTES.notfound();
   const docs = assetDocStatus(a), s0 = scheduleFor(a.id).sort((x, y) => x.nextDue.localeCompare(y.nextDue))[0], dfs = assetOpenDefects(a);
@@ -107,17 +108,21 @@ ROUTES.qr = (p) => {
     <div class="alert demo">${icon('qr')}<div>Opened via asset QR code <span class="mono">${esc(a.qr)}</span> (simulated scan).</div></div>
     <div class="card"><div class="card-body" style="padding-top:16px"><div class="sh-id">${esc(assetType(a).name)} · ${esc(sname(a.site))} · ${esc(a.location)}</div><h1 style="margin:4px 0 8px">${esc(a.tag)} — ${esc(a.name)}</h1>
       <div class="alert ${ok ? 'success' : 'danger'}" style="margin:0">${icon(ok ? 'checkCircle' : 'alert')}<div><b>${a.status === 'Out of Service' ? 'OUT OF SERVICE — DO NOT USE' : ok ? 'Safe to use — documents current' : 'Use restricted — document non-compliance'}</b>${dfs.length ? `<br>${dfs.length} open defect(s)` : ''}</div></div></div></div>
-    <div class="big-actions">
+    ${isFieldUser() ? `<div class="big-actions">
+      ${s0 ? `<button class="btn primary" data-act="go" data-href="#/inspect/${s0.id}">${icon('clipboard', 'lg')} Start inspection</button>` : `<button class="btn" disabled title="No inspection is scheduled for this asset">${icon('clipboard', 'lg')} No inspection scheduled</button>`}
+      <button class="btn" data-act="go" data-href="#/report?asset=${a.id}">${icon('siren', 'lg')} Report incident</button>
+    </div>` : `<div class="big-actions">
       <button class="btn primary" data-act="go" data-href="${s0 ? '#/inspect/' + s0.id : '#/assets/' + a.id}">${icon('clipboard', 'lg')} Start inspection</button>
       <button class="btn danger" data-act="defectNew" data-asset="${a.id}">${icon('alert', 'lg')} Report defect</button>
       <button class="btn" data-act="go" data-href="#/assets/${a.id}?tab=documents">${icon('file', 'lg')} Documents</button>
       <button class="btn" data-act="go" data-href="#/incidents/new?asset=${a.id}">${icon('siren', 'lg')} Report incident</button>
-    </div>
+    </div>`}
     <div class="card"><div class="card-head"><h2>Certificates</h2></div><div class="card-body"><ul class="link-list">${docs.map(d => `<li><div class="ll-main"><b>${esc(d.req.name)}</b><div>${d.cert && d.cert.expiry ? 'Expires ' + fmt(d.cert.expiry) : d.cert ? 'No expiry' : 'Not on file'}</div></div>${sbadge(d.status)}</li>`).join('')}</ul></div></div>
     <div class="card"><div class="card-head"><h2>Next inspection</h2></div><div class="card-body">${s0 ? dueText(s0.nextDue) + ` · ${esc(byId('templates', s0.template).title)}` : 'Not scheduled'}</div></div>
-    <a class="btn" href="#/assets/${a.id}">Open full asset record</a>
+    ${isFieldUser() ? '' : `<a class="btn" href="#/assets/${a.id}">Open full asset record</a>`}
   </div>`;
-  return { title: 'QR · ' + a.tag, nav: 'assets', crumbs: [['Assets & equipment', '#/assets'], ['QR · ' + a.tag, '#']], html };
+  QR_ACCESS.asset = a.id;   // the QR page was opened for this asset: field users may now inspect it
+  return { title: 'QR · ' + a.tag, nav: isFieldUser() ? 'field' : 'assets', crumbs: [['Assets & equipment', '#/assets'], ['QR · ' + a.tag, '#']], html };
 };
 ACT.qrScan = () => openModal({ title: 'Scan asset QR (simulated)', sub: 'A phone camera would read the QR label. For the demo, choose an asset or type its QR code.', size: 'narrow', body: `${fld({ name: 'code', label: 'QR code / tag', placeholder: 'e.g. VDW-QR-AS-002 or FL-02' })}${fld({ name: 'pick', label: 'Or choose an asset', type: 'select', options: opts(scoped('assets').map(a => ({ value: a.id, label: `${a.tag} — ${a.name}` })), '', '— Select —') })}`,
   buttons: [{ label: 'Open asset', cls: 'primary', onClick: m => { const v = readForm(m); const code = (v.code || '').toUpperCase(); const a = v.pick ? byId('assets', v.pick) : S.assets.find(x => x.qr.toUpperCase() === code || x.tag.toUpperCase() === code || x.id === code); if (!a) { toast('No asset matches that code.', 'error'); return false; } navigate('#/qr/' + a.id); } }] });
@@ -137,7 +142,7 @@ ACT.certUpload = (el) => { const a = byId('assets', el.dataset.id), t = assetTyp
   buttons: [{ label: 'Save certificate', cls: 'primary', onClick: m => { if (!validateForm(m, fail => { const e = m.querySelector('[name=expiry]'); if (e.value && e.value < TODAY) fail(e, 'This certificate is already expired.'); })) return false; const v = readForm(m); a.certs.push({ type: v.type, number: v.number, issued: v.issued, expiry: v.expiry || null, file: v.file }); assetHistory(a, `Certificate uploaded: ${v.type} (${v.number}), valid to ${fmt(v.expiry)}`); log(`${a.tag}: ${v.type} uploaded`, '#/assets/' + a.id + '?tab=documents'); save(); toast('Certificate recorded. Previous certificate retained in history.'); rerender(); } }] }); };
 ACT.defectNew = (el) => {
   const pre = el.dataset.asset;
-  openModal({ title: 'Report defect', sub: 'Critical defects remove the asset from service until the corrective action is verified.', body: `<div class="form-grid">${fld({ name: 'asset', label: 'Asset', type: 'select', options: opts(scoped('assets').map(a => ({ value: a.id, label: `${a.tag} — ${a.name}` })), pre || '', '— Select —'), required: true, full: true })}${fld({ name: 'description', label: 'Defect description', type: 'textarea', required: true, full: true })}${fld({ name: 'severity', label: 'Severity', type: 'select', options: opts(['Critical', 'Major', 'Minor'], 'Major'), required: true })}${fld({ name: 'photo', label: 'Photo (optional)', type: 'file', accept: 'image/*', capture: true })}${fld({ name: 'oos', label: 'Remove asset from service immediately', type: 'checkbox', full: true })}${fld({ name: 'raise', label: 'Raise corrective action', type: 'checkbox', value: true, full: true })}${fld({ name: 'owner', label: 'Action owner', type: 'select', options: personOptions('') })}${fld({ name: 'due', label: 'Action due', type: 'date', value: addDays(TODAY, 14) })}</div>`,
+  openModal({ title: 'Report defect', sub: 'Critical defects remove the asset from service until the corrective action is verified.', body: `<div class="form-grid">${fld({ name: 'asset', label: 'Asset', type: 'select', options: opts(scoped('assets').map(a => ({ value: a.id, label: `${a.tag} — ${a.name}` })), pre || '', '— Select —'), required: true, full: true })}${fld({ name: 'description', label: 'Defect description', type: 'textarea', required: true, full: true })}${fld({ name: 'severity', label: 'Severity', type: 'select', options: opts(['Critical', 'Major', 'Minor'], 'Major'), required: true })}${fld({ name: 'photo', label: 'Photo (optional)', type: 'file', accept: 'image/*', capture: true })}${fld({ name: 'oos', label: 'Remove asset from service immediately', type: 'checkbox', full: true })}${fld({ name: 'raise', label: 'Raise corrective action', type: 'checkbox', value: true, full: true })}${fld({ name: 'owner', label: 'Action owner', type: 'select', options: personOptions('', canOwnActions) })}${fld({ name: 'due', label: 'Action due', type: 'date', value: addDays(TODAY, 14) })}</div>`,
     onOpen: m => { const sev = m.querySelector('[name=severity]'); const sync = () => { if (sev.value === 'Critical') { m.querySelector('[name=oos]').checked = true; m.querySelector('[name=due]').value = addDays(TODAY, 3); } }; sev.addEventListener('change', sync); const asel = m.querySelector('[name=asset]'); const setOwner = () => { const a = byId('assets', asel.value); if (a) m.querySelector('[name=owner]').value = a.responsible; }; asel.addEventListener('change', setOwner); setOwner(); },
     buttons: [{ label: 'Report defect', cls: 'danger solid', onClick: m => {
       if (!validateForm(m, fail => { if (m.querySelector('[name=raise]').checked && !m.querySelector('[name=owner]').value) fail(m.querySelector('[name=owner]'), 'Select an action owner.'); })) return false;
@@ -184,3 +189,20 @@ ACT.mtComplete = (el) => { const mt = byId('maintenance', el.dataset.id), a = by
   buttons: [{ label: 'Complete', cls: 'success', onClick: m => { if (!validateForm(m)) return false; const v = readForm(m); mt.completed = v.date; mt.notes = v.notes; mt.evidence.push(v.file); assetHistory(a, `Maintenance ${mt.id} completed: ${mt.description}`);
     if (v.next) S.maintenance.push({ id: nextId('MT-', 'maintenance', 3, 200), asset: a.id, type: 'Planned', description: mt.description, due: v.next, completed: null, by: mt.by, notes: '', evidence: [] });
     log(`Completed maintenance ${mt.id} on ${a.tag}`, '#/assets/' + a.id + '?tab=maintenance'); save(); toast(`Maintenance completed${v.next ? '; next scheduled ' + fmt(v.next) : ''}.`); rerender(); if (v.defect) setTimeout(() => ACT.defectNew({ dataset: { asset: a.id } }), 50); } }] }); };
+
+/* ---------- Field home for field-only users (e.g. Employee) ---------- */
+ROUTES.field = (p, q) => {
+  const mine = S.schedules.filter(s => inSite(s, S.ui.site) && s.assignee === S.ui.user && s.asset).sort((a, b) => a.nextDue.localeCompare(b.nextDue));
+  const reported = S.incidents.filter(i => i.reporter === S.ui.user).sort((a, b) => b.date.localeCompare(a.date));
+  const html = `<div class="mobile-card">
+    ${q.blocked ? `<div class="alert info">${icon('lock')}<div>That page is not available for your role. Field users can inspect assets by scanning their QR code and report incidents.</div></div>` : ''}
+    ${pageHead('Hello, ' + esc(me().name.split(' ')[0]), 'Scan the QR code on an asset to inspect it, or report an incident.')}
+    <div class="big-actions">
+      <button class="btn primary" data-act="qrScan">${icon('qr', 'lg')} Scan asset QR code</button>
+      <button class="btn accent" data-act="go" data-href="#/report">${icon('siren', 'lg')} Report incident</button>
+    </div>
+    <div class="card"><div class="card-head"><h2>My inspections</h2><span class="ch-sub">Scan the asset's QR code to start</span></div><div class="card-body">${mine.length ? `<ul class="link-list">${mine.map(s => { const a = byId('assets', s.asset); return `<li><div class="ll-main"><b>${esc(a.tag)} — ${esc(a.name)}</b><div>${esc(byId('templates', s.template).title)} · ${esc(a.location)}</div></div>${dueText(s.nextDue)}</li>`; }).join('')}</ul>` : '<p class="muted">No inspections are assigned to you.</p>'}</div></div>
+    <div class="card"><div class="card-head"><h2>Incidents I reported</h2></div><div class="card-body">${reported.length ? `<ul class="link-list">${reported.map(i => `<li><div class="ll-main"><b>${esc(i.title)}</b><div>${esc(i.id)} · ${fmt(i.date)} · ${esc(i.type)}</div></div>${sbadge(i.status)}</li>`).join('')}</ul>` : '<p class="muted">You have not reported any incidents.</p>'}</div></div>
+  </div>`;
+  return { title: 'Home', nav: 'field', crumbs: [['Home', '#/field']], html };
+};

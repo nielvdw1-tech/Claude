@@ -10,6 +10,7 @@ const RC_CATEGORIES = ['Procedure', 'Training', 'Supervision', 'PPE', 'Equipment
 function incActions(i) { return S.actions.filter(a => a.source === 'Incident' && a.sourceId === i.id); }
 function sevChip(n) { const c = n >= 4 ? 'red' : n === 3 ? 'amber' : 'green'; return badge(SEV_LABELS[n] || '—', c, true); }
 
+ROUTES.report = (p, q) => Object.assign(incidentForm(q), { nav: 'report' });
 ROUTES.incidents = (p, q) => {
   if (p[0] === 'new') return incidentForm(q);
   if (p[0]) return incidentDetail(p[0]);
@@ -36,7 +37,7 @@ function incidentForm(q) {
     ${fld({ name: 'actualSev', label: 'Actual severity', type: 'select', options: opts([1, 2, 3, 4, 5].map(n => ({ value: n, label: SEV_LABELS[n] })), 1), required: true })}${fld({ name: 'potentialSev', label: 'Potential severity (worst credible)', type: 'select', options: opts([1, 2, 3, 4, 5].map(n => ({ value: n, label: SEV_LABELS[n] })), 3), required: true })}
     ${fld({ name: 'asset', label: 'Equipment involved', type: 'select', options: opts(scoped('assets').map(a => ({ value: a.id, label: `${a.tag} — ${a.name}` })), q.asset || '', '— None —') })}${fld({ name: 'witnesses', label: 'Witnesses' })}
     <div class="field full"><label for="f_photos">Photographs / attachments</label><input id="f_photos" name="photos" type="file" multiple accept="image/*,.pdf" capture="environment"><div class="file-note">${icon('info', 'sm')} Prototype: file names only are kept as demo references.</div></div>
-  </div></div><div class="modal-foot" style="border-radius:0 0 12px 12px"><a class="btn" href="#/incidents">Cancel</a><button class="btn accent" type="button" data-act="incSubmit">${icon('check', 'sm')} Submit report</button></div></form></div>`;
+  </div></div><div class="modal-foot" style="border-radius:0 0 12px 12px"><a class="btn" href="${isFieldUser() ? '#/field' : '#/incidents'}">Cancel</a><button class="btn accent" type="button" data-act="incSubmit">${icon('check', 'sm')} Submit report</button></div></form></div>`;
   return { title: 'Report incident', nav: 'incidents', crumbs: [['Incidents & injuries', '#/incidents'], ['Report', '#']], html, after: () => { const t = document.querySelector('#incForm [name=type]'); const sync = () => document.getElementById('injBox').classList.toggle('hidden', t.value !== 'Injury'); t.addEventListener('change', sync); sync(); } };
 }
 ACT.incSubmit = () => {
@@ -49,7 +50,7 @@ ACT.incSubmit = () => {
   S.incidents.push(i);
   addEvent('red', 'incidents', `New incident reported: ${id}`, `${v.type} at ${sname(v.site)} — ${v.title}. Investigator to be assigned.`, '#/incidents/' + id, v.site);
   if (v.asset) { const a = byId('assets', v.asset); assetHistory(a, `Involved in incident ${id}: ${v.title}`); }
-  log(`Reported ${id}: ${v.title}`, '#/incidents/' + id); save(); toast(`${id} reported. The branch manager and HSEQ team have been notified (simulated).`); navigate('#/incidents/' + id);
+  log(`Reported ${id}: ${v.title}`, '#/incidents/' + id); save(); toast(`${id} reported. The branch manager and HSEQ team have been notified (simulated).`); navigate(isFieldUser() ? '#/field' : '#/incidents/' + id);
 };
 
 function incidentDetail(id) {
@@ -145,7 +146,8 @@ ROUTES.inspect = (p) => {
   const s = byId('schedules', p[0]); if (!s) return ROUTES.notfound();
   const t = byId('templates', s.template), r = tplCurrent(t), a = s.asset && byId('assets', s.asset);
   if (INSP.sched !== s.id) { INSP.sched = s.id; INSP.answers = {}; }
-  if (!can('inspect')) return { title: 'Inspection', nav: 'inspections', crumbs: [['Inspections', '#/inspections'], ['Inspection', '#']], html: `<div class="alert danger">${icon('lock')}<div>${esc(noPerm('inspect'))}</div></div>` };
+  if (isFieldUser() && (!can('inspect.qr') || !s.asset || QR_ACCESS.asset !== s.asset)) return { title: 'Inspection', nav: 'field', crumbs: [['Home', '#/field'], ['Inspection', '#']], html: `<div class="mobile-card"><div class="alert info">${icon('qr')}<div><b>Scan the asset's QR code to start this inspection.</b> Field users start inspections from the asset's QR page.</div></div><button class="btn primary" data-act="qrScan">${icon('qr', 'sm')} Scan asset QR code</button></div>` };
+  if (!can('inspect') && !isFieldUser()) return { title: 'Inspection', nav: 'inspections', crumbs: [['Inspections', '#/inspections'], ['Inspection', '#']], html: `<div class="alert danger">${icon('lock')}<div>${esc(noPerm('inspect'))}</div></div>` };
   const html = `<div class="mobile-card" style="max-width:860px">
     ${a && a.status === 'Out of Service' ? `<div class="alert danger">${icon('alert')}<div><b>${esc(a.tag)} is out of service.</b> You may still record an inspection (e.g. post-repair check).</div></div>` : ''}
     <div class="controlled-header"><div class="chh"><div class="print-logo"><div class="logo-mark">VDW</div><div><b style="font-size:12px">${esc(orgOf(S.ui.org).short)}</b><small>HSEQ Management System</small></div></div><div class="ch-title">${esc(t.title)}</div><div class="ch-meta">Doc no: <b class="mono">${esc(t.docNumber)}</b><br>Revision: <b>${r.rev}</b> · Rev. date: <b>${fmt(r.revDate)}</b><br>Status: Approved (${esc(pname(r.approvedBy))})</div></div>
@@ -155,7 +157,7 @@ ROUTES.inspect = (p) => {
     <h4 class="mb">Checklist — ${r.questions.length} items <span class="muted" id="answered" style="text-transform:none;letter-spacing:0"></span></h4>
     <div id="qList">${r.questions.map((q, k) => qCard(q, k, a)).join('')}</div>
     <div class="card mt"><div class="card-body" style="padding-top:14px"><div class="form-grid">${fld({ name: 'summary', label: 'General findings / comments', type: 'textarea', full: true })}${fld({ name: 'reviewer', label: 'Reviewer (sign-off)', type: 'select', options: personOptions(site(s.site).manager, x => !!x.sysRole) })}${fld({ name: 'declare', label: 'I declare that this inspection was carried out as recorded.', type: 'checkbox', full: true })}</div></div>
-      <div class="modal-foot" style="border-radius:0 0 12px 12px"><a class="btn" href="${a ? '#/assets/' + a.id : '#/inspections/schedule'}">Cancel</a><button class="btn primary" data-act="inspSubmit">${icon('check', 'sm')} Submit inspection</button></div></div>
+      <div class="modal-foot" style="border-radius:0 0 12px 12px"><a class="btn" href="${isFieldUser() && a ? '#/qr/' + a.id : a ? '#/assets/' + a.id : '#/inspections/schedule'}">Cancel</a><button class="btn primary" data-act="inspSubmit">${icon('check', 'sm')} Submit inspection</button></div></div>
   </div>`;
   return { title: 'Inspection — ' + s.target, nav: 'inspections', crumbs: [['Inspections', '#/inspections'], ['Inspection: ' + s.target, '#']], html, after: updAnswered };
 };
@@ -165,7 +167,7 @@ function qCard(q, k, a) {
     <div class="seg" role="group" aria-label="Response for item ${k + 1}">${['Pass', 'Fail', 'N/A'].map(x => `<button type="button" class="${ans.result === x ? 'on-' + (x === 'N/A' ? 'na' : x.toLowerCase()) : ''}" data-act="qAns" data-q="${q.id}" data-v="${x}" aria-pressed="${ans.result === x}">${x}</button>`).join('')}</div></div>
     <div class="q-extra"><div class="field"><label for="c-${q.id}">Comment${ans.result === 'Fail' ? '<span class="req">*</span>' : ''}</label><input type="text" id="c-${q.id}" data-qc="${q.id}" value="${esc(ans.comment || '')}" placeholder="${ans.result === 'Fail' ? 'Describe the failure' : 'Optional'}"></div><div class="field"><label for="ph-${q.id}">Photo</label><input type="file" id="ph-${q.id}" data-qp="${q.id}" accept="image/*" capture="environment"></div></div>
     ${ans.result === 'Fail' ? `<div class="q-fail"><label class="check"><input type="checkbox" data-qf="${q.id}" data-k="raise" ${ans.raise !== false ? 'checked' : ''}> <span><b>Raise corrective action</b> in the central register</span></label>
-      <div class="form-grid mt-s"><div class="field"><label>Action owner</label><select data-qf="${q.id}" data-k="owner">${personOptions(ans.owner || (a ? a.responsible : byId('schedules', INSP.sched).assignee))}</select></div><div class="field"><label>Priority</label><select data-qf="${q.id}" data-k="priority">${opts(S.config.priorities.map(p => p.name), ans.priority || (q.critical ? 'Critical' : 'High'))}</select></div></div>
+      <div class="form-grid mt-s"><div class="field"><label>Action owner</label><select data-qf="${q.id}" data-k="owner">${personOptions(ans.owner || (a ? a.responsible : byId('schedules', INSP.sched).assignee), canOwnActions)}</select></div><div class="field"><label>Priority</label><select data-qf="${q.id}" data-k="priority">${opts(S.config.priorities.map(p => p.name), ans.priority || (q.critical ? 'Critical' : 'High'))}</select></div></div>
       ${a ? `<label class="check mt-s"><input type="checkbox" data-qf="${q.id}" data-k="oos" ${ans.oos ? 'checked' : ''}> <span style="color:var(--red)"><b>Critical defect — remove ${esc(a.tag)} from service</b></span></label>` : ''}</div>` : ''}
   </div>`;
 }
@@ -201,7 +203,7 @@ ACT.inspSubmit = () => {
   log(`Completed inspection ${id} (${s.target}) — ${ins.actions.length} action(s) raised`, '#/inspections/' + id);
   INSP.sched = null; INSP.answers = {}; save();
   toast(`${id} submitted. ${ins.actions.length ? ins.actions.length + ' corrective action(s) raised. ' : ''}${oos ? `<b>${esc(a.tag)} placed OUT OF SERVICE.</b> ` : ''}Next inspection scheduled ${fmt(s.nextDue)} (was ${fmt(prev)}).`);
-  navigate('#/inspections/' + id);
+  navigate(isFieldUser() ? (s.asset ? '#/qr/' + s.asset : '#/field') : '#/inspections/' + id);
 };
 
 ROUTES.inspections = function (p) {

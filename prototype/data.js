@@ -15,7 +15,7 @@ function buildSeed() {
   const T = (n, h = 9, m = 0) => { const x = new Date(base); x.setDate(x.getDate() + n); x.setHours(h, m, 0, 0); return x.toISOString(); };
   const demoFile = (name, kb) => ({ name, size: kb * 1024, type: name.endsWith('.pdf') ? 'application/pdf' : 'application/octet-stream', demo: true, seeded: true });
 
-  const S = { version: 5, seededOn: D(0) };
+  const S = { version: 6, seededOn: D(0) };
 
   /* ---------------- Organisations, sites, departments ---------------- */
   S.orgs = [
@@ -57,15 +57,15 @@ function buildSeed() {
   S.roles = [
     { name: 'Managing Director', desc: 'Organisation-wide visibility; final approver for policies.', perms: ['view.all', 'doc.approve', 'action.verify', 'report.view'] },
     { name: 'HSEQ Manager', desc: 'Owns document control, verification of corrective actions, incident investigation and configuration.', perms: ['view.all', 'doc.create', 'doc.approve', 'doc.issue', 'action.create', 'action.verify', 'incident.investigate', 'admin', 'report.view', 'inspect'] },
-    { name: 'Safety Consultant', desc: 'External VDW consultant: reviews documents, verifies evidence, supports investigations.', perms: ['view.all', 'doc.create', 'doc.approve', 'action.create', 'action.verify', 'incident.investigate', 'report.view', 'inspect'] },
+    { name: 'Safety Consultant', desc: 'External VDW consultant with full access: documents, approvals and issue, inspections, corrective actions, incidents, reports and configuration.', perms: ['view.all', 'doc.create', 'doc.approve', 'doc.issue', 'action.create', 'action.verify', 'incident.investigate', 'admin', 'report.view', 'inspect'] },
     { name: 'Branch Manager', desc: 'Manages assets, inspections, actions and incidents at the assigned branch; approves branch documents.', perms: ['view.branch', 'doc.create', 'doc.approve', 'action.create', 'action.verify', 'incident.investigate', 'report.view', 'inspect'] },
     { name: 'Supervisor', desc: 'Conducts inspections, reports defects and incidents, updates actions assigned to them.', perms: ['view.branch', 'action.create', 'inspect', 'incident.report'] },
-    { name: 'Employee', desc: 'Reports incidents and defects, completes assigned actions, views issued documents.', perms: ['view.own', 'incident.report'] }
+    { name: 'Employee', desc: 'Field access only: inspects assets by scanning their QR code and reports incidents.', perms: ['inspect.qr', 'incident.report'], fieldOnly: true }
   ];
   S.permissionDefs = [
     ['view.all', 'View all organisations / branches in scope'], ['view.branch', 'View records of assigned branch'], ['view.own', 'View own tasks & issued documents'],
     ['doc.create', 'Upload, create & revise documents'], ['doc.approve', 'Can be placed on a document approval route'], ['doc.issue', 'Issue approved documents for use'],
-    ['inspect', 'Conduct inspections'], ['action.create', 'Raise corrective actions'], ['action.verify', 'Verify & close corrective actions'],
+    ['inspect', 'Conduct inspections'], ['inspect.qr', 'Inspect an asset after scanning its QR code (field users)'], ['action.create', 'Raise corrective actions'], ['action.verify', 'Verify & close corrective actions'],
     ['incident.report', 'Report incidents'], ['incident.investigate', 'Investigate & close incidents'], ['report.view', 'Management reports'], ['admin', 'System configuration']
   ];
 
@@ -321,8 +321,8 @@ function buildSeed() {
       progress: [{ ts: T(-22), by: 'P-011', note: 'Training delivered to 6 staff.' }], evidence: [demoFile('HCA_attendance_register.pdf', 210)], history: [AH(T(-65), 'P-003', 'Created'), AH(T(-65), 'P-003', 'Assigned', '', 'P-011'), AH(T(-60), 'P-011', 'Acknowledged'), AH(T(-30), 'P-011', 'In Progress'), AH(T(-21), 'P-011', 'Submitted for Verification')] }),
     A({ id: 'ACT-1012', title: 'Faded pedestrian walkway markings at dispatch bay', action: 'Repaint pedestrian walkway and crossing markings at dispatch bay.', source: 'Inspection', sourceId: 'INS-1087', priority: 'Medium', site: 'S-JHB', owner: 'P-007', createdBy: 'P-007', created: D(-33), due: D(10), status: 'In Progress',
       progress: [{ ts: T(-10), by: 'P-007', note: 'Paint ordered; weekend shutdown booked.' }], history: [AH(T(-33), 'P-007', 'Created'), AH(T(-33), 'P-007', 'Assigned', '', 'P-007'), AH(T(-32), 'P-007', 'Acknowledged'), AH(T(-10), 'P-007', 'In Progress')] }),
-    A({ id: 'ACT-1014', title: 'Compressor CMP-02 safety valve failure', action: 'Replace safety valve, test and certify receiver before return to service.', source: 'Asset Defect', sourceId: 'DF-301', priority: 'Critical', site: 'S-DBN', owner: 'P-010', createdBy: 'P-003', created: D(-9), due: D(-6), status: 'In Progress',
-      progress: [{ ts: T(-7), by: 'P-010', note: 'Replacement valve ordered from supplier.' }], history: [AH(T(-9), 'P-003', 'Created'), AH(T(-9), 'P-003', 'Assigned', '', 'P-010'), AH(T(-9), 'P-010', 'Acknowledged'), AH(T(-7), 'P-010', 'In Progress')] }),
+    A({ id: 'ACT-1014', title: 'Compressor CMP-02 safety valve failure', action: 'Replace safety valve, test and certify receiver before return to service.', source: 'Asset Defect', sourceId: 'DF-301', priority: 'Critical', site: 'S-DBN', owner: 'P-011', createdBy: 'P-003', created: D(-9), due: D(-6), status: 'In Progress',
+      progress: [{ ts: T(-7), by: 'P-011', note: 'Replacement valve ordered from supplier.' }], history: [AH(T(-9), 'P-003', 'Created'), AH(T(-9), 'P-003', 'Assigned', '', 'P-011'), AH(T(-9), 'P-011', 'Acknowledged'), AH(T(-7), 'P-011', 'In Progress')] }),
     A({ id: 'ACT-1016', title: 'Two extinguishers past service date (Pinetown)', action: 'Have extinguishers serviced by accredited provider.', source: 'Inspection', sourceId: 'INS-1090', priority: 'High', site: 'S-DBN', owner: 'P-011', createdBy: 'P-011', created: D(-40), due: D(-26), status: 'Verified',
       progress: [{ ts: T(-30), by: 'P-011', note: 'Serviced.' }], evidence: [demoFile('FE_service_slip.pdf', 90)], verification: { by: 'P-003', ts: T(-27), decision: 'Verified', comment: 'Service tags checked.' },
       history: [AH(T(-40), 'P-011', 'Created'), AH(T(-40), 'P-011', 'Assigned', '', 'P-011'), AH(T(-39), 'P-011', 'Acknowledged'), AH(T(-35), 'P-011', 'In Progress'), AH(T(-30), 'P-011', 'Submitted for Verification'), AH(T(-27), 'P-003', 'Verified')] }),

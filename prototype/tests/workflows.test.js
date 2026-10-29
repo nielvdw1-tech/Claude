@@ -128,7 +128,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
 
   /* ---------------- D. Incident management ---------------- */
   {
-    await asUser('P-009'); await go('#/incidents/new');
+    await asUser('P-009'); await go('#/report');
     await p.selectOption('#incForm [name=type]', 'Injury'); await p.fill('#incForm [name=title]', 'Foot struck by pallet jack'); await p.fill('#incForm [name=location]', 'Aisle 3');
     await p.fill('#incForm [name=description]', 'Pallet jack rolled over right foot.'); await p.fill('#incForm [name=immediate]', 'First aid; ice pack.'); await p.fill('#incForm [name=nature]', 'Bruising');
     await p.setInputFiles('#incForm [name=photos]', { name: 'scene.jpg', mimeType: 'image/jpeg', buffer: Buffer.from('x') });
@@ -242,6 +242,39 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     const fr = fp.frames().find(f => f.url().includes('index.html'));
     await fr.click('.sh-actions button:has-text("Print")'); await fp.waitForTimeout(200);
     ok('G6 in an embedded preview the user is told where to print from', (await fr.innerText('.modal')).includes('Printing is not available in the online preview')); await fp.close();
+  }
+
+  /* ---------------- H. Roles: Safety Consultant full access; Employee field access only ---------------- */
+  {
+    await p.evaluate(() => { document.body.classList.remove('printing-file'); });
+    await asUser('P-006'); await go('#/admin/approvals');
+    ok('H1 Safety Consultant can use Administration', !(await p.innerText('#content')).includes('Read-only') && await has('[data-act=routeEdit]'));
+    await go('#/documents/DOC-017');
+    ok('H2 Safety Consultant can issue approved documents', await has('.sh-actions button:has-text("Issue for use"):not([disabled])'));
+    await asUser('P-014'); await p.waitForTimeout(150);
+    const nav = await p.$$eval('.nav-item span:not(.count)', e => e.map(x => x.textContent));
+    ok('H3 Employee sees only the field screens', nav.join('|') === 'Scan & inspect|Report incident' && !(await has('#globalSearch')), nav.join(' | '));
+    await go('#/documents');
+    ok('H4 other pages are closed to employees', (await p.innerText('#content')).includes('not available for your role'));
+    await go('#/inspect/ISCH-04');
+    ok('H5 an employee cannot start an inspection without scanning the asset QR', (await p.innerText('#content')).includes("Scan the asset's QR code to start"));
+    await go('#/field'); await act('.big-actions button:has-text("Scan asset QR code")'); await msel('pick', 'AS-004'); await mbtn('Open asset');
+    const qrTxt = await p.innerText('#content');
+    ok('H6 employee QR page offers only inspection and incident reporting', qrTxt.includes('Start inspection') && qrTxt.includes('Report incident') && !qrTxt.includes('Report defect') && !qrTxt.includes('Open full asset record'));
+    await act('.big-actions button:has-text("Start inspection")');
+    const qv = await S(`tplCurrent(byId('templates','TPL-VEH')).questions.map(q=>q.id)`);
+    for (const q of qv) await p.click(`[data-act=qAns][data-q="${q}"][data-v="Pass"]`);
+    await p.check('[name=declare]'); await p.click('[data-act=inspSubmit]'); await p.waitForTimeout(250);
+    const lastIns = await S('S.inspections[S.inspections.length-1]');
+    ok('H7 employee completes the inspection after scanning and returns to the QR page', lastIns.inspector === 'P-014' && lastIns.asset === 'AS-004' && (await p.evaluate(() => location.hash)) === '#/qr/AS-004');
+    await go('#/field'); await act('.big-actions button:has-text("Report incident")');
+    await p.fill('#incForm [name=title]', 'Oil on floor at bay 4'); await p.fill('#incForm [name=location]', 'Bay 4'); await p.fill('#incForm [name=description]', 'Slippery patch.'); await p.fill('#incForm [name=immediate]', 'Cordoned off.');
+    await p.click('[data-act=incSubmit]'); await p.waitForTimeout(250);
+    ok('H8 employee reports an incident and sees it on their home screen', (await S('S.incidents[S.incidents.length-1].reporter')) === 'P-014' && (await p.innerText('#content')).includes('Oil on floor at bay 4'));
+    await asUser('P-002'); await go('#/actions'); await btn('New action'); await mbtn('Continue'); await p.waitForTimeout(100);
+    const owners = await p.$$eval('.modal [name=owner] option', o => o.map(x => x.value));
+    ok('H9 employees are not offered as corrective action owners', !owners.includes('P-009') && !owners.includes('P-014') && owners.includes('P-007'));
+    await p.keyboard.press('Escape');
   }
 
   /* ---------------- Print output ---------------- */
