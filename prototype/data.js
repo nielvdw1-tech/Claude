@@ -15,7 +15,7 @@ function buildSeed() {
   const T = (n, h = 9, m = 0) => { const x = new Date(base); x.setDate(x.getDate() + n); x.setHours(h, m, 0, 0); return x.toISOString(); };
   const demoFile = (name, kb) => ({ name, size: kb * 1024, type: name.endsWith('.pdf') ? 'application/pdf' : 'application/octet-stream', demo: true, seeded: true });
 
-  const S = { version: 6, seededOn: D(0) };
+  const S = { version: 7, seededOn: D(0) };
 
   /* ---------------- Organisations, sites, departments ---------------- */
   S.orgs = [
@@ -55,10 +55,10 @@ function buildSeed() {
 
   /* ---------------- Roles & permissions (client-side DEMO only) ---------------- */
   S.roles = [
-    { name: 'Managing Director', desc: 'Organisation-wide visibility; final approver for policies.', perms: ['view.all', 'doc.approve', 'action.verify', 'report.view'] },
-    { name: 'HSEQ Manager', desc: 'Owns document control, verification of corrective actions, incident investigation and configuration.', perms: ['view.all', 'doc.create', 'doc.approve', 'doc.issue', 'action.create', 'action.verify', 'incident.investigate', 'admin', 'report.view', 'inspect'] },
-    { name: 'Safety Consultant', desc: 'External VDW consultant with full access: documents, approvals and issue, inspections, corrective actions, incidents, reports and configuration.', perms: ['view.all', 'doc.create', 'doc.approve', 'doc.issue', 'action.create', 'action.verify', 'incident.investigate', 'admin', 'report.view', 'inspect'] },
-    { name: 'Branch Manager', desc: 'Manages assets, inspections, actions and incidents at the assigned branch; approves branch documents.', perms: ['view.branch', 'doc.create', 'doc.approve', 'action.create', 'action.verify', 'incident.investigate', 'report.view', 'inspect'] },
+    { name: 'Managing Director', desc: 'Organisation-wide visibility; final approver for policies.', perms: ['notice.publish', 'view.all', 'doc.approve', 'action.verify', 'report.view'] },
+    { name: 'HSEQ Manager', desc: 'Owns document control, verification of corrective actions, incident investigation and configuration.', perms: ['notice.publish', 'view.all', 'doc.create', 'doc.approve', 'doc.issue', 'action.create', 'action.verify', 'incident.investigate', 'admin', 'report.view', 'inspect'] },
+    { name: 'Safety Consultant', desc: 'External VDW consultant with full access: documents, approvals and issue, inspections, corrective actions, incidents, reports and configuration.', perms: ['notice.publish', 'view.all', 'doc.create', 'doc.approve', 'doc.issue', 'action.create', 'action.verify', 'incident.investigate', 'admin', 'report.view', 'inspect'] },
+    { name: 'Branch Manager', desc: 'Manages assets, inspections, actions and incidents at the assigned branch; approves branch documents.', perms: ['notice.publish', 'view.branch', 'doc.create', 'doc.approve', 'action.create', 'action.verify', 'incident.investigate', 'report.view', 'inspect'] },
     { name: 'Supervisor', desc: 'Conducts inspections, reports defects and incidents, updates actions assigned to them.', perms: ['view.branch', 'action.create', 'inspect', 'incident.report'] },
     { name: 'Employee', desc: 'Field access only: inspects assets by scanning their QR code and reports incidents.', perms: ['inspect.qr', 'incident.report'], fieldOnly: true }
   ];
@@ -66,7 +66,7 @@ function buildSeed() {
     ['view.all', 'View all organisations / branches in scope'], ['view.branch', 'View records of assigned branch'], ['view.own', 'View own tasks & issued documents'],
     ['doc.create', 'Upload, create & revise documents'], ['doc.approve', 'Can be placed on a document approval route'], ['doc.issue', 'Issue approved documents for use'],
     ['inspect', 'Conduct inspections'], ['inspect.qr', 'Inspect an asset after scanning its QR code (field users)'], ['action.create', 'Raise corrective actions'], ['action.verify', 'Verify & close corrective actions'],
-    ['incident.report', 'Report incidents'], ['incident.investigate', 'Investigate & close incidents'], ['report.view', 'Management reports'], ['admin', 'System configuration']
+    ['incident.report', 'Report incidents'], ['incident.investigate', 'Investigate & close incidents'], ['notice.publish', 'Publish company notices'], ['report.view', 'Management reports'], ['admin', 'System configuration']
   ];
 
   /* ---------------- Configuration ---------------- */
@@ -90,7 +90,7 @@ function buildSeed() {
     notify: {
       docReviewLead: 30, inspectionLead: 7, maintenanceLead: 14, certLead: 30,
       channels: { inApp: true, email: false, sms: false },
-      categories: { documents: true, assets: true, incidents: true, actions: true }
+      categories: { documents: true, assets: true, incidents: true, actions: true, notices: true }
     },
     complianceWeights: { documents: 20, assets: 35, actions: 30, incidents: 15 }
   };
@@ -334,6 +334,20 @@ function buildSeed() {
   S.incidents.find(i => i.id === 'INC-2026-005').actions = ['ACT-1011'];
   S.incidents.find(i => i.id === 'INC-2026-008').actions = ['ACT-1019'];
   S.incidents.forEach(i => { if (!i.actions) i.actions = []; });
+
+  /* ---------------- Company notices (memos / important information) ---------------- */
+  S.notices = [
+    { id: 'NT-001', org: 'ORG-1', title: 'New pedestrian walkways and forklift rules in the warehouse', priority: 'Important', audience: 'S-JHB', ackRequired: true, expires: null,
+      body: 'From Monday, pedestrians must use the newly painted green walkways in the Germiston warehouse at all times.\n\nForklifts must stop at every walkway crossing and sound the horn. Do not walk behind a reversing forklift.\n\nYour supervisor will brief you at the next toolbox talk. Please confirm that you have read and understood this notice.',
+      attachment: demoFile('Memo_Warehouse_Walkways.pdf', 140), publishedBy: 'P-005', publishedOn: T(-2, 8, 15),
+      reads: { 'P-005': T(-2, 8, 15), 'P-007': T(-2, 9, 2), 'P-009': T(-1, 7, 40), 'P-002': T(-2, 10, 5) }, acks: { 'P-007': T(-2, 9, 3), 'P-009': T(-1, 7, 41) } },
+    { id: 'NT-002', org: 'ORG-1', title: 'Year-end shutdown and site security', priority: 'Normal', audience: 'ALL', ackRequired: false, expires: D(60),
+      body: 'All branches close for the year-end shutdown. Equipment must be switched off and isolated, and keys returned to the branch manager before you leave.\n\nThe exact dates will be confirmed by your branch manager.',
+      attachment: null, publishedBy: 'P-001', publishedOn: T(-5, 11, 0), reads: { 'P-001': T(-5, 11, 0), 'P-002': T(-5, 12, 0), 'P-003': T(-4, 8, 0) }, acks: {} },
+    { id: 'NT-003', org: 'ORG-1', title: 'Water supply interruption at Pinetown on Friday', priority: 'Normal', audience: 'S-DBN', ackRequired: false, expires: D(3),
+      body: 'The municipality will interrupt the water supply on Friday from 08:00 to 14:00. Bottled drinking water will be provided in the canteen, and the eyewash station has its own reserve tank.',
+      attachment: null, publishedBy: 'P-003', publishedOn: T(-1, 14, 30), reads: { 'P-003': T(-1, 14, 30) }, acks: {} }
+  ];
 
   /* ---------------- Activity & notification state ---------------- */
   S.activity = [

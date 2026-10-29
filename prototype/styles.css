@@ -645,6 +645,22 @@ button.file-chip svg.ic.sm { width: 13px; height: 13px; }
   #routeEd > div > select { grid-column: 2 / -1; }
 }
 
+/* ---------- Company notices ---------- */
+.notice-list { display: flex; flex-direction: column; gap: 10px; }
+.notice { display: block; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 14px 16px; color: var(--fg); box-shadow: var(--shadow-sm); transition: border-color .15s, box-shadow .15s; }
+.notice:hover { text-decoration: none; border-color: var(--line-strong); box-shadow: var(--shadow); }
+.notice.notice-imp { border-left: 3px solid var(--bad); }
+.notice-top { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.notice-date { margin-left: auto; font-size: 12px; color: var(--muted); }
+.notice-title { font-family: var(--font-display); font-weight: 650; font-size: 15.5px; margin-top: 8px; color: var(--fg); }
+.notice-unread .notice-title::after { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--brand); margin-left: 8px; vertical-align: 2px; }
+.notice-snip { font-size: 13px; color: var(--fg-2); margin-top: 4px; }
+.notice-meta { font-size: 12px; color: var(--muted); margin-top: 6px; display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+.notice-sheet.notice-imp { border-top: 3px solid var(--bad); }
+.notice-body { font-size: 15px; line-height: 1.65; color: var(--fg); margin-top: 16px; max-width: 68ch; }
+.notice-ack { margin-top: 20px; padding: 14px 16px; border-radius: 9px; background: var(--surface-2); border: 1px solid var(--line); display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; color: var(--fg); }
+.notice-ack > svg { color: var(--ok); }
+
 /* ---------- Printed document copies (#printArea) ---------- */
 #printArea { display: none; }
 @media print {

@@ -197,6 +197,7 @@ ROUTES.field = (p, q) => {
   const html = `<div class="mobile-card">
     ${q.blocked ? `<div class="alert info">${icon('lock')}<div>That page is not available for your role. Field users can inspect assets by scanning their QR code and report incidents.</div></div>` : ''}
     ${pageHead('Hello, ' + esc(me().name.split(' ')[0]), 'Scan the QR code on an asset to inspect it, or report an incident.')}
+    ${(() => { const nn = myNotices().filter(n => noticeUnread(n) || noticeNeedsAck(n) || n.priority === 'Important').slice(0, 3); return nn.length ? `<div class="stack"><h4>${icon('info', 'sm')} Notices for you</h4><div class="notice-list">${nn.map(noticeCard).join('')}</div>${myNotices().length > nn.length ? '<a class="btn sm ghost" href="#/notices">All notices</a>' : ''}</div>` : ''; })()}
     <div class="big-actions">
       <button class="btn primary" data-act="qrScan">${icon('qr', 'lg')} Scan asset QR code</button>
       <button class="btn accent" data-act="go" data-href="#/report">${icon('siren', 'lg')} Report incident</button>

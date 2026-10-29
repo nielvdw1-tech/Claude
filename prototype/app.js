@@ -8,7 +8,7 @@
    ========================================================================== */
 'use strict';
 
-const STORE_KEY = 'vdw-hseq-prototype-v6';
+const STORE_KEY = 'vdw-hseq-prototype-v7';
 let S = null;                        // application state (demo data)
 const TODAY = (() => { const d = new Date(); d.setHours(0, 0, 0, 0); return isoDate(d); })();
 const ROUTES = {};                   // page renderers registered by module files
@@ -18,7 +18,7 @@ const ACT = {};                      // click handlers: data-act="name"
 function loadState() {
   try {
     const raw = localStorage.getItem(STORE_KEY);
-    if (raw) { const parsed = JSON.parse(raw); if (parsed && parsed.version === 6) { S = parsed; return; } }
+    if (raw) { const parsed = JSON.parse(raw); if (parsed && parsed.version === 7) { S = parsed; return; } }
   } catch (e) { console.warn('Could not read local storage; using fresh demo data.', e); }
   S = buildSeed(); save();
 }
@@ -383,6 +383,7 @@ function myTasks() {
   S.schedules.filter(s => inSite(s, S.ui.site) && s.assignee === uid && daysTo(s.nextDue) <= 7).forEach(s => out.push({ title: `Inspect: ${s.target}`, sub: `Due ${fmt(s.nextDue)}`, link: '#/inspect/' + s.id, sev: daysTo(s.nextDue) < 0 ? 'red' : 'amber' }));
   S.incidents.filter(i => inSite(i, S.ui.site) && i.investigator === uid && !['Closed'].includes(i.status)).forEach(i => out.push({ title: `Investigate ${i.id}: ${i.title}`, sub: i.status, link: '#/incidents/' + i.id, sev: 'amber' }));
   if (can('incident.investigate')) S.incidents.filter(i => inSite(i, S.ui.site) && i.status === 'Reported').forEach(i => out.push({ title: `Assign investigator: ${i.id}`, sub: i.title, link: '#/incidents/' + i.id, sev: 'red' }));
+  if (typeof myNotices === 'function') myNotices().filter(n => noticeNeedsAck(n)).forEach(n => out.push({ title: `Acknowledge notice: ${n.title}`, sub: `From ${pname(n.publishedBy)} · ${fmt(n.publishedOn)}`, link: '#/notices/' + n.id, sev: n.priority === 'Important' ? 'red' : 'amber' }));
   return out;
 }
 
@@ -461,7 +462,7 @@ function raiseActionModal(o, after) {
    SHELL: sidebar, topbar, routing
    ========================================================================== */
 const NAV = [
-  { group: 'Overview', items: [['dashboard', 'Dashboard', 'dashboard'], ['notifications', 'Notifications & Tasks', 'bell']] },
+  { group: 'Overview', items: [['dashboard', 'Dashboard', 'dashboard'], ['notifications', 'Notifications & Tasks', 'bell'], ['notices', 'Company Notices', 'info']] },
   { group: 'Document control', items: [['documents', 'Document Manager', 'docs']] },
   { group: 'Assets & inspections', items: [['assets', 'Assets & Equipment', 'forklift'], ['inspections', 'Inspections', 'clipboard'], ['maintenance', 'Maintenance & Defects', 'wrench']] },
   { group: 'Incidents', items: [['incidents', 'Incident Management', 'alert']] },
@@ -469,14 +470,15 @@ const NAV = [
   { group: 'Assurance', items: [['reports', 'Reports', 'chart']] },
   { group: 'Administration', items: [['admin', 'Administration', 'settings']] }
 ];
-const NAV_FIELD = [{ group: 'Field', items: [['field', 'Scan & inspect', 'qr'], ['report', 'Report incident', 'alert']] }];
-const FIELD_ROUTES = ['field', 'report', 'qr', 'inspect', 'notfound'];
+const NAV_FIELD = [{ group: 'Field', items: [['field', 'Scan & inspect', 'qr'], ['report', 'Report incident', 'alert'], ['notices', 'Notices', 'info']] }];
+const FIELD_ROUTES = ['field', 'report', 'qr', 'inspect', 'notices', 'notfound'];
 function navCounts() {
   const c = {};
   c.actions = S.actions.filter(a => inSite(a, S.ui.site) && actionOverdue(a)).length;
   c.notifications = buildNotifs().filter(n => !S.readNotifs[n.key]).length;
   c.incidents = S.incidents.filter(i => inSite(i, S.ui.site) && i.status === 'Reported').length;
   c.documents = S.documents.filter(d => inSite(d, S.ui.site) && (curStep(docLatest(d)) || {}).person === S.ui.user).length;
+  c.notices = typeof myUnreadNotices === 'function' ? myUnreadNotices().length : 0;
   c.inspections = S.schedules.filter(s => inSite(s, S.ui.site) && daysTo(s.nextDue) < 0).length;
   return c;
 }
@@ -492,7 +494,7 @@ function renderSidebar(active) {
   </div>
   <nav class="sb-nav" aria-label="Main navigation">
     ${(isFieldUser() ? NAV_FIELD : NAV).map((g, gi) => `<div class="nav-group ${S.ui.navCollapsed && S.ui.navCollapsed[gi] ? 'collapsed' : ''}"><button class="nav-group-title" data-act="toggleNavGroup" data-g="${gi}" aria-expanded="${!(S.ui.navCollapsed && S.ui.navCollapsed[gi])}">${esc(g.group)} ${icon('chevron')}</button><div class="nav-items">
-      ${g.items.map(([k, label, ic]) => `<a class="nav-item ${active === k ? 'active' : ''}" href="#/${k}">${icon(ic)}<span>${esc(label)}</span>${cnt[k] ? `<span class="count" title="${k === 'actions' ? 'Overdue actions' : k === 'notifications' ? 'Unread' : k === 'documents' ? 'Awaiting your approval' : k === 'inspections' ? 'Overdue inspections' : 'Requires attention'}">${cnt[k]}</span>` : ''}</a>`).join('')}
+      ${g.items.map(([k, label, ic]) => `<a class="nav-item ${active === k ? 'active' : ''}" href="#/${k}">${icon(ic)}<span>${esc(label)}</span>${cnt[k] ? `<span class="count" title="${k === 'actions' ? 'Overdue actions' : k === 'notifications' ? 'Unread' : k === 'documents' ? 'Awaiting your approval' : k === 'inspections' ? 'Overdue inspections' : k === 'notices' ? 'Unread or awaiting your acknowledgement' : 'Requires attention'}">${cnt[k]}</span>` : ''}</a>`).join('')}
     </div></div>`).join('')}
   </nav>
   <div class="sb-user"><div class="avatar">${initials(u.name)}</div><div class="who"><b>${esc(u.name)}</b><span>${esc(u.sysRole)}</span></div></div>`;
@@ -694,7 +696,7 @@ ACT.focusSite = (el) => { S.ui.site = el.dataset.site; save(); toast(el.dataset.
 /* ==========================================================================
    NOTIFICATIONS & TASKS
    ========================================================================== */
-const CAT_LABEL = { documents: 'Document Manager', assets: 'Assets & inspections', incidents: 'Incidents', actions: 'Corrective actions' };
+const CAT_LABEL = { documents: 'Document Manager', assets: 'Assets & inspections', incidents: 'Incidents', actions: 'Corrective actions', notices: 'Company notices' };
 ROUTES.notifications = (p, q) => {
   const tab = p[0] || 'all';
   const all = buildNotifs(); const tasks = myTasks();
@@ -702,7 +704,7 @@ ROUTES.notifications = (p, q) => {
   let list = all;
   if (tab === 'unread') list = unread;
   if (q.cat) list = list.filter(n => n.cat === q.cat);
-  const icMap = { documents: 'docs', assets: 'forklift', incidents: 'alert', actions: 'target' };
+  const icMap = { documents: 'docs', assets: 'forklift', incidents: 'alert', actions: 'target', notices: 'info' };
   const body = tab === 'tasks'
     ? `<div class="card"><div class="card-head"><h2>My tasks — ${esc(me().name)}</h2><span class="ch-sub">${esc(myRole().name)} · ${esc(scopeLabel())}</span></div><div class="card-body flush">
       ${tasks.length ? tasks.map(t => `<div class="notif"><div class="n-ic ic-${t.sev}">${icon('tasks')}</div><div class="n-body"><div class="n-title">${esc(t.title)}</div><div class="n-text">${esc(t.sub)}</div></div><a class="btn sm primary" href="${t.link}">Open</a></div>`).join('') : `<div class="empty">${icon('checkCircle')}<div>No tasks assigned to you in this scope. Switch user from the user menu to see other people's tasks.</div></div>`}

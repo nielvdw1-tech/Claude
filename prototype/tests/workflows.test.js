@@ -168,7 +168,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await asUser('P-007'); await go('#/notifications/tasks');
     ok('E3 overdue inspection appears in the assignee task centre', (await p.innerText('#content')).includes('Inspect: Germiston warehouse & workshop'));
     await go('#/legal'); ok('E4 removed modules are no longer reachable', (await p.innerText('#content')).includes('Page not found'));
-    ok('E5 navigation shows only the focused modules', (await p.$$eval('.nav-item span:not(.count)', e => e.map(x => x.textContent))).join('|') === 'Dashboard|Notifications & Tasks|Document Manager|Assets & Equipment|Inspections|Maintenance & Defects|Incident Management|Corrective Actions|Reports|Administration');
+    ok('E5 navigation shows only the focused modules', (await p.$$eval('.nav-item span:not(.count)', e => e.map(x => x.textContent))).join('|') === 'Dashboard|Notifications & Tasks|Company Notices|Document Manager|Assets & Equipment|Inspections|Maintenance & Defects|Incident Management|Corrective Actions|Reports|Administration');
     await asUser('P-002'); await go('#/incidents'); await go('#/actions'); await btn('New action'); await mbtn('Continue'); await p.waitForTimeout(100); await mbtn('Raise action');
     ok('E6 form validation blocks empty required fields', await modalOpen() && (await p.$$('.modal .field.invalid')).length > 0); await p.keyboard.press('Escape');
     await asUser('P-009'); await go('#/documents/DOC-007');
@@ -253,7 +253,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     ok('H2 Safety Consultant can issue approved documents', await has('.sh-actions button:has-text("Issue for use"):not([disabled])'));
     await asUser('P-014'); await p.waitForTimeout(150);
     const nav = await p.$$eval('.nav-item span:not(.count)', e => e.map(x => x.textContent));
-    ok('H3 Employee sees only the field screens', nav.join('|') === 'Scan & inspect|Report incident' && !(await has('#globalSearch')), nav.join(' | '));
+    ok('H3 Employee sees only the field screens', nav.join('|') === 'Scan & inspect|Report incident|Notices' && !(await has('#globalSearch')), nav.join(' | '));
     await go('#/documents');
     ok('H4 other pages are closed to employees', (await p.innerText('#content')).includes('not available for your role'));
     await go('#/inspect/ISCH-04');
@@ -275,6 +275,31 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     const owners = await p.$$eval('.modal [name=owner] option', o => o.map(x => x.value));
     ok('H9 employees are not offered as corrective action owners', !owners.includes('P-009') && !owners.includes('P-014') && owners.includes('P-007'));
     await p.keyboard.press('Escape');
+  }
+
+  /* ---------------- N. Company notices ---------------- */
+  {
+    await asUser('P-002'); await go('#/notices'); await btn('Publish notice');
+    await mfill('title', 'Hearing protection in the workshop'); await mfill('body', 'Hearing protection must be worn in the workshop from today.');
+    await msel('audience', 'S-JHB'); await msel('priority', 'Important'); await p.check('.modal [name=ackRequired]');
+    await mfile('.modal [name=attachment]', 'Memo_Hearing_Protection.pdf'); await mbtn('Publish notice');
+    const nid = await S('S.notices[S.notices.length-1].id');
+    ok('N1 manager publishes a notice to one branch with acknowledgement required', (await S(`S.notices.find(n=>n.id==='${nid}').audience`)) === 'S-JHB', nid);
+    await asUser('P-014'); await p.waitForTimeout(150);
+    const cnt = await p.$eval('.nav-item[href="#/notices"] .count', e => +e.textContent).catch(() => 0);
+    const home = await p.innerText('#content');
+    ok('N2 employee at that branch sees an unread count and the notice on the home screen', cnt >= 1 && home.includes('Hearing protection in the workshop') && home.includes('Please acknowledge'), `${cnt} unread`);
+    await p.click(`a.notice[href="#/notices/${nid}"]`); await p.waitForTimeout(150);
+    ok('N3 opening the notice marks it read; attachment can be opened', !!(await S(`S.notices.find(n=>n.id==='${nid}').reads['P-014']`)) && await has('.notice-sheet button.file-chip'));
+    await act('[data-act=noticeAck]');
+    ok('N4 employee acknowledges "read and understood"', !!(await S(`S.notices.find(n=>n.id==='${nid}').acks['P-014']`)) && (await p.innerText('#content')).includes('You acknowledged this notice'));
+    await asUser('P-012'); await go('#/notices');
+    ok('N5 employees at other branches do not receive branch notices', !(await p.innerText('#content')).includes('Hearing protection in the workshop'));
+    await asUser('P-002'); await go('#/notices/' + nid);
+    const track = await p.innerText('#content');
+    ok('N6 publisher sees who read and acknowledged the notice', /Tebogo Molefe[\s\S]*\d{1,2} \w{3} \d{4}/.test(track) && track.includes('Outstanding'));
+    await asUser('P-007'); await go('#/notifications/tasks');
+    ok('N7 notices awaiting acknowledgement appear in a manager or supervisor task list', (await p.innerText('#content')).includes('Acknowledge notice: Hearing protection in the workshop'));
   }
 
   /* ---------------- Print output ---------------- */

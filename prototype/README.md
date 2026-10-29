@@ -95,6 +95,16 @@ Switch to **Tebogo Molefe** (Employee). The menu shows only **Scan & inspect** a
 
 Other pages are closed to employees. An inspection can only be started from the QR page of that asset. Employees are not offered as owners of corrective actions.
 
+### Company notices (memos and important information)
+- **Who publishes:** the HSEQ Manager, Managing Director, Safety Consultant and Branch Managers. Go to **Company Notices → Publish notice**.
+- **What a notice holds:** a title and message, sent to all staff or to one branch, marked Normal or **Important**. It can carry an attachment (e.g. a memo PDF) and can require a **"read and understood"** acknowledgement.
+- **What staff see:**
+  - Everyone sees notices addressed to them under **Notices**, with an unread count.
+  - Employees also see unread and important notices at the top of their home screen.
+  - Opening a notice marks it as read, and staff acknowledge it with one tap.
+- **Tracking:** the publisher sees, for each notice, who has read it and who has acknowledged it, with times. They can send a reminder (simulated, in-app only) or withdraw the notice.
+- **Example:** switch to **Tebogo Molefe** (Employee, Germiston) to see the *New pedestrian walkways* notice waiting for acknowledgement.
+
 ### D. Branches and tasks
 - Use the **Branch / site** selector to scope everything to one branch. **Reports → Branch comparison** shows them side by side.
 - **Notifications & Tasks → My tasks** shows each person their own work: documents awaiting their approval, actions to complete or verify, inspections due and investigations.
@@ -134,12 +144,13 @@ prototype/
 ├── mod-inspections-incidents.js  Inspections, controlled templates & print report, incidents
 ├── mod-actions-reports-admin.js  Corrective actions, reports, administration
 ├── mod-files.js                  File storage (browser) and in-app file viewer
+├── mod-notices.js                Company notices: publish, read, acknowledge, track
 ├── vendor/pdfjs/                 PDF.js 3.11.174 (Apache-2.0) for viewing PDFs, works offline
 ├── tests/workflows.test.js       Automated end-to-end test (developers)
 ├── CHECKLIST.md                  Requirements checklist with status
 └── README.md                     This file
 ```
 
-**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 68 workflow outcomes.
+**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 75 workflow outcomes.
 
 The earlier full HSEQ prototype, with legal, risk, people, PPE, chemicals, emergency and audits, is preserved in git history at commit `26b59bc`.
