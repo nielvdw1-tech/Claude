@@ -34,6 +34,10 @@ To start again, open the user menu (top right) and choose **Reset demo data**.
 | Bongani Zulu / Fatima Patel | Supervisors | Inspections; action owners |
 | Nomvula Sithole, Tebogo Molefe | Employee | **Field access only:** scans an asset's QR code to inspect it, and reports incidents |
 
+**Company logo.** The company using the system appears at the top of the menu, with a small *Powered by VDW HSEQ* line underneath. To add the logo, go to **Administration → Organisations & sites → Upload logo**. PNG, JPG, SVG or WebP files are accepted.
+- The logo then appears in the company block of document headers, inspection checklists, printed inspection reports and printed management reports.
+- Each organisation has its own logo. Until one is uploaded, the company's initials are shown.
+
 ## 3. Guided demonstrations
 
 ### A. Upload a document and route it through several approvers
@@ -159,6 +163,6 @@ prototype/
 └── README.md                     This file
 ```
 
-**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 83 workflow outcomes.
+**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 88 workflow outcomes.
 
 The earlier full HSEQ prototype, with legal, risk, people, PPE, chemicals, emergency and audits, is preserved in git history at commit `26b59bc`.

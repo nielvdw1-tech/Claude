@@ -41,6 +41,9 @@ function pname(id) { if (!id) return '—'; if (id === 'System') return 'System'
 function site(id) { return S.sites.find(s => s.id === id); }
 function sname(id) { if (!id || id === 'ALL') return 'All sites'; const s = site(id); return s ? s.short : id; }
 function orgOf(id) { return S.orgs.find(o => o.id === id); }
+// The client company's logo (uploaded in Administration → Organisations), or its initials until one is uploaded.
+function orgInitials(o) { return (o.short || o.name).split(/\s+/).filter(w => /^[A-Za-z0-9]/.test(w)).slice(0, 2).map(w => w[0].toUpperCase()).join(''); }
+function orgMark(o, cls = '') { return o.logo ? `<span class="org-logo ${cls}"><img src="${o.logo}" alt="${esc(o.short)} logo"></span>` : `<span class="org-initials ${cls}" aria-hidden="true">${esc(orgInitials(o))}</span>`; }
 function initials(name) { return String(name || '?').split(' ').map(x => x[0]).slice(0, 2).join('').toUpperCase(); }
 function me() { return person(S.ui.user); }
 function myRole() { const p = me(); return S.roles.find(r => r.name === (p && p.sysRole)) || S.roles[S.roles.length - 1]; }
@@ -486,7 +489,9 @@ function navCounts() {
 function renderSidebar(active) {
   const cnt = navCounts(), u = me();
   const sites = orgSites();
-  return `<div class="sb-brand"><div class="logo-mark">VDW</div><div class="logo-text"><b>VDW HSEQ</b><span>Management System · Prototype</span></div></div>
+  const org = orgOf(S.ui.org);
+  return `<div class="sb-brand">${orgMark(org, 'sb')}<div class="logo-text"><b>${esc(org.short)}</b><span>HSEQ Management System</span></div></div>
+  <div class="sb-powered"><span class="logo-mark xs">VDW</span><span>Powered by <b>VDW HSEQ</b> · Prototype</span></div>
   <div class="sb-scope">
     <label for="orgSel">Organisation</label>
     <select id="orgSel">${S.orgs.map(o => `<option value="${o.id}" ${o.id === S.ui.org ? 'selected' : ''}>${esc(o.short)}</option>`).join('')}</select>

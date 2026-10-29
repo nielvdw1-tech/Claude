@@ -323,6 +323,24 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     ok('S8 the incident page shows the alert status', (await p.innerText('#content')).includes('Safety alert to staff'));
   }
 
+  /* ---------------- L. Company logo ---------------- */
+  {
+    await asUser('P-002'); await go('#/dashboard');
+    const brand = await p.innerText('.sidebar');
+    ok('L1 menu shows the client company with "Powered by VDW HSEQ"', brand.includes('Kestrel Industrial') && brand.includes('Powered by'));
+    await go('#/admin/orgs');
+    const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
+    const [fc] = await Promise.all([p.waitForEvent('filechooser'), p.click('[data-act=orgLogo][data-id="ORG-1"]')]);
+    await fc.setFiles({ name: 'kestrel-logo.png', mimeType: 'image/png', buffer: png }); await p.waitForTimeout(400);
+    ok('L2 administrator uploads the company logo', (await S("(S.orgs.find(o=>o.id==='ORG-1').logo||'').startsWith('data:image/png')")) && await has('.sidebar .sb-brand .org-logo img'));
+    await go('#/documents/DOC-001'); await btn('Open document'); await p.waitForTimeout(300);
+    ok('L3 the logo appears in the company block of document headers', await has('.modal .print-logo .org-logo img')); await p.keyboard.press('Escape');
+    await go('#/print/INS-1087');
+    ok('L4 the logo appears on inspection reports', await has('.print-logo .org-logo img'));
+    await go('#/admin/orgs'); await act('[data-act=orgLogoRemove][data-id="ORG-1"]'); await p.click('.modal-foot button:has-text("Remove")'); await p.waitForTimeout(150);
+    ok('L5 removing the logo falls back to the company initials', !(await S("S.orgs.find(o=>o.id==='ORG-1').logo")) && (await p.innerText('.sb-brand .org-initials')) === 'KI');
+  }
+
   /* ---------------- Print output ---------------- */
   { await go('#/print/INS-1087'); await p.emulateMedia({ media: 'print' }); await p.pdf({ path: path.join(os.tmpdir(), 'vdw_inspection_report.pdf'), format: 'A4', printBackground: true }); await p.emulateMedia({ media: 'screen' }); }
 

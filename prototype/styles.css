@@ -141,6 +141,22 @@ td, .kpi, .bar-val, .due, .tc, .count, .dot { font-variant-numeric: tabular-nums
   position: relative; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .18);
 }
 .logo-mark::after { content: ""; position: absolute; right: -3px; bottom: -3px; width: 10px; height: 10px; border-radius: 3px; background: #F26A21; box-shadow: 0 0 0 2px var(--rail); }
+.logo-mark.xs { width: 20px; height: 20px; border-radius: 5px; font-size: 7px; }
+.logo-mark.xs::after { width: 6px; height: 6px; right: -2px; bottom: -2px; border-radius: 2px; }
+/* Client company logo / initials */
+.org-logo, .org-initials { flex: none; display: inline-grid; place-items: center; border-radius: 8px; overflow: hidden; }
+.org-logo { background: #fff; padding: 3px; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .08); }
+.org-logo img { display: block; max-width: 100%; max-height: 100%; object-fit: contain; }
+.org-initials { background: #005FEF; color: #fff; font-family: var(--font-display); font-weight: 800; letter-spacing: .02em; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.org-logo.sb, .org-initials.sb { width: 40px; height: 40px; font-size: 14px; }
+.org-logo.sb:has(img) { width: auto; min-width: 40px; max-width: 96px; }
+.org-logo.doc, .org-initials.doc { height: 44px; min-width: 44px; max-width: 160px; font-size: 13px; }
+.org-logo.doc { padding: 0; box-shadow: none; background: transparent; }
+.org-logo.admin, .org-initials.admin { width: 64px; height: 48px; font-size: 16px; }
+.org-head { display: flex; gap: 14px; align-items: flex-start; }
+.sb-powered { display: flex; align-items: center; gap: 8px; padding: 0 18px 12px; font-size: 11px; color: var(--rail-dim); }
+.sb-powered b { color: #fff; font-weight: 600; }
+.rep-org { display: flex; align-items: center; gap: 10px; }
 .logo-text { line-height: 1.15; }
 .logo-text b { display: block; color: #fff; font-family: var(--font-display); font-size: 15px; font-weight: 700; letter-spacing: .01em; }
 .logo-text span { font-size: 11px; color: var(--rail-dim); }
@@ -514,7 +530,9 @@ button.file-chip svg.ic.sm { width: 13px; height: 13px; }
 .q-card .q-extra { margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .q-card .q-fail { margin-top: 12px; border-top: 1px dashed var(--bad-line); padding-top: 12px; }
 .controlled-header { border: 1.5px solid var(--fg); border-radius: 8px; overflow: hidden; margin-bottom: 16px; background: var(--surface); }
-.controlled-header .chh { display: grid; grid-template-columns: 170px 1fr 230px; }
+.controlled-header .chh { display: grid; grid-template-columns: 190px minmax(0, 1fr) 230px; }
+.controlled-header .print-logo { flex-direction: column; align-items: flex-start; justify-content: center; gap: 6px; min-width: 0; }
+.controlled-header .print-logo b { display: block; line-height: 1.25; }
 .controlled-header .chh > div { padding: 11px 13px; border-right: 1px solid var(--line-strong); }
 .controlled-header .chh > div:last-child { border-right: 0; }
 .controlled-header .ch-title { font-family: var(--font-display); font-weight: 700; font-size: 16px; color: var(--fg); display: flex; align-items: center; }
