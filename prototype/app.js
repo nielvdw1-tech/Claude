@@ -8,7 +8,7 @@
    ========================================================================== */
 'use strict';
 
-const STORE_KEY = 'vdw-hseq-prototype-v9';
+const STORE_KEY = 'vdw-hseq-prototype-v10';
 let S = null;                        // application state (demo data)
 const TODAY = (() => { const d = new Date(); d.setHours(0, 0, 0, 0); return isoDate(d); })();
 const ROUTES = {};                   // page renderers registered by module files
@@ -18,7 +18,7 @@ const ACT = {};                      // click handlers: data-act="name"
 function loadState() {
   try {
     const raw = localStorage.getItem(STORE_KEY);
-    if (raw) { const parsed = JSON.parse(raw); if (parsed && parsed.version === 9) { S = parsed; return; } }
+    if (raw) { const parsed = JSON.parse(raw); if (parsed && parsed.version === 10) { S = parsed; return; } }
   } catch (e) { console.warn('Could not read local storage; using fresh demo data.', e); }
   S = buildSeed(); save();
 }
@@ -135,7 +135,7 @@ const STATUS_COLOURS = {
   // incidents
   'Reported': 'orange', 'Under Investigation': 'blue', 'Actions in Progress': 'blue', 'Awaiting Closure': 'purple',
   // misc
-  'Planned': 'blue', 'Scheduled': 'blue', 'Completed': 'green', 'Reviewed': 'green', 'Overdue': 'red', 'Open': 'red', 'Action Raised': 'amber', 'Awaiting Approval': 'amber',
+  'Planned': 'blue', 'Scheduled': 'blue', 'Completed': 'green', 'Reviewed': 'green', 'Overdue': 'red', 'Open': 'red', 'Action Raised': 'amber', 'Awaiting Review': 'amber', 'Escalated': 'red', 'Effective': 'green', 'Not effective': 'red', 'Awaiting Approval': 'amber',
   'Valid': 'green', 'Expiring': 'amber', 'Expired': 'red', 'Missing': 'red', 'Not accepted': 'amber', 'Vacant': 'red', 'Superseded draft': 'grey', 'Repaired – awaiting verification': 'purple',
   'Critical': 'red', 'High': 'orange', 'Medium': 'amber', 'Low': 'green', 'Major NC': 'red', 'Minor NC': 'amber', 'Observation': 'blue', 'OFI': 'grey', 'Major': 'orange', 'Minor': 'amber'
 };
@@ -301,9 +301,33 @@ function assetChecks(a) {
   const checks = docs.map(d => d.status !== 'Missing' && d.status !== 'Expired');
   sch.forEach(s => checks.push(daysTo(s.nextDue) >= 0));
   checks.push(a.status !== 'Out of Service');
+  S.defects.filter(d => d.asset === a.id && d.status === 'Awaiting Review').forEach(d => checks.push(daysTo(d.reviewDue) >= 0));   // defects reviewed in time
   return checks;
 }
-function incidentOnTrack(i) { return !(i.status === 'Reported' && daysTo(i.date) < -3) && !(i.status === 'Under Investigation' && i.invDue && daysTo(i.invDue) < 0); }
+function rules() { return Object.assign({ defectReviewDays: 2, assignInvestigatorDays: 3, effectivenessDays: 30 }, S.config.reviewRules || {}); }
+function effOverdue(i) { return i.status === 'Closed' && i.effectiveness && !i.effectiveness.done && daysTo(i.effectiveness.due) < 0; }
+function incidentOnTrack(i) { return !(i.status === 'Reported' && daysTo(i.date) < -rules().assignInvestigatorDays) && !(i.status === 'Under Investigation' && i.invDue && daysTo(i.invDue) < 0) && !effOverdue(i); }
+// Who reviews a defect reported by an operator: the asset's responsible person (if they may raise actions) and the branch manager.
+function defectReviewers(a) { return [...new Set([a.responsible, (site(a.site) || {}).manager].filter(id => { const p = person(id); const r = p && S.roles.find(x => x.name === p.sysRole); return r && r.perms.includes('action.create'); }))]; }
+function hseqManagers(org) { return S.people.filter(p => p.sysRole === 'HSEQ Manager' && p.org === org && p.status === 'Active').map(p => p.id); }
+/* Escalation of incidents that are not being dealt with in time (a server job in production; checked on every screen here). */
+function incEscalation(i) {
+  const to = [...new Set([site(i.site) && site(i.site).manager, ...hseqManagers(i.org)].filter(Boolean))];
+  if (i.status === 'Reported' && daysTo(i.date) < -rules().assignInvestigatorDays) return { key: 'assign', reason: `No investigator assigned ${-daysTo(i.date)} days after the incident`, to };
+  if (i.status === 'Under Investigation' && i.invDue && daysTo(i.invDue) < 0) { const up = to.filter(x => x !== i.investigator); return { key: 'inv-' + i.invDue, reason: `Investigation overdue by ${-daysTo(i.invDue)} day(s) — investigator ${pname(i.investigator)}`, to: up.length ? up : to }; }   // escalate above the investigator
+  if (effOverdue(i)) return { key: 'eff-' + i.effectiveness.due, reason: `Effectiveness review overdue by ${-daysTo(i.effectiveness.due)} day(s)`, to: [...new Set([i.investigator, ...hseqManagers(i.org)].filter(Boolean))] };
+  return null;
+}
+function runEscalations() {
+  let changed = false;
+  (S.incidents || []).forEach(i => { const e = incEscalation(i); if (!e) return; i.escalations = i.escalations || [];
+    if (i.escalations.some(x => x.key === e.key)) return;
+    i.escalations.push({ key: e.key, ts: nowTs(), to: e.to, reason: e.reason });
+    i.history.push({ ts: nowTs(), by: 'System', action: `Escalated to ${e.to.map(pname).join(', ')}`, comment: e.reason });
+    S.events.unshift({ key: 'EV-esc-' + i.id + e.key, sev: 'red', cat: 'incidents', title: `Escalated: ${i.id}`, text: `${e.reason} — ${i.title}.`, link: '#/incidents/' + i.id, date: TODAY, ts: nowTs(), site: i.site, org: i.org });
+    changed = true; });
+  if (changed) save();
+}
 /* Indicative control score per site: are documents current, assets inspected & certified,
    corrective actions on time, incidents investigated promptly? Weights configurable in Administration. */
 function compliance(siteId) {
@@ -312,7 +336,7 @@ function compliance(siteId) {
   let aTot = 0, aOk = 0; S.assets.filter(a => inSite(a, siteId) && a.status !== 'Decommissioned').forEach(a => assetChecks(a).forEach(c => { aTot++; if (c) aOk++; }));
   const acts = S.actions.filter(a => inSite(a, siteId) && actionOpen(a));
   const actScore = pct(acts.filter(a => !actionOverdue(a)).length, acts.length);
-  const incs = S.incidents.filter(i => inSite(i, siteId) && i.status !== 'Closed');
+  const incs = S.incidents.filter(i => inSite(i, siteId) && (i.status !== 'Closed' || effOverdue(i)));
   const parts = { documents: docScore, assets: pct(aOk, aTot), actions: actScore, incidents: pct(incs.filter(incidentOnTrack).length, incs.length) };
   const w = S.config.complianceWeights; let tw = 0, ts = 0; Object.keys(parts).forEach(k => { tw += Number(w[k] || 0); ts += parts[k] * Number(w[k] || 0); });
   return { overall: tw ? Math.round(ts / tw) : 100, parts, openActions: acts.length, overdueActions: acts.filter(actionOverdue).length, openIncidents: incs.length };
@@ -360,6 +384,10 @@ function buildNotifs() {
     else if (ds.status === 'Expiring') push({ key: 'cert-up-' + a.id + ds.req.name + ds.cert.expiry, sev: 'amber', cat: 'assets', title: `Certificate expiring: ${a.tag}`, text: `${ds.req.name} expires ${fmt(ds.cert.expiry)}.`, link: '#/assets/' + a.id + '?tab=documents', date: ds.cert.expiry, site: a.site });
     else if (ds.status === 'Missing' && ds.req.months > 0) push({ key: 'cert-mi-' + a.id + ds.req.name, sev: 'red', cat: 'assets', title: `Required document missing: ${a.tag}`, text: `${ds.req.name} not on file.`, link: '#/assets/' + a.id + '?tab=documents', date: TODAY, site: a.site });
   }));
+  S.defects.filter(d => d.status === 'Awaiting Review' && inSite(byId('assets', d.asset), S.ui.site)).forEach(d => {
+    const a = byId('assets', d.asset), late = daysTo(d.reviewDue) < 0;
+    push({ key: 'df-rv-' + d.id + (late ? '-late' : ''), sev: late ? 'red' : 'amber', cat: 'assets', title: `Defect awaiting review: ${a.tag}${late ? ' — overdue' : ''}`, text: `${d.description} (reported by ${pname(d.by)}). Review by ${fmt(d.reviewDue)}.`, link: '#/assets/' + a.id + '?tab=defects', date: d.reviewDue, site: a.site });
+  });
   // Incidents
   S.incidents.filter(i => inSite(i, S.ui.site) && ['Reported', 'Under Investigation'].includes(i.status)).forEach(i => {
     push({ key: 'inc-' + i.id + i.status, sev: i.status === 'Reported' ? 'red' : 'amber', cat: 'incidents', title: i.status === 'Reported' ? `Incident awaiting investigation: ${i.id}` : `Investigation in progress: ${i.id}`, text: `${i.title} (${sname(i.site)}).`, link: '#/incidents/' + i.id, date: i.invDue || i.date, site: i.site, task: true, owner: i.investigator });
@@ -385,6 +413,10 @@ function myTasks() {
   if (can('action.verify')) S.actions.filter(a => inSite(a, S.ui.site) && a.status === 'Submitted for Verification' && a.owner !== uid).forEach(a => out.push({ title: `Verify ${a.id}: ${a.title}`, sub: `Evidence submitted by ${pname(a.owner)}`, link: '#/actions/' + a.id, sev: 'blue' }));
   S.schedules.filter(s => inSite(s, S.ui.site) && s.assignee === uid && daysTo(s.nextDue) <= 7).forEach(s => out.push({ title: `Inspect: ${s.target}`, sub: `Due ${fmt(s.nextDue)}`, link: '#/inspect/' + s.id, sev: daysTo(s.nextDue) < 0 ? 'red' : 'amber' }));
   S.incidents.filter(i => inSite(i, S.ui.site) && i.investigator === uid && !['Closed'].includes(i.status)).forEach(i => out.push({ title: `Investigate ${i.id}: ${i.title}`, sub: i.status, link: '#/incidents/' + i.id, sev: 'amber' }));
+  if (can('action.create')) S.defects.filter(d => d.status === 'Awaiting Review').forEach(d => { const a = byId('assets', d.asset); if (!a || !inSite(a, S.ui.site)) return; const late = daysTo(d.reviewDue) < 0;
+    if (defectReviewers(a).includes(uid) || (late && hseqManagers(a.org).includes(uid))) out.push({ title: `Review defect ${d.id}: ${a.tag}`, sub: `${d.description} · reported by ${pname(d.by)} · review by ${fmt(d.reviewDue)}`, link: '#/assets/' + a.id + '?tab=defects', sev: late ? 'red' : 'amber' }); });
+  S.incidents.filter(i => inSite(i, S.ui.site)).forEach(i => { const e = incEscalation(i); if (e && e.to.includes(uid)) out.push({ title: `Escalated: ${i.id} — ${i.title}`, sub: e.reason, link: '#/incidents/' + i.id, sev: 'red' }); });
+  if (can('incident.investigate')) S.incidents.filter(i => inSite(i, S.ui.site) && i.status === 'Closed' && i.effectiveness && !i.effectiveness.done && daysTo(i.effectiveness.due) <= 7 && !effOverdue(i) && (i.investigator === uid || hseqManagers(i.org).includes(uid))).forEach(i => out.push({ title: `Effectiveness review: ${i.id}`, sub: `Due ${fmt(i.effectiveness.due)} — check the corrective actions worked`, link: '#/incidents/' + i.id, sev: 'amber' }));
   if (can('incident.investigate')) S.incidents.filter(i => inSite(i, S.ui.site) && i.injury && !i.injury.classification && i.status !== 'Closed').forEach(i => out.push({ title: `Classify injury: ${i.id}`, sub: i.title, link: '#/incidents/' + i.id, sev: 'amber' }));
   if (can('incident.investigate')) S.incidents.filter(i => inSite(i, S.ui.site) && i.status === 'Reported').forEach(i => out.push({ title: `Assign investigator: ${i.id}`, sub: i.title, link: '#/incidents/' + i.id, sev: 'red' }));
   (S.notices || []).filter(n => n.status === 'Pending approval' && n.org === S.ui.org && (noticeCurStep(n) || {}).person === uid).forEach(n => { const c = noticeCurStep(n); out.push({ title: `Approve safety alert: ${n.title.replace(/^Safety alert:\s*/, '')}`, sub: `From ${n.source.id} · step ${c.step} of ${n.approvals.length} — ${c.label}`, link: '#/notices/' + n.id, sev: 'amber' }); });
@@ -430,10 +462,11 @@ function actionTransition(a, to, comment, extra = {}) {
 function onActionStatus(a, to) {
   const otherOpen = (pred) => S.actions.some(x => x.id !== a.id && pred(x) && actionOpen(x));
   if (a.source === 'Asset Defect' || a.source === 'Inspection' || a.source === 'Maintenance') {
-    const d = S.defects.find(x => x.action === a.id);
-    if (d && to === 'Submitted for Verification') d.status = 'Repaired – awaiting verification';
-    if (d && to === 'Verified') { d.status = 'Closed'; d.closed = TODAY; const as = byId('assets', d.asset); if (as) assetHistory(as, `Defect ${d.id} closed — corrective action ${a.id} verified by ${pname(S.ui.user)}`); }
-    if (d && to === 'Rejected') d.status = 'Action Raised';
+    S.defects.filter(x => x.action === a.id).forEach(d => {
+      if (to === 'Submitted for Verification') d.status = 'Repaired – awaiting verification';
+      if (to === 'Verified') { d.status = 'Closed'; d.closed = TODAY; const as = byId('assets', d.asset); if (as) assetHistory(as, `Defect ${d.id} closed — corrective action ${a.id} verified by ${pname(S.ui.user)}`); }
+      if (to === 'Rejected') d.status = 'Action Raised';
+    });
   }
   if (a.source === 'Incident') {
     const i = byId('incidents', a.sourceId); if (!i) return;
@@ -524,6 +557,7 @@ function parseHash() {
 function navigate(h) { if (location.hash === h) rerender(); else location.hash = h; }
 let lastRoute = '';
 function rerender(keepScroll = true) {
+  runEscalations();
   const { parts, q } = parseHash(); const key = parts[0] || 'dashboard';
   let fn = ROUTES[key] || ROUTES.notfound;
   // Field users (e.g. Employee) only see the field screens: QR inspections and incident reporting

@@ -8,7 +8,7 @@ Status key:
 - **Not implemented**
 
 "Tested" means one of the following:
-- the automated browser test (`tests/workflows.test.js`, **96/96 passing**, no JavaScript errors);
+- the automated browser test (`tests/workflows.test.js`, **106/106 passing**, no JavaScript errors);
 - the route smoke test (77 routes plus a second organisation, no errors);
 - the mobile layout check (31 routes at 390 px, no horizontal overflow).
 
@@ -39,6 +39,7 @@ Status key:
 | Failed item → defect + corrective action | Implemented | C3 |
 | Critical failure → asset out of service; return to service only after verification | Implemented | C3, C5, C8 |
 | Defects reported directly (asset / QR page) | Implemented | C12 |
+| Operators only report failures; a supervisor or manager reviews each defect and raises the corrective action, closes it as fixed on the spot (with evidence) or links it to an existing action; review period with escalation | Implemented | R1–R4, R10 |
 | Corrective action workflow: Assigned → Acknowledged → In progress → Evidence → Submitted → Verified → Closed | Implemented | C6–C9 |
 | Verifier can return insufficient evidence; completion ≠ closure | Implemented | C7 |
 | Overdue tracking and escalation | Partial | Overdue flags plus manual escalation; automatic escalation needs a server |
@@ -54,6 +55,9 @@ Status key:
 | Closure only when all actions are verified | Implemented | D5, D7 |
 | External reporting status | Implemented | Reportability is decided by a competent person |
 | Incident trends in reporting | Implemented | D8 |
+| Automatic escalation of incidents without an investigator or with an overdue investigation | Partial | R5–R6; checked when the system is opened (a server job in production) |
+| Investigator corrects type and severity with a reason | Implemented | R7 |
+| Effectiveness review after closure; "not effective" reopens the incident | Implemented | R8–R9 |
 | Injury classification (first aid, medical treatment, restricted work, lost time, fatality) set by the HSEQ team from recorded facts; system suggestion, override with reason, reclassification history; required before closure; company-defined definitions | Implemented | J1–J8 |
 
 ## Supporting features

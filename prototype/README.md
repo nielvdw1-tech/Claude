@@ -85,11 +85,28 @@ Default routes per category are set in **Administration → Approval routes**.
 
 Defects can also be reported directly from the asset page or its **QR page** (e.g. `#/qr/AS-012`).
 
+**Who raises the corrective action.**
+- **Operators and employees only report.** When they fail an item, they describe the failure, add a photo and can mark the asset **unsafe to use**, which takes it out of service at once. They don't choose an owner or priority.
+- Each failure becomes a defect **awaiting review**. The asset's responsible supervisor (if they can raise actions) and the branch manager get a task to review it within the review period (default 2 days). The reviewer can:
+  - **raise a corrective action**, choosing the owner, priority and due date;
+  - close the defect as **fixed on the spot**, which needs a comment and evidence;
+  - **add it to an existing corrective action** on the same asset.
+- A review that is not done in time turns red, goes to the HSEQ Manager and lowers the asset score.
+- Supervisors and managers who inspect still raise the action directly from the checklist.
+- **Example:** defect **DF-303** on LDV-03 is waiting for review by Pieter Botha.
+
 ### C. Incident management
 1. As **Nomvula Sithole**, go to **Incident Management → Report incident**. This form is designed for a phone.
 2. As Johan, **Assign investigator → Record investigation**: findings, immediate, underlying and root cause, and cause categories. Tick *Investigation complete*, and you are prompted to raise a corrective action.
 3. Work and verify the action as above. The incident moves to **Awaiting closure**.
 4. **Review & close**. The incident can't be closed while any action is still open. Check **Reports → Incident trends**.
+
+**Controls after an incident is logged.**
+- **Escalation:** an incident with no investigator after the set number of days (default 3), or an investigation past its due date, is **escalated automatically** to the branch manager and the HSEQ Manager. An overdue investigation is escalated above the investigator. The escalation is recorded in the incident history, shown on the incident and added to their tasks.
+- **Corrections:** investigators can **correct the type and severity** set by the reporter, with a reason. The original values stay in the history.
+- **Effectiveness review:** a set number of days after closure (default 30), the investigator and HSEQ Manager are asked to confirm that the corrective actions **worked**. *Not effective* reopens the incident and prompts a new corrective action. An overdue effectiveness review is escalated and lowers the score.
+- The review periods are set in **Administration → Review periods**.
+- **Examples:** INC-2026-006 (no investigator) and INC-2026-007 (investigation overdue) are escalated. INC-2026-003 has an effectiveness review due.
 
 **Injury classification.** The person reporting an injury only describes it: what the injury is, the body part, the first aid given, and whether the person was sent for medical treatment. **They do not classify it.**
 - An investigator or HSEQ role uses **Classify injury** on the incident to record the facts: treated beyond first aid, full shifts lost, shifts on restricted work, the date back at normal work, and whether the injury was fatal.
@@ -173,6 +190,6 @@ prototype/
 └── README.md                     This file
 ```
 
-**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 96 workflow outcomes.
+**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 106 workflow outcomes.
 
 The earlier full HSEQ prototype, with legal, risk, people, PPE, chemicals, emergency and audits, is preserved in git history at commit `26b59bc`.

@@ -17,7 +17,7 @@ ROUTES.incidents = (p, q) => {
   const rows = scoped('incidents').sort((a, b) => b.date.localeCompare(a.date));
   const lv = listView('inc', { rows, initial: { status: q.status || '', type: q.type || '' }, resetState: !!(q.status || q.type), search: i => [i.id, i.title, i.type, i.location, pname(i.reporter)].join(' '), href: i => '#/incidents/' + i.id, rowClass: i => i.status === 'Reported' ? 'row-red' : '',
     filters: [{ id: 'status', label: 'All statuses', options: [{ value: 'open', label: 'Open (not closed)' }, 'Reported', 'Under Investigation', 'Actions in Progress', 'Awaiting Closure', 'Closed'], test: (i, v) => v === 'open' ? i.status !== 'Closed' : i.status === v }, { id: 'type', label: 'All types', options: INC_TYPES, test: (i, v) => i.type === v }, { id: 'site', label: 'All sites', options: orgSites().map(s => ({ value: s.id, label: s.short })), test: (i, v) => i.site === v }],
-    columns: [{ label: 'Incident', render: i => `<span class="mono">${i.id}</span><div class="t-title">${esc(i.title)}</div>` }, { label: 'Type', render: i => badge(i.type, i.type === 'Injury' ? 'red' : i.type === 'Environmental' ? 'green' : i.type === 'Property Damage' ? 'orange' : 'blue', true) + (i.injury ? `<div class="mt-s">${injClassBadge(i)}</div>` : '') }, { label: 'Date / site', render: i => `${fmt(i.date)} ${esc(i.time)}<div class="t-sub">${esc(sname(i.site))} · ${esc(i.location)}</div>` }, { label: 'Actual / potential', render: i => `${sevChip(i.actualSev)}<div class="mt-s">${sevChip(i.potentialSev)}</div>` }, { label: 'Investigator', render: i => i.investigator ? esc(pname(i.investigator)) : '<span class="due red">Not assigned</span>' }, { label: 'Actions', render: i => { const a = incActions(i); return a.length ? `${a.filter(x => !actionOpen(x)).length}/${a.length} verified` : '—'; } }, { label: 'Status', render: i => sbadge(i.status) }] });
+    columns: [{ label: 'Incident', render: i => `<span class="mono">${i.id}</span><div class="t-title">${esc(i.title)}</div>` }, { label: 'Type', render: i => badge(i.type, i.type === 'Injury' ? 'red' : i.type === 'Environmental' ? 'green' : i.type === 'Property Damage' ? 'orange' : 'blue', true) + (i.injury ? `<div class="mt-s">${injClassBadge(i)}</div>` : '') }, { label: 'Date / site', render: i => `${fmt(i.date)} ${esc(i.time)}<div class="t-sub">${esc(sname(i.site))} · ${esc(i.location)}</div>` }, { label: 'Actual / potential', render: i => `${sevChip(i.actualSev)}<div class="mt-s">${sevChip(i.potentialSev)}</div>` }, { label: 'Investigator', render: i => i.investigator ? esc(pname(i.investigator)) : '<span class="due red">Not assigned</span>' }, { label: 'Actions', render: i => { const a = incActions(i); return a.length ? `${a.filter(x => !actionOpen(x)).length}/${a.length} verified` : '—'; } }, { label: 'Status', render: i => sbadge(i.status) + (incEscalation(i) ? ` ${badge('Escalated', 'red')}` : '') }] });
   const html = `${pageHead('Incidents & injuries', 'Report near misses, injuries, property damage and environmental events; investigate root causes; drive corrective actions through verification to closure.', `<a class="btn accent" href="#/incidents/new">${icon('plus', 'sm')} Report incident</a>`, scopePill())}
     <div class="kpis">${kpi('Open incidents', rows.filter(i => i.status !== 'Closed').length, 'Not yet closed', 'amber', '#/incidents?status=open', 'alert')}${kpi('Awaiting investigation', rows.filter(i => i.status === 'Reported').length, 'Investigator to be assigned', rows.some(i => i.status === 'Reported') ? 'red' : 'green', '#/incidents?status=Reported', 'clock')}${kpi('Injuries (12 months)', rows.filter(i => i.type === 'Injury' && daysTo(i.date) > -365).length, `${rows.filter(i => injClass(i) === 'Lost Time Injury' && daysTo(i.date) > -365).length} lost-time · ${rows.filter(i => i.injury && !injClass(i) && i.status !== 'Closed').length} to classify`, 'red', '#/incidents?type=Injury', 'alert')}${kpi('High-potential events', rows.filter(i => i.potentialSev >= 4).length, 'Potential severity major or worse', 'amber', '#/incidents', 'risk')}</div>${lv}`;
   return { title: 'Incidents', crumbs: [['Incidents & injuries', '#/incidents']], html };
@@ -62,8 +62,11 @@ function incidentDetail(id) {
   const B = [];
   if (i.status === 'Reported') B.push(permBtn('incident.investigate', `<button class="btn primary" data-act="incAssign" data-id="${i.id}">Assign investigator</button>`));
   if (['Under Investigation', 'Actions in Progress'].includes(i.status)) { B.push(permBtn('incident.investigate', `<button class="btn" data-act="incInvestigate" data-id="${i.id}">${icon('search', 'sm')} Record investigation</button>`)); if (inv) B.push(permBtn('action.create', `<button class="btn primary" data-act="incAction" data-id="${i.id}">${icon('plus', 'sm')} Corrective action</button>`)); }
+  if (i.status !== 'Closed') B.push(permBtn('incident.investigate', `<button class="btn" data-act="incCorrect" data-id="${i.id}">Correct type / severity</button>`));
+  if (i.status === 'Closed' && i.effectiveness && !i.effectiveness.done) B.push(permBtn('incident.investigate', `<button class="btn primary" data-act="incEffect" data-id="${i.id}">${icon('checkCircle', 'sm')} Effectiveness review</button>`));
   if (i.status !== 'Closed' && i.status !== 'Reported') B.push(permBtn('incident.investigate', `<button class="btn success" data-act="incClose" data-id="${i.id}">${icon('checkCircle', 'sm')} Review & close</button>`));
   const html = `<div class="status-hero"><div><div class="sh-id">${i.id} · ${esc(i.type)} · ${esc(sname(i.site))}</div><h1 style="margin:2px 0 6px">${esc(i.title)}</h1><div class="btn-row">${sbadge(i.status)} Actual ${sevChip(i.actualSev)} Potential ${sevChip(i.potentialSev)}</div></div><div class="sh-actions">${B.join('')}</div></div>
+  ${(() => { const e = incEscalation(i); return e ? `<div class="alert danger">${icon('alert')}<div><b>Escalated to ${esc(e.to.map(pname).join(', '))}.</b> ${esc(e.reason)}.</div></div>` : ''; })()}
   <div class="card mb"><div class="card-body" style="padding-top:12px"><div class="stepper">${flow.map((s, k) => `<div class="step ${k < idx || i.status === 'Closed' ? 'done' : k === idx ? 'current' : ''}"><span class="sd">${k < idx || i.status === 'Closed' ? '✓' : k + 1}</span><span class="sl">${s}</span></div>`).join('')}</div></div></div>
   <div class="detail"><div class="stack">
     <div class="card"><div class="card-head"><h2>Event details</h2></div><div class="card-body"><div class="kv">
@@ -78,6 +81,7 @@ function incidentDetail(id) {
     <div class="card"><div class="card-head"><h2>History</h2></div><div class="card-body"><ul class="timeline">${i.history.slice().reverse().map(h => `<li><b>${esc(h.action)}</b><div class="tl-meta">${esc(pname(h.by))} · ${fmtTs(h.ts)}</div>${h.comment ? `<div class="tl-comment">${esc(h.comment)}</div>` : ''}</li>`).join('')}${i.closure ? `<li class="t-green"><b>Closed</b><div class="tl-meta">${esc(pname(i.closure.by))} · ${fmt(i.closure.date)}</div>${i.closure.comment ? `<div class="tl-comment">${esc(i.closure.comment)}</div>` : ''}</li>` : ''}</ul></div></div>
   </div><div class="stack">
     <div class="card"><div class="card-head"><h2>External reporting</h2>${permBtn('incident.investigate', `<button class="btn sm" data-act="incReporting" data-id="${i.id}">Update</button>`)}</div><div class="card-body"><div class="kv"><div>Reportable?</div><div>${esc(i.reporting.required)}</div><div>Status</div><div>${esc(i.reporting.status)}</div><div>Reference</div><div>${esc(i.reporting.ref || '—')}</div></div>${['Lost Time Injury', 'Fatality'].includes(injClass(i)) && i.reporting.required === 'To be determined' ? `<div class="alert warn mt-s">${icon('alert')}<div><b>${esc(injClass(i))}:</b> check whether this incident must be reported to the authorities, and record the decision here.</div></div>` : ''}<p class="muted mt-s">Whether an incident must be reported to the authorities (e.g. under section 24 of the OHS Act or COIDA) must be determined by a competent person.</p></div></div>
+    ${effectivenessCard(i)}
     ${incidentAlertCard(i)}
     <div class="card"><div class="card-head"><h2>Linked records</h2>${permBtn('incident.investigate', `<button class="btn sm" data-act="incLink" data-id="${i.id}">Link</button>`)}</div><div class="card-body"><ul class="link-list">
       ${i.links.assets.map(x => { const a = byId('assets', x); return `<li><div class="ll-main"><a href="#/assets/${a.id}">${esc(a.tag)}</a><div>Asset · ${esc(a.name)}</div></div>${sbadge(a.status)}</li>`; }).join('')}
@@ -111,7 +115,7 @@ ACT.incClose = (el) => { const i = byId('incidents', el.dataset.id); const open 
   if (!i.investigation || !i.investigation.completed) { toast('Complete the investigation before closing.', 'error'); return; }
   if (i.injury && !i.injury.classification) { toast('Classify the injury before closing the incident.', 'error'); return; }
   if (open.length) { toast(`Cannot close: ${open.length} corrective action(s) not yet verified (${open.map(a => a.id).join(', ')}).`, 'error'); return; }
-  openModal({ title: 'Review & close incident', sub: i.id, body: fld({ name: 'comment', label: 'Closure review comments', type: 'textarea', required: true }), buttons: [{ label: 'Close incident', cls: 'success', onClick: m => { if (!validateForm(m)) return false; i.status = 'Closed'; i.closure = { by: S.ui.user, date: TODAY, comment: readForm(m).comment }; log(`Closed ${i.id}`, '#/incidents/' + i.id); save(); toast(`${i.id} closed.`); rerender(); } }] }); };
+  openModal({ title: 'Review & close incident', sub: i.id, body: fld({ name: 'comment', label: 'Closure review comments', type: 'textarea', required: true }), buttons: [{ label: 'Close incident', cls: 'success', onClick: m => { if (!validateForm(m)) return false; i.status = 'Closed'; i.closure = { by: S.ui.user, date: TODAY, comment: readForm(m).comment }; if (i.effectiveness) { i.effHistory = (i.effHistory || []).concat([i.effectiveness]); } i.effectiveness = { due: addDays(TODAY, rules().effectivenessDays), done: null }; i.history.push({ ts: nowTs(), by: S.ui.user, action: `Incident closed — effectiveness review due ${fmt(i.effectiveness.due)}`, comment: '' }); log(`Closed ${i.id}`, '#/incidents/' + i.id); save(); toast(`${i.id} closed.`); rerender(); } }] }); };
 ACT.incReporting = (el) => { const i = byId('incidents', el.dataset.id); openModal({ title: 'External reporting status', sub: i.id, body: `<div class="form-grid">${fld({ name: 'required', label: 'Reportable to authorities?', type: 'select', options: opts(['To be determined', 'Yes', 'No'], i.reporting.required) })}${fld({ name: 'status', label: 'Status', value: i.reporting.status })}${fld({ name: 'ref', label: 'Reference', value: i.reporting.ref })}</div>`, buttons: [{ label: 'Save', cls: 'primary', onClick: m => { i.reporting = readForm(m); i.history.push({ ts: nowTs(), by: S.ui.user, action: 'Reporting status updated: ' + i.reporting.status, comment: '' }); save(); rerender(); } }] }); };
 ACT.incLink = (el) => { const i = byId('incidents', el.dataset.id); const list = [].concat(scoped('assets').map(a => ({ value: 'assets|' + a.id, label: `Asset ${a.tag}` })), scoped('documents').filter(docActive).map(d => ({ value: 'docs|' + d.id, label: `Procedure ${d.number} — ${d.title}` })));
   openModal({ title: 'Link record', sub: i.id, body: fld({ name: 'ref', label: 'Record', type: 'select', options: opts(list, '', '— Select —'), required: true }), buttons: [{ label: 'Link', cls: 'primary', onClick: m => { if (!validateForm(m)) return false; const [k, id] = readForm(m).ref.split('|'); if (!i.links[k].includes(id)) i.links[k].push(id); save(); toast('Linked.'); rerender(); } }] }); };
@@ -169,7 +173,9 @@ function qCard(q, k, a) {
   return `<div class="q-card ${ans.result === 'Fail' ? 'failed' : ''}" id="qc-${q.id}"><div class="q-top"><div class="q-text"><span class="q-num">${k + 1}.</span>${esc(q.text)} ${q.critical ? badge('Critical item', 'red', true) : ''}</div>
     <div class="seg" role="group" aria-label="Response for item ${k + 1}">${['Pass', 'Fail', 'N/A'].map(x => `<button type="button" class="${ans.result === x ? 'on-' + (x === 'N/A' ? 'na' : x.toLowerCase()) : ''}" data-act="qAns" data-q="${q.id}" data-v="${x}" aria-pressed="${ans.result === x}">${x}</button>`).join('')}</div></div>
     <div class="q-extra"><div class="field"><label for="c-${q.id}">Comment${ans.result === 'Fail' ? '<span class="req">*</span>' : ''}</label><input type="text" id="c-${q.id}" data-qc="${q.id}" value="${esc(ans.comment || '')}" placeholder="${ans.result === 'Fail' ? 'Describe the failure' : 'Optional'}"></div><div class="field"><label for="ph-${q.id}">Photo</label><input type="file" id="ph-${q.id}" data-qp="${q.id}" accept="image/*" capture="environment"></div></div>
-    ${ans.result === 'Fail' ? `<div class="q-fail"><label class="check"><input type="checkbox" data-qf="${q.id}" data-k="raise" ${ans.raise !== false ? 'checked' : ''}> <span><b>Raise corrective action</b> in the central register</span></label>
+    ${ans.result === 'Fail' && !can('action.create') ? `<div class="q-fail"><p class="muted" style="margin:0">${icon('info', 'sm')} Your supervisor will review this failure and decide on the corrective action.</p>
+      ${a ? `<label class="check mt-s"><input type="checkbox" data-qf="${q.id}" data-k="oos" ${ans.oos ? 'checked' : ''}> <span style="color:var(--red)"><b>Unsafe to use — remove ${esc(a.tag)} from service</b></span></label>` : ''}</div>` : ''}
+    ${ans.result === 'Fail' && can('action.create') ? `<div class="q-fail"><label class="check"><input type="checkbox" data-qf="${q.id}" data-k="raise" ${ans.raise !== false ? 'checked' : ''}> <span><b>Raise corrective action</b> in the central register</span></label>
       <div class="form-grid mt-s"><div class="field"><label>Action owner</label><select data-qf="${q.id}" data-k="owner">${personOptions(ans.owner || (a ? a.responsible : byId('schedules', INSP.sched).assignee), canOwnActions)}</select></div><div class="field"><label>Priority</label><select data-qf="${q.id}" data-k="priority">${opts(S.config.priorities.map(p => p.name), ans.priority || (q.critical ? 'Critical' : 'High'))}</select></div></div>
       ${a ? `<label class="check mt-s"><input type="checkbox" data-qf="${q.id}" data-k="oos" ${ans.oos ? 'checked' : ''}> <span style="color:var(--red)"><b>Critical defect — remove ${esc(a.tag)} from service</b></span></label>` : ''}</div>` : ''}
   </div>`;
@@ -196,16 +202,18 @@ ACT.inspSubmit = () => {
   const snap = { templateId: t.id, docNumber: t.docNumber, title: t.title, rev: r.rev, revDate: r.revDate, questions: JSON.parse(JSON.stringify(r.questions)) };
   const ins = { id, template: snap, schedule: s.id, asset: s.asset, site: s.site, target: s.target, date: v.idate || TODAY, inspector: S.ui.user, reviewer: v.reviewer || null, results: r.questions.map(q => ({ qid: q.id, result: INSP.answers[q.id].result, comment: INSP.answers[q.id].comment || '', photo: INSP.answers[q.id].photo || null })), summary: v.summary, actions: [], status: 'Completed', defects: [] };
   S.inspections.push(ins);
-  let oos = false;
+  let oos = false, reviews = 0;
   r.questions.forEach(q => { const an = INSP.answers[q.id]; if (an.result !== 'Fail') return;
     let d = null; if (a) { d = createDefect(a, `${q.text}: ${an.comment}`, an.oos ? 'Critical' : q.critical ? 'Major' : 'Minor', an.oos, id); ins.defects.push(d.id); if (an.oos) oos = true; }
+    if (d && !can('action.create')) { d.status = 'Awaiting Review'; d.reviewDue = addDays(TODAY, rules().defectReviewDays); reviews++; return; }   // operators report; a supervisor or manager decides on the action
     if (an.raise !== false) { const act = createAction({ source: 'Inspection', sourceId: id, title: `${s.target}: ${q.text} — failed`, action: an.comment, owner: an.owner || (a ? a.responsible : s.assignee), priority: an.priority || (q.critical ? 'Critical' : 'High'), site: s.site }); ins.actions.push(act.id); if (d) { d.action = act.id; d.status = 'Action Raised'; } }
   });
   const prev = s.nextDue; s.nextDue = addDays(ins.date, s.freqDays); s.lastDone = ins.date;
   if (a) assetHistory(a, `Inspection ${id} completed on ${t.docNumber} Rev ${r.rev} — ${ins.results.filter(x => x.result === 'Fail').length} failed item(s); next inspection ${fmt(s.nextDue)}`);
-  log(`Completed inspection ${id} (${s.target}) — ${ins.actions.length} action(s) raised`, '#/inspections/' + id);
+  if (reviews) addEvent(oos ? 'red' : 'amber', 'assets', `${reviews} defect(s) to review: ${a.tag}`, `Reported by ${pname(S.ui.user)} during ${id}. ${defectReviewers(a).map(pname).join(' / ')} to decide on corrective action.`, '#/assets/' + a.id + '?tab=defects', a.site);
+  log(`Completed inspection ${id} (${s.target}) — ${ins.actions.length} action(s) raised${reviews ? `, ${reviews} defect(s) sent for review` : ''}`, '#/inspections/' + id);
   INSP.sched = null; INSP.answers = {}; save();
-  toast(`${id} submitted. ${ins.actions.length ? ins.actions.length + ' corrective action(s) raised. ' : ''}${oos ? `<b>${esc(a.tag)} placed OUT OF SERVICE.</b> ` : ''}Next inspection scheduled ${fmt(s.nextDue)} (was ${fmt(prev)}).`);
+  toast(`${id} submitted. ${ins.actions.length ? ins.actions.length + ' corrective action(s) raised. ' : ''}${reviews ? `${reviews} defect(s) sent to ${esc(defectReviewers(a).map(pname).join(' / '))} for review. ` : ''}${oos ? `<b>${esc(a.tag)} placed OUT OF SERVICE.</b> ` : ''}Next inspection scheduled ${fmt(s.nextDue)} (was ${fmt(prev)}).`);
   navigate(isFieldUser() ? (s.asset ? '#/qr/' + s.asset : '#/field') : '#/inspections/' + id);
 };
 
@@ -218,7 +226,7 @@ ROUTES.inspections = function (p) {
   <div class="detail"><div class="stack"><div class="card"><div class="card-head"><h2>Checklist results</h2></div><div class="card-body flush"><table class="tbl stackable"><thead><tr><th>#</th><th>Item</th><th>Result</th><th>Comment / evidence</th></tr></thead><tbody>${i.template.questions.map((q, k) => { const r = i.results.find(x => x.qid === q.id) || {}; return `<tr class="${r.result === 'Fail' ? 'row-red' : ''}"><td data-label="#">${k + 1}</td><td data-label="Item">${esc(q.text)} ${q.critical ? badge('Critical', 'red', true) : ''}</td><td data-label="Result"><span class="${r.result === 'Pass' ? 'res-pass' : r.result === 'Fail' ? 'res-fail' : 'res-na'}">${esc(r.result || '—')}</span></td><td data-label="Comment">${esc(r.comment || '')}${r.photo ? `<div class="mt-s">${fileChip(r.photo)}</div>` : ''}</td></tr>`; }).join('')}</tbody></table></div></div>
     ${i.summary ? `<div class="card"><div class="card-head"><h2>Findings / comments</h2></div><div class="card-body">${esc(i.summary)}</div></div>` : ''}</div>
   <div class="stack"><div class="card"><div class="card-head"><h2>Inspection details</h2></div><div class="card-body"><div class="kv"><div>Date</div><div>${fmt(i.date)}</div><div>Asset / area</div><div>${i.asset ? `<a href="#/assets/${i.asset}">${esc(i.target)}</a>` : esc(i.target)}</div><div>Inspector</div><div>${esc(pname(i.inspector))}</div><div>Reviewer</div><div>${esc(pname(i.reviewer))}${i.reviewedOn ? ' · ' + fmt(i.reviewedOn) : ''}</div><div>Template</div><div>${esc(i.template.docNumber)} Rev ${i.template.rev} (${fmt(i.template.revDate)})</div></div></div></div>
-    <div class="card"><div class="card-head"><h2>Corrective actions</h2></div><div class="card-body">${i.actions.length ? `<ul class="link-list">${i.actions.map(x => { const a = byId('actions', x); return `<li><div class="ll-main"><a href="#/actions/${a.id}">${a.id}</a><div>${esc(a.title)} · ${esc(pname(a.owner))}</div></div>${sbadge(a.status)}</li>`; }).join('')}</ul>` : '<p class="muted">None raised.</p>'}${(i.defects || []).length ? `<p class="mt-s">Defects: ${i.defects.map(d => `<a href="#/assets/${i.asset}?tab=defects">${d}</a>`).join(', ')}</p>` : ''}</div></div></div></div>`;
+    <div class="card"><div class="card-head"><h2>Corrective actions</h2></div><div class="card-body">${i.actions.length ? `<ul class="link-list">${i.actions.map(x => { const a = byId('actions', x); return `<li><div class="ll-main"><a href="#/actions/${a.id}">${a.id}</a><div>${esc(a.title)} · ${esc(pname(a.owner))}</div></div>${sbadge(a.status)}</li>`; }).join('')}</ul>` : `<p class="muted">${(i.defects || []).some(d => (byId('defects', d) || {}).status === 'Awaiting Review') ? 'None raised yet — the defects are waiting for a supervisor or manager to review them.' : 'None raised.'}</p>`}${(i.defects || []).length ? `<ul class="link-list mt-s">${i.defects.map(x => { const d = byId('defects', x); return d ? `<li><div class="ll-main"><a href="#/assets/${i.asset}?tab=defects">${d.id}</a><div>Defect · ${esc(d.description)}${d.review ? ' · ' + esc(d.review.decision) : ''}</div></div>${sbadge(d.status)}</li>` : ''; }).join('')}</ul>` : ''}</div></div></div></div>`;
   return { title: i.id, nav: 'inspections', crumbs: [['Inspections', '#/inspections/records'], [i.id, '#']], html };
 };
 ACT.inspReview = (el) => { const i = byId('inspections', el.dataset.id); openModal({ title: 'Review & sign off inspection', sub: i.id, body: fld({ name: 'comment', label: 'Reviewer comment', type: 'textarea' }), buttons: [{ label: 'Sign off', cls: 'success', onClick: m => { i.status = 'Reviewed'; i.reviewer = S.ui.user; i.reviewedOn = TODAY; i.reviewComment = readForm(m).comment; log(`Reviewed inspection ${i.id}`, '#/inspections/' + i.id); save(); toast('Inspection reviewed and signed off.'); rerender(); } }] }); };
@@ -316,5 +324,58 @@ ACT.injClassify = (el) => {
       log(`${what} — ${i.id}`, '#/incidents/' + i.id); save();
       toast(['Lost Time Injury', 'Fatality'].includes(v.classification) && i.reporting.required === 'To be determined' ? `${what}. Check whether it must be reported to the authorities.` : what + '.');
       rerender();
+    } }] });
+};
+
+/* ---------------- Correcting type / severity ---------------- */
+ACT.incCorrect = (el) => {
+  const i = byId('incidents', el.dataset.id), sev = [1, 2, 3, 4, 5].map(n => ({ value: n, label: SEV_LABELS[n] }));
+  openModal({ title: 'Correct type / severity', sub: `${i.id} — as reported by ${pname(i.reporter)}. The original values stay in the history.`,
+    body: `<div class="form-grid">${fld({ name: 'type', label: 'Incident type', type: 'select', options: opts(INC_TYPES, i.type), required: true })}${fld({ name: 'actualSev', label: 'Actual severity', type: 'select', options: opts(sev, i.actualSev), required: true })}${fld({ name: 'potentialSev', label: 'Potential severity (worst credible)', type: 'select', options: opts(sev, i.potentialSev), required: true })}${fld({ name: 'reason', label: 'Reason for the correction', type: 'textarea', required: true, full: true, rows: 2 })}</div>`,
+    buttons: [{ label: 'Save correction', cls: 'primary', onClick: m => {
+      if (!validateForm(m)) return false;
+      const v = readForm(m), ch = [];
+      if (v.type !== i.type) ch.push(`type ${i.type} → ${v.type}`);
+      if (+v.actualSev !== i.actualSev) ch.push(`actual severity ${SEV_LABELS[i.actualSev]} → ${SEV_LABELS[+v.actualSev]}`);
+      if (+v.potentialSev !== i.potentialSev) ch.push(`potential severity ${SEV_LABELS[i.potentialSev]} → ${SEV_LABELS[+v.potentialSev]}`);
+      if (!ch.length) { toast('Nothing has changed.', 'info'); return false; }
+      if (v.type === 'Injury' && !i.injury) i.injury = i.injuryRemoved || { nature: '', body: '', firstAid: '', sentForMedical: 'Not known', medical: false, fatal: false, daysLost: 0, restrictedDays: 0, rtw: null, classification: null, classHistory: [] };
+      if (v.type !== 'Injury' && i.injury) { i.injuryRemoved = i.injury; i.injury = null; }
+      Object.assign(i, { type: v.type, actualSev: +v.actualSev, potentialSev: +v.potentialSev });
+      i.history.push({ ts: nowTs(), by: S.ui.user, action: 'Corrected: ' + ch.join('; '), comment: v.reason });
+      log(`Corrected ${i.id}: ${ch.join('; ')}`, '#/incidents/' + i.id); save();
+      toast(v.type === 'Injury' && !i.injury.classification ? 'Corrected. Add the injury details and classify the injury.' : 'Correction saved.'); rerender();
+    } }] });
+};
+
+/* ---------------- Effectiveness review after closure ---------------- */
+function effectivenessCard(i) {
+  const e = i.effectiveness; if (!e) return '';
+  const past = (i.effHistory || []).filter(x => x.done);
+  return `<div class="card"><div class="card-head"><h2>Effectiveness review</h2>${e.done ? sbadge(e.done.result) : effOverdue(i) ? badge('Overdue', 'red') : badge('Due ' + fmt(e.due), 'amber')}</div><div class="card-body">
+    ${e.done ? `<div class="kv"><div>Result</div><div>${sbadge(e.done.result)}</div><div>Reviewed by</div><div>${esc(pname(e.done.by))} · ${fmtTs(e.done.ts)}</div><div>Comment</div><div>${esc(e.done.comment)}</div>${e.done.evidence ? `<div>Evidence</div><div>${fileChip(e.done.evidence)}</div>` : ''}</div>`
+      : `<p class="muted">After closure, check that the corrective actions actually worked: has the problem come back? Due ${fmt(e.due)}.</p>`}
+    ${past.length ? `<ul class="link-list mt-s">${past.map(x => `<li><div class="ll-main"><b>Earlier review: ${esc(x.done.result)}</b><div>${esc(pname(x.done.by))} · ${fmtTs(x.done.ts)} — ${esc(x.done.comment)}</div></div></li>`).join('')}</ul>` : ''}
+  </div></div>`;
+}
+ACT.incEffect = (el) => {
+  const i = byId('incidents', el.dataset.id);
+  openModal({ title: 'Effectiveness review', sub: `${i.id} — did the corrective actions remove the problem?`,
+    body: `<div class="alert info">${icon('info')}<div>Root cause: <b>${esc(i.investigation ? i.investigation.root : '—')}</b><br>Actions: ${incActions(i).map(a => `${a.id} (${esc(a.status)})`).join(', ') || 'none'}</div></div>
+      <div class="form-grid">${fld({ name: 'result', label: 'Result', type: 'select', options: opts([{ value: 'Effective', label: 'Effective — the problem has not come back' }, { value: 'Not effective', label: 'Not effective — reopen the incident' }]), required: true, full: true })}${fld({ name: 'comment', label: 'What did you check?', type: 'textarea', required: true, full: true, rows: 3 })}${fld({ name: 'evidence', label: 'Evidence (optional)', type: 'file', full: true })}</div>`,
+    buttons: [{ label: 'Save review', cls: 'primary', onClick: m => {
+      if (!validateForm(m)) return false;
+      const v = readForm(m);
+      i.effectiveness.done = { by: S.ui.user, ts: nowTs(), result: v.result, comment: v.comment, evidence: v.evidence || null };
+      if (v.result === 'Effective') {
+        i.history.push({ ts: nowTs(), by: S.ui.user, action: 'Effectiveness review: corrective actions effective', comment: v.comment });
+        log(`Effectiveness review for ${i.id}: effective`, '#/incidents/' + i.id); save(); toast('Effectiveness review recorded.'); rerender(); return;
+      }
+      i.effHistory = (i.effHistory || []).concat([i.effectiveness]); i.effectiveness = null;
+      i.status = 'Actions in Progress'; i.closure = null;
+      i.history.push({ ts: nowTs(), by: S.ui.user, action: 'Effectiveness review: NOT effective — incident reopened', comment: v.comment });
+      addEvent('red', 'incidents', `Incident reopened: ${i.id}`, `Corrective actions were not effective — ${i.title}.`, '#/incidents/' + i.id, i.site);
+      log(`Effectiveness review for ${i.id}: not effective — reopened`, '#/incidents/' + i.id); save(); toast('Incident reopened. Raise a new corrective action.'); rerender();
+      setTimeout(() => ACT.incAction({ dataset: { id: i.id } }), 60);
     } }] });
 };

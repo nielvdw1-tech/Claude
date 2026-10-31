@@ -341,6 +341,44 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     ok('S8 the incident page shows the alert status', (await p.innerText('#content')).includes('Safety alert to staff'));
   }
 
+  /* ---------------- R. Defect review, escalation, corrections, effectiveness ---------------- */
+  {
+    const tryReview = async () => { await act('[data-act=defectReview]'); };
+    await asUser('P-014'); await go('#/field'); await act('.big-actions button:has-text("Scan asset QR code")'); await msel('pick', 'AS-004'); await mbtn('Open asset');
+    await act('.big-actions button:has-text("Start inspection")');
+    const qv = await S(`tplCurrent(byId('templates','TPL-VEH')).questions.map(q=>q.id)`);
+    for (const q of qv) await p.click(`[data-act=qAns][data-q="${q}"][data-v="${q === qv[0] ? 'Fail' : 'Pass'}"]`);
+    const ownerPicker = await has('[data-k=owner]');
+    await p.fill(`#c-${qv[0]}`, 'Hooter not working'); await p.check('[name=declare]'); await p.click('[data-act=inspSubmit]'); await p.waitForTimeout(250);
+    const ins = await S('S.inspections[S.inspections.length-1]'), did = ins.defects[0];
+    ok('R1 an operator only reports the failure: no owner or priority to pick, no action raised', !ownerPicker && ins.actions.length === 0 && (await S(`byId('defects','${did}').status`)) === 'Awaiting Review', did);
+    await asUser('P-005'); await go('#/notifications/tasks');
+    ok('R2 the branch manager gets a task to review the defect', (await p.innerText('#content')).includes(`Review defect ${did}`));
+    await go('#/assets/AS-004?tab=defects'); await p.click(`[data-act=defectReview][data-id="${did}"]`); await p.waitForTimeout(150);
+    await msel('decision', 'Fixed on the spot — close the defect'); await mfill('comment', 'Fuse replaced; hooter tested.'); await mbtn('Continue');
+    const blocked = await modalOpen();
+    await mfile('.modal [name=evidence]', 'hooter_fuse.jpg'); await mbtn('Continue');
+    ok('R3 a defect can be closed as fixed on the spot only with evidence', blocked && (await S(`byId('defects','${did}').status`)) === 'Closed' && (await S(`byId('defects','${did}').review.decision`)) === 'Fixed on the spot');
+    await p.click('[data-act=defectReview][data-id="DF-303"]'); await p.waitForTimeout(150);
+    await msel('decision', 'Raise a corrective action'); await mbtn('Continue'); await p.waitForTimeout(200);
+    await mfill('action', 'Replace both rear tyres.'); await msel('owner', 'P-007'); await mbtn('Raise action');
+    ok('R4 the reviewer raises the corrective action and chooses the owner', (await S("byId('defects','DF-303').status")) === 'Action Raised' && (await S("byId('actions', byId('defects','DF-303').action).owner")) === 'P-007' && (await S("byId('defects','DF-303').review.decision")).includes('raised'));
+    await go('#/notifications/tasks');
+    ok('R5 an incident without an investigator is escalated to the branch manager', (await p.innerText('#content')).includes('Escalated: INC-2026-006') && (await S("byId('incidents','INC-2026-006').history.some(h=>h.by==='System'&&h.action.startsWith('Escalated'))")));
+    await asUser('P-002'); await go('#/incidents/INC-2026-007');
+    ok('R6 an overdue investigation is escalated and shown on the incident', (await p.innerText('#content')).includes('Investigation overdue'));
+    await go('#/incidents/INC-2026-006'); await btn('Correct type / severity'); await msel('potentialSev', '5'); await mbtn('Save correction');
+    const needReason = await modalOpen(); await mfill('reason', 'A generator falling off the vehicle on the N3 could have killed another road user.'); await mbtn('Save correction');
+    ok('R7 the investigator corrects the severity with a reason; history keeps the original', needReason && (await S("byId('incidents','INC-2026-006').potentialSev")) === 5 && (await p.innerText('#content')).includes('Corrected: potential severity'));
+    await go('#/notifications/tasks');
+    ok('R8 an effectiveness review falls due after closure', (await p.innerText('#content')).includes('Effectiveness review: INC-2026-003'));
+    await go('#/incidents/INC-2026-003'); await btn('Effectiveness review'); await msel('result', 'Not effective'); await mfill('comment', 'Another oil leak from a returned unit last week.'); await mbtn('Save review'); await p.waitForTimeout(200);
+    ok('R9 a "not effective" review reopens the incident and prompts a new action', (await S("byId('incidents','INC-2026-003').status")) === 'Actions in Progress' && await modalOpen());
+    await p.keyboard.press('Escape');
+    await go('#/admin/rules'); await p.fill('#rulesForm [name=defectReviewDays]', '5'); await act('[data-act=saveRules]');
+    ok('R10 review periods are set in Administration', (await S('S.config.reviewRules.defectReviewDays')) === 5);
+  }
+
   /* ---------------- L. Company logo ---------------- */
   {
     await asUser('P-002'); await go('#/dashboard');
