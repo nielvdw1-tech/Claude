@@ -743,3 +743,17 @@ button.file-chip svg.ic.sm { width: 13px; height: 13px; }
 .sig-show { display: inline-flex; flex-direction: column; gap: 2px; }
 .sig-show img { max-height: 60px; max-width: 220px; background: #fff; border: 1px solid var(--line); border-radius: 6px; padding: 2px 6px; }
 .sig-show small { font-size: 11px; color: var(--muted); }
+
+/* Inspection photos: take with the camera or upload; thumbnails open full size */
+.vh { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; pointer-events: none; }
+.photo-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.photo-btns .btn { position: relative; cursor: pointer; }
+.photo-btns .btn:focus-within { outline: 2px solid var(--accent, #005FEF); outline-offset: 2px; }
+.photo-strip { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.ph-thumb { position: relative; display: inline-block; }
+.ph-thumb > button[data-act=viewFile] { display: grid; place-items: center; width: 76px; height: 76px; padding: 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--surface-2); cursor: zoom-in; }
+.ph-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ph-thumb small { font-size: 9px; padding: 2px; word-break: break-all; color: var(--muted); }
+.ph-del { position: absolute; top: -7px; right: -7px; width: 24px; height: 24px; border-radius: 50%; border: 0; background: var(--bad); color: #fff; font-size: 15px; line-height: 1; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+.print-photos { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.print-photos img { height: 26mm; max-width: 40mm; object-fit: cover; border: 0.3mm solid #999; }

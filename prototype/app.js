@@ -59,9 +59,17 @@ function addEvent(sev, cat, title, text, link, site) { S.events.unshift({ key: '
 function fileMeta(f) { return f ? storeFile(f) : null; }   // storeFile (mod-files.js) keeps the content in browser storage for viewing
 function fsize(b) { if (!b && b !== 0) return ''; return b > 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB'; }
 /* A clickable file chip; ctx = { doc, ri } ties it to a document revision so the viewer can show its header */
+function fileAttrs(f, ctx) {
+  return `data-act="viewFile" data-name="${esc(f.name)}" data-type="${esc(f.type || '')}" data-size="${f.size || 0}"${f.blobId ? ` data-blob="${f.blobId}"` : ''}${f.seeded ? ' data-seeded="1"' : ''}${f.tooLarge ? ' data-too-large="1"' : ''}${ctx && ctx.doc ? ` data-doc="${ctx.doc}" data-ri="${ctx.ri}"` : ''}`;
+}
+// Photo thumbnails (click to open full size); editQ adds a remove button for the inspection form.
+function photoStrip(list, editQ) {
+  if (!list || !list.length) return '';
+  return `<div class="photo-strip">${list.map((f, k) => `<span class="ph-thumb"><button type="button" ${fileAttrs(f)} title="Open ${esc(f.name)}">${f.thumb ? `<img src="${f.thumb}" alt="Photo ${k + 1}">` : `${icon('file', 'sm')}<small>${esc(f.name)}</small>`}</button>${editQ ? `<button type="button" class="ph-del" data-act="qPhotoDel" data-q="${editQ}" data-i="${k}" aria-label="Remove photo ${k + 1}">×</button>` : ''}</span>`).join('')}</div>`;
+}
 function fileChip(f, ctx) {
   if (!f) return '<span class="muted">No file</span>';
-  const attrs = `data-act="viewFile" data-name="${esc(f.name)}" data-type="${esc(f.type || '')}" data-size="${f.size || 0}"${f.blobId ? ` data-blob="${f.blobId}"` : ''}${f.seeded ? ' data-seeded="1"' : ''}${f.tooLarge ? ' data-too-large="1"' : ''}${ctx && ctx.doc ? ` data-doc="${ctx.doc}" data-ri="${ctx.ri}"` : ''}`;
+  const attrs = fileAttrs(f, ctx);
   return `<button type="button" class="file-chip" ${attrs} title="Open ${esc(f.name)}">${icon('file', 'sm')}<span class="fc-name">${esc(f.name)}</span><span class="muted">${fsize(f.size)}</span><span class="fc-note">${icon('eye', 'sm')}View</span></button>`;
 }
 function uniq(a) { return [...new Set(a)]; }

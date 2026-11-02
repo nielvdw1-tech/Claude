@@ -43,6 +43,16 @@ function storeFile(f) {
   FILE_PENDING[id] = idbPut(id, f).catch(e => { console.warn('Could not keep file in browser storage', e); meta.saveFailed = true; }).finally(() => { setTimeout(() => delete FILE_PENDING[id], 0); });
   return meta;
 }
+// Small preview of an image (kept with the record so photos show instantly; the full file is in browser storage).
+function makeThumb(file, max = 320) {
+  return new Promise(res => {
+    if (!file || !/^image\//.test(file.type)) return res(null);
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = () => { const k = Math.min(1, max / Math.max(img.width, img.height)), c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url); res(c.toDataURL('image/jpeg', 0.75)); };
+    img.onerror = () => { URL.revokeObjectURL(url); res(null); };
+    img.src = url;
+  });
+}
 function guessType(name) {
   const ext = String(name).split('.').pop().toLowerCase();
   return { pdf: 'application/pdf', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', txt: 'text/plain', csv: 'text/csv', md: 'text/plain', docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation' }[ext] || '';
