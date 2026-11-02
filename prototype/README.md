@@ -122,6 +122,7 @@ Defects can also be reported directly from the asset page or its **QR page** (e.
 Switch to **Tebogo Molefe** (Employee). The menu shows only **Scan & inspect** and **Report incident**.
 1. **Scan asset QR code**, then choose **LDV-03**. The asset's QR page shows its safety status with two buttons: **Start inspection** and **Report incident**.
 2. Complete the inspection. Any failed items still raise defects and corrective actions, which go to managers and supervisors.
+   - Before submitting, the inspector ticks the declaration and **signs on screen** with a finger or mouse. **An inspection can't be submitted without a signature.** The signature is stored with the record, with the inspector's name and the time, and appears on the inspection record and in the *Inspector signature* box of the printed report.
 3. **Report incident** opens the phone-friendly form. Reported incidents are listed on the employee's home screen.
 
 Other pages are closed to employees. An inspection can only be started from the QR page of that asset. Employees are not offered as owners of corrective actions.
@@ -190,6 +191,6 @@ prototype/
 └── README.md                     This file
 ```
 
-**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 106 workflow outcomes.
+**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 111 workflow outcomes.
 
 The earlier full HSEQ prototype, with legal, risk, people, PPE, chemicals, emergency and audits, is preserved in git history at commit `26b59bc`.

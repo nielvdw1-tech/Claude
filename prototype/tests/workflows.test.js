@@ -22,6 +22,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
   const msel = async (name, val) => { await p.selectOption(`.modal [name="${name}"]`, val); };
   const mfile = async (sel = '.modal input[type=file]', name = 'evidence.pdf') => { await p.setInputFiles(sel, { name, mimeType: 'application/pdf', buffer: Buffer.from('demo evidence') }); };
   const asUser = async (id) => { await act('[data-act=userMenu]'); await act(`.dropdown [data-act=switchUser][data-id="${id}"]`); };
+  const sign = async () => { const b = await (await p.$('#sigPad')).boundingBox(); await p.mouse.move(b.x + 20, b.y + 100); await p.mouse.down(); for (let k = 1; k <= 12; k++) await p.mouse.move(b.x + 20 + k * 15, b.y + 100 - (k % 2) * 40); await p.mouse.up(); await p.waitForTimeout(50); };
   const modalOpen = async () => (await p.$('.modal')) !== null;
   const has = async (sel) => (await p.$(sel)) !== null;
   const ownerCompletes = async (aid) => {
@@ -101,7 +102,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     for (const q of qs) await p.click(`[data-act=qAns][data-q="${q}"][data-v="${q === 'q1' ? 'Fail' : 'Pass'}"]`);
     await p.fill('#c-q1', 'Parking brake does not hold on ramp.');
     const oosChecked = await p.isChecked('[data-qf="q1"][data-k="oos"]');
-    await p.check('[name=declare]'); await p.click('[data-act=inspSubmit]'); await p.waitForTimeout(200);
+    await p.check('[name=declare]'); await sign(); await p.click('[data-act=inspSubmit]'); await p.waitForTimeout(200);
     const ins = await S(`S.inspections[S.inspections.length-1]`);
     ok('C2 inspection submitted on the current controlled template revision', ins.template.rev === 3 && ins.results.find(r => r.qid === 'q1').result === 'Fail', ins.id);
     ok('C3 failed critical item → defect + corrective action; asset OUT OF SERVICE', oosChecked && ins.actions.length === 1 && ins.defects.length === 1 && (await S(`byId('assets','AS-002').status`)) === 'Out of Service');
@@ -282,9 +283,20 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await act('.big-actions button:has-text("Start inspection")');
     const qv = await S(`tplCurrent(byId('templates','TPL-VEH')).questions.map(q=>q.id)`);
     for (const q of qv) await p.click(`[data-act=qAns][data-q="${q}"][data-v="Pass"]`);
+    const before = await S('S.inspections.length');
     await p.check('[name=declare]'); await p.click('[data-act=inspSubmit]'); await p.waitForTimeout(250);
+    ok('SG1 an inspection cannot be submitted without the inspector signature', (await S('S.inspections.length')) === before && (await p.$eval('#sigField', e => e.classList.contains('invalid'))));
+    await sign(); await act('[data-act=sigClear]'); await p.click('[data-act=inspSubmit]'); await p.waitForTimeout(150);
+    ok('SG2 clearing the signature means the inspector must sign again', (await S('S.inspections.length')) === before);
+    await sign(); await p.click('[data-act=inspSubmit]'); await p.waitForTimeout(250);
     const lastIns = await S('S.inspections[S.inspections.length-1]');
+    ok('SG3 the signature is stored with the inspection, with name and time', !!lastIns.signature && lastIns.signature.by === 'P-014' && lastIns.signature.image.startsWith('data:image/png') && !!lastIns.signature.ts);
     ok('H7 employee completes the inspection after scanning and returns to the QR page', lastIns.inspector === 'P-014' && lastIns.asset === 'AS-004' && (await p.evaluate(() => location.hash)) === '#/qr/AS-004');
+    await asUser('P-002'); await go('#/inspections/' + lastIns.id);
+    ok('SG4 the signature shows on the inspection record', await has('.sig-show img'));
+    await go('#/print/' + lastIns.id);
+    ok('SG5 the signature prints in the inspector signature box', await has('.sign-box img'));
+    await asUser('P-014');
     await go('#/field'); await act('.big-actions button:has-text("Report incident")');
     await p.fill('#incForm [name=title]', 'Oil on floor at bay 4'); await p.fill('#incForm [name=location]', 'Bay 4'); await p.fill('#incForm [name=description]', 'Slippery patch.'); await p.fill('#incForm [name=immediate]', 'Cordoned off.');
     await p.click('[data-act=incSubmit]'); await p.waitForTimeout(250);
@@ -349,7 +361,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     const qv = await S(`tplCurrent(byId('templates','TPL-VEH')).questions.map(q=>q.id)`);
     for (const q of qv) await p.click(`[data-act=qAns][data-q="${q}"][data-v="${q === qv[0] ? 'Fail' : 'Pass'}"]`);
     const ownerPicker = await has('[data-k=owner]');
-    await p.fill(`#c-${qv[0]}`, 'Hooter not working'); await p.check('[name=declare]'); await p.click('[data-act=inspSubmit]'); await p.waitForTimeout(250);
+    await p.fill(`#c-${qv[0]}`, 'Hooter not working'); await p.check('[name=declare]'); await sign(); await p.click('[data-act=inspSubmit]'); await p.waitForTimeout(250);
     const ins = await S('S.inspections[S.inspections.length-1]'), did = ins.defects[0];
     ok('R1 an operator only reports the failure: no owner or priority to pick, no action raised', !ownerPicker && ins.actions.length === 0 && (await S(`byId('defects','${did}').status`)) === 'Awaiting Review', did);
     await asUser('P-005'); await go('#/notifications/tasks');

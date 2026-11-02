@@ -8,7 +8,7 @@ Status key:
 - **Not implemented**
 
 "Tested" means one of the following:
-- the automated browser test (`tests/workflows.test.js`, **106/106 passing**, no JavaScript errors);
+- the automated browser test (`tests/workflows.test.js`, **111/111 passing**, no JavaScript errors);
 - the route smoke test (77 routes plus a second organisation, no errors);
 - the mobile layout check (31 routes at 390 px, no horizontal overflow).
 
@@ -36,6 +36,7 @@ Status key:
 | QR identifier and mobile asset page | Partial | Simulated QR pattern and scan dialog |
 | Scheduled inspections against controlled, revisioned checklist templates | Implemented | Header locked; history keeps the template revision used |
 | Pass / Fail / N/A, comments, photos | Implemented | Photos kept as file names only |
+| Inspector signs on screen before an inspection can be submitted; signature shown on the record and the printed report | Partial | SG1–SG5. A drawn signature with name and time; not a certified electronic signature |
 | Failed item → defect + corrective action | Implemented | C3 |
 | Critical failure → asset out of service; return to service only after verification | Implemented | C3, C5, C8 |
 | Defects reported directly (asset / QR page) | Implemented | C12 |
