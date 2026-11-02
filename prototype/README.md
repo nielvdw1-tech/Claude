@@ -121,7 +121,7 @@ Defects can also be reported directly from the asset page or its **QR page** (e.
 ### Employees (field access)
 Switch to **Tebogo Molefe** (Employee). The menu shows only **Scan & inspect** and **Report incident**.
 1. **Scan asset QR code**, then choose **LDV-03**. The asset's QR page shows its safety status with two buttons: **Start inspection** and **Report incident**.
-2. Complete the inspection. Any failed items still raise defects and corrective actions, which go to managers and supervisors.
+2. Complete the inspection. Failed items become defects that a supervisor or branch manager reviews and turns into corrective actions.
    - Before submitting, the inspector ticks the declaration and **signs on screen** with a finger or mouse. **An inspection can't be submitted without a signature.** The signature is stored with the record, with the inspector's name and the time, and appears on the inspection record and in the *Inspector signature* box of the printed report.
 3. **Report incident** opens the phone-friendly form. Reported incidents are listed on the employee's home screen.
 
