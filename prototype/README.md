@@ -27,7 +27,7 @@ To start again, open the user menu (top right) and choose **Reset demo data**.
 | Demo user | Role | Typical part in the demos |
 |---|---|---|
 | Johan van Wyk (default) | HSEQ Manager | Approver, issues documents, verifies actions, investigates incidents |
-| Thandi Mokoena | Managing Director | Final approver for policies and safe work procedures |
+| Thandi Mokoena | Managing Director | Final approver for policies and safe work procedures; raises, assigns and verifies corrective actions |
 | Pieter Botha | Operations Manager | Operational reviewer on approval routes |
 | Ayesha Khan | VDW Safety Consultant | **Full access** (same as HSEQ Manager): approvals, issuing, verification, investigations, administration |
 | Sipho Ndlovu / Lerato Dlamini | Branch Managers | Document authors; action owners |
@@ -80,7 +80,7 @@ Default routes per category are set in **Administration → Approval routes**.
 3. Submit. A **defect** and a **corrective action** are raised, **FL-02 is OUT OF SERVICE**, and the next inspection is scheduled.
 4. **Return to service** is blocked until the action is verified.
 5. Open the action. Use **Act as owner** to work it: **Acknowledge → Start work → Upload evidence → Submit for verification**.
-6. Switch back to Johan and choose **Review evidence & verify**. You can **return it** for further work (Rejected), or **accept** it and tick **Authorise return to service**. Then **Close action**. Completing an action never closes it on its own.
+6. Switch back to Johan and choose **Review evidence & verify**. **Verification must be independent:** the owner of an action can never verify it, even if their role allows verifying. The owner sees who can verify instead. You can **return it** for further work (Rejected), or **accept** it and tick **Authorise return to service**. Then **Close action**. Completing an action never closes it on its own.
 7. The asset's **history** shows the whole story. **Controlled report / print** produces the inspection report with "Page X of Y" on every page.
 
 Defects can also be reported directly from the asset page or its **QR page** (e.g. `#/qr/AS-012`).
@@ -192,6 +192,6 @@ prototype/
 └── README.md                     This file
 ```
 
-**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 120 workflow outcomes.
+**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 124 workflow outcomes.
 
 The earlier full HSEQ prototype, with legal, risk, people, PPE, chemicals, emergency and audits, is preserved in git history at commit `26b59bc`.

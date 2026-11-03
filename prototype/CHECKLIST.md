@@ -8,7 +8,7 @@ Status key:
 - **Not implemented**
 
 "Tested" means one of the following:
-- the automated browser test (`tests/workflows.test.js`, **120/120 passing**, no JavaScript errors);
+- the automated browser test (`tests/workflows.test.js`, **124/124 passing**, no JavaScript errors);
 - the route smoke test (77 routes plus a second organisation, no errors);
 - the mobile layout check (31 routes at 390 px, no horizontal overflow).
 
@@ -43,6 +43,8 @@ Status key:
 | Operators only report failures; a supervisor or manager reviews each defect and raises the corrective action, closes it as fixed on the spot (with evidence) or links it to an existing action; review period with escalation | Implemented | R1–R4, R10 |
 | Corrective action workflow: Assigned → Acknowledged → In progress → Evidence → Submitted → Verified → Closed | Implemented | C6–C9 |
 | Verifier can return insufficient evidence; completion ≠ closure | Implemented | C7 |
+| Independent verification enforced: the owner can never verify their own action | Implemented | V2–V4 |
+| Managing Director can raise, assign and verify corrective actions | Implemented | V1, V4 |
 | Overdue tracking and escalation | Partial | Overdue flags plus manual escalation; automatic escalation needs a server |
 | Printable controlled inspection report with Page X of Y | Implemented | Page numbers need Chrome or Edge |
 | Maintenance scheduling and completion | Implemented | |

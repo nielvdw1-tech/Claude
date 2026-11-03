@@ -413,6 +413,24 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     ok('R10 review periods are set in Administration', (await S('S.config.reviewRules.defectReviewDays')) === 5);
   }
 
+  /* ---------------- V. Managing Director raises actions; no self-verification ---------------- */
+  {
+    await asUser('P-001'); await go('#/actions');
+    const canRaise = await has('.page-head button:has-text("New action")');
+    await btn('New action'); await mbtn('Continue'); await p.waitForTimeout(100);
+    await mfill('title', 'Repaint faded walkway at dispatch'); await mfill('action', 'Repaint the pedestrian walkway lines at the dispatch bay.'); await msel('owner', 'P-002'); await mbtn('Raise action');
+    const vid = await S('S.actions[S.actions.length-1].id');
+    ok('V1 the Managing Director can raise a corrective action and assign the owner', canRaise && (await S(`byId('actions','${vid}').owner`)) === 'P-002' && (await S(`byId('actions','${vid}').createdBy`)) === 'P-001', vid);
+    await ownerCompletes(vid); await go('#/actions/' + vid);
+    const btnLocked = await p.$eval('.sh-actions button:has-text("Verification by someone else")', e => e.disabled).catch(() => false);
+    await S(`ACT.actVerify({ dataset: { id: '${vid}' } })`); await p.waitForTimeout(100);
+    ok('V2 the owner cannot verify their own action, even with verification rights', btnLocked && !(await modalOpen()) && (await S(`byId('actions','${vid}').status`)) === 'Submitted for Verification');
+    ok('V3 the owner is told who can verify instead', (await p.innerText('#content')).includes('you cannot verify it') && (await p.innerText('#content')).includes('Thandi Mokoena'));
+    await go('#/notifications/tasks');
+    const ownTask = (await p.innerText('#content')).includes(`Verify ${vid}`);
+    ok('V4 another verifier verifies it (the MD)', !ownTask && (await verify(vid, 'P-001')) === 'Verified');
+  }
+
   /* ---------------- L. Company logo ---------------- */
   {
     await asUser('P-002'); await go('#/dashboard');

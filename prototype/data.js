@@ -15,7 +15,7 @@ function buildSeed() {
   const T = (n, h = 9, m = 0) => { const x = new Date(base); x.setDate(x.getDate() + n); x.setHours(h, m, 0, 0); return x.toISOString(); };
   const demoFile = (name, kb) => ({ name, size: kb * 1024, type: name.endsWith('.pdf') ? 'application/pdf' : 'application/octet-stream', demo: true, seeded: true });
 
-  const S = { version: 10, seededOn: D(0) };
+  const S = { version: 11, seededOn: D(0) };
 
   /* ---------------- Organisations, sites, departments ---------------- */
   S.orgs = [
@@ -55,7 +55,7 @@ function buildSeed() {
 
   /* ---------------- Roles & permissions (client-side DEMO only) ---------------- */
   S.roles = [
-    { name: 'Managing Director', desc: 'Organisation-wide visibility; final approver for policies.', perms: ['notice.publish', 'view.all', 'doc.approve', 'action.verify', 'report.view'] },
+    { name: 'Managing Director', desc: 'Organisation-wide visibility; final approver for policies; can raise, assign and verify corrective actions.', perms: ['notice.publish', 'view.all', 'doc.approve', 'action.create', 'action.verify', 'report.view'] },
     { name: 'HSEQ Manager', desc: 'Owns document control, verification of corrective actions, incident investigation and configuration.', perms: ['notice.publish', 'view.all', 'doc.create', 'doc.approve', 'doc.issue', 'action.create', 'action.verify', 'incident.investigate', 'admin', 'report.view', 'inspect'] },
     { name: 'Safety Consultant', desc: 'External VDW consultant with full access: documents, approvals and issue, inspections, corrective actions, incidents, reports and configuration.', perms: ['notice.publish', 'view.all', 'doc.create', 'doc.approve', 'doc.issue', 'action.create', 'action.verify', 'incident.investigate', 'admin', 'report.view', 'inspect'] },
     { name: 'Branch Manager', desc: 'Manages assets, inspections, actions and incidents at the assigned branch; approves branch documents.', perms: ['notice.publish', 'view.branch', 'doc.create', 'doc.approve', 'action.create', 'action.verify', 'incident.investigate', 'report.view', 'inspect'] },
