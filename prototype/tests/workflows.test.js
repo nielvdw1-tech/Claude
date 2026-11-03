@@ -454,6 +454,21 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     ok('DB6 the LTI trend shows days since the last LTI, LTIs and shifts lost per month', ltiCols === 24 && ltiTxt.includes('Days since last LTI') && ltiTxt.includes(String(lti.since)) && ltiTxt.includes(lti.id) && /shifts lost per month/i.test(ltiTxt), `${lti.n12} LTI(s), ${lti.since} days since ${lti.id}`);
   }
 
+  /* ---------------- QL. Quick links per user ---------------- */
+  {
+    const links = async () => p.$$eval('.ql-item', e => e.map(x => x.innerText.replace(/\s+/g, ' ').trim()));
+    await asUser('P-002'); await go('#/dashboard'); await p.waitForTimeout(200);
+    const hseq = await links(), tasks = await S('myTasks().length');
+    ok('QL1 the HSEQ Manager gets links for their role, with counts of waiting work first', hseq[0] === `My tasks ${tasks}` && hseq.some(x => x.startsWith('Administration')) && hseq.some(x => x.startsWith('Upload document')) && hseq.some(x => x.startsWith('Actions to verify')), hseq.join(' | '));
+    await asUser('P-007'); await go('#/dashboard'); await p.waitForTimeout(200);
+    const sup = await links();
+    ok('QL2 a supervisor only gets the links their role allows', !sup.some(x => /Administration|Upload document|Actions to verify|Publish notice/.test(x)) && sup.some(x => x.startsWith('My inspections due')) && sup.some(x => x.startsWith('Raise corrective action')), sup.join(' | '));
+    await p.click('.ql-item[data-act=actionNew]'); await p.waitForTimeout(150);
+    const modal = await modalOpen(); await p.keyboard.press('Escape');
+    await p.click('.ql-item[href="#/inspections/schedule"]'); await p.waitForTimeout(150);
+    ok('QL3 quick links open the action form or the page directly', modal && (await p.evaluate(() => location.hash)) === '#/inspections/schedule');
+  }
+
   /* ---------------- L. Company logo ---------------- */
   {
     await asUser('P-002'); await go('#/dashboard');

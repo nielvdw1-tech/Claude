@@ -880,3 +880,13 @@ button.file-chip svg.ic.sm { width: 13px; height: 13px; }
 .cs-hero .pie-v { font-size: 40px; }
 .cs-hero .cs-k, .cs-hero .cs-note { text-align: center; justify-content: center; }
 @media print { .pie circle { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+
+/* Dashboard quick links (per user) */
+.ql { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 6px; }
+.ql-item { display: inline-flex; align-items: center; gap: 7px; padding: 7px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--fg); font: inherit; font-size: 13px; font-weight: 550; text-decoration: none; cursor: pointer; transition: border-color .15s, background .15s; }
+.ql-item:hover { border-color: var(--line-strong); background: var(--surface-2); text-decoration: none; }
+.ql-item svg { color: var(--muted); }
+.ql-item.has-n { border-color: var(--brand); }
+.ql-item.has-n svg { color: var(--brand); }
+.ql-n { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--brand); color: #fff; font-size: 11.5px; display: inline-grid; place-items: center; }
+@media (max-width: 560px) { .ql { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; } .ql-item { flex: none; } }

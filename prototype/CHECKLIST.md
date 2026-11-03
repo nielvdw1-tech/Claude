@@ -8,7 +8,7 @@ Status key:
 - **Not implemented**
 
 "Tested" means one of the following:
-- the automated browser test (`tests/workflows.test.js`, **130/130 passing**, no JavaScript errors);
+- the automated browser test (`tests/workflows.test.js`, **133/133 passing**, no JavaScript errors);
 - the route smoke test (77 routes plus a second organisation, no errors);
 - the mobile layout check (31 routes at 390 px, no horizontal overflow).
 
@@ -67,6 +67,7 @@ Status key:
 | Requirement | Status | Notes |
 |---|---|---|
 | Dashboard: compliance status first (overall score, four areas with status labels and drivers, status by branch), then 12-month trend charts (incl. LTI trend: days since last LTI, LTIs and shifts lost per month) with tooltips and data tables, then detail tiles | Implemented | DB1–DB6 |
+| Quick links on the dashboard based on the user's role and waiting work, with counts | Implemented | QL1–QL3 |
 | Branch / organisation selection and comparison | Implemented | E1–E2 |
 | Task centre per user | Implemented | E3 |
 | Reports with print and CSV | Implemented | E9 |

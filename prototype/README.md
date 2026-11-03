@@ -39,6 +39,8 @@ To start again, open the user menu (top right) and choose **Reset demo data**.
 - Each organisation has its own logo. Until one is uploaded, the company's initials are shown.
 
 **Dashboard.** Built so a managing director sees the picture at a glance, in three sections:
+**Quick links** sit at the top of the dashboard and depend on who is signed in. Links with work waiting come first, with a count: my tasks, documents to approve, actions to verify, my corrective actions, defects to review, inspections due, investigations, safety alerts to approve and unread notices. After those come the shortcuts the person's role allows: report an incident, raise a corrective action, upload a document, publish a notice, Reports and Administration. For example, a supervisor sees their inspections and actions but not Administration or document upload.
+
 1. **Compliance status (top).**
    - The overall control score, with a status label: **On track** (85% and above), **Needs attention** (70–84%) or **At risk** (below 70%).
    - The overall score and each area (documents, assets and inspections, corrective actions, incidents) are shown as **pie charts**: the coloured share is the score, the rest is what is still to close. Each area card also shows its weighting and what is pulling it down, for example "4 inspections overdue".
@@ -208,6 +210,6 @@ prototype/
 └── README.md                     This file
 ```
 
-**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 130 workflow outcomes.
+**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 133 workflow outcomes.
 
 The earlier full HSEQ prototype, with legal, risk, people, PPE, chemicals, emergency and audits, is preserved in git history at commit `26b59bc`.

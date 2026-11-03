@@ -154,6 +154,48 @@ function drawLineChart() {
 let LINE_RESIZE = null;
 window.addEventListener('resize', () => { clearTimeout(LINE_RESIZE); LINE_RESIZE = setTimeout(drawLineChart, 120); });
 
+/* ---------------- Quick links for the signed-in user ----------------
+   Built from the user's role (permissions) and what is waiting for them right now.
+   Links with something waiting show a count and come first. */
+function quickLinks() {
+  const uid = S.ui.user, sid = S.ui.site, mine = (x) => inSite(x, sid);
+  const n = {
+    approve: S.documents.filter(d => mine(d) && (curStep(docLatest(d)) || {}).person === uid).length,
+    myActs: S.actions.filter(a => mine(a) && actionOpen(a) && a.owner === uid).length,
+    verify: can('action.verify') ? S.actions.filter(a => mine(a) && a.status === 'Submitted for Verification' && actionVerifiers(a).includes(uid)).length : 0,
+    defects: S.defects.filter(d => { const a = byId('assets', d.asset); return d.status === 'Awaiting Review' && a && mine(a) && defectReviewers(a).includes(uid); }).length,
+    insp: S.schedules.filter(x => mine(x) && x.assignee === uid && daysTo(x.nextDue) <= 7).length,
+    invest: S.incidents.filter(i => mine(i) && i.investigator === uid && i.status !== 'Closed').length,
+    assign: can('incident.investigate') ? S.incidents.filter(i => mine(i) && i.status === 'Reported').length : 0,
+    alerts: (S.notices || []).filter(x => x.status === 'Pending approval' && x.org === S.ui.org && (noticeCurStep(x) || {}).person === uid).length,
+    notices: myUnreadNotices().length
+  };
+  const L = [
+    { label: 'My tasks', icon: 'tasks', href: '#/notifications/tasks', count: myTasks().length },
+    { label: 'Documents to approve', icon: 'docs', href: '#/documents?status=mine', count: n.approve, show: can('doc.approve') },
+    { label: 'My corrective actions', icon: 'target', href: '#/actions?owner=me', count: n.myActs, show: n.myActs > 0 || can('action.create') },
+    { label: 'Actions to verify', icon: 'checkCircle', href: '#/actions?status=Submitted for Verification', count: n.verify, show: can('action.verify') },
+    { label: 'Defects to review', icon: 'search', href: '#/maintenance/defects', count: n.defects, show: n.defects > 0 },
+    { label: 'My inspections due', icon: 'clipboard', href: '#/inspections/schedule', count: n.insp, show: can('inspect') },
+    { label: 'Incidents to investigate', icon: 'alert', href: '#/incidents?status=open', count: n.invest, show: n.invest > 0 },
+    { label: 'Assign investigators', icon: 'user', href: '#/incidents?status=Reported', count: n.assign, show: can('incident.investigate') },
+    { label: 'Safety alerts to approve', icon: 'info', href: '#/notices', count: n.alerts, show: n.alerts > 0 },
+    { label: 'Unread notices', icon: 'bell', href: '#/notices', count: n.notices, show: n.notices > 0 },
+    { label: 'Report incident', icon: 'plus', href: '#/incidents/new', show: can('incident.report') || can('incident.investigate') },
+    { label: 'Raise corrective action', icon: 'plus', act: 'actionNew', show: can('action.create') },
+    { label: 'Upload document', icon: 'upload', act: 'newDoc', show: can('doc.create') },
+    { label: 'Publish notice', icon: 'plus', act: 'noticeNew', show: can('notice.publish') },
+    { label: 'Reports', icon: 'chart', href: '#/reports', show: can('report.view') },
+    { label: 'Administration', icon: 'settings', href: '#/admin', show: can('admin') }
+  ].filter(x => x.show !== false);
+  // Waiting work first (largest count first), then the shortcuts in their set order
+  const sorted = L.filter(x => x.count).sort((a, b) => b.count - a.count).concat(L.filter(x => !x.count));
+  return `<nav class="ql" aria-label="Quick links for ${esc(pname(uid))}">${sorted.map(x => {
+    const inner = `${icon(x.icon, 'sm')}<span>${esc(x.label)}</span>${x.count ? `<b class="ql-n">${x.count}</b>` : ''}`;
+    return x.act ? `<button type="button" class="ql-item" data-act="${x.act}">${inner}</button>` : `<a class="ql-item${x.count ? ' has-n' : ''}" href="${x.href}">${inner}</a>`;
+  }).join('')}</nav>`;
+}
+
 /* ---------------- The page ---------------- */
 ROUTES.dashboard = () => {
   const sid = S.ui.site, comp = compliance(sid), drv = partDrivers(sid), months = last12Months();
@@ -195,8 +237,9 @@ ROUTES.dashboard = () => {
   ];
 
   const b = band(comp.overall);
-  const html = `${pageHead('Dashboard', `Compliance control status for ${esc(scopeLabel())}, then the 12-month trends and the detail behind them. Every figure opens the records behind it.`, `<a class="btn" href="#/reports">${icon('chart', 'sm')} Reports</a><a class="btn primary" href="#/notifications/tasks">${icon('tasks', 'sm')} My tasks (${myTasks().length})</a>`, scopePill())}
+  const html = `${pageHead('Dashboard', `Compliance control status for ${esc(scopeLabel())}, then the 12-month trends and the detail behind them. Every figure opens the records behind it.`, '', scopePill())}
 
+  ${quickLinks()}
   <h3 class="dash-sec">${icon('shield', 'sm')} Compliance status</h3>
   <div class="cs-grid">
     <div class="card cs-hero st-edge-${b.cls}"><div class="card-body">
