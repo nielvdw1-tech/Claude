@@ -41,7 +41,7 @@ To start again, open the user menu (top right) and choose **Reset demo data**.
 **Dashboard.** Built so a managing director sees the picture at a glance, in three sections:
 1. **Compliance status (top).**
    - The overall control score, with a status label: **On track** (85% and above), **Needs attention** (70–84%) or **At risk** (below 70%).
-   - One card for each area (documents, assets and inspections, corrective actions, incidents), showing its score, weighting and what is pulling it down, for example "4 inspections overdue".
+   - The overall score and each area (documents, assets and inspections, corrective actions, incidents) are shown as **pie charts**: the coloured share is the score, the rest is what is still to close. Each area card also shows its weighting and what is pulling it down, for example "4 inspections overdue".
    - A **status by branch** table. Click a branch to focus the whole dashboard on it.
 2. **Trends over the last 12 months:**
    - incidents per month;

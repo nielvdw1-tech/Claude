@@ -864,3 +864,19 @@ button.file-chip svg.ic.sm { width: 13px; height: 13px; }
 @media (max-width: 1180px) { .cs-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .cs-hero { grid-column: 1 / -1; } }
 @media (max-width: 560px) { .cs-grid { grid-template-columns: minmax(0, 1fr); } .cs-hero-v { font-size: 48px; } .hb-row { grid-template-columns: minmax(80px, 120px) 1fr 30px; } }
 @media print { .viz-table, .viz-tip { display: none !important; } .seg, .vc-bar, .hb-bar, .meter > span, .hm-cell, .st-chip { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+
+/* Compliance status pies (one score out of 100 per block) */
+.cs-pie-row { display: flex; justify-content: center; width: 100%; margin: 12px 0 10px; }
+.cs-center { display: flex; justify-content: center; width: 100%; }
+.pie { position: relative; flex: none; outline: none; border-radius: 50%; }
+.pie:focus-visible { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--brand); }
+.pie svg { width: 100%; height: 100%; display: block; }
+.pie circle { fill: none; stroke-width: 14; }
+.pie-good .pie-track { stroke: var(--ok-bg); } .pie-good .pie-fill { stroke: var(--st-good); }
+.pie-warn .pie-track { stroke: var(--warn-bg); } .pie-warn .pie-fill { stroke: var(--st-warn); }
+.pie-bad .pie-track { stroke: var(--bad-bg); } .pie-bad .pie-fill { stroke: var(--st-bad); }
+.pie-v { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 1px; font-family: var(--font-display); font-weight: 700; color: var(--fg); font-size: 26px; line-height: 1; }
+.pie-v small { font-size: .5em; font-weight: 600; color: var(--fg-2); margin-left: 1px; }
+.cs-hero .pie-v { font-size: 40px; }
+.cs-hero .cs-k, .cs-hero .cs-note { text-align: center; justify-content: center; }
+@media print { .pie circle { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }

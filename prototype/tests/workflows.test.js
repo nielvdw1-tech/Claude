@@ -437,11 +437,11 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     if ((await S('S.ui.site')) !== 'ALL') { await S("(S.ui.site = 'ALL', save(), rerender())"); await p.waitForTimeout(250); }
     const secs = await p.$$eval('h3.dash-sec', e => e.map(x => x.textContent.trim()));
     ok('DB1 compliance status comes first, then trends, then detail', secs.length === 3 && /Compliance status/i.test(secs[0]) && /Trends/i.test(secs[1]) && /Detail/i.test(secs[2]), secs.join(' | '));
-    const hero = await p.$eval('.cs-hero-v', e => parseInt(e.textContent)), want = await S("compliance('ALL').overall");
-    ok('DB2 the overall control score and the four areas show with a status label', hero === want && (await p.$$eval('.cs-part', e => e.length)) === 4 && (await p.$$eval('.cs-grid .st-chip', e => e.length)) === 5, `${hero}%`);
+    const hero = await p.$eval('.cs-hero .pie-v', e => parseInt(e.textContent)), want = await S("compliance('ALL').overall");
+    ok('DB2 the overall control score and the four areas show with a status label', hero === want && (await p.$$eval('.cs-part', e => e.length)) === 4 && (await p.$$eval('.cs-grid .pie svg', e => e.length)) === 5 && (await p.$$eval('.cs-grid .st-chip', e => e.length)) === 5, `${hero}%`);
     const rows = await p.$$eval('.tbl.hm tbody tr', e => e.length), sites = await S("orgSites().length");
     await p.click('.tbl.hm [data-act=focusSite][data-site="S-DBN"]'); await p.waitForTimeout(250);
-    ok('DB3 branch status table lists every branch; clicking one focuses the dashboard on it', rows === sites && (await S('S.ui.site')) === 'S-DBN' && (await p.$eval('.cs-hero-v', e => parseInt(e.textContent))) === (await S("compliance('S-DBN').overall")));
+    ok('DB3 branch status table lists every branch; clicking one focuses the dashboard on it', rows === sites && (await S('S.ui.site')) === 'S-DBN' && (await p.$eval('.cs-hero .pie-v', e => parseInt(e.textContent))) === (await S("compliance('S-DBN').overall")));
     await p.click('.pad [data-act=focusSite][data-site="ALL"]'); await p.waitForTimeout(250);
     const openActs = await S("S.actions.filter(a => a.org === S.ui.org && actionOpen(a)).length");
     const segTotal = await p.$$eval('.seg em', e => e.reduce((a, x) => a + Number(x.textContent), 0));

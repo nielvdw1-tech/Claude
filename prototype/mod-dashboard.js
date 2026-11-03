@@ -16,6 +16,13 @@ const STATUS_BAND = {
 };
 function band(v) { return STATUS_BAND[scoreColour(v)]; }
 function statusChip(v) { const b = band(v); return `<span class="st-chip st-${b.cls}">${icon(b.icon, 'sm')}${b.label}</span>`; }
+// Pie (ring) chart for one score out of 100: the filled share carries the status colour, the rest is a light track.
+function scorePie(v, size, label) {
+  const b = band(v), r = 42, c = 2 * Math.PI * r, f = Math.max(0, Math.min(100, v)) / 100;
+  return `<div class="pie pie-${b.cls}" style="width:${size}px;height:${size}px" tabindex="0" role="img" aria-label="${esc(label)}: ${v}% — ${b.label}" ${tip([[label, ''], [v + '%', b.label], [(100 - v) + '%', 'still to close']])}>
+    <svg viewBox="0 0 100 100"><circle class="pie-track" cx="50" cy="50" r="${r}"/>${f ? `<circle class="pie-fill" cx="50" cy="50" r="${r}" stroke-dasharray="${(f * c).toFixed(2)} ${c.toFixed(2)}" transform="rotate(-90 50 50)"/>` : ''}</svg>
+    <span class="pie-v"><span>${v}<small>%</small></span></span></div>`;
+}
 function meter(v, label) { const b = band(v); return `<div class="meter m-${b.cls}" role="img" aria-label="${esc(label || 'Score')}: ${v}% — ${b.label}"><span style="width:${Math.max(0, Math.min(100, v))}%"></span></div>`; }
 
 /* ---------------- Time buckets: the last 12 calendar months ---------------- */
@@ -187,14 +194,13 @@ ROUTES.dashboard = () => {
   <div class="cs-grid">
     <div class="card cs-hero st-edge-${b.cls}"><div class="card-body">
       <div class="cs-k">Overall control score</div>
-      <div class="cs-hero-v">${comp.overall}<small>%</small></div>
-      ${statusChip(comp.overall)}
-      ${meter(comp.overall, 'Overall control score')}
+      <div class="cs-pie-row">${scorePie(comp.overall, 150, 'Overall control score')}</div>
+      <div class="cs-center">${statusChip(comp.overall)}</div>
       <p class="cs-note">${esc(scopeLabel())} · weighted from the four areas (Administration → Control scoring). Indicative, from demonstration data.</p>
     </div></div>
     ${Object.keys(comp.parts).map(k => { const v = comp.parts[k], d = drv[k]; return `<button class="card cs-part st-edge-${band(v).cls}" data-act="go" data-href="${PART_LINKS[k]}">
       <div class="cs-k">${icon(PART_ICON[k], 'sm')}${PART_TITLE[k]} <span class="cs-w">${S.config.complianceWeights[k]}%</span></div>
-      <div class="cs-v">${v}%</div>${statusChip(v)}${meter(v, PART_TITLE[k])}
+      <div class="cs-pie-row">${scorePie(v, 104, PART_TITLE[k])}</div><div class="cs-center">${statusChip(v)}</div>
       <div class="cs-line">${esc(d.line)}</div>
       ${d.issues.length ? `<ul class="cs-issues">${d.issues.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : '<div class="cs-ok">Nothing outstanding</div>'}
     </button>`; }).join('')}
