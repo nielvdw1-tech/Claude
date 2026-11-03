@@ -811,7 +811,7 @@ button.file-chip svg.ic.sm { width: 13px; height: 13px; }
 .lg-sw { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
 .lg-line { width: 16px; height: 2px; border-radius: 2px; display: inline-block; }
 /* Column chart (HTML) */
-.vc { padding-left: 26px; }
+.vc { padding-left: 26px; padding-top: 10px; }
 .vc-plot { position: relative; height: 180px; border-bottom: 1px solid var(--line-strong); }
 .vc-grid { position: absolute; left: 0; right: 0; border-top: 1px solid var(--viz-grid); }
 .vc-grid span { position: absolute; left: -26px; top: -8px; width: 20px; text-align: right; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }

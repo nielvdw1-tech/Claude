@@ -46,6 +46,7 @@ To start again, open the user menu (top right) and choose **Reset demo data**.
 2. **Trends over the last 12 months:**
    - incidents per month;
    - incidents by type, and injuries by classification;
+   - **lost time injuries (LTI):** days since the last LTI, LTIs in the last 12 months and this year, injuries not yet classified, and LTIs and shifts lost per month. These use the final injury classification. An LTI frequency rate needs hours worked, which the system does not record yet;
    - corrective actions raised against completed (verified) per month;
    - open corrective actions split by due date (on time, due within 7 days, overdue up to 30 days, overdue more than 30 days).
 
@@ -207,6 +208,6 @@ prototype/
 └── README.md                     This file
 ```
 
-**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 129 workflow outcomes.
+**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 130 workflow outcomes.
 
 The earlier full HSEQ prototype, with legal, risk, people, PPE, chemicals, emergency and audits, is preserved in git history at commit `26b59bc`.

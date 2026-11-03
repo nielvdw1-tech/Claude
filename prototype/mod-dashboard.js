@@ -176,6 +176,13 @@ ROUTES.dashboard = () => {
   const incTypes = INC_TYPES.map(t => [t, inc12.filter(i => i.type === t).length, `#/incidents?type=${encodeURIComponent(t)}`]).sort((a, b) => b[1] - a[1]);
   const injRows = injClasses().map(c => [c.name, inc12.filter(i => injClass(i) === c.name).length]).filter(r => r[1]).sort((a, b) => b[1] - a[1]);
   const unclassified = inc12.filter(i => i.injury && !injClass(i)).length;
+  // Lost time injuries: counted by their final classification, on the date of the incident
+  const ltiAll = incAll.filter(i => injClass(i) === 'Lost Time Injury').sort((a, b) => a.date.localeCompare(b.date));
+  const lti12 = ltiAll.filter(i => i.date.slice(0, 7) >= months[0]);
+  const ltiPerMonth = months.map(m => lti12.filter(i => i.date.startsWith(m)).length);
+  const shiftsPerMonth = months.map(m => lti12.filter(i => i.date.startsWith(m)).reduce((a, i) => a + (+i.injury.daysLost || 0), 0));
+  const lastLti = ltiAll.length ? ltiAll[ltiAll.length - 1] : null, ltiYtd = ltiAll.filter(i => i.date.startsWith(TODAY.slice(0, 4))).length;
+  const ltiIds = k => lti12.filter(i => i.date.startsWith(months[k])).map(i => [i.id, `${i.injury.daysLost} shift(s) lost`]);
   const raised = months.map(m => acts.filter(a => (a.created || '').startsWith(m)).length);
   const done = months.map(m => acts.filter(a => (actionDoneDate(a) || '').startsWith(m)).length);
   LINE.data = { months, aria: 'Corrective actions raised and completed per month, last 12 months', series: [{ name: 'Raised', short: 'raised', v: '--viz-1', vals: raised }, { name: 'Completed (verified)', short: 'completed', v: '--viz-2', vals: done }] };
@@ -230,6 +237,20 @@ ROUTES.dashboard = () => {
       ${dataTable(['Category', 'Count'], incTypes.map(r => [r[0], r[1]]).concat(injRows.map(r => ['Injury: ' + r[0], r[1]])))}
     </div></div>
   </div>
+  <div class="card mb" id="ltiCard"><div class="card-head"><h2>Lost time injuries (LTI)</h2><span class="ch-sub">By final injury classification · last 12 months</span></div><div class="card-body">
+    <div class="kpis mini">
+      ${kpi('Days since last LTI', lastLti ? -daysTo(lastLti.date) : '—', lastLti ? `Last: ${lastLti.id} on ${fmt(lastLti.date)}` : 'No LTI recorded', lastLti && -daysTo(lastLti.date) < 30 ? 'red' : 'green', lastLti ? '#/incidents/' + lastLti.id : '#/incidents?type=Injury', 'clock')}
+      ${kpi('LTIs, last 12 months', lti12.length, `${shiftsPerMonth.reduce((a, b) => a + b, 0)} shift(s) lost`, lti12.length ? 'red' : 'green', '#/incidents?type=Injury', 'alert')}
+      ${kpi('LTIs this year', ltiYtd, `Since 1 Jan ${TODAY.slice(0, 4)}`, ltiYtd ? 'amber' : 'green', '#/incidents?type=Injury', 'clipboard')}
+      ${kpi('Injuries not yet classified', unclassified, 'Could still become LTIs', unclassified ? 'amber' : 'green', '#/incidents?type=Injury', 'search')}
+    </div>
+    <div class="grid g2 mt">
+      <div><h4>LTIs per month</h4>${columnChart(months, ltiPerMonth, { unit: 'LTIs', aria: `Lost time injuries per month: ${months.map((m, k) => `${monthLabel(m, true)} ${ltiPerMonth[k]}`).join(', ')}`, href: '#/incidents?type=Injury', detail: ltiIds })}</div>
+      <div><h4>Shifts lost per month</h4>${columnChart(months, shiftsPerMonth, { unit: 'shifts lost', aria: `Shifts lost to lost time injuries per month: ${months.map((m, k) => `${monthLabel(m, true)} ${shiftsPerMonth[k]}`).join(', ')}`, href: '#/incidents?type=Injury', detail: ltiIds })}</div>
+    </div>
+    <p class="muted mt-s">${icon('info', 'sm')} An LTI frequency rate (LTIs per hours worked) needs the hours worked per branch, which the system does not record yet.</p>
+    ${dataTable(['Month', 'LTIs', 'Shifts lost', 'Incidents'], months.map((m, k) => [monthLabel(m, true), ltiPerMonth[k], shiftsPerMonth[k], lti12.filter(i => i.date.startsWith(m)).map(i => i.id).join(', ') || '—']))}
+  </div></div>
   <div class="grid g2 mb">
     <div class="card"><div class="card-head"><h2>Corrective actions raised and completed</h2><span class="ch-sub">Per month · completed = verified</span></div><div class="card-body">
       <div class="viz-legend">${LINE.data.series.map(s => `<span><i class="lg-line" style="background:var(${s.v})"></i>${esc(s.name)}</span>`).join('')}</div>
