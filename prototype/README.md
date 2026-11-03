@@ -38,6 +38,20 @@ To start again, open the user menu (top right) and choose **Reset demo data**.
 - The logo then appears in the company block of document headers, inspection checklists, printed inspection reports and printed management reports.
 - Each organisation has its own logo. Until one is uploaded, the company's initials are shown.
 
+**Dashboard.** Built so a managing director sees the picture at a glance, in three sections:
+1. **Compliance status (top).**
+   - The overall control score, with a status label: **On track** (85% and above), **Needs attention** (70–84%) or **At risk** (below 70%).
+   - One card for each area (documents, assets and inspections, corrective actions, incidents), showing its score, weighting and what is pulling it down, for example "4 inspections overdue".
+   - A **status by branch** table. Click a branch to focus the whole dashboard on it.
+2. **Trends over the last 12 months:**
+   - incidents per month;
+   - incidents by type, and injuries by classification;
+   - corrective actions raised against completed (verified) per month;
+   - open corrective actions split by due date (on time, due within 7 days, overdue up to 30 days, overdue more than 30 days).
+
+   Hover over (or tab to) any bar or point to see the figures. Each chart has a **Data table** with the numbers.
+3. **Detail:** the operational tiles for documents, assets, incidents and actions, upcoming deadlines and recent activity.
+
 ## 3. Guided demonstrations
 
 ### A. Upload a document and route it through several approvers
@@ -186,12 +200,13 @@ prototype/
 ├── mod-actions-reports-admin.js  Corrective actions, reports, administration
 ├── mod-files.js                  File storage (browser) and in-app file viewer
 ├── mod-notices.js                Company notices: publish, read, acknowledge, track
+├── mod-dashboard.js              Dashboard: compliance status, 12-month trends, detail
 ├── vendor/pdfjs/                 PDF.js 3.11.174 (Apache-2.0) for viewing PDFs, works offline
 ├── tests/workflows.test.js       Automated end-to-end test (developers)
 ├── CHECKLIST.md                  Requirements checklist with status
 └── README.md                     This file
 ```
 
-**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 124 workflow outcomes.
+**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 129 workflow outcomes.
 
 The earlier full HSEQ prototype, with legal, risk, people, PPE, chemicals, emergency and audits, is preserved in git history at commit `26b59bc`.

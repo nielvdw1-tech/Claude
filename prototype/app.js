@@ -675,71 +675,7 @@ function gaugeSvg(v) {
 function barRow(label, v, href, colour) { return `<div class="bar-row ${href ? 'clickable' : ''}" ${href ? `data-act="go" data-href="${href}"` : ''}><span class="bar-label" title="${esc(label)}">${esc(label)}</span><div class="bar"><span class="fill-${colour || scoreColour(v)}" style="width:${v}%"></span></div><span class="bar-val" style="color:var(--${scoreColour(v) === 'amber' ? 'amber' : scoreColour(v)})">${v}%</span></div>`; }
 function kpi(label, value, sub, tone, href, ic) { return `<button class="kpi t-${tone}" data-act="go" data-href="${href}"><div class="k-label">${ic ? icon(ic, 'sm') : ''}${esc(label)}</div><div class="k-value">${value}</div><div class="k-sub">${sub}</div><span class="k-go">${icon('arrowR', 'sm')}</span></button>`; }
 
-ROUTES.dashboard = () => {
-  const sid = S.ui.site, comp = compliance(sid);
-  const docs = S.documents.filter(d => inSite(d, sid));
-  const myAppr = docs.filter(d => (curStep(docLatest(d)) || {}).person === S.ui.user);
-  const inAppr = docs.filter(d => docStatus(d) === 'In Approval');
-  const toIssue = docs.filter(d => docStatus(d) === 'Approved');
-  const returned = docs.filter(d => docStatus(d) === 'Returned for Correction');
-  const docsOver = docs.filter(docReviewOverdue);
-  const assets = S.assets.filter(a => inSite(a, sid));
-  const oos = assets.filter(a => a.status === 'Out of Service');
-  const certBad = assets.filter(a => assetDocStatus(a).some(d => d.status === 'Expired' || d.status === 'Missing'));
-  const sch = S.schedules.filter(s => inSite(s, sid)); const insOver = sch.filter(s => daysTo(s.nextDue) < 0); const insDue = sch.filter(s => daysTo(s.nextDue) >= 0 && daysTo(s.nextDue) <= 7);
-  const defOpen = S.defects.filter(d => d.status !== 'Closed' && inSite(byId('assets', d.asset), sid));
-  const acts = S.actions.filter(a => inSite(a, sid)); const open = acts.filter(actionOpen), overdue = acts.filter(actionOverdue), awaitingVer = acts.filter(a => a.status === 'Submitted for Verification');
-  const incOpen = S.incidents.filter(i => inSite(i, sid) && i.status !== 'Closed'); const incNew = incOpen.filter(i => i.status === 'Reported');
-  const notifs = buildNotifs();
-  const upcoming = notifs.filter(n => n.date && daysTo(n.date) >= 0 && daysTo(n.date) <= 30 && !String(n.key).startsWith('EV-') && !String(n.key).startsWith('cert-mi')).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 8);
-  const branchRows = orgSites().map(s => ({ s, c: compliance(s.id) }));
-  const html = `${pageHead('Dashboard', 'Documents awaiting approval, asset inspections and defects, incidents and the corrective actions that close them — across all branches. Every tile opens the underlying records.', `<a class="btn" href="#/reports">${icon('chart', 'sm')} Reports</a><a class="btn primary" href="#/notifications/tasks">${icon('tasks', 'sm')} My tasks (${myTasks().length})</a>`, scopePill())}
-  <div class="alert demo">${icon('info')}<div><b>Demonstration data.</b> Kestrel Industrial Equipment and Ridgeway Pumps are fictional companies. The control score is <b>indicative</b>, calculated from the demo records with configurable weights (Administration → Scoring).</div></div>
-  <h4 class="mb">${icon('docs', 'sm')} Document Manager</h4>
-  <div class="kpis">
-    ${kpi('Awaiting my approval', myAppr.length, myAppr.length ? 'Your turn on the approval route' : 'Nothing waiting for you', myAppr.length ? 'amber' : 'green', '#/documents?status=mine', 'user')}
-    ${kpi('In approval', inAppr.length, 'Moving through approval routes', 'blue', '#/documents?status=In Approval', 'clock')}
-    ${kpi('Approved — not issued', toIssue.length, 'Ready to issue for use', toIssue.length ? 'blue' : 'green', '#/documents?status=Approved', 'checkCircle')}
-    ${kpi('Returned for correction', returned.length, 'Author must revise', returned.length ? 'amber' : 'green', '#/documents?status=Returned for Correction', 'refresh')}
-    ${kpi('Document reviews overdue', docsOver.length, 'Issued documents past review date', docsOver.length ? 'red' : 'green', '#/documents?review=overdue', 'file')}
-  </div>
-  <h4 class="mb">${icon('forklift', 'sm')} Assets, inspections & defects</h4>
-  <div class="kpis">
-    ${kpi('Out of service', oos.length, oos.length ? oos.map(a => a.tag).join(', ') : 'All assets in service', oos.length ? 'red' : 'green', '#/assets?status=Out of Service', 'power')}
-    ${kpi('Inspections overdue', insOver.length, `${insDue.length} due in the next 7 days`, insOver.length ? 'red' : 'green', '#/inspections/schedule?due=overdue', 'clipboard')}
-    ${kpi('Open defects', defOpen.length, `${defOpen.filter(d => d.severity === 'Critical').length} critical`, defOpen.some(d => d.severity === 'Critical') ? 'red' : defOpen.length ? 'amber' : 'green', '#/maintenance/defects', 'alert')}
-    ${kpi('Certificates expired / missing', certBad.length, 'Assets with non-compliant documents', certBad.length ? 'red' : 'green', '#/assets?issue=docs', 'file')}
-  </div>
-  <h4 class="mb">${icon('alert', 'sm')} Incidents & corrective actions</h4>
-  <div class="kpis">
-    ${kpi('Open incidents', incOpen.length, `${incNew.length} awaiting investigation`, incNew.length ? 'red' : incOpen.length ? 'amber' : 'green', '#/incidents?status=open', 'alert')}
-    ${kpi('Open corrective actions', open.length, `${open.filter(a => a.priority === 'Critical').length} critical · ${open.filter(a => a.priority === 'High').length} high`, 'blue', '#/actions?status=open', 'target')}
-    ${kpi('Actions overdue', overdue.length, `${overdue.filter(a => a.escalated).length} escalated`, overdue.length ? 'red' : 'green', '#/actions?status=overdue', 'clock')}
-    ${kpi('Awaiting verification', awaitingVer.length, 'Evidence submitted — verifier to decide', awaitingVer.length ? 'blue' : 'green', '#/actions?status=Submitted for Verification', 'checkCircle')}
-  </div>
-  <div class="grid g-3-2 mb">
-    <div class="card"><div class="card-head"><h2>Control status</h2><span class="ch-sub">${esc(scopeLabel())}</span></div><div class="card-body"><div class="score-wrap">${gaugeSvg(comp.overall)}<div class="bars">
-      ${Object.keys(comp.parts).map(k => barRow(PART_LABELS[k], comp.parts[k], PART_LINKS[k])).join('')}
-    </div></div></div></div>
-    <div class="card"><div class="card-head"><h2>By branch</h2><span class="ch-sub">Click a branch to focus on it</span></div><div class="card-body"><div class="bars">
-      ${branchRows.map(b => `<div class="bar-row clickable" data-act="focusSite" data-site="${b.s.id}"><span class="bar-label">${esc(b.s.short)}${S.ui.site === b.s.id ? ' ●' : ''}</span><div class="bar"><span class="fill-${scoreColour(b.c.overall)}" style="width:${b.c.overall}%"></span></div><span class="bar-val">${b.c.overall}%</span></div>`).join('')}
-    </div>
-    <div class="table-wrap mt"><table class="tbl compact"><thead><tr><th>Branch</th><th>Open actions</th><th>Overdue</th><th>Open incidents</th></tr></thead><tbody>
-      ${branchRows.map(b => `<tr class="rowlink" data-href="#/reports/branches"><td>${esc(b.s.short)}</td><td>${b.c.openActions}</td><td>${b.c.overdueActions ? `<b style="color:var(--red)">${b.c.overdueActions}</b>` : '0'}</td><td>${b.c.openIncidents}</td></tr>`).join('')}
-    </tbody></table></div>
-    ${S.ui.site !== 'ALL' ? `<button class="btn sm mt" data-act="focusSite" data-site="ALL">${icon('building', 'sm')} Return to organisation-wide view</button>` : ''}
-    </div></div>
-  </div>
-  <div class="grid g2">
-    <div class="card"><div class="card-head"><h2>Upcoming deadlines (next 30 days)</h2><a class="btn ghost sm" href="#/notifications">All notifications</a></div><div class="card-body flush">
-      ${upcoming.length ? `<table class="tbl compact stackable"><tbody>${upcoming.map(n => `<tr class="rowlink" data-href="${n.link}"><td data-label="Due" class="nowrap">${dueText(n.date)}</td><td data-label="Item"><div class="t-title">${esc(n.title)}</div><div class="t-sub">${esc(n.text)}</div></td></tr>`).join('')}</tbody></table>` : '<div class="empty">No deadlines in the next 30 days.</div>'}
-    </div></div>
-    <div class="card"><div class="card-head"><h2>Recent activity</h2><span class="ch-sub">Simulated audit trail (browser-local)</span></div><div class="card-body">
-      <ul class="activity">${S.activity.slice(0, 9).map(a => `<li><span class="avatar sm">${initials(pname(a.by))}</span><div><div>${a.link ? `<a href="${a.link}">${esc(a.text)}</a>` : esc(a.text)}</div><div class="a-meta">${esc(pname(a.by))} · ${fmtTs(a.ts)}</div></div></li>`).join('')}</ul>
-    </div></div>
-  </div>`;
-  return { title: 'Dashboard', crumbs: [['Dashboard', '#/dashboard']], html };
-};
+// ROUTES.dashboard lives in mod-dashboard.js
 ACT.focusSite = (el) => { S.ui.site = el.dataset.site; save(); toast(el.dataset.site === 'ALL' ? 'Organisation-wide view.' : `Focused on ${esc(site(el.dataset.site).name)}.`, 'info'); rerender(); };
 
 /* ==========================================================================
