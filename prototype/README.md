@@ -27,7 +27,7 @@ To start again, open the user menu (top right) and choose **Reset demo data**.
 | Demo user | Role | Typical part in the demos |
 |---|---|---|
 | Johan van Wyk (default) | HSEQ Manager | Approver, issues documents, verifies actions, investigates incidents |
-| Thandi Mokoena | Managing Director | Final approver for policies and safe work procedures; raises, assigns and verifies corrective actions |
+| Thandi Mokoena | Managing Director | Final approver for policies and safe work procedures; raises, assigns and verifies corrective actions; reports incidents |
 | Pieter Botha | Operations Manager | Operational reviewer on approval routes |
 | Ayesha Khan | VDW Safety Consultant | **Full access** (same as HSEQ Manager): approvals, issuing, verification, investigations, administration |
 | Sipho Ndlovu / Lerato Dlamini | Branch Managers | Document authors; action owners |
@@ -39,7 +39,7 @@ To start again, open the user menu (top right) and choose **Reset demo data**.
 - Each organisation has its own logo. Until one is uploaded, the company's initials are shown.
 
 **Dashboard.** Built so a managing director sees the picture at a glance, in three sections:
-**Quick links** sit at the top of the dashboard and depend on who is signed in. Links with work waiting come first, with a count: my tasks, documents to approve, actions to verify, my corrective actions, defects to review, inspections due, investigations, safety alerts to approve and unread notices. After those come the shortcuts the person's role allows: report an incident, raise a corrective action, upload a document, publish a notice, Reports and Administration. For example, a supervisor sees their inspections and actions but not Administration or document upload.
+**Quick links** sit at the top of the dashboard and depend on who is signed in. Links with work waiting come first, with a count: my tasks, documents to approve, actions to verify, my corrective actions, defects to review, inspections due, investigations, safety alerts to approve and unread notices. After those come the shortcuts the person's role allows: report an incident, raise a corrective action, upload a document, publish a notice, Reports and Administration. For example, a supervisor sees their inspections and actions but not Administration or document upload. "My inspections due" only appears for people who are assigned scheduled inspections.
 
 1. **Compliance status (top).**
    - The overall control score, with a status label: **On track** (85% and above), **Needs attention** (70–84%) or **At risk** (below 70%).
@@ -210,6 +210,6 @@ prototype/
 └── README.md                     This file
 ```
 
-**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 133 workflow outcomes.
+**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 134 workflow outcomes.
 
 The earlier full HSEQ prototype, with legal, risk, people, PPE, chemicals, emergency and audits, is preserved in git history at commit `26b59bc`.

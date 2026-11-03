@@ -176,7 +176,7 @@ function quickLinks() {
     { label: 'My corrective actions', icon: 'target', href: '#/actions?owner=me', count: n.myActs, show: n.myActs > 0 || can('action.create') },
     { label: 'Actions to verify', icon: 'checkCircle', href: '#/actions?status=Submitted for Verification', count: n.verify, show: can('action.verify') },
     { label: 'Defects to review', icon: 'search', href: '#/maintenance/defects', count: n.defects, show: n.defects > 0 },
-    { label: 'My inspections due', icon: 'clipboard', href: '#/inspections/schedule', count: n.insp, show: can('inspect') },
+    { label: 'My inspections due', icon: 'clipboard', href: '#/inspections/schedule', count: n.insp, show: S.schedules.some(x => mine(x) && x.assignee === uid) },   // only for people who carry out scheduled inspections
     { label: 'Incidents to investigate', icon: 'alert', href: '#/incidents?status=open', count: n.invest, show: n.invest > 0 },
     { label: 'Assign investigators', icon: 'user', href: '#/incidents?status=Reported', count: n.assign, show: can('incident.investigate') },
     { label: 'Safety alerts to approve', icon: 'info', href: '#/notices', count: n.alerts, show: n.alerts > 0 },

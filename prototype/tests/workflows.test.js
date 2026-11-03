@@ -459,7 +459,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     const links = async () => p.$$eval('.ql-item', e => e.map(x => x.innerText.replace(/\s+/g, ' ').trim()));
     await asUser('P-002'); await go('#/dashboard'); await p.waitForTimeout(200);
     const hseq = await links(), tasks = await S('myTasks().length');
-    ok('QL1 the HSEQ Manager gets links for their role, with counts of waiting work first', hseq[0] === `My tasks ${tasks}` && hseq.some(x => x.startsWith('Administration')) && hseq.some(x => x.startsWith('Upload document')) && hseq.some(x => x.startsWith('Actions to verify')), hseq.join(' | '));
+    ok('QL1 the HSEQ Manager gets links for their role, with counts of waiting work first', hseq[0] === `My tasks ${tasks}` && hseq.some(x => x.startsWith('Administration')) && hseq.some(x => x.startsWith('Upload document')) && hseq.some(x => x.startsWith('Actions to verify')) && !hseq.some(x => x.startsWith('My inspections due')), hseq.join(' | '));
     await asUser('P-007'); await go('#/dashboard'); await p.waitForTimeout(200);
     const sup = await links();
     ok('QL2 a supervisor only gets the links their role allows', !sup.some(x => /Administration|Upload document|Actions to verify|Publish notice/.test(x)) && sup.some(x => x.startsWith('My inspections due')) && sup.some(x => x.startsWith('Raise corrective action')), sup.join(' | '));
@@ -467,6 +467,13 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     const modal = await modalOpen(); await p.keyboard.press('Escape');
     await p.click('.ql-item[href="#/inspections/schedule"]'); await p.waitForTimeout(150);
     ok('QL3 quick links open the action form or the page directly', modal && (await p.evaluate(() => location.hash)) === '#/inspections/schedule');
+  }
+
+  {
+    await asUser('P-001'); await go('#/dashboard'); await p.waitForTimeout(200);
+    const md = await p.$$eval('.ql-item', e => e.map(x => x.innerText.trim()));
+    await go('#/incidents/new');
+    ok('QL4 the Managing Director can report an incident (quick link and form)', md.some(x => x.startsWith('Report incident')) && await has('#incForm [data-act=incSubmit]'));
   }
 
   /* ---------------- L. Company logo ---------------- */
