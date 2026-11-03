@@ -63,9 +63,9 @@ function fileAttrs(f, ctx) {
   return `data-act="viewFile" data-name="${esc(f.name)}" data-type="${esc(f.type || '')}" data-size="${f.size || 0}"${f.blobId ? ` data-blob="${f.blobId}"` : ''}${f.seeded ? ' data-seeded="1"' : ''}${f.tooLarge ? ' data-too-large="1"' : ''}${ctx && ctx.doc ? ` data-doc="${ctx.doc}" data-ri="${ctx.ri}"` : ''}`;
 }
 // Photo thumbnails (click to open full size); editQ adds a remove button for the inspection form.
-function photoStrip(list, editQ) {
+function photoStrip(list, editQ, delAct = 'qPhotoDel') {
   if (!list || !list.length) return '';
-  return `<div class="photo-strip">${list.map((f, k) => `<span class="ph-thumb"><button type="button" ${fileAttrs(f)} title="Open ${esc(f.name)}">${f.thumb ? `<img src="${f.thumb}" alt="Photo ${k + 1}">` : `${icon('file', 'sm')}<small>${esc(f.name)}</small>`}</button>${editQ ? `<button type="button" class="ph-del" data-act="qPhotoDel" data-q="${editQ}" data-i="${k}" aria-label="Remove photo ${k + 1}">×</button>` : ''}</span>`).join('')}</div>`;
+  return `<div class="photo-strip">${list.map((f, k) => `<span class="ph-thumb"><button type="button" ${fileAttrs(f)} title="Open ${esc(f.name)}">${f.thumb ? `<img src="${f.thumb}" alt="Photo ${k + 1}">` : `${icon('file', 'sm')}<small>${esc(f.name)}</small>`}</button>${editQ ? `<button type="button" class="ph-del" data-act="${delAct}" data-q="${editQ}" data-i="${k}" aria-label="Remove photo ${k + 1}">×</button>` : ''}</span>`).join('')}</div>`;
 }
 function fileChip(f, ctx) {
   if (!f) return '<span class="muted">No file</span>';

@@ -23,7 +23,18 @@ ROUTES.incidents = (p, q) => {
   return { title: 'Incidents', crumbs: [['Incidents & injuries', '#/incidents']], html };
 };
 
+const MAX_INC_FILES = 10;
+let INC_FILES = [];   // photos / attachments picked on the incident form, kept until it is submitted
+async function addIncFiles(files) {
+  const ok = files.filter(f => /^image\//.test(f.type) || f.type === 'application/pdf' || /\.pdf$/i.test(f.name)), room = MAX_INC_FILES - INC_FILES.length;
+  if (ok.length < files.length) toast('Only photos and PDF files can be attached.', 'error');
+  if (ok.length > room) toast(`Up to ${MAX_INC_FILES} files — ${Math.max(0, room)} more can be added.`, 'error');
+  for (const f of ok.slice(0, Math.max(0, room))) { const m = fileMeta(f); if (m.tooLarge) { toast(`${f.name} is larger than 20 MB.`, 'error'); continue; } m.thumb = await makeThumb(f); INC_FILES.push(m); }
+  const box = document.getElementById('incFiles'); if (box) box.innerHTML = photoStrip(INC_FILES, 'inc', 'incFileDel');
+}
+ACT.incFileDel = (el) => { INC_FILES.splice(+el.dataset.i, 1); const box = document.getElementById('incFiles'); if (box) box.innerHTML = photoStrip(INC_FILES, 'inc', 'incFileDel'); };
 function incidentForm(q) {
+  if (!q.keep) INC_FILES = [];
   const html = `<div class="mobile-card" style="max-width:820px">${pageHead('Report an incident', 'Quick reporting form — works on a phone in the field. Investigation details are added afterwards by the investigator.')}
   <form id="incForm" class="card" novalidate><div class="card-body" style="padding-top:16px"><div class="form-grid">
     ${fld({ name: 'type', label: 'Incident type', type: 'select', options: opts(INC_TYPES, 'Near Miss'), required: true })}
@@ -36,14 +47,14 @@ function incidentForm(q) {
     <fieldset class="fieldset full hidden" id="injBox"><legend>Injury details</legend><div class="form-grid">${fld({ name: 'nature', label: 'Nature of injury', placeholder: 'e.g. laceration, sprain' })}${fld({ name: 'body', label: 'Body part' })}${fld({ name: 'firstAid', label: 'First aid given', placeholder: 'e.g. wound cleaned, ice pack' })}${fld({ name: 'sentForMedical', label: 'Sent to a doctor, nurse or clinic?', type: 'select', options: opts(['Not known', 'Yes', 'No']) })}</div><p class="muted mt-s">${icon('info', 'sm')} You only describe the injury. The HSEQ team classifies it (first aid, medical treatment, lost time and so on) during the investigation.</p><p class="muted mt-s">${icon('lock', 'sm')} Medical details are restricted to authorised roles in production.</p></fieldset>
     ${fld({ name: 'actualSev', label: 'Actual severity', type: 'select', options: opts([1, 2, 3, 4, 5].map(n => ({ value: n, label: SEV_LABELS[n] })), 1), required: true })}${fld({ name: 'potentialSev', label: 'Potential severity (worst credible)', type: 'select', options: opts([1, 2, 3, 4, 5].map(n => ({ value: n, label: SEV_LABELS[n] })), 3), required: true })}
     ${fld({ name: 'asset', label: 'Equipment involved', type: 'select', options: opts(scoped('assets').map(a => ({ value: a.id, label: `${a.tag} — ${a.name}` })), q.asset || '', '— None —') })}${fld({ name: 'witnesses', label: 'Witnesses' })}
-    <div class="field full"><label for="f_photos">Photographs / attachments</label><input id="f_photos" name="photos" type="file" multiple accept="image/*,.pdf" capture="environment"><div class="file-note">${icon('info', 'sm')} Prototype: file names only are kept as demo references.</div></div>
+    <div class="field full" id="incFilesField"><label>Photographs / attachments</label><div class="photo-btns"><label class="btn sm"><input class="vh" type="file" data-incf="1" accept="image/*" capture="environment">${icon('camera', 'sm')} Take photo</label><label class="btn sm"><input class="vh" type="file" data-incf="1" accept="image/*,.pdf,application/pdf" multiple>${icon('upload', 'sm')} Upload</label></div><div id="incFiles">${photoStrip(INC_FILES, 'inc', 'incFileDel')}</div><div class="file-note">${icon('info', 'sm')} Take photos with the camera, or upload photos and PDFs from your phone or computer (up to ${MAX_INC_FILES} files, 20 MB each). Prototype: files are kept in this browser only.</div></div>
   </div></div><div class="modal-foot" style="border-radius:0 0 12px 12px"><a class="btn" href="${isFieldUser() ? '#/field' : '#/incidents'}">Cancel</a><button class="btn accent" type="button" data-act="incSubmit">${icon('check', 'sm')} Submit report</button></div></form></div>`;
   return { title: 'Report incident', nav: 'incidents', crumbs: [['Incidents & injuries', '#/incidents'], ['Report', '#']], html, after: () => { const t = document.querySelector('#incForm [name=type]'); const sync = () => document.getElementById('injBox').classList.toggle('hidden', t.value !== 'Injury'); t.addEventListener('change', sync); sync(); } };
 }
 ACT.incSubmit = () => {
   const f = document.getElementById('incForm');
   if (!validateForm(f, fail => { const d = f.querySelector('[name=date]'); if (d.value > TODAY) fail(d, 'The incident date cannot be in the future.'); if (f.querySelector('[name=type]').value === 'Injury' && !f.querySelector('[name=nature]').value.trim()) fail(f.querySelector('[name=nature]'), 'Describe the injury.'); })) return;
-  const v = readForm(f); const files = [...f.querySelector('[name=photos]').files].map(fileMeta);
+  const v = readForm(f); const files = INC_FILES.slice(); INC_FILES = [];
   const yr = v.date.slice(0, 4); let max = 0; S.incidents.forEach(i => { const m = i.id.match(new RegExp('INC-' + yr + '-(\\d+)')); if (m) max = Math.max(max, +m[1]); });
   const id = `INC-${yr}-${String(max + 1).padStart(3, '0')}`;
   const i = { id, org: siteOrgOf(v.site), type: v.type, title: v.title, date: v.date, time: v.time, site: v.site, location: v.location, reporter: S.ui.user, persons: v.person ? [v.person] : [], others: v.others, description: v.description, immediate: v.immediate, injury: v.type === 'Injury' ? { nature: v.nature, body: v.body, firstAid: v.firstAid, sentForMedical: v.sentForMedical, medical: v.sentForMedical === 'Yes', fatal: false, daysLost: 0, restrictedDays: 0, rtw: null, classification: null, classHistory: [] } : null, actualSev: +v.actualSev, potentialSev: +v.potentialSev, witnesses: v.witnesses, attachments: files, investigator: null, status: 'Reported', investigation: null, links: { assets: v.asset ? [v.asset] : [], docs: [] }, reporting: { required: 'To be determined', status: 'Not assessed', ref: '' }, closure: null, actions: [], history: [{ ts: nowTs(), by: S.ui.user, action: 'Incident reported', comment: '' }] };
@@ -73,7 +84,7 @@ function incidentDetail(id) {
       <div>Incident number</div><div class="mono">${i.id}</div><div>Type</div><div>${esc(i.type)}</div><div>Date & time</div><div>${fmt(i.date)} ${esc(i.time)}</div><div>Organisation / branch</div><div>${esc(orgOf(i.org).short)} · ${esc(site(i.site).name)}</div><div>Location</div><div>${esc(i.location)}</div>
       <div>Reported by</div><div>${esc(pname(i.reporter))}</div><div>Persons involved</div><div>${i.persons.map(x => esc(pname(x))).join(', ') || '—'}${i.others ? ', ' + esc(i.others) : ''}</div>
       <div>Description</div><div>${esc(i.description)}</div><div>Immediate response</div><div>${esc(i.immediate)}</div><div>Witnesses</div><div>${esc(i.witnesses || '—')}</div>
-      <div>Attachments</div><div>${i.attachments.length ? i.attachments.map(fileChip).join(' ') : '—'}</div>
+      <div>Attachments</div><div>${i.attachments.length ? photoStrip(i.attachments.filter(f => f.thumb)) + i.attachments.filter(f => !f.thumb).map(fileChip).join(' ') : '—'}</div>
     </div></div></div>
     ${i.injury ? injuryCard(i) : ''}
     <div class="card"><div class="card-head"><h2>Investigation & root-cause analysis</h2>${i.investigator ? `<span class="ch-sub">Investigator: ${esc(pname(i.investigator))}</span>` : ''}</div><div class="card-body">${inv ? `<div class="kv"><div>Findings</div><div>${esc(inv.findings)}</div><div>Immediate cause</div><div>${esc(inv.immediate)}</div><div>Underlying cause</div><div>${esc(inv.underlying)}</div><div>Root cause</div><div><b>${esc(inv.root)}</b></div><div>Cause categories</div><div>${(inv.categories || []).map(c => `<span class="tag">${esc(c)}</span>`).join(' ')}</div><div>Completed</div><div>${inv.completed ? fmt(inv.completed) : '<span class="due amber">In progress</span>'}</div></div>` : `<p class="muted">${i.investigator ? 'Investigation not yet recorded.' : 'No investigator assigned yet.'}</p>`}</div></div>
@@ -207,7 +218,7 @@ ACT.qAns = (el) => {
   const card = document.getElementById('qc-' + q); card.outerHTML = qCard(qq, k, s.asset && byId('assets', s.asset)); updAnswered();
 };
 document.addEventListener('input', e => { const t = e.target; if (t.dataset && t.dataset.qc) { (INSP.answers[t.dataset.qc] = INSP.answers[t.dataset.qc] || {}).comment = t.value; } });
-document.addEventListener('change', e => { const t = e.target; if (!t.dataset) return; if (t.dataset.qp) addQPhotos(t.dataset.qp, [...t.files]); if (t.dataset.qf) { const a = INSP.answers[t.dataset.qf] = INSP.answers[t.dataset.qf] || {}; a[t.dataset.k] = t.type === 'checkbox' ? t.checked : t.value; } });
+document.addEventListener('change', e => { const t = e.target; if (!t.dataset) return; if (t.dataset.qp) { addQPhotos(t.dataset.qp, [...t.files]); t.value = ''; } if (t.dataset.incf) { addIncFiles([...t.files]); t.value = ''; } if (t.dataset.qf) { const a = INSP.answers[t.dataset.qf] = INSP.answers[t.dataset.qf] || {}; a[t.dataset.k] = t.type === 'checkbox' ? t.checked : t.value; } });
 ACT.inspSubmit = () => {
   const s = byId('schedules', INSP.sched), t = byId('templates', s.template), r = tplCurrent(t), a = s.asset && byId('assets', s.asset);
   const root = document.getElementById('content');

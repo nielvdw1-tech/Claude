@@ -8,7 +8,7 @@ Status key:
 - **Not implemented**
 
 "Tested" means one of the following:
-- the automated browser test (`tests/workflows.test.js`, **116/116 passing**, no JavaScript errors);
+- the automated browser test (`tests/workflows.test.js`, **120/120 passing**, no JavaScript errors);
 - the route smoke test (77 routes plus a second organisation, no errors);
 - the mobile layout check (31 routes at 390 px, no horizontal overflow).
 
@@ -50,7 +50,7 @@ Status key:
 ## Incident management
 | Requirement | Status | Notes |
 |---|---|---|
-| Report incident (mobile-friendly), four incident types, injury details, photos | Implemented | D1 |
+| Report incident (mobile-friendly), four incident types, injury details, photos | Implemented | D1; Take photo (camera) or upload photos and PDFs, up to 10, removable before submitting (IP1–IP4) |
 | Assign investigator; investigation and root-cause analysis | Implemented | D2–D3 |
 | Corrective actions from the incident, tracked through verification | Implemented | D4, D6 |
 | Closure only when all actions are verified | Implemented | D5, D7 |

@@ -96,7 +96,7 @@ Defects can also be reported directly from the asset page or its **QR page** (e.
 - **Example:** defect **DF-303** on LDV-03 is waiting for review by Pieter Botha.
 
 ### C. Incident management
-1. As **Nomvula Sithole**, go to **Incident Management → Report incident**. This form is designed for a phone.
+1. As **Nomvula Sithole**, go to **Incident Management → Report incident**. This form is designed for a phone. Under **Photographs / attachments**, **Take photo** opens the phone camera and **Upload** adds photos or PDFs (for example a witness statement) from the phone or computer. Up to 10 files can be attached, and each can be removed before submitting. Photos show as thumbnails on the incident and open full size.
 2. As Johan, **Assign investigator → Record investigation**: findings, immediate, underlying and root cause, and cause categories. Tick *Investigation complete*, and you are prompted to raise a corrective action.
 3. Work and verify the action as above. The incident moves to **Awaiting closure**.
 4. **Review & close**. The incident can't be closed while any action is still open. Check **Reports → Incident trends**.
@@ -192,6 +192,6 @@ prototype/
 └── README.md                     This file
 ```
 
-**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 116 workflow outcomes.
+**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 120 workflow outcomes.
 
 The earlier full HSEQ prototype, with legal, risk, people, PPE, chemicals, emergency and audits, is preserved in git history at commit `26b59bc`.
