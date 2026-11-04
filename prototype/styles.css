@@ -922,3 +922,27 @@ body.auth-mode .main { margin-left: 0; }
 .mail-hdr { background: var(--surface-2); padding: 10px 14px; font-size: 13px; display: grid; gap: 3px; border-bottom: 1px solid var(--line); }
 .mail-hdr span { display: inline-block; width: 64px; color: var(--muted); }
 .mail-body { padding: 14px; font-size: 13.5px; line-height: 1.6; color: var(--fg); }
+
+/* QR labels */
+.lbl-pick { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 4px 12px; max-height: 220px; overflow: auto; margin-top: 8px; padding: 8px; border: 1px solid var(--line); border-radius: 8px; }
+.lbl-sheet { display: flex; flex-wrap: wrap; gap: 4mm; }
+.lbl { display: flex; gap: 3mm; align-items: center; background: #fff; color: #000; border: 0.3mm dashed #999; border-radius: 2mm; padding: 2.5mm; break-inside: avoid; overflow: hidden; }
+.lbl-l .lbl { width: 70mm; height: 50mm; } .lbl-l .lbl-qr { width: 40mm; height: 40mm; }
+.lbl-s .lbl { width: 50mm; height: 30mm; } .lbl-s .lbl-qr { width: 25mm; height: 25mm; }
+.lbl-qr { flex: none; } .lbl-qr svg { width: 100%; height: 100%; display: block; }
+.lbl-txt { display: flex; flex-direction: column; gap: 0.6mm; min-width: 0; font-family: Arial, sans-serif; }
+.lbl-org { display: flex; align-items: center; gap: 1.5mm; font-size: 6.5pt; font-weight: 700; }
+.org-logo.lblorg, .org-initials.lblorg { width: auto; height: 5mm; min-width: 5mm; max-width: 16mm; font-size: 6pt; border-radius: 1mm; padding: 0; box-shadow: none; }
+.lbl-tag { font-size: 15pt; line-height: 1; }
+.lbl-s .lbl-tag { font-size: 11pt; }
+.lbl-name { font-size: 7pt; line-height: 1.15; max-height: 3em; overflow: hidden; }
+.lbl-cta { font-size: 6.5pt; font-weight: 700; margin-top: 0.5mm; }
+.lbl-code { font-size: 5.5pt; color: #444; }
+.lbl-s .lbl-name, .lbl-s .lbl-cta { display: none; }
+@media print { .lbl { border-color: #ccc; } .lbl-sheet { gap: 3mm; } }
+/* Scanner */
+.scan-cam { position: relative; aspect-ratio: 4 / 3; background: #0b1220; border-radius: 10px; overflow: hidden; display: grid; place-items: center; }
+.scan-cam video { width: 100%; height: 100%; object-fit: cover; display: none; }
+.scan-cam.live video { display: block; }
+.scan-frame { position: absolute; inset: 18%; border: 3px solid rgba(255, 255, 255, .85); border-radius: 12px; box-shadow: 0 0 0 999px rgba(0, 0, 0, .25); }
+.scan-msg { margin: 8px 0 10px; font-size: 12.5px; }

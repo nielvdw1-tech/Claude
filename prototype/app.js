@@ -277,14 +277,12 @@ function listBody(key) {
 function refreshList(key) { const b = document.getElementById('lvb-' + key); if (b) b.innerHTML = listBody(key); }
 
 /* ---------------- Simulated QR identifier ---------------- */
-function qrSvg(text) {
-  const n = 25; let h = 2166136261; for (const c of text) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); }
-  const rnd = () => { h ^= h << 13; h ^= h >>> 17; h ^= h << 5; return (h >>> 0) / 4294967296; };
-  let cells = '';
-  const finder = (x, y) => { cells += `<rect x="${x}" y="${y}" width="7" height="7" fill="#0A2A6B"/><rect x="${x + 1}" y="${y + 1}" width="5" height="5" fill="#fff"/><rect x="${x + 2}" y="${y + 2}" width="3" height="3" fill="#0A2A6B"/>`; };
-  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) { const inF = (x < 8 && y < 8) || (x > n - 9 && y < 8) || (x < 8 && y > n - 9); if (!inF && rnd() > .52) cells += `<rect x="${x}" y="${y}" width="1" height="1" fill="#0A2A6B"/>`; }
-  finder(0, 0); finder(n - 7, 0); finder(0, n - 7);
-  return `<svg viewBox="-1 -1 ${n + 2} ${n + 2}" shape-rendering="crispEdges" role="img" aria-label="Simulated QR code ${esc(text)}"><rect x="-1" y="-1" width="${n + 2}" height="${n + 2}" fill="#fff"/>${cells}</svg>`;
+// Real QR code (vendor/qr/qrcode.js) as crisp SVG, with a quiet zone so it scans reliably
+function qrSvg(text, label) {
+  const q = qrcode(0, 'M'); q.addData(text); q.make();
+  const n = q.getModuleCount(); let d = '';
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (q.isDark(y, x)) d += `M${x},${y}h1v1h-1z`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 ${n + 8} ${n + 8}" shape-rendering="crispEdges" role="img" aria-label="QR code${label ? ' for ' + esc(label) : ''}"><rect x="-4" y="-4" width="${n + 8}" height="${n + 8}" fill="#fff"/><path d="${d}" fill="#000"/></svg>`;
 }
 
 /* ==========================================================================

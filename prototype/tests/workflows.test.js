@@ -297,7 +297,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     ok('H4 other pages are closed to employees', (await p.innerText('#content')).includes('not available for your role'));
     await go('#/inspect/ISCH-04');
     ok('H5 an employee cannot start an inspection without scanning the asset QR', (await p.innerText('#content')).includes("Scan the asset's QR code to start"));
-    await go('#/field'); await act('.big-actions button:has-text("Scan asset QR code")'); await msel('pick', 'AS-004'); await mbtn('Open asset');
+    await go('#/field'); await act('.big-actions button:has-text("Scan asset QR code")'); await p.click('.modal details summary'); await msel('pick', 'AS-004'); await mbtn('Open asset');
     const qrTxt = await p.innerText('#content');
     ok('H6 employee QR page offers only inspection and incident reporting', qrTxt.includes('Start inspection') && qrTxt.includes('Report incident') && !qrTxt.includes('Report defect') && !qrTxt.includes('Open full asset record'));
     await act('.big-actions button:has-text("Start inspection")');
@@ -376,7 +376,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
   /* ---------------- R. Defect review, escalation, corrections, effectiveness ---------------- */
   {
     const tryReview = async () => { await act('[data-act=defectReview]'); };
-    await asUser('P-014'); await go('#/field'); await act('.big-actions button:has-text("Scan asset QR code")'); await msel('pick', 'AS-004'); await mbtn('Open asset');
+    await asUser('P-014'); await go('#/field'); await act('.big-actions button:has-text("Scan asset QR code")'); await p.click('.modal details summary'); await msel('pick', 'AS-004'); await mbtn('Open asset');
     await act('.big-actions button:has-text("Start inspection")');
     const qv = await S(`tplCurrent(byId('templates','TPL-VEH')).questions.map(q=>q.id)`);
     for (const q of qv) await p.click(`[data-act=qAns][data-q="${q}"][data-v="${q === qv[0] ? 'Fail' : 'Pass'}"]`);
@@ -587,6 +587,32 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await restore(bpath); const summary = await p.innerText('.modal'); await mbtn('Replace everything with this backup'); await p.waitForTimeout(800);
     const blob = await S(`(async () => { const id = [...referencedBlobs(S)][0]; return !!(await idbGet(id)); })()`);
     ok('BK3 restoring shows what is in the backup, then brings back the records and the stored files', summary.includes('verified') && (await S('S.actions.length')) === nActs && !(await S("S.actions.some(a => a.title === 'Added after the backup')")) && blob && (await S('S.ui.user')) === 'P-002');
+  }
+
+  /* ---------------- QR. Real QR codes, labels and scanning ---------------- */
+  {
+    // Render an asset's QR code to a PNG (as a phone photo of the label would show it)
+    const qrPng = async (svgSel) => Buffer.from(await p.evaluate(async (sel) => {
+      const svg = document.querySelector(sel).outerHTML, url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
+      const img = await new Promise(r => { const i = new Image(); i.onload = () => r(i); i.src = url; });
+      const c = document.createElement('canvas'); c.width = 600; c.height = 600; const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, 600, 600); g.drawImage(img, 100, 100, 400, 400);
+      return c.toDataURL('image/png').split(',')[1];
+    }, svgSel), 'base64');
+    await asUser('P-002'); await go('#/assets/AS-002');
+    const png = await qrPng('.qr-box svg');
+    const decoded = await p.evaluate(async (b64) => { await ensureJsQR(); const img = await new Promise(r => { const i = new Image(); i.onload = () => r(i); i.src = 'data:image/png;base64,' + b64; }); const c = document.createElement('canvas'); c.width = img.width; c.height = img.height; const g = c.getContext('2d'); g.drawImage(img, 0, 0); const d = g.getImageData(0, 0, c.width, c.height); const r = jsQR(d.data, d.width, d.height); return r && r.data; }, png.toString('base64'));
+    ok('QR1 each asset has a real, readable QR code that links to its QR page', !!decoded && decoded.endsWith('#/qr/AS-002'), decoded);
+    await go('#/labels'); const allN = await p.$$eval('.lbl', e => e.length);
+    await go('#/labels?size=small&ids=AS-002,AS-004'); const two = await p.$$eval('.lbl-sheet.lbl-s .lbl', e => e.length);
+    ok('QR2 a label sheet prints for all or chosen assets, small or large', allN === (await S("scoped('assets').filter(a => a.status !== 'Decommissioned').length")) && two === 2 && (await p.innerText('.lbl-sheet')).includes('FL-02'));
+    await go('#/assets'); await btn('Scan asset QR');
+    await p.setInputFiles('#scanPhoto', { name: 'label.png', mimeType: 'image/png', buffer: png }); await p.waitForTimeout(1200);
+    ok('QR3 scanning a photo of the label opens the asset', (await p.evaluate(() => location.hash)) === '#/qr/AS-002' && !(await modalOpen()));
+    const other = Buffer.from(await p.evaluate(async () => { const svg = qrSvg('https://example.com/not-an-asset'); const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' })); const img = await new Promise(r => { const i = new Image(); i.onload = () => r(i); i.src = url; }); const c = document.createElement('canvas'); c.width = 600; c.height = 600; const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, 600, 600); g.drawImage(img, 100, 100, 400, 400); return c.toDataURL('image/png').split(',')[1]; }), 'base64');
+    await go('#/assets'); await btn('Scan asset QR');
+    await p.setInputFiles('#scanPhoto', { name: 'other.png', mimeType: 'image/png', buffer: other }); await p.waitForTimeout(1000);
+    ok('QR4 a QR code that is not one of our labels is refused', (await p.evaluate(() => location.hash)) === '#/assets' && await modalOpen());
+    await p.keyboard.press('Escape');
   }
 
   /* ---------------- L. Company logo ---------------- */
