@@ -127,14 +127,14 @@ const LINES = {};
 function drawLine(id) {
   const box = document.getElementById(id), D = LINES[id]; if (!box || !D) return;
   const { months, series } = D, W = Math.max(280, box.clientWidth), H = 220, L = 30, R = 96, T = 14, B = 26;
-  const all = series.flatMap(s => s.vals).filter(v => v != null), max = D.max || niceMax(Math.max(1, ...all)), n = months.length;
+  const all = series.flatMap(s => s.vals).filter(v => v != null), max = D.max || (D.decimal ? niceMaxDec(Math.max(0, ...all)) : niceMax(Math.max(1, ...all))), n = months.length;
   const x = k => L + (k * (W - L - R)) / (n - 1), y = v => T + (1 - v / max) * (H - T - B);
   const path = s => s.vals.map((v, k) => v == null ? '' : `${k && s.vals[k - 1] != null ? 'L' : 'M'}${x(k).toFixed(1)},${y(v).toFixed(1)}`).join('');
   const lastIdx = s => { for (let k = n - 1; k >= 0; k--) if (s.vals[k] != null) return k; return -1; };
   const ends = series.map(s => ({ s, k: lastIdx(s) })).filter(e => e.k >= 0).map(e => Object.assign(e, { yy: y(e.s.vals[e.k]) }));
   if (ends.length === 2 && Math.abs(ends[0].yy - ends[1].yy) < 14) { const mid = (ends[0].yy + ends[1].yy) / 2, up = ends[0].yy <= ends[1].yy ? 0 : 1; ends[up].ly = mid - 8; ends[1 - up].ly = mid + 8; }
   box.innerHTML = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" tabindex="0" role="img" aria-label="${esc(D.aria)}. Use the left and right arrow keys to read each month.">
-    ${[0, max / 2, max].map(t => `<line class="lc-grid" x1="${L}" x2="${W - R}" y1="${y(t)}" y2="${y(t)}"/><text class="lc-tick" x="${L - 6}" y="${y(t) + 4}" text-anchor="end">${t}</text>`).join('')}
+    ${[0, max / 2, max].map(t => `<line class="lc-grid" x1="${L}" x2="${W - R}" y1="${y(t)}" y2="${y(t)}"/><text class="lc-tick" x="${L - 6}" y="${y(t) + 4}" text-anchor="end">${D.decimal ? +t.toFixed(2) : t}</text>`).join('')}
     ${D.ref ? `<line class="lc-ref" x1="${L}" x2="${W - R}" y1="${y(D.ref.v)}" y2="${y(D.ref.v)}"/><text class="lc-ref-t" x="${W - R + 6}" y="${y(D.ref.v) + 4}">${esc(D.ref.label)}</text>` : ''}
     ${months.map((m, k) => k % 2 === (n - 1) % 2 ? `<text class="lc-tick" x="${x(k)}" y="${H - 8}" text-anchor="middle">${monthLabel(m, m.endsWith('-01') || k === 0)}</text>` : '').join('')}
     ${series.map(s => `<path class="lc-line" d="${path(s)}" style="stroke:var(${s.v})"/>`).join('')}
@@ -303,8 +303,12 @@ ROUTES.dashboard = () => {
       <div><h4>LTIs per month</h4>${columnChart(months, ltiPerMonth, { unit: 'LTIs', aria: `Lost time injuries per month: ${months.map((m, k) => `${monthLabel(m, true)} ${ltiPerMonth[k]}`).join(', ')}`, href: '#/incidents?type=Injury', detail: ltiIds })}</div>
       <div><h4>Shifts lost per month</h4>${columnChart(months, shiftsPerMonth, { unit: 'shifts lost', aria: `Shifts lost to lost time injuries per month: ${months.map((m, k) => `${monthLabel(m, true)} ${shiftsPerMonth[k]}`).join(', ')}`, href: '#/incidents?type=Injury', detail: ltiIds })}</div>
     </div>
-    ${(() => { const fm = monthsBack(12, prevMonth(TODAY.slice(0, 7))), fr = fm.map(m => ltifr(sid, m)), vals = fr.map(f => f.value == null ? 0 : f.value), gaps = fr.filter(f => f.value == null).length;
-      return `<div class="mt"><h4>LTI frequency rate — rolling 12 months, per ${fmtNum(ltifrBase())} hours worked</h4>${columnChart(fm, vals, { unit: 'LTIFR', decimal: true, missing: k => fr[k].value == null, aria: `Rolling 12-month LTIFR: ${fm.map((m, k) => `${monthLabel(m, true)} ${fr[k].value == null ? 'not available' : fr[k].value}`).join(', ')}`, href: '#/admin/hours', detail: k => fr[k].value == null ? [['—', `hours missing for ${fr[k].missing} branch-month(s)`]] : [[String(fr[k].ltis), 'LTIs'], [fmtNum(fr[k].hours), 'hours worked']] })}
+    ${(() => { const fm = monthsBack(12, prevMonth(TODAY.slice(0, 7))), fr = fm.map(m => ltifr(sid, m)), gaps = fr.filter(f => f.value == null).length;
+      // Line chart: a month without hours worked is a gap in the line, not a zero
+      LINES.lcLtifr = { months: fm, decimal: true, aria: `Rolling 12-month LTIFR: ${fm.map((m, k) => `${monthLabel(m, true)} ${fr[k].value == null ? 'not available' : fr[k].value}`).join(', ')}`,
+        note: k => fr[k].value == null ? `hours missing for ${fr[k].missing} branch-month(s)` : `${fr[k].ltis} LTI(s) in ${fmtNum(fr[k].hours)} hours`,
+        series: [{ name: 'LTIFR', short: 'LTIFR', v: '--viz-1', vals: fr.map(f => f.value) }] };
+      return `<div class="mt"><h4>LTI frequency rate — rolling 12 months, per ${fmtNum(ltifrBase())} hours worked</h4><div id="lcLtifr" class="lc"></div>
         ${gaps ? `<p class="muted mt-s">${icon('alert', 'sm')} ${gaps} month(s) cannot be calculated because hours worked are missing. <a href="#/admin/hours">Enter hours worked</a>.</p>` : ''}</div>`; })()}
     ${dataTable(['Month', 'LTIs', 'Shifts lost', 'Incidents', 'Rolling 12-month LTIFR'], months.map((m, k) => { const f = ltifr(sid, m); return [monthLabel(m, true), ltiPerMonth[k], shiftsPerMonth[k], lti12.filter(i => i.date.startsWith(m)).map(i => i.id).join(', ') || '—', f.value == null ? 'hours missing' : f.value.toFixed(2)]; }))}
   </div></div>

@@ -455,13 +455,13 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await p.click('.pad [data-act=focusSite][data-site="ALL"]'); await p.waitForTimeout(250);
     const openActs = await S("S.actions.filter(a => a.org === S.ui.org && actionOpen(a)).length");
     const segTotal = await p.$$eval('.seg em', e => e.reduce((a, x) => a + Number(x.textContent), 0));
-    ok('DB4 the 12-month charts render with data tables', (await p.$$eval('.vc-col', e => e.length)) === 48 && (await p.$$eval('#lcActions .lc-line', e => e.length)) === 2 && segTotal === openActs && (await p.$$eval('.viz-table', e => e.length)) === 6, `${segTotal} of ${openActs} open`);
+    ok('DB4 the 12-month charts render with data tables', (await p.$$eval('.vc-col', e => e.length)) === 36 && (await p.$$eval('#lcLtifr .lc-line', e => e.length)) === 1 && (await p.$$eval('#lcActions .lc-line', e => e.length)) === 2 && segTotal === openActs && (await p.$$eval('.viz-table', e => e.length)) === 6, `${segTotal} of ${openActs} open`);
     const cols = await p.$$('.vc-col'); await cols[cols.length - 1].scrollIntoViewIfNeeded(); await p.waitForTimeout(150); await cols[cols.length - 1].hover(); await p.waitForTimeout(120);
     ok('DB5 hovering a column shows a tooltip with the month and value', await p.$eval('#vizTip', e => e.style.display === 'block' && /[0-9]/.test(e.textContent)).catch(() => false));
     const lti = await S("(() => { const all = S.incidents.filter(i => i.org === S.ui.org && injClass(i) === 'Lost Time Injury').sort((a, b) => a.date.localeCompare(b.date)); const last = all[all.length - 1]; return { n12: all.filter(i => i.date.slice(0, 7) >= last12Months()[0]).length, since: last ? -daysTo(last.date) : null, id: last && last.id }; })()");
     const ltiTxt = await p.innerText('#ltiCard');
     const ltiCols = await p.$$eval('#ltiCard .vc-col', e => e.length);
-    ok('DB6 the LTI trend shows days since the last LTI, LTIs and shifts lost per month', ltiCols === 36 && ltiTxt.includes('Days since last LTI') && ltiTxt.includes(String(lti.since)) && ltiTxt.includes(lti.id) && /shifts lost per month/i.test(ltiTxt), `${lti.n12} LTI(s), ${lti.since} days since ${lti.id}`);
+    ok('DB6 the LTI trend shows days since the last LTI, LTIs and shifts lost per month', ltiCols === 24 && ltiTxt.includes('Days since last LTI') && ltiTxt.includes(String(lti.since)) && ltiTxt.includes(lti.id) && /shifts lost per month/i.test(ltiTxt), `${lti.n12} LTI(s), ${lti.since} days since ${lti.id}`);
   }
 
   /* ---------------- QL. Quick links per user ---------------- */
