@@ -185,14 +185,31 @@ Other pages are closed to employees. An inspection can only be started from the 
 - **Backup and restore** (Administration → Backup & data):
   - One file holds all records and all uploaded files, with a checksum.
   - Restoring shows what is in the backup first. A damaged or edited backup, or one from another version, is refused.
-  - Use it to keep a copy or to move the prototype to another computer. The online preview blocks downloads, so make backups from the folder copy.
+  - Use it to keep a copy or to move the prototype to another computer.
+
+### F. Getting a client set up (towards a pilot)
+- **Real QR codes and labels:**
+  - Every asset has a real, scannable QR code that links to its QR page.
+  - **Assets → Print QR labels** prints small (50 × 30 mm) or large (70 × 50 mm) labels for all or chosen assets. Each label shows the company logo, the asset tag and name, and "Scan to inspect or report". An asset's own page has **Print label**.
+- **Scanning:**
+  - **Scan asset QR** uses the phone or laptop camera.
+  - Where the camera can't be used (for example in the online preview), **Take a photo of the label** reads the code from a photo.
+  - A QR code that isn't one of the system's labels is refused.
+- **Bulk import from Excel or CSV** (Administration → Import data):
+  - You can load **assets**, **people**, **inspection schedules** and an **existing document register** from a spreadsheet (.xlsx or .csv, including semicolon-separated files).
+  - **Download template** gives the column headings.
+  - Every row is checked and shown in a preview first: *Ready*, *Error* (with the reason) or *Exists* (skipped, never duplicated).
+  - **Imported people** get temporary passwords, shown once to the administrator.
+  - **Imported assets** get their inspection schedule automatically.
+  - **Imported documents** are recorded as issued, with revision and review dates. Attach each current file afterwards.
+- **Downloads in the online preview:** backups, import templates and report CSV exports now ask you to confirm the download instead of being blocked.
 
 ## 4. What works and what is simulated
 
 | Works in the browser | Simulated / not provided |
 |---|---|
 | Upload form with file selection, sequential approval routes, return / reject / resubmit, issue, revisions; **in-app viewing of PDFs, images and text files** | **Files:** kept in this browser only (up to 20 MB each); Word/Excel files have no in-app preview |
-| Asset register, QR pages, type-specific certificates, scheduled inspections, controlled templates, defects, out-of-service control | **QR codes:** a simulated pattern and a "scan" dialog |
+| Asset register, real QR codes and printable labels, camera / photo scanning, type-specific certificates, scheduled inspections, controlled templates, defects, out-of-service control | **Camera in the online preview:** not available there; scan from a photo of the label instead |
 | Corrective actions with owner workflow, evidence, independent verification, rejection, reopening, escalation | **Sign-in & security:** sign-in, passwords and permissions are checked in the browser only, so they are not secure |
 | Incident reporting, investigation, root cause, actions, closure | **Email / SMS:** e-mails are written to an outbox but not sent; no SMS |
 | Dashboard, task centre, reports (print + CSV), administration incl. approval routes | **Audit trail:** hash-chained so changes are detected, but kept in the browser, where someone could rebuild it |
@@ -206,7 +223,7 @@ Other pages are closed to employees. An inspection can only be started from the 
 4. Send the e-mails that the prototype writes to its outbox, from the server.
 5. Keep the audit trail on the server, signed and out of users' reach (the prototype shows the hash chain and locked records).
 6. Add electronic signatures on approvals.
-7. Generate printable QR labels.
+7. Host the system at a short web address, so the links in printed QR labels open directly on any phone.
 8. Support offline mobile inspections.
 
 ## 6. Files
@@ -222,6 +239,8 @@ prototype/
 ├── mod-audit.js                  Locked records, amendments, hash-chained audit trail
 ├── mod-mail.js                   E-mail outbox (simulated) and notification settings
 ├── mod-backup.js                 Backup and restore of all records and stored files
+├── mod-qr.js                     Real QR codes, printable labels, camera / photo scanning
+├── mod-import.js                 Bulk import from Excel (.xlsx) or CSV with preview
 ├── mod-documents.js              Document control & sequential approval routes
 ├── mod-operations.js             Assets, QR pages, maintenance & defects
 ├── mod-inspections-incidents.js  Inspections, controlled templates & print report, incidents
@@ -230,11 +249,12 @@ prototype/
 ├── mod-notices.js                Company notices: publish, read, acknowledge, track
 ├── mod-dashboard.js              Dashboard: compliance status, 12-month trends, detail
 ├── vendor/pdfjs/                 PDF.js 3.11.174 (Apache-2.0) for viewing PDFs, works offline
+├── vendor/qr/                    QR code generator (MIT) and reader jsQR (Apache-2.0)
 ├── tests/workflows.test.js       Automated end-to-end test (developers)
 ├── CHECKLIST.md                  Requirements checklist with status
 └── README.md                     This file
 ```
 
-**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 156 workflow outcomes.
+**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 165 workflow outcomes.
 
 The earlier full HSEQ prototype, with legal, risk, people, PPE, chemicals, emergency and audits, is preserved in git history at commit `26b59bc`.

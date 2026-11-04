@@ -946,3 +946,9 @@ body.auth-mode .main { margin-left: 0; }
 .scan-cam.live video { display: block; }
 .scan-frame { position: absolute; inset: 18%; border: 3px solid rgba(255, 255, 255, .85); border-radius: 12px; box-shadow: 0 0 0 999px rgba(0, 0, 0, .25); }
 .scan-msg { margin: 8px 0 10px; font-size: 12.5px; }
+
+/* Bulk import */
+.imp-steps { margin: 0; padding-left: 20px; display: grid; gap: 10px; font-size: 13.5px; }
+.imp-steps .tag { margin: 2px 2px; }
+.imp-notes { font-size: 12px; color: var(--fg-2); min-width: 200px; }
+.imp-err td { background: var(--bad-bg); }

@@ -8,7 +8,7 @@ Status key:
 - **Not implemented**
 
 "Tested" means one of the following:
-- the automated browser test (`tests/workflows.test.js`, **156/156 passing**, no JavaScript errors);
+- the automated browser test (`tests/workflows.test.js`, **165/165 passing**, no JavaScript errors);
 - the route smoke test (77 routes plus a second organisation, no errors);
 - the mobile layout check (31 routes at 390 px, no horizontal overflow).
 
@@ -33,7 +33,8 @@ Status key:
 | Requirement | Status | Notes |
 |---|---|---|
 | Load assets onto the system; asset types with required certificates | Implemented | |
-| QR identifier and mobile asset page | Partial | Simulated QR pattern and scan dialog |
+| QR identifier and mobile asset page | Implemented | Real QR codes linking to the asset page; printable label sheets (small/large); camera scanning with photo fallback (QR1–QR4). Camera is not available inside the online preview — the photo fallback works there |
+| Bulk import of assets, people, inspection schedules and the document register from Excel (.xlsx) or CSV, with validation preview | Implemented | IM1–IM5; document files are attached afterwards |
 | Scheduled inspections against controlled, revisioned checklist templates | Implemented | Header locked; history keeps the template revision used |
 | Pass / Fail / N/A, comments, photos | Implemented | Take photo (device camera) or upload several per item; thumbnails; kept in browser storage, shown on the record, the defect review and the printed report (P1–P5) |
 | Inspector signs on screen before an inspection can be submitted; signature shown on the record and the printed report | Partial | SG1–SG5. A drawn signature with name and time; not a certified electronic signature |

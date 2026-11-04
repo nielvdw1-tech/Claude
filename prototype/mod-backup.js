@@ -29,11 +29,9 @@ async function buildBackup() {
   return { format: BACKUP_FORMAT, formatVersion: 1, dataVersion: S.version, createdOn: nowTs(), createdBy: pname(S.ui.user), orgs: S.orgs.map(o => o.short), counts: backupCounts(data), data, files, checksum: backupChecksum(data, files) };
 }
 ACT.backupDownload = async () => {
-  if (typeof inPreviewFrame === 'function' && inPreviewFrame()) { toast('The online preview blocks downloads. Open the prototype from its folder (index.html) to download a backup.', 'error'); return; }
   toast('Preparing backup…', 'info');
   const bk = await buildBackup();
-  const blob = new Blob([JSON.stringify(bk)], { type: 'application/json' }), a = document.createElement('a');
-  a.href = URL.createObjectURL(blob); a.download = `vdw-hseq-backup-${TODAY}.json`; document.body.appendChild(a); a.click(); a.remove();
+  if (!(await saveFile(`vdw-hseq-backup-${TODAY}.json`, new Blob([JSON.stringify(bk)], { type: 'application/json' })))) return;
   S.lastBackup = { ts: bk.createdOn, by: S.ui.user, files: Object.keys(bk.files).length }; log(`Downloaded a full backup (${Object.keys(bk.files).length} file(s))`, '#/admin/data'); save();
   toast(`Backup downloaded with ${Object.keys(bk.files).length} stored file(s).`); rerender();
 };

@@ -148,6 +148,19 @@ ACT.viewDocFile = (el) => { const d = byId('documents', el.dataset.id), ri = el.
    NOT FOR USE" for revisions that are not issued. The hosted online preview
    blocks the print dialog, so there the viewer explains where to print from.
    ========================================================================== */
+/* Save a generated file for the user. In the hosted preview the page asks the viewer to confirm the
+   download (the 'downloads' permission); opened from the folder it downloads directly.
+   Resolves true when the file was handed over. */
+async function saveFile(filename, blob) {
+  const dl = window.claude && typeof window.claude.use === 'function' ? await window.claude.use('downloads').catch(() => null) : null;
+  if (dl) {
+    try { await dl.save({ filename, data: blob }); return true; }
+    catch (e) { const c = e && e.code; toast(c === 'declined' ? 'Download cancelled.' : c === 'rate_limited' ? 'Another download is waiting for your answer.' : 'This file cannot be downloaded here. Open the prototype from its folder (index.html) instead.', c === 'declined' ? 'info' : 'error'); return false; }
+  }
+  if (inPreviewFrame()) { toast('The online preview blocks downloads. Open the prototype from its folder (index.html) to download files.', 'error'); return false; }
+  const url = URL.createObjectURL(blob), a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+  return true;
+}
 function inPreviewFrame() { try { return window.self !== window.top; } catch (e) { return true; } }
 function printBlockedNotice() {
   openModal({ title: 'Printing is not available in the online preview', size: 'narrow', body: `<p>The online preview link blocks the print dialog for everyone.</p><p>To print, open the prototype from its folder on your computer (double-click <b>index.html</b>) and use the same Print button. In the production system printing works directly from the browser.</p>`, buttons: [] });

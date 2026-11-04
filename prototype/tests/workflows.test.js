@@ -615,6 +615,42 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await p.keyboard.press('Escape');
   }
 
+  /* ---------------- IM. Bulk import from Excel / CSV ---------------- */
+  {
+    await asUser('P-002'); await go('#/admin/import');
+    const upload = async (name, mime, buffer) => { await p.setInputFiles('#impFile', { name, mimeType: mime, buffer }); await p.waitForTimeout(500); };
+    const statuses = () => p.$$eval('#content tbody tr td:nth-child(2)', e => e.map(x => x.innerText.trim()));
+    // People from a semicolon-separated CSV (as Excel saves it with South African regional settings)
+    await act('[data-act=impType][data-v=people]');
+    await upload('people.csv', 'text/csv', Buffer.from('Full name;E-mail;Job title;Branch;System role\nSam Botha;sam.botha@kestrel.demo;Storeman;Germiston;Employee\nNo Email;not-an-email;Cleaner;Germiston;Employee\nJohan Again;johan.vw@kestrel.demo;HSEQ Manager;Germiston;HSEQ Manager\n'));
+    const st1 = await statuses();
+    await act('[data-act=impRun]'); await p.waitForTimeout(200);
+    const pwList = await p.innerText('.modal'); await mbtn('Done');
+    ok('IM1 people import from CSV: preview marks ready / error / already exists, then creates accounts with temporary passwords', st1.join('|') === 'Ready|Error|Exists' && (await S("S.people.some(x => x.email === 'sam.botha@kestrel.demo' && x.auth.mustChange)")) && pwList.includes('sam.botha@kestrel.demo') && (await S("S.outbox.some(e => e.toEmail === 'sam.botha@kestrel.demo')")), st1.join('|'));
+    // Assets from a real .xlsx workbook
+    await act('[data-act=impType][data-v=assets]');
+    await upload('import-assets.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', require('fs').readFileSync(path.join(__dirname, 'fixtures', 'import-assets.xlsx')));
+    const st2 = await statuses();
+    await act('[data-act=impRun]'); await p.waitForTimeout(200);
+    const fl9 = await S("(() => { const a = S.assets.find(x => x.tag === 'FL-09'); return a && { resp: a.responsible, year: a.year, sched: S.schedules.some(s => s.asset === a.id), qr: a.qr }; })()");
+    ok('IM2 assets import from an Excel workbook, with its inspection schedule, responsible person and QR code', st2.join('|') === 'Ready|Error|Exists' && fl9 && fl9.resp === 'P-007' && fl9.year === '2024' && fl9.sched && /^VDW-QR-AS-/.test(fl9.qr), st2.join('|'));
+    // Schedules with a day/month/year date
+    await act('[data-act=impType][data-v=schedules]');
+    await upload('schedules.csv', 'text/csv', Buffer.from('Asset tag,Checklist,Every (days),Next due,Inspector\nLDV-03,KIE-FRM-031,14,15/12/2026,ruan.p@kestrel.demo\n'));
+    await act('[data-act=impRun]'); await p.waitForTimeout(200);
+    ok('IM3 schedules import reads day/month/year dates and links the checklist and inspector', await S("S.schedules.some(s => s.target === 'LDV-03' && s.template === 'TPL-FL' && s.nextDue === '2026-12-15' && s.freqDays === 14 && s.assignee === 'P-008')"));
+    // Existing document register
+    await act('[data-act=impType][data-v=documents]');
+    await upload('register.csv', 'text/csv', Buffer.from('Document number,Title,Category,Applies to,Document owner,Revision,Issue date,Review every (months)\nKIE-SWP-040,"Working at Heights, Ladders and Scaffolds",Safe Work Procedure,All,johan.vw@kestrel.demo,2,2025-03-01,24\n'));
+    await act('[data-act=impRun]'); await p.waitForTimeout(200);
+    const did = await S("(S.documents.find(d => d.number === 'KIE-SWP-040') || {}).id");
+    await go('#/documents/' + did);
+    ok('IM4 the existing document register imports as issued documents with review dates', !!did && (await S(`docStatus(byId('documents','${did}'))`)) === 'Issued for Use' && (await S(`byId('documents','${did}').nextReview`)) === '2027-03-01' && (await p.innerText('#content')).includes('Working at Heights, Ladders and Scaffolds'));
+    await go('#/admin/import'); await act('[data-act=impType][data-v=assets]');
+    await upload('wrong.csv', 'text/csv', Buffer.from('Tag number,Description\nA1,Something\n'));
+    ok('IM5 a sheet without the required columns is explained, not imported', (await p.innerText('#content')).includes('required columns were not found'));
+  }
+
   /* ---------------- L. Company logo ---------------- */
   {
     await asUser('P-002'); await go('#/dashboard');
