@@ -3646,13 +3646,28 @@ function rebuildPPECurrentStock() {
           )
         );
 
+      /*
+       * Reorder point = usage during the supplier lead time
+       * + safety stock. Never below the manual Minimum Stock.
+       */
       reorderPoint =
-        Math.ceil(
-          (averageMonthlyUsage / 30) * leadTimeDays + safetyStock
+        Math.max(
+          Math.ceil(
+            (averageMonthlyUsage / 30) * leadTimeDays + safetyStock
+          ),
+          minimumStock
         );
 
+      /*
+       * Target stock = reorder point + 2 months of usage, so an
+       * order placed now still covers the lead time and leaves
+       * two months' cover. Never below Minimum + Reorder Qty.
+       */
       targetStock =
-        Math.ceil(averageMonthlyUsage * 2 + safetyStock);
+        Math.max(
+          reorderPoint + Math.ceil(averageMonthlyUsage * 2),
+          minimumStock + reorderQuantity
+        );
 
     } else {
       // No usage history yet: fall back to Minimum / Reorder Qty.
