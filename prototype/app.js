@@ -123,6 +123,7 @@ const ICON_PATHS = {
   refresh: '<path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>',
   user: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
   info: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>',
+  arrowL: '<path d="M19 12H5M12 19l-7-7 7-7"/>',
   arrowR: '<path d="M5 12h14M12 5l7 7-7 7"/>',
   power: '<path d="M18.36 6.64a9 9 0 1 1-12.73 0M12 2v10"/>',
   camera: '<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>',
@@ -549,9 +550,10 @@ function renderSidebar(active) {
   </nav>
   <div class="sb-user"><div class="avatar">${initials(u.name)}</div><div class="who"><b>${esc(u.name)}</b><span>${esc(u.sysRole)}</span></div></div>`;
 }
-function renderTopbar(crumbs) {
+function renderTopbar(crumbs, back) {
   const notifs = buildNotifs(); const unread = notifs.filter(n => !S.readNotifs[n.key]).length; const tasks = myTasks().length; const u = me();
   return `<button class="icon-btn menu-btn" data-act="toggleNav" aria-label="Open menu">${icon('menu')}</button>
+  ${back ? `<button class="btn sm back-btn" data-act="goBack" aria-label="Back to the previous page">${icon('arrowL', 'sm')}<span>Back</span></button>` : ''}
   <div class="crumbs">${crumbs.map((c, i) => i < crumbs.length - 1 ? `<a href="${c[1]}">${esc(c[0])}</a>${icon('chevronR', 'sm')}` : `<b>${esc(c[0])}</b>`).join('')}</div>
   ${isFieldUser() ? '<span style="margin-left:auto"></span>' : `<div class="top-search">${icon('search', 'sm')}<input id="globalSearch" type="search" placeholder="Search records, IDs, people, assets…" autocomplete="off" aria-label="Global search"><div class="search-results hidden" id="searchResults"></div></div>
   <button class="icon-btn" data-act="openTasks" title="My tasks requiring attention" aria-label="My tasks">${icon('tasks')}${tasks ? `<span class="dot orange">${tasks}</span>` : ''}</button>
@@ -565,7 +567,26 @@ function parseHash() {
   return { parts, q };
 }
 function navigate(h) { if (location.hash === h) rerender(); else location.hash = h; }
-let lastRoute = '';
+let lastRoute = '', lastHash = '';
+/* Back navigation: every page below the main menu level gets a Back button. It returns to the page
+   you came from in this session, or, if you arrived directly (e.g. from a link or QR code), to the
+   page above it. */
+const NAV_STACK = []; let NAV_BACKING = false;
+const TOP_ROUTES = ['dashboard', 'notifications', 'notices', 'documents', 'assets', 'inspections', 'maintenance', 'incidents', 'actions', 'reports', 'admin', 'clients', 'field'];
+function needsBack(parts) {
+  const k = parts[0] || 'dashboard';
+  if (!TOP_ROUTES.includes(k)) return true;
+  if (parts.length < 2) return false;
+  if (['admin', 'notifications', 'maintenance'].includes(k)) return false;                                  // tabs, not deeper pages
+  if (k === 'inspections' && ['schedule', 'records', 'templates'].includes(parts[1])) return false;
+  return true;
+}
+let BACK_PARENT = '#/dashboard';
+ACT.goBack = () => {
+  const prev = NAV_STACK.pop();
+  if (prev) { NAV_BACKING = true; location.hash = prev; return; }
+  navigate(BACK_PARENT);
+};
 function rerender(keepScroll = true) {
   if (!signedIn()) { renderSignIn(); return; }   // nobody signed in (or the account was deactivated)
   document.body.classList.remove('auth-mode');
@@ -581,9 +602,13 @@ function rerender(keepScroll = true) {
   try { page = fn(parts.slice(1), q); }
   catch (e) { console.error(e); page = { title: 'Error', crumbs: [['Error', '#']], html: `<div class="alert danger">${icon('alert')}<div>Something went wrong rendering this page: ${esc(e.message)}</div></div>` }; }
   const routeId = location.hash.split('?')[0];
+  if (routeId !== lastRoute) { if (lastHash && !NAV_BACKING) { NAV_STACK.push(lastHash); if (NAV_STACK.length > 50) NAV_STACK.shift(); } NAV_BACKING = false; }
+  lastHash = location.hash || '#/dashboard';
+  const crumbsArr = page.crumbs || [[page.title, '#']], up = crumbsArr.slice(0, -1).reverse().find(c => c[1] && c[1] !== '#');
+  BACK_PARENT = isFieldUser() ? '#/field' : (up ? up[1] : '#/' + (TOP_ROUTES.includes(key) ? key : 'dashboard'));
   const y = window.scrollY;
   document.getElementById('sidebar').innerHTML = renderSidebar(page.nav || key);
-  document.getElementById('topbar').innerHTML = renderTopbar(page.crumbs || [[page.title, '#']]);
+  document.getElementById('topbar').innerHTML = renderTopbar(crumbsArr, needsBack(parts));
   document.getElementById('content').innerHTML = page.html;
   document.title = (page.title ? page.title + ' · ' : '') + 'VDW HSEQ';
   if (page.after) page.after();

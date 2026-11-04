@@ -43,6 +43,7 @@ function tempPassword() { const c = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; let s = '
 function pwProblem(pw) { if (pw.length < 8) return 'Use at least 8 characters.'; if (!/[A-Za-z]/.test(pw) || !/[0-9]/.test(pw)) return 'Use letters and at least one number.'; return ''; }
 
 function startSession(p) {
+  NAV_STACK.length = 0;   // a new session starts a new back history
   const a = account(p); a.failed = 0; a.lockedUntil = null; a.lastSignIn = nowTs();
   S.ui.user = p.id; if (p.org !== S.ui.org) { S.ui.org = p.org; S.ui.site = 'ALL'; }
   log(`${p.name} signed in`, ''); save();

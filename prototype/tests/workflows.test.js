@@ -299,7 +299,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     ok('H5 an employee cannot start an inspection without scanning the asset QR', (await p.innerText('#content')).includes("Scan the asset's QR code to start"));
     await go('#/field'); await act('.big-actions button:has-text("Scan asset QR code")'); await p.click('.modal details summary'); await msel('pick', 'AS-004'); await mbtn('Open asset');
     const qrTxt = await p.innerText('#content');
-    ok('H6 employee QR page offers only inspection and incident reporting', qrTxt.includes('Start inspection') && qrTxt.includes('Report incident') && !qrTxt.includes('Report defect') && !qrTxt.includes('Open full asset record'));
+    ok('H6 employee QR page offers only the inspection (incidents are reported from the home screen)', qrTxt.includes('Start inspection') && !qrTxt.includes('Report incident') && !qrTxt.includes('Report defect') && !qrTxt.includes('Open full asset record'));
     await act('.big-actions button:has-text("Start inspection")');
     const qv = await S(`tplCurrent(byId('templates','TPL-VEH')).questions.map(q=>q.id)`);
     for (const q of qv) await p.click(`[data-act=qAns][data-q="${q}"][data-v="Pass"]`);
@@ -778,6 +778,26 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     const gone = await S(`(() => { const p = person('${sid}'); return p.name === 'Former employee (${sid})' && !p.email && !p.auth && !S.outbox.some(e => e.to === '${sid}'); })()`);
     await S("(S.ui.org = 'ORG-1', save())"); await go('#/admin/audit'); await act('[data-act=auditVerify]');
     ok('PV4 a former employee\'s personal details can be removed on request; records stay intact', gone && (await p.innerText('#content')).includes('Intact.'));
+  }
+
+  /* ---------------- BB. Back buttons ---------------- */
+  {
+    const hash = () => p.evaluate(() => location.hash);
+    await asUser('P-002'); await go('#/documents');
+    const noBackTop = !(await has('#topbar [data-act=goBack]'));
+    await go('#/admin/users'); const noBackTab = !(await has('#topbar [data-act=goBack]'));
+    ok('BB1 main pages and tabs have no Back button', noBackTop && noBackTab);
+    await go('#/documents'); await go('#/documents/DOC-001'); await go('#/actions/ACT-1001');
+    await act('#topbar [data-act=goBack]'); const h1 = await hash();
+    await act('#topbar [data-act=goBack]'); const h2 = await hash();
+    ok('BB2 Back returns to the pages you came from, in order', h1 === '#/documents/DOC-001' && h2 === '#/documents', `${h1} → ${h2}`);
+    await S("NAV_STACK.length = 0"); await go('#/incidents/INC-2026-005');
+    await S("NAV_STACK.length = 0"); await act('#topbar [data-act=goBack]');
+    ok('BB3 opened directly (no history), Back goes to the page above it', (await hash()) === '#/incidents');
+    await asUser('P-014'); await S("NAV_STACK.length = 0"); await go('#/qr/AS-004');
+    await S("NAV_STACK.length = 0"); const qrHasBack = await has('#topbar [data-act=goBack]'); await act('#topbar [data-act=goBack]');
+    ok('BB4 an employee on an asset QR page can go back to their home screen', qrHasBack && (await hash()) === '#/field');
+    await asUser('P-002');
   }
 
   /* ---------------- L. Company logo ---------------- */

@@ -971,3 +971,8 @@ body.auth-mode .main { margin-left: 0; }
 
 /* Privacy */
 .med-gate { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 10px 12px; border: 1px dashed var(--line-strong); border-radius: 8px; background: var(--surface-2); font-size: 13px; }
+
+/* Back button (top bar) */
+.back-btn { flex: none; gap: 6px; padding: 6px 11px; }
+@media (max-width: 760px) { .back-btn { padding: 6px 9px; } }
+.big-actions > :only-child { grid-column: 1 / -1; }

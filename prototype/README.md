@@ -23,6 +23,7 @@ To start again, open the user menu (top right) and choose **Reset demo data**.
 
 - **Sidebar:** organisation and branch selectors, plus the pages: Dashboard, Notifications & Tasks, Document Manager, Assets & Equipment, Inspections, Maintenance & Defects, Incident Management, Corrective Actions, Reports and Administration.
 - **Top bar:** global search (press `/`), **My tasks** (✓ icon), notifications and the user menu.
+- **Back:** every page below the main menu level has a **Back** button at the top left. It returns to the page you came from, or, if you opened the page directly (for example from a QR code), to the page above it.
 - **User menu (top right):** change your password, set which e-mails you receive (**Notification settings**), **sign out**, or, for demos, sign in as someone else in one click.
 - **Switch demo user:** use the user menu to act as someone else. Approvals and corrective actions depend on *who* you are, so this is how you see each step. Where a step belongs to someone else, the page offers **Act as current approver** or **Act as owner** to switch in one click.
 
@@ -139,7 +140,7 @@ Defects can also be reported directly from the asset page or its **QR page** (e.
 
 ### Employees (field access)
 Switch to **Tebogo Molefe** (Employee). The menu shows only **Scan & inspect** and **Report incident**.
-1. **Scan asset QR code**, then choose **LDV-03**. The asset's QR page shows its safety status with two buttons: **Start inspection** and **Report incident**.
+1. **Scan asset QR code**, then choose **LDV-03**. The asset's QR page shows its safety status and **Start inspection**. (Incidents are reported from the home screen or the menu, not from an asset's QR page.)
 2. Complete the inspection. Failed items become defects that a supervisor or branch manager reviews and turns into corrective actions.
    - **Photos:** each checklist item has **Take photo**, which opens the phone camera, and **Upload**, which picks one or more photos from the phone or computer. Up to 6 photos can be added per item. Thumbnails show straight away and can be removed before submitting. The photos are saved with the inspection and the defect, so the reviewing supervisor sees them. They also show on the inspection record (tap to view full size) and print on the inspection report.
    - Before submitting, the inspector ticks the declaration and **signs on screen** with a finger or mouse. **An inspection can't be submitted without a signature.** The signature is stored with the record, with the inspector's name and the time, and appears on the inspection record and in the *Inspector signature* box of the printed report.
@@ -286,6 +287,6 @@ prototype/
 └── README.md                     This file
 ```
 
-**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 187 workflow outcomes.
+**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 191 workflow outcomes.
 
 The earlier full HSEQ prototype, with legal, risk, people, PPE, chemicals, emergency and audits, is preserved in git history at commit `26b59bc`.

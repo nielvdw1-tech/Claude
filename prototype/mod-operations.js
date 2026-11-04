@@ -110,12 +110,10 @@ ROUTES.qr = (p) => {
       <div class="alert ${ok ? 'success' : 'danger'}" style="margin:0">${icon(ok ? 'checkCircle' : 'alert')}<div><b>${a.status === 'Out of Service' ? 'OUT OF SERVICE — DO NOT USE' : ok ? 'Safe to use — documents current' : 'Use restricted — document non-compliance'}</b>${dfs.length ? `<br>${dfs.length} open defect(s)` : ''}</div></div></div></div>
     ${isFieldUser() ? `<div class="big-actions">
       ${s0 ? `<button class="btn primary" data-act="go" data-href="#/inspect/${s0.id}">${icon('clipboard', 'lg')} Start inspection</button>` : `<button class="btn" disabled title="No inspection is scheduled for this asset">${icon('clipboard', 'lg')} No inspection scheduled</button>`}
-      <button class="btn" data-act="go" data-href="#/report?asset=${a.id}">${icon('siren', 'lg')} Report incident</button>
     </div>` : `<div class="big-actions">
       <button class="btn primary" data-act="go" data-href="${s0 ? '#/inspect/' + s0.id : '#/assets/' + a.id}">${icon('clipboard', 'lg')} Start inspection</button>
       <button class="btn danger" data-act="defectNew" data-asset="${a.id}">${icon('alert', 'lg')} Report defect</button>
       <button class="btn" data-act="go" data-href="#/assets/${a.id}?tab=documents">${icon('file', 'lg')} Documents</button>
-      <button class="btn" data-act="go" data-href="#/incidents/new?asset=${a.id}">${icon('siren', 'lg')} Report incident</button>
     </div>`}
     <div class="card"><div class="card-head"><h2>Certificates</h2></div><div class="card-body"><ul class="link-list">${docs.map(d => `<li><div class="ll-main"><b>${esc(d.req.name)}</b><div>${d.cert && d.cert.expiry ? 'Expires ' + fmt(d.cert.expiry) : d.cert ? 'No expiry' : 'Not on file'}</div></div>${sbadge(d.status)}</li>`).join('')}</ul></div></div>
     <div class="card"><div class="card-head"><h2>Next inspection</h2></div><div class="card-body">${s0 ? dueText(s0.nextDue) + ` · ${esc(byId('templates', s0.template).title)}` : 'Not scheduled'}</div></div>

@@ -8,7 +8,7 @@ Status key:
 - **Not implemented**
 
 "Tested" means one of the following:
-- the automated browser test (`tests/workflows.test.js`, **187/187 passing**, no JavaScript errors);
+- the automated browser test (`tests/workflows.test.js`, **191/191 passing**, no JavaScript errors);
 - the route smoke test (77 routes plus a second organisation, no errors);
 - the mobile layout check (31 routes at 390 px, no horizontal overflow).
 
@@ -71,6 +71,7 @@ Status key:
 | Quick links on the dashboard based on the user's role and waiting work, with counts | Implemented | QL1–QL3 |
 | Branch / organisation selection and comparison | Implemented | E1–E2 |
 | Task centre per user | Implemented | E3 |
+| Back button on every page below the main menu level (previous page, or the page above when opened directly) | Implemented | BB1–BB4 |
 | Reports with print and CSV | Implemented | E9 |
 | Safety Consultant has full access; Employee limited to QR inspections and incident reporting | Implemented | H1–H9 (client-side demonstration of the intended permissions) |
 | Company notices (memos) to all staff or a branch, with optional attachment and read-and-understood acknowledgement; read/acknowledgement tracking | Implemented | N1–N7; reminders are in-app only (email/SMS simulated) |
