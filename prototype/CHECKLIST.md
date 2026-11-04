@@ -8,7 +8,7 @@ Status key:
 - **Not implemented**
 
 "Tested" means one of the following:
-- the automated browser test (`tests/workflows.test.js`, **191/191 passing**, no JavaScript errors);
+- the automated browser test (`tests/workflows.test.js`, **196/196 passing**, no JavaScript errors);
 - the route smoke test (77 routes plus a second organisation, no errors);
 - the mobile layout check (31 routes at 390 px, no horizontal overflow).
 
@@ -41,6 +41,7 @@ Status key:
 | Failed item → defect + corrective action | Implemented | C3 |
 | Critical failure → asset out of service; return to service only after verification | Implemented | C3, C5, C8 |
 | Defects reported directly (asset / QR page) | Implemented | C12 |
+| Equipment QR page for anybody: details, documents (view only), last inspection and by whom; inspectors can only inspect and report a defect; nobody uploads from the QR page; certificate uploads only for document managers | Implemented | H6, QV1–QV5; the page works without signing in (prototype: data is in this browser) |
 | Operators only report failures; a supervisor or manager reviews each defect and raises the corrective action, closes it as fixed on the spot (with evidence) or links it to an existing action; review period with escalation | Implemented | R1–R4, R10 |
 | Corrective action workflow: Assigned → Acknowledged → In progress → Evidence → Submitted → Verified → Closed | Implemented | C6–C9 |
 | Verifier can return insufficient evidence; completion ≠ closure | Implemented | C7 |

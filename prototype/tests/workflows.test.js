@@ -299,7 +299,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     ok('H5 an employee cannot start an inspection without scanning the asset QR', (await p.innerText('#content')).includes("Scan the asset's QR code to start"));
     await go('#/field'); await act('.big-actions button:has-text("Scan asset QR code")'); await p.click('.modal details summary'); await msel('pick', 'AS-004'); await mbtn('Open asset');
     const qrTxt = await p.innerText('#content');
-    ok('H6 employee QR page offers only the inspection (incidents are reported from the home screen)', qrTxt.includes('Start inspection') && !qrTxt.includes('Report incident') && !qrTxt.includes('Report defect') && !qrTxt.includes('Open full asset record'));
+    ok('H6 an inspector\'s QR page offers the inspection, a defect report and the documents (view only) — nothing else', qrTxt.includes('Start inspection') && qrTxt.includes('Report defect') && qrTxt.includes('Last inspection') && qrTxt.includes('View only') && !qrTxt.includes('Report incident') && !qrTxt.includes('Upload') && !qrTxt.includes('Open full asset record'));
     await act('.big-actions button:has-text("Start inspection")');
     const qv = await S(`tplCurrent(byId('templates','TPL-VEH')).questions.map(q=>q.id)`);
     for (const q of qv) await p.click(`[data-act=qAns][data-q="${q}"][data-v="Pass"]`);
@@ -797,6 +797,29 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await asUser('P-014'); await S("NAV_STACK.length = 0"); await go('#/qr/AS-004');
     await S("NAV_STACK.length = 0"); const qrHasBack = await has('#topbar [data-act=goBack]'); await act('#topbar [data-act=goBack]');
     ok('BB4 an employee on an asset QR page can go back to their home screen', qrHasBack && (await hash()) === '#/field');
+    await asUser('P-002');
+  }
+
+  /* ---------------- QV. Equipment QR page for everyone ---------------- */
+  {
+    const lastBy = await S("(() => { const li = lastInspection(byId('assets','AS-002')); return pname(li.inspector); })()");
+    await act('[data-act=userMenu]'); await act('.dropdown [data-act=signOut]');
+    await p.evaluate(() => { location.hash = '#/qr/AS-002'; }); await p.waitForTimeout(250);
+    const pub = await p.innerText('#content');
+    ok('QV1 anybody (not signed in) who scans a label sees the equipment, its documents and when it was last inspected and by whom — view only', pub.includes('FL-02') && pub.includes('Last inspection') && pub.includes(lastBy) && pub.includes('Lifting machine') && !(await has('[data-act=qrDefect]')) && !pub.includes('Start inspection') && (await p.$('#sidebar .nav-item')) === null, `last inspected by ${lastBy}`);
+    await act('[data-act=qrSignIn]');
+    await p.fill('#signinForm [name=email]', 'bongani.z@kestrel.demo'); await p.fill('#signinForm [name=password]', 'demo1234'); await p.click('#signinForm button[type=submit]'); await p.waitForTimeout(300);
+    const sup = await p.innerText('#content');
+    ok('QV2 an inspector who signs in from the label comes straight back to it, and can inspect and report a defect', (await p.evaluate(() => location.hash)) === '#/qr/AS-002' && sup.includes('Start inspection') && await has('[data-act=qrDefect]'));
+    await go('#/assets/AS-002?tab=documents');
+    ok('QV3 inspectors cannot upload documents (only document managers can)', !(await has('[data-act=certUpload]:not([disabled])')));
+    await asUser('P-001'); await go('#/qr/AS-002');
+    ok('QV4 people who are not inspectors get the same page, view only', !(await has('[data-act=qrDefect]')) && !(await p.innerText('#content')).includes('Start inspection') && (await p.innerText('#content')).includes('View only'));
+    await asUser('P-014'); await go('#/qr/AS-004'); await act('[data-act=qrDefect]');
+    await mfill('description', 'Brake light not working'); await p.setInputFiles('#qrDefPhoto', { name: 'light.png', mimeType: 'image/png', buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64') }); await p.waitForTimeout(300);
+    await mbtn('Report defect'); await p.waitForTimeout(200);
+    const df = await S("(() => { const d = S.defects[S.defects.length - 1]; return { st: d.status, ph: d.photos.length, by: d.by, asset: d.asset }; })()");
+    ok('QV5 an employee reports a defect from the label, with a photo, for their supervisor to review', df.st === 'Awaiting Review' && df.ph === 1 && df.by === 'P-014' && df.asset === 'AS-004');
     await asUser('P-002');
   }
 

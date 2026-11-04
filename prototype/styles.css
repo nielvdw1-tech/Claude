@@ -976,3 +976,5 @@ body.auth-mode .main { margin-left: 0; }
 .back-btn { flex: none; gap: 6px; padding: 6px 11px; }
 @media (max-width: 760px) { .back-btn { padding: 6px 9px; } }
 .big-actions > :only-child { grid-column: 1 / -1; }
+
+.qr-public { max-width: 560px; margin: 16px auto; padding: 0 4px; }

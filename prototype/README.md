@@ -140,7 +140,7 @@ Defects can also be reported directly from the asset page or its **QR page** (e.
 
 ### Employees (field access)
 Switch to **Tebogo Molefe** (Employee). The menu shows only **Scan & inspect** and **Report incident**.
-1. **Scan asset QR code**, then choose **LDV-03**. The asset's QR page shows its safety status and **Start inspection**. (Incidents are reported from the home screen or the menu, not from an asset's QR page.)
+1. **Scan asset QR code**, then choose **LDV-03**. The asset's QR page shows its safety status, **Start inspection** and **Report defect**. (Incidents are reported from the home screen or the menu, not from an asset's QR page.)
 2. Complete the inspection. Failed items become defects that a supervisor or branch manager reviews and turns into corrective actions.
    - **Photos:** each checklist item has **Take photo**, which opens the phone camera, and **Upload**, which picks one or more photos from the phone or computer. Up to 6 photos can be added per item. Thumbnails show straight away and can be removed before submitting. The photos are saved with the inspection and the defect, so the reviewing supervisor sees them. They also show on the inspection record (tap to view full size) and print on the inspection report.
    - Before submitting, the inspector ticks the declaration and **signs on screen** with a finger or mouse. **An inspection can't be submitted without a signature.** The signature is stored with the record, with the inspector's name and the time, and appears on the inspection record and in the *Inspector signature* box of the printed report.
@@ -187,6 +187,17 @@ Other pages are closed to employees. An inspection can only be started from the 
   - One file holds all records and all uploaded files, with a checksum.
   - Restoring shows what is in the backup first. A damaged or edited backup, or one from another version, is refused.
   - Use it to keep a copy or to move the prototype to another computer.
+
+**The equipment QR page** is what anybody sees after scanning a label:
+- the equipment's details and safety status;
+- its documents (certificates and the related procedure), view only;
+- when it was last inspected, by whom, the result and when the next inspection is due.
+
+Who sees what:
+- **Anyone not signed in** gets this page read-only, with a **Sign in** button that brings them back to the same equipment.
+- **Inspectors** (supervisors, branch and HSEQ managers, and employees) also get **Start inspection** and **Report defect**. Employees describe the defect and add photos, and a supervisor or manager reviews it.
+- **Everyone else**, such as the Managing Director, sees the page view only.
+- **Nobody** uploads documents from the QR page. On the asset record, only people who manage documents (HSEQ Manager, Safety Consultant, Branch Manager) can upload certificates.
 
 ### F. Getting a client set up (towards a pilot)
 - **Real QR codes and labels:**
@@ -287,6 +298,6 @@ prototype/
 └── README.md                     This file
 ```
 
-**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 191 workflow outcomes.
+**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 196 workflow outcomes.
 
 The earlier full HSEQ prototype, with legal, risk, people, PPE, chemicals, emergency and audits, is preserved in git history at commit `26b59bc`.

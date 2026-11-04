@@ -49,6 +49,7 @@ function startSession(p) {
   log(`${p.name} signed in`, ''); save();
   document.body.classList.remove('auth-mode');
   if (a.mustChange) { location.hash = '#/password'; rerender(); return; }
+  if (S.ui.returnTo) { const back = S.ui.returnTo; S.ui.returnTo = null; save(); if (location.hash === back) rerender(); else location.hash = back; return; }   // e.g. back to the QR page that asked to sign in
   if (isFieldUser()) { if (location.hash !== '#/field') location.hash = '#/field'; else rerender(); }
   else if (!location.hash || location.hash === '#/' || location.hash === '#/signin' || location.hash === '#/password') { location.hash = '#/dashboard'; } else rerender();
 }

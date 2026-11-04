@@ -68,8 +68,8 @@ function assetDetail(id, q) {
       ${docs.map(d => `<li><div class="ll-main"><b>${esc(d.req.name)}</b><div>${d.cert ? (d.cert.expiry ? 'Expires ' + fmt(d.cert.expiry) : 'No expiry') : 'Not on file'}</div></div>${sbadge(d.status)}</li>`).join('')}
       ${sch.map(s => `<li><div class="ll-main"><b>${esc(byId('templates', s.template).title)}</b><div>Every ${s.freqDays} days</div></div>${dueText(s.nextDue)}</li>`).join('')}
     </ul></div></div></div></div>`;
-  if (tab === 'documents') body = `<div class="alert info">${icon('info')}<div>Document requirements are configured per asset type (<b>${esc(t.name)}</b>) in Administration → Asset types. A different type (e.g. vehicle vs forklift) requires different documents.</div></div><div class="card"><div class="card-head"><h2>Required documents & certificates</h2>${permBtn('inspect', `<button class="btn sm primary" data-act="certUpload" data-id="${a.id}">${icon('upload', 'sm')} Upload certificate</button>`)}</div><div class="card-body flush"><table class="tbl stackable"><thead><tr><th>Requirement</th><th>Validity</th><th>Certificate no.</th><th>Issued</th><th>Expiry</th><th>File</th><th>Status</th><th></th></tr></thead><tbody>
-    ${docs.map(d => `<tr class="${d.status === 'Expired' || d.status === 'Missing' ? 'row-red' : d.status === 'Expiring' ? 'row-amber' : ''}"><td data-label="Requirement"><b>${esc(d.req.name)}</b></td><td data-label="Validity">${d.req.months ? d.req.months + ' months' : 'No expiry'}</td><td data-label="Cert. no." class="mono">${d.cert ? esc(d.cert.number) : '—'}</td><td data-label="Issued">${d.cert ? fmt(d.cert.issued) : '—'}</td><td data-label="Expiry">${d.cert && d.cert.expiry ? dueText(d.cert.expiry) : '—'}</td><td data-label="File">${d.cert ? fileChip(d.cert.file) : '—'}</td><td data-label="Status">${sbadge(d.status)}</td><td data-label="">${permBtn('inspect', `<button class="btn sm" data-act="certUpload" data-id="${a.id}" data-req="${esc(d.req.name)}">${d.cert ? 'Renew' : 'Upload'}</button>`)}</td></tr>`).join('')}
+  if (tab === 'documents') body = `<div class="alert info">${icon('info')}<div>Document requirements are configured per asset type (<b>${esc(t.name)}</b>) in Administration → Asset types. A different type (e.g. vehicle vs forklift) requires different documents.</div></div><div class="card"><div class="card-head"><h2>Required documents & certificates</h2>${permBtn('doc.create', `<button class="btn sm primary" data-act="certUpload" data-id="${a.id}">${icon('upload', 'sm')} Upload certificate</button>`)}</div><div class="card-body flush"><table class="tbl stackable"><thead><tr><th>Requirement</th><th>Validity</th><th>Certificate no.</th><th>Issued</th><th>Expiry</th><th>File</th><th>Status</th><th></th></tr></thead><tbody>
+    ${docs.map(d => `<tr class="${d.status === 'Expired' || d.status === 'Missing' ? 'row-red' : d.status === 'Expiring' ? 'row-amber' : ''}"><td data-label="Requirement"><b>${esc(d.req.name)}</b></td><td data-label="Validity">${d.req.months ? d.req.months + ' months' : 'No expiry'}</td><td data-label="Cert. no." class="mono">${d.cert ? esc(d.cert.number) : '—'}</td><td data-label="Issued">${d.cert ? fmt(d.cert.issued) : '—'}</td><td data-label="Expiry">${d.cert && d.cert.expiry ? dueText(d.cert.expiry) : '—'}</td><td data-label="File">${d.cert ? fileChip(d.cert.file) : '—'}</td><td data-label="Status">${sbadge(d.status)}</td><td data-label="">${permBtn('doc.create', `<button class="btn sm" data-act="certUpload" data-id="${a.id}" data-req="${esc(d.req.name)}">${d.cert ? 'Renew' : 'Upload'}</button>`)}</td></tr>`).join('')}
     </tbody></table></div></div>${a.certs.filter(c => !t.reqDocs.some(r => r.name === c.type)).length ? '' : ''}`;
   if (tab === 'inspections') body = `<div class="card mb"><div class="card-head"><h2>Inspection schedule</h2></div><div class="card-body flush">${sch.length ? `<table class="tbl stackable"><thead><tr><th>Template</th><th>Frequency</th><th>Next due</th><th>Assigned</th><th></th></tr></thead><tbody>${sch.map(s => { const tp = byId('templates', s.template); const r = tp.revisions.find(x => x.status === 'Approved'); return `<tr><td data-label="Template"><b>${esc(tp.title)}</b><div class="t-sub">${esc(tp.docNumber)} Rev ${r.rev}</div></td><td data-label="Frequency">Every ${s.freqDays} days</td><td data-label="Next due">${dueText(s.nextDue)}</td><td data-label="Assigned">${esc(pname(s.assignee))}</td><td data-label="">${permBtn('inspect', `<a class="btn sm primary" href="#/inspect/${s.id}">Start inspection</a>`.replace('<a', '<button data-act="go" data-href="#/inspect/' + s.id + '"').replace('</a>', '</button>'))}</td></tr>`; }).join('')}</tbody></table>` : '<div class="empty">No schedule.</div>'}</div></div>
     <div class="card"><div class="card-head"><h2>Inspection history</h2><span class="ch-sub">Each record retains the template revision used at the time</span></div><div class="card-body flush">${inspTable(ins)}</div></div>`;
@@ -100,27 +100,70 @@ function actionsMiniTable(acts) { return acts.length ? `<table class="tbl stacka
 
 /* ---------- QR quick view (mobile-first) ---------- */
 const QR_ACCESS = { asset: null };
-ROUTES.qr = (p) => {
-  const a = byId('assets', p[0]); if (!a) return ROUTES.notfound();
-  const docs = assetDocStatus(a), s0 = scheduleFor(a.id).sort((x, y) => x.nextDue.localeCompare(y.nextDue))[0], dfs = assetOpenDefects(a);
+/* QR page: what anybody sees after scanning an asset's label — the equipment's details, its documents
+   (view only), and when it was last inspected and by whom. Inspectors can also start an inspection and
+   report a defect. Nobody uploads documents from here. Also shown to people who are not signed in. */
+function lastInspection(a) { return S.inspections.filter(x => x.asset === a.id).sort((x, y) => (y.date + y.id).localeCompare(x.date + x.id))[0] || null; }
+function qrPageHtml(a, mode) {   // mode: 'public' (not signed in), 'inspector' or 'view'
+  const docs = assetDocStatus(a), s0 = scheduleFor(a.id).sort((x, y) => x.nextDue.localeCompare(y.nextDue))[0], dfs = assetOpenDefects(a), li = lastInspection(a);
   const ok = a.status !== 'Out of Service' && !docs.some(d => ['Expired', 'Missing'].includes(d.status));
-  const html = `<div class="mobile-card stack">
-    <div class="alert demo">${icon('qr')}<div>Opened from the QR label <span class="mono">${esc(a.qr)}</span>.</div></div>
-    <div class="card"><div class="card-body" style="padding-top:16px"><div class="sh-id">${esc(assetType(a).name)} · ${esc(sname(a.site))} · ${esc(a.location)}</div><h1 style="margin:4px 0 8px">${esc(a.tag)} — ${esc(a.name)}</h1>
-      <div class="alert ${ok ? 'success' : 'danger'}" style="margin:0">${icon(ok ? 'checkCircle' : 'alert')}<div><b>${a.status === 'Out of Service' ? 'OUT OF SERVICE — DO NOT USE' : ok ? 'Safe to use — documents current' : 'Use restricted — document non-compliance'}</b>${dfs.length ? `<br>${dfs.length} open defect(s)` : ''}</div></div></div></div>
-    ${isFieldUser() ? `<div class="big-actions">
+  const tpl = s0 && byId('templates', s0.template), proc = tpl && tpl.procedure && byId('documents', tpl.procedure), procIss = proc && docIssued(proc);
+  const fails = li ? li.results.filter(r => r.result === 'Fail').length : 0;
+  return `<div class="mobile-card stack">
+    <div class="card"><div class="card-body" style="padding-top:16px"><div class="sh-id">${esc(assetType(a).name)} · ${esc(sname(a.site))} · ${esc(a.location || '')}</div><h1 style="margin:4px 0 8px">${esc(a.tag)} — ${esc(a.name)}</h1>
+      <div class="alert ${ok ? 'success' : 'danger'}" style="margin:0">${icon(ok ? 'checkCircle' : 'alert')}<div><b>${a.status === 'Out of Service' ? 'OUT OF SERVICE — DO NOT USE' : ok ? 'Safe to use — documents current' : 'Use restricted — check the documents below'}</b>${dfs.length ? `<br>${dfs.length} open defect(s) being dealt with` : ''}</div></div>
+      <div class="kv mt"><div>Make / model</div><div>${esc([a.make, a.model].filter(Boolean).join(' ') || '—')}</div><div>Serial number</div><div class="mono">${esc(a.serial || '—')}</div><div>Year</div><div>${esc(a.year || '—')}</div><div>Responsible person</div><div>${a.responsible ? esc(pname(a.responsible)) : '—'}</div><div>QR label</div><div class="mono">${esc(a.qr)}</div></div>
+    </div></div>
+    ${mode === 'inspector' ? `<div class="big-actions">
       ${s0 ? `<button class="btn primary" data-act="go" data-href="#/inspect/${s0.id}">${icon('clipboard', 'lg')} Start inspection</button>` : `<button class="btn" disabled title="No inspection is scheduled for this asset">${icon('clipboard', 'lg')} No inspection scheduled</button>`}
-    </div>` : `<div class="big-actions">
-      <button class="btn primary" data-act="go" data-href="${s0 ? '#/inspect/' + s0.id : '#/assets/' + a.id}">${icon('clipboard', 'lg')} Start inspection</button>
-      <button class="btn danger" data-act="defectNew" data-asset="${a.id}">${icon('alert', 'lg')} Report defect</button>
-      <button class="btn" data-act="go" data-href="#/assets/${a.id}?tab=documents">${icon('file', 'lg')} Documents</button>
-    </div>`}
-    <div class="card"><div class="card-head"><h2>Certificates</h2></div><div class="card-body"><ul class="link-list">${docs.map(d => `<li><div class="ll-main"><b>${esc(d.req.name)}</b><div>${d.cert && d.cert.expiry ? 'Expires ' + fmt(d.cert.expiry) : d.cert ? 'No expiry' : 'Not on file'}</div></div>${sbadge(d.status)}</li>`).join('')}</ul></div></div>
-    <div class="card"><div class="card-head"><h2>Next inspection</h2></div><div class="card-body">${s0 ? dueText(s0.nextDue) + ` · ${esc(byId('templates', s0.template).title)}` : 'Not scheduled'}</div></div>
-    ${isFieldUser() ? '' : `<a class="btn" href="#/assets/${a.id}">Open full asset record</a>`}
+      <button class="btn danger" data-act="qrDefect" data-id="${a.id}">${icon('alert', 'lg')} Report defect</button>
+    </div>` : mode === 'public' ? `<div class="alert info">${icon('lock')}<div>View only. <b>Inspectors</b> sign in to start an inspection or report a defect.<div class="mt-s"><button class="btn primary sm" data-act="qrSignIn">Sign in</button></div></div></div>` : `<div class="alert demo">${icon('info')}<div>View only. Inspections and defects are recorded by inspectors.</div></div>`}
+    <div class="card"><div class="card-head"><h2>Last inspection</h2></div><div class="card-body">${li ? `<div class="kv"><div>Date</div><div>${fmt(li.date)} <span class="muted">(${-daysTo(li.date)} day(s) ago)</span></div><div>Inspected by</div><div><b>${esc(pname(li.inspector))}</b>${person(li.inspector) && person(li.inspector).jobTitle ? ` · ${esc(person(li.inspector).jobTitle)}` : ''}</div><div>Checklist</div><div>${esc(li.template.docNumber)} Rev ${li.template.rev} — ${esc(li.template.title)}</div><div>Result</div><div>${fails ? badge(fails + ' item(s) failed', 'red') : badge('All items passed', 'green')}</div>${li.reviewer ? `<div>Reviewed by</div><div>${esc(pname(li.reviewer))}${li.reviewedOn ? ' · ' + fmt(li.reviewedOn) : ''}</div>` : ''}<div>Next inspection</div><div>${s0 ? dueText(s0.nextDue) : 'Not scheduled'}</div></div>` : `<p class="muted" style="margin:0">Not inspected in this system yet.${s0 ? ` Next inspection due ${fmt(s0.nextDue)}.` : ''}</p>`}</div></div>
+    <div class="card"><div class="card-head"><h2>Documents for this ${esc(assetType(a).name.split('/')[0].trim().toLowerCase())}</h2><span class="ch-sub">View only</span></div><div class="card-body"><ul class="link-list">
+      ${docs.map(d => `<li><div class="ll-main"><b>${esc(d.req.name)}</b><div>${d.cert ? `${esc(d.cert.number || '')}${d.cert.expiry ? ' · expires ' + fmt(d.cert.expiry) : ' · no expiry'}` : 'Not on file'}</div></div><div class="btn-row">${sbadge(d.status)}${d.cert && d.cert.file ? fileChip(d.cert.file) : ''}</div></li>`).join('') || '<li class="muted">No documents are required for this type of equipment.</li>'}
+      ${procIss ? `<li><div class="ll-main"><b>${esc(proc.number)} — ${esc(proc.title)}</b><div>Procedure · ${revLabel(procIss)} · issued for use</div></div>${procIss.file ? `<button class="btn sm" data-act="viewDocFile" data-id="${proc.id}" data-ri="${proc.revisions.indexOf(procIss)}">${icon('eye', 'sm')} View</button>` : ''}</li>` : ''}
+    </ul></div></div>
   </div>`;
-  QR_ACCESS.asset = a.id;   // the QR page was opened for this asset: field users may now inspect it
-  return { title: 'QR · ' + a.tag, nav: isFieldUser() ? 'field' : 'assets', crumbs: [['Assets & equipment', '#/assets'], ['QR · ' + a.tag, '#']], html };
+}
+ROUTES.qr = (p) => {
+  const a = byId('assets', p[0]); if (!a || !canSeeOrg(a.org || siteOrgOf(a.site))) return ROUTES.notfound();
+  QR_ACCESS.asset = a.id;   // the QR page was opened for this asset: inspectors may now inspect it
+  const mode = can('inspect') || can('inspect.qr') ? 'inspector' : 'view';
+  return { title: 'QR · ' + a.tag, nav: isFieldUser() ? 'field' : 'assets', crumbs: [['Assets & equipment', '#/assets'], ['QR · ' + a.tag, '#']], html: qrPageHtml(a, mode) };
+};
+// Not signed in: the same equipment page, view only, with a sign-in button
+function renderPublicQr(id) {
+  const a = byId('assets', id); document.body.classList.add('auth-mode');
+  document.getElementById('sidebar').innerHTML = ''; document.getElementById('topbar').innerHTML = '';
+  if (!a) { renderSignIn({ text: 'That QR code does not belong to equipment in this system.' }); return; }
+  const org = orgOf(a.org || siteOrgOf(a.site));
+  document.getElementById('content').innerHTML = `<div class="qr-public"><div class="auth-brand mb">${orgMark(org, 'sb')}<div><b>${esc(org.short)}</b><span>Equipment information</span></div></div>${qrPageHtml(a, 'public')}<div class="auth-powered"><span class="logo-mark xs">VDW</span>Powered by VDW HSEQ</div></div>`;
+  document.title = `${a.tag} · ${org.short}`;
+}
+ACT.qrSignIn = () => { S.ui.returnTo = location.hash; save(); renderSignIn({ type: 'info', text: 'Sign in to inspect this equipment or report a defect.' }); };
+
+/* Report a defect from the QR page. People who raise corrective actions use the full form; others
+   describe the problem (with photos) and a supervisor or manager reviews it. */
+const QRDEF = { photos: [] };
+ACT.qrDefect = (el) => {
+  const a = byId('assets', el.dataset.id);
+  if (can('action.create')) { ACT.defectNew({ dataset: { asset: a.id } }); return; }
+  QRDEF.photos = [];
+  openModal({ title: `Report a defect on ${a.tag}`, sub: 'Describe what is wrong. Your supervisor or branch manager reviews it and decides on the corrective action.',
+    body: `<div class="form-grid">${fld({ name: 'description', label: 'What is wrong?', type: 'textarea', required: true, full: true, rows: 3, placeholder: 'e.g. Hydraulic oil leaking from the tilt cylinder' })}
+      <div class="field full"><label>Photos</label><label class="btn sm"><input class="vh" type="file" id="qrDefPhoto" accept="image/*" multiple>${icon('camera', 'sm')} Take or add photos</label><div id="qrDefStrip"></div></div>
+      ${fld({ name: 'oos', label: `Unsafe to use — take ${a.tag} out of service now`, type: 'checkbox', full: true })}</div>`,
+    onOpen: m => m.querySelector('#qrDefPhoto').addEventListener('change', async e => {
+      for (const f of [...e.target.files].filter(f => /^image\//.test(f.type)).slice(0, 6 - QRDEF.photos.length)) { const meta = fileMeta(f); meta.thumb = await makeThumb(f); QRDEF.photos.push(meta); }
+      m.querySelector('#qrDefStrip').innerHTML = photoStrip(QRDEF.photos); e.target.value = '';
+    }),
+    buttons: [{ label: 'Report defect', cls: 'danger solid', onClick: m => {
+      if (!validateForm(m)) return false;
+      const v = readForm(m), d = createDefect(a, v.description.trim(), v.oos ? 'Critical' : 'Minor', v.oos, null);
+      d.photos = QRDEF.photos.slice(); d.status = 'Awaiting Review'; d.reviewDue = addDays(TODAY, rules().defectReviewDays); QRDEF.photos = [];
+      addEvent(v.oos ? 'red' : 'amber', 'assets', `Defect to review: ${a.tag}`, `Reported by ${pname(S.ui.user)} from the QR page: ${v.description.trim()}${v.oos ? ' (taken out of service)' : ''}.`, '#/assets/' + a.id + '?tab=defects', a.site, defectReviewers(a));
+      save(); toast(`Defect ${d.id} reported${v.oos ? ` — <b>${esc(a.tag)} is OUT OF SERVICE</b>` : ''}. ${esc(defectReviewers(a).map(pname).join(' / '))} will review it.`); rerender();
+    } }] });
 };
 // ACT.qrScan (camera / photo scanning) lives in mod-qr.js
 

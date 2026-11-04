@@ -588,7 +588,7 @@ ACT.goBack = () => {
   navigate(BACK_PARENT);
 };
 function rerender(keepScroll = true) {
-  if (!signedIn()) { renderSignIn(); return; }   // nobody signed in (or the account was deactivated)
+  if (!signedIn()) { const ph = parseHash(); if (ph.parts[0] === 'qr') { renderPublicQr(ph.parts[1]); return; } renderSignIn(); return; }   // not signed in: only an equipment QR page, or the sign-in page
   document.body.classList.remove('auth-mode');
   ensureOrgAccess();   // only the companies this person may see
   ensureAudit();
