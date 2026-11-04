@@ -736,6 +736,32 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     ok('ST4 a Word file cannot be stamped: the user is told, and the file name says DRAFT/UNCONTROLLED', warn.includes('cannot be added') && /_DRAFT\.docx$/.test(d3.suggestedFilename()), d3.suggestedFilename());
   }
 
+  /* ---------------- CL. Several clients: separation, overview, new client ---------------- */
+  {
+    const orgOpts = () => p.$$eval('#orgSel option', e => e.map(x => x.value));
+    await asUser('P-002'); await go('#/dashboard');
+    const johan = await orgOpts(), johanNav = await has('.nav-item[href="#/clients"]');
+    await S("(S.ui.org = 'ORG-2', save(), rerender())"); await p.waitForTimeout(150);
+    ok('CL1 a client\'s staff see only their own company (selector, menu, and a forced switch is undone)', johan.join() === 'ORG-1' && !johanNav && (await S('S.ui.org')) === 'ORG-1');
+    await asUser('P-017'); await go('#/incidents');
+    ok('CL2 the other client\'s staff only see their company\'s records', (await orgOpts()).join() === 'ORG-2' && !(await p.innerText('#content')).includes('INC-2026-001'));
+    await asUser('P-006'); await go('#/clients');
+    const rows = await p.$$eval('#content tbody tr', e => e.length);
+    ok('CL3 the VDW consultant sees all their clients side by side', rows === 2 && (await orgOpts()).length === 2 && (await p.innerText('#content')).includes('Ridgeway'));
+    await btn('New client');
+    await mfill('name', 'Highveld Steel Fabricators (Pty) Ltd'); await mfill('short', 'Highveld Steel'); await mfill('industry', 'Structural steel fabrication');
+    await mfill('b1name', 'Head office and workshop, Benoni'); await mfill('b1short', 'Benoni'); await mfill('b1head', '85');
+    await mfill('b2name', 'Site office, Secunda'); await mfill('b2short', 'Secunda');
+    await mfill('aname', 'Grace Mokoena'); await mfill('aemail', 'grace.m@highveld.demo'); await mfill('ajob', 'SHE Manager'); await msel('arole', 'HSEQ Manager');
+    await mbtn('Create client'); await p.waitForTimeout(200);
+    const temp = (await p.innerText('.modal .temp-pw')).trim(); await mbtn('Open the new client'); await p.waitForTimeout(250);
+    const nid = await S("S.orgs.find(o => o.short === 'Highveld Steel').id");
+    ok('CL4 the new-client wizard creates the company, its branches and its first administrator', !!nid && (await S('S.ui.org')) === nid && (await S(`S.sites.filter(s => s.org === '${nid}').length`)) === 2 && (await S("S.people.some(p => p.email === 'grace.m@highveld.demo' && p.auth.mustChange)")) && /^[A-Z0-9]{8}$/.test(temp) && (await S(`person('P-006').clients.includes('${nid}')`)));
+    const empty = await S(`[S.documents, S.assets, S.incidents, S.actions].every(c => !c.some(x => (x.org || siteOrgOf(x.site)) === '${nid}'))`);
+    ok('CL5 a new client starts empty, and other companies\' staff cannot see it', empty && (await p.innerText('.sb-brand')).includes('Highveld Steel') && (await S("(() => { const k = S.ui.user; S.ui.user = 'P-002'; const r = canSeeOrg('" + nid + "'); S.ui.user = k; return r; })()")) === false);
+    await S("(S.ui.org = 'ORG-1', S.ui.site = 'ALL', save())");
+  }
+
   /* ---------------- L. Company logo ---------------- */
   {
     await asUser('P-002'); await go('#/dashboard');

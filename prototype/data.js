@@ -15,7 +15,7 @@ function buildSeed() {
   const T = (n, h = 9, m = 0) => { const x = new Date(base); x.setDate(x.getDate() + n); x.setHours(h, m, 0, 0); return x.toISOString(); };
   const demoFile = (name, kb) => ({ name, size: kb * 1024, type: name.endsWith('.pdf') ? 'application/pdf' : 'application/octet-stream', demo: true, seeded: true });
 
-  const S = { version: 13, seededOn: D(0) };
+  const S = { version: 14, seededOn: D(0) };
 
   /* ---------------- Organisations, sites, departments ---------------- */
   S.orgs = [
@@ -38,7 +38,7 @@ function buildSeed() {
     P('P-003', 'Sipho Ndlovu', 'Branch Manager', 'S-DBN', 'Management', 'Employee', 'Branch Manager', 'sipho.n@kestrel.demo'),
     P('P-004', 'Lerato Dlamini', 'Branch Manager', 'S-CPT', 'Management', 'Employee', 'Branch Manager', 'lerato.d@kestrel.demo'),
     P('P-005', 'Pieter Botha', 'Operations Manager', 'S-JHB', 'Management', 'Employee', 'Branch Manager', 'pieter.b@kestrel.demo'),
-    P('P-006', 'Ayesha Khan', 'VDW Safety Consultant', 'S-JHB', 'HSEQ', 'Consultant', 'Safety Consultant', 'ayesha.k@vdw.demo', { company: 'VDW Health & Safety Solutions' }),
+    P('P-006', 'Ayesha Khan', 'VDW Safety Consultant', 'S-JHB', 'HSEQ', 'Consultant', 'Safety Consultant', 'ayesha.k@vdw.demo', { company: 'VDW Health & Safety Solutions', clients: ['ORG-1', 'ORG-2'] }),   // a VDW consultant looks after both demo clients
     P('P-007', 'Bongani Zulu', 'Warehouse Supervisor', 'S-JHB', 'Warehouse & Logistics', 'Employee', 'Supervisor', 'bongani.z@kestrel.demo'),
     P('P-008', 'Ruan Pretorius', 'Workshop Foreman', 'S-JHB', 'Workshop & Service', 'Employee', 'Supervisor', 'ruan.p@kestrel.demo'),
     P('P-009', 'Nomvula Sithole', 'Forklift Operator', 'S-JHB', 'Warehouse & Logistics', 'Employee', 'Employee', 'nomvula.s@kestrel.demo'),
@@ -57,7 +57,7 @@ function buildSeed() {
   S.roles = [
     { name: 'Managing Director', desc: 'Organisation-wide visibility; final approver for policies; can raise, assign and verify corrective actions and report incidents.', perms: ['notice.publish', 'view.all', 'doc.approve', 'action.create', 'action.verify', 'incident.report', 'report.view'] },
     { name: 'HSEQ Manager', desc: 'Owns document control, verification of corrective actions, incident investigation and configuration.', perms: ['notice.publish', 'view.all', 'doc.create', 'doc.approve', 'doc.issue', 'action.create', 'action.verify', 'incident.investigate', 'admin', 'report.view', 'inspect'] },
-    { name: 'Safety Consultant', desc: 'External VDW consultant with full access: documents, approvals and issue, inspections, corrective actions, incidents, reports and configuration.', perms: ['notice.publish', 'view.all', 'doc.create', 'doc.approve', 'doc.issue', 'action.create', 'action.verify', 'incident.investigate', 'admin', 'report.view', 'inspect'] },
+    { name: 'Safety Consultant', desc: 'External VDW consultant with full access: documents, approvals and issue, inspections, corrective actions, incidents, reports and configuration.', perms: ['clients.manage', 'notice.publish', 'view.all', 'doc.create', 'doc.approve', 'doc.issue', 'action.create', 'action.verify', 'incident.investigate', 'admin', 'report.view', 'inspect'] },
     { name: 'Branch Manager', desc: 'Manages assets, inspections, actions and incidents at the assigned branch; approves branch documents.', perms: ['notice.publish', 'view.branch', 'doc.create', 'doc.approve', 'action.create', 'action.verify', 'incident.investigate', 'report.view', 'inspect'] },
     { name: 'Supervisor', desc: 'Conducts inspections, reports defects and incidents, updates actions assigned to them.', perms: ['view.branch', 'action.create', 'inspect', 'incident.report'] },
     { name: 'Employee', desc: 'Field access only: inspects assets by scanning their QR code and reports incidents.', perms: ['inspect.qr', 'incident.report'], fieldOnly: true }
@@ -66,7 +66,7 @@ function buildSeed() {
     ['view.all', 'View all organisations / branches in scope'], ['view.branch', 'View records of assigned branch'], ['view.own', 'View own tasks & issued documents'],
     ['doc.create', 'Upload, create & revise documents'], ['doc.approve', 'Can be placed on a document approval route'], ['doc.issue', 'Issue approved documents for use'],
     ['inspect', 'Conduct inspections'], ['inspect.qr', 'Inspect an asset after scanning its QR code (field users)'], ['action.create', 'Raise corrective actions'], ['action.verify', 'Verify & close corrective actions'],
-    ['incident.report', 'Report incidents'], ['incident.investigate', 'Investigate & close incidents'], ['notice.publish', 'Publish company notices'], ['report.view', 'Management reports'], ['admin', 'System configuration']
+    ['incident.report', 'Report incidents'], ['incident.investigate', 'Investigate & close incidents'], ['notice.publish', 'Publish company notices'], ['report.view', 'Management reports'], ['admin', 'System configuration'], ['clients.manage', 'Set up and look after several client companies']
   ];
 
   /* ---------------- Configuration ---------------- */

@@ -963,3 +963,8 @@ body.auth-mode .main { margin-left: 0; }
 .cs-delta.t-good { color: var(--ok); } .cs-delta.t-bad { color: var(--bad); }
 .lc-ref { stroke: var(--st-good); stroke-width: 1; stroke-dasharray: 4 3; opacity: .8; }
 .lc-ref-t { font-size: 11px; fill: var(--muted); font-family: inherit; }
+
+/* Clients */
+.client-cell { display: flex; align-items: center; gap: 10px; }
+.org-logo.cl, .org-initials.cl { width: 38px; height: 38px; font-size: 13px; }
+.org-logo.cl:has(img) { width: auto; max-width: 80px; }

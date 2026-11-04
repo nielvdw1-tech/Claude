@@ -8,7 +8,7 @@
    ========================================================================== */
 'use strict';
 
-const STORE_KEY = 'vdw-hseq-prototype-v13';
+const STORE_KEY = 'vdw-hseq-prototype-v14';
 let S = null;                        // application state (demo data)
 const TODAY = (() => { const d = new Date(); d.setHours(0, 0, 0, 0); return isoDate(d); })();
 const ROUTES = {};                   // page renderers registered by module files
@@ -18,7 +18,7 @@ const ACT = {};                      // click handlers: data-act="name"
 function loadState() {
   try {
     const raw = localStorage.getItem(STORE_KEY);
-    if (raw) { const parsed = JSON.parse(raw); if (parsed && parsed.version === 13) { S = parsed; return; } }
+    if (raw) { const parsed = JSON.parse(raw); if (parsed && parsed.version === 14) { S = parsed; return; } }
   } catch (e) { console.warn('Could not read local storage; using fresh demo data.', e); }
   S = buildSeed(); save();
 }
@@ -510,7 +510,7 @@ function raiseActionModal(o, after) {
    SHELL: sidebar, topbar, routing
    ========================================================================== */
 const NAV = [
-  { group: 'Overview', items: [['dashboard', 'Dashboard', 'dashboard'], ['notifications', 'Notifications & Tasks', 'bell'], ['notices', 'Company Notices', 'info']] },
+  { group: 'Overview', items: [['dashboard', 'Dashboard', 'dashboard'], ['notifications', 'Notifications & Tasks', 'bell'], ['notices', 'Company Notices', 'info'], ['clients', 'My clients', 'building']] },
   { group: 'Document control', items: [['documents', 'Document Manager', 'docs']] },
   { group: 'Assets & inspections', items: [['assets', 'Assets & Equipment', 'forklift'], ['inspections', 'Inspections', 'clipboard'], ['maintenance', 'Maintenance & Defects', 'wrench']] },
   { group: 'Incidents', items: [['incidents', 'Incident Management', 'alert']] },
@@ -538,13 +538,13 @@ function renderSidebar(active) {
   <div class="sb-powered"><span class="logo-mark xs">VDW</span><span>Powered by <b>VDW HSEQ</b> · Prototype</span></div>
   <div class="sb-scope">
     <label for="orgSel">Organisation</label>
-    <select id="orgSel">${S.orgs.map(o => `<option value="${o.id}" ${o.id === S.ui.org ? 'selected' : ''}>${esc(o.short)}</option>`).join('')}</select>
+    <select id="orgSel" ${myOrgs().length < 2 ? 'disabled' : ''}>${myOrgs().map(o => `<option value="${o.id}" ${o.id === S.ui.org ? 'selected' : ''}>${esc(o.short)}</option>`).join('')}</select>
     <label for="siteSel">Branch / site</label>
     <select id="siteSel"><option value="ALL">All branches (organisation view)</option>${sites.map(s => `<option value="${s.id}" ${s.id === S.ui.site ? 'selected' : ''}>${esc(s.short)}</option>`).join('')}</select>
   </div>
   <nav class="sb-nav" aria-label="Main navigation">
     ${(isFieldUser() ? NAV_FIELD : NAV).map((g, gi) => `<div class="nav-group ${S.ui.navCollapsed && S.ui.navCollapsed[gi] ? 'collapsed' : ''}"><button class="nav-group-title" data-act="toggleNavGroup" data-g="${gi}" aria-expanded="${!(S.ui.navCollapsed && S.ui.navCollapsed[gi])}">${esc(g.group)} ${icon('chevron')}</button><div class="nav-items">
-      ${g.items.map(([k, label, ic]) => `<a class="nav-item ${active === k ? 'active' : ''}" href="#/${k}">${icon(ic)}<span>${esc(label)}</span>${cnt[k] ? `<span class="count" title="${k === 'actions' ? 'Overdue actions' : k === 'notifications' ? 'Unread' : k === 'documents' ? 'Awaiting your approval' : k === 'inspections' ? 'Overdue inspections' : k === 'notices' ? 'Unread or awaiting your acknowledgement' : 'Requires attention'}">${cnt[k]}</span>` : ''}</a>`).join('')}
+      ${g.items.filter(([k]) => k !== 'clients' || myOrgs().length > 1 || can('clients.manage')).map(([k, label, ic]) => `<a class="nav-item ${active === k ? 'active' : ''}" href="#/${k}">${icon(ic)}<span>${esc(label)}</span>${cnt[k] ? `<span class="count" title="${k === 'actions' ? 'Overdue actions' : k === 'notifications' ? 'Unread' : k === 'documents' ? 'Awaiting your approval' : k === 'inspections' ? 'Overdue inspections' : k === 'notices' ? 'Unread or awaiting your acknowledgement' : 'Requires attention'}">${cnt[k]}</span>` : ''}</a>`).join('')}
     </div></div>`).join('')}
   </nav>
   <div class="sb-user"><div class="avatar">${initials(u.name)}</div><div class="who"><b>${esc(u.name)}</b><span>${esc(u.sysRole)}</span></div></div>`;
@@ -569,6 +569,7 @@ let lastRoute = '';
 function rerender(keepScroll = true) {
   if (!signedIn()) { renderSignIn(); return; }   // nobody signed in (or the account was deactivated)
   document.body.classList.remove('auth-mode');
+  ensureOrgAccess();   // only the companies this person may see
   ensureAudit();
   runEscalations();
   let { parts, q } = parseHash(); let key = parts[0] || 'dashboard';
@@ -616,7 +617,7 @@ document.addEventListener('input', (e) => {
 });
 document.addEventListener('change', (e) => {
   const el = e.target;
-  if (el.id === 'orgSel') { S.ui.org = el.value; S.ui.site = 'ALL'; save(); toast(`Switched to ${esc(orgOf(el.value).name)}.`, 'info'); if (parseHash().parts.length > 1) navigate('#/dashboard'); else rerender(); }
+  if (el.id === 'orgSel') { if (!canSeeOrg(el.value)) { toast('You do not have access to that company.', 'error'); rerender(); return; } S.ui.org = el.value; S.ui.site = 'ALL'; save(); toast(`Switched to ${esc(orgOf(el.value).name)}.`, 'info'); if (parseHash().parts.length > 1) navigate('#/dashboard'); else rerender(); }
   if (el.id === 'siteSel') { S.ui.site = el.value; save(); toast(el.value === 'ALL' ? 'Showing organisation-wide view (all branches).' : `Showing branch: ${esc(site(el.value).name)}.`, 'info'); rerender(); }
 });
 document.addEventListener('keydown', (e) => {
