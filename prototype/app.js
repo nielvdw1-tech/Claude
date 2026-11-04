@@ -8,7 +8,7 @@
    ========================================================================== */
 'use strict';
 
-const STORE_KEY = 'vdw-hseq-prototype-v15';
+const STORE_KEY = 'vdw-hseq-prototype-v16';
 let S = null;                        // application state (demo data)
 const TODAY = (() => { const d = new Date(); d.setHours(0, 0, 0, 0); return isoDate(d); })();
 const ROUTES = {};                   // page renderers registered by module files
@@ -18,7 +18,7 @@ const ACT = {};                      // click handlers: data-act="name"
 function loadState() {
   try {
     const raw = localStorage.getItem(STORE_KEY);
-    if (raw) { const parsed = JSON.parse(raw); if (parsed && parsed.version === 15) { S = parsed; return; } }
+    if (raw) { const parsed = JSON.parse(raw); if (parsed && parsed.version === 16) { S = parsed; return; } }
   } catch (e) { console.warn('Could not read local storage; using fresh demo data.', e); }
   S = buildSeed(); save();
 }
@@ -47,7 +47,7 @@ function orgMark(o, cls = '') { return o.logo ? `<span class="org-logo ${cls}"><
 function initials(name) { return String(name || '?').split(' ').map(x => x[0]).slice(0, 2).join('').toUpperCase(); }
 function me() { return person(S.ui.user); }
 function myRole() { const p = me(); return S.roles.find(r => r.name === (p && p.sysRole)) || S.roles[S.roles.length - 1]; }
-function can(perm) { return myRole().perms.includes(perm); }
+function can(perm) { return roleHas(myRole(), perm); }   // System Administrator: everything
 function isFieldUser() { return !!myRole().fieldOnly; }   // e.g. Employee: QR inspections and incident reporting only
 function canOwnActions(p) { const r = S.roles.find(x => x.name === p.sysRole); return !(r && r.fieldOnly); }
 function nextId(prefix, coll, pad = 3, start = 1) {
@@ -329,7 +329,7 @@ function rules() { return Object.assign({ defectReviewDays: 2, assignInvestigato
 function effOverdue(i) { return i.status === 'Closed' && i.effectiveness && !i.effectiveness.done && daysTo(i.effectiveness.due) < 0; }
 function incidentOnTrack(i) { return !(i.status === 'Reported' && daysTo(i.date) < -rules().assignInvestigatorDays) && !(i.status === 'Under Investigation' && i.invDue && daysTo(i.invDue) < 0) && !effOverdue(i); }
 // Who reviews a defect reported by an operator: the asset's responsible person (if they may raise actions) and the branch manager.
-function defectReviewers(a) { return [...new Set([a.responsible, (site(a.site) || {}).manager].filter(id => { const p = person(id); const r = p && S.roles.find(x => x.name === p.sysRole); return r && r.perms.includes('action.create'); }))]; }
+function defectReviewers(a) { return [...new Set([a.responsible, (site(a.site) || {}).manager].filter(id => { const p = person(id); const r = p && S.roles.find(x => x.name === p.sysRole); return roleHas(r, 'action.create'); }))]; }
 function hseqManagers(org) { return S.people.filter(p => p.sysRole === 'HSEQ Manager' && p.org === org && p.status === 'Active').map(p => p.id); }
 /* Escalation of incidents that are not being dealt with in time (a server job in production; checked on every screen here). */
 function incEscalation(i) {
@@ -534,6 +534,8 @@ const NAV = [
   { group: 'Administration', items: [['admin', 'Administration', 'settings']] }
 ];
 const NAV_FIELD = [{ group: 'Field', items: [['field', 'Scan & inspect', 'qr'], ['report', 'Report incident', 'alert'], ['notices', 'Notices', 'info']] }];
+// Field-screen roles: the field menu, plus any areas an administrator opened for the role
+function fieldNav() { const extra = NAV.flatMap(g => g.items).filter(([k]) => AREA_OF[k] && k !== 'notices' && canArea(k)); return extra.length ? NAV_FIELD.concat([{ group: 'Opened for your role', items: extra }]) : NAV_FIELD; }
 const FIELD_ROUTES = ['field', 'report', 'qr', 'inspect', 'notices', 'notfound', 'password', 'settings'];
 function navCounts() {
   const c = {};
@@ -558,7 +560,7 @@ function renderSidebar(active) {
     <select id="siteSel" ${branchLimited() ? 'disabled title="You work in your own branch"' : ''}>${branchLimited() ? '' : '<option value="ALL">All branches (organisation view)</option>'}${sites.map(s => `<option value="${s.id}" ${s.id === S.ui.site ? 'selected' : ''}>${esc(s.short)}</option>`).join('')}</select>
   </div>
   <nav class="sb-nav" aria-label="Main navigation">
-    ${(isFieldUser() ? NAV_FIELD : NAV).map((g, gi) => `<div class="nav-group ${S.ui.navCollapsed && S.ui.navCollapsed[gi] ? 'collapsed' : ''}"><button class="nav-group-title" data-act="toggleNavGroup" data-g="${gi}" aria-expanded="${!(S.ui.navCollapsed && S.ui.navCollapsed[gi])}">${esc(g.group)} ${icon('chevron')}</button><div class="nav-items">
+    ${(isFieldUser() ? fieldNav() : NAV.map(g => Object.assign({}, g, { items: g.items.filter(([k]) => canArea(k)) })).filter(g => g.items.length)).map((g, gi) => `<div class="nav-group ${S.ui.navCollapsed && S.ui.navCollapsed[gi] ? 'collapsed' : ''}"><button class="nav-group-title" data-act="toggleNavGroup" data-g="${gi}" aria-expanded="${!(S.ui.navCollapsed && S.ui.navCollapsed[gi])}">${esc(g.group)} ${icon('chevron')}</button><div class="nav-items">
       ${g.items.filter(([k]) => k !== 'clients' || myOrgs().length > 1 || can('clients.manage')).map(([k, label, ic]) => `<a class="nav-item ${active === k ? 'active' : ''}" href="#/${k}">${icon(ic)}<span>${esc(label)}</span>${cnt[k] ? `<span class="count" title="${k === 'actions' ? 'Overdue actions' : k === 'notifications' ? 'Unread' : k === 'documents' ? 'Awaiting your approval' : k === 'inspections' ? 'Overdue inspections' : k === 'notices' ? 'Unread or awaiting your acknowledgement' : 'Requires attention'}">${cnt[k]}</span>` : ''}</a>`).join('')}
     </div></div>`).join('')}
   </nav>
@@ -611,11 +613,12 @@ function rerender(keepScroll = true) {
   let { parts, q } = parseHash(); let key = parts[0] || 'dashboard';
   if (account(me()).mustChange && key !== 'password') { history.replaceState(null, '', '#/password'); parts = ['password']; key = 'password'; }   // a reset password must be changed first
   let fn = ROUTES[key] || ROUTES.notfound;
+  if (!isFieldUser() && AREA_OF[key] && !canArea(key)) fn = () => areaClosedPage(key);   // area not open for this role
   // A record page from another branch (opened by link, search or bookmark) is not shown to branch-limited people
   const REC_ROUTE = { incidents: 'incidents', actions: 'actions', assets: 'assets', inspections: 'inspections', documents: 'documents', print: 'inspections', inspect: 'schedules' };
   if (REC_ROUTE[key] && parts[1] && recordOutsideBranch(byId(REC_ROUTE[key], parts[1]))) fn = () => ({ title: 'Other branch', crumbs: [['Not available', '#']], html: `<div class="alert info">${icon('lock')}<div><b>This record belongs to another branch.</b> You work in ${esc(site(me().site).name)}, so you only see that branch's records and company-wide documents.</div></div>` });
   // Field users (e.g. Employee) only see the field screens: QR inspections and incident reporting
-  if (isFieldUser() && !FIELD_ROUTES.includes(key)) fn = (pp, qq) => ROUTES.field(pp, key === 'dashboard' ? {} : Object.assign({}, qq, { blocked: key }));
+  if (isFieldUser() && !FIELD_ROUTES.includes(key) && !(AREA_OF[key] && canArea(key))) fn = (pp, qq) => ROUTES.field(pp, key === 'dashboard' ? {} : Object.assign({}, qq, { blocked: key }));
   let page;
   try { page = fn(parts.slice(1), q); }
   catch (e) { console.error(e); page = { title: 'Error', crumbs: [['Error', '#']], html: `<div class="alert danger">${icon('alert')}<div>Something went wrong rendering this page: ${esc(e.message)}</div></div>` }; }

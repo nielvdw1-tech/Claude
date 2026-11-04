@@ -19,7 +19,7 @@ function suggestDocNumber(cat) {
 }
 function curStep(r) { return (r && r.route || []).find(s => s.status === 'Current'); }
 function routeText(r) { const c = curStep(r); return c ? `step ${c.step} of ${r.route.length} — ${c.label} (${pname(c.person)})` : ''; }
-function hasPerm(p, perm) { const r = S.roles.find(x => x.name === p.sysRole); return !!(r && r.perms.includes(perm)); }
+function hasPerm(p, perm) { return roleHas(S.roles.find(x => x.name === p.sysRole), perm); }
 function defaultRoute(cat, author) {
   const r = JSON.parse(JSON.stringify(S.config.approvalRoutes[cat] || S.config.approvalRoutes['*'])).filter(x => x.person !== author);   // nobody approves their own document
   return r.length ? r : [{ label: 'Approval', person: '' }];

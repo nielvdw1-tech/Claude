@@ -875,6 +875,33 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     ok('SS2 the downloaded sheet has the same sections as the on-screen sheet', ['Controlled document', 'Overhead Crane', 'Document no:', 'CATEGORY', 'APPLIES TO', 'OWNER', 'AUTHOR', 'CHANGE SUMMARY', 'Sample sheet generated'].every(k => txt.includes(k)));
   }
 
+  /* ---------------- RL. Roles: System Administrator, new roles, opening areas ---------------- */
+  {
+    const navKeys = () => p.$$eval('#sidebar .nav-item', e => e.map(x => x.getAttribute('href')));
+    await asUser('P-019'); await go('#/admin/roles');   // Marius Venter, System Administrator
+    const nav = await navKeys(), txt = await p.innerText('#content');
+    ok('RL1 the System Administrator can do everything and the role cannot be changed', ['#/dashboard', '#/documents', '#/reports', '#/admin', '#/clients'].every(k => nav.includes(k)) && (await S("can('clients.manage') && can('doc.issue') && can('admin') && can('anything.added.later')")) && txt.includes('Cannot be changed') && !(await has('[data-act=roleEdit][data-name="System Administrator"]')));
+    await p.click('[data-act=roleNew][data-from="Supervisor"]'); await p.waitForTimeout(150);
+    await mfill('name', 'Contractor supervisor'); await mfill('desc', 'Supervises contractors on site.');
+    await p.uncheck('.modal [name="p_area.reports"]'); await p.uncheck('.modal [name="p_area.documents"]'); await mbtn('Create role');
+    const role = await S("S.roles.find(r => r.name === 'Contractor supervisor')");
+    ok('RL2 an administrator creates a new role from a copy and chooses its areas and permissions', !!role && role.custom && role.perms.includes('inspect') && !role.perms.includes('area.reports') && !role.perms.includes('area.documents') && role.perms.includes('area.incidents'));
+    await go('#/admin/users'); await p.selectOption('[data-act-role="P-008"]', 'Contractor supervisor'); await p.waitForTimeout(150);
+    await asUser('P-008'); const nav2 = await navKeys(); await go('#/reports');
+    ok('RL3 people with the new role only see the areas opened for it', !nav2.includes('#/reports') && !nav2.includes('#/documents') && nav2.includes('#/incidents') && (await p.innerText('#content')).includes('not open for your role'));
+    await asUser('P-019'); await go('#/admin/roles'); await p.click('[data-act=roleEdit][data-name="Employee"]'); await p.waitForTimeout(150);
+    await p.check('.modal [name="p_area.documents"]'); await mbtn('Save role');
+    await asUser('P-014'); const nav3 = await navKeys(); await go('#/documents');
+    ok('RL4 an area can be opened for a role that normally cannot use it (employees: Document Manager)', nav3.includes('#/documents') && nav3.includes('#/field') && (await p.innerText('#content')).includes('KIE-POL-001') && !(await S("can('doc.create')")));
+    await asUser('P-019'); await go('#/admin/roles'); await p.click('[data-act=roleDelete][data-name="Contractor supervisor"]'); await p.waitForTimeout(150);
+    const blocked = (await S("S.roles.some(r => r.name === 'Contractor supervisor')")) && !(await modalOpen());
+    await go('#/admin/users'); await p.selectOption('[data-act-role="P-008"]', 'Supervisor'); await p.waitForTimeout(150);
+    await go('#/admin/roles'); await p.click('[data-act=roleDelete][data-name="Contractor supervisor"]'); await p.waitForTimeout(150); await p.click('.modal-foot button:has-text("Delete role")'); await p.waitForTimeout(150);
+    ok('RL5 a role still in use cannot be deleted; once nobody has it, it can', blocked && !(await S("S.roles.some(r => r.name === 'Contractor supervisor')")));
+    await S("(() => { const e = S.roles.find(r => r.name === 'Employee'); e.perms = e.perms.filter(k => k !== 'area.documents'); save(); })()");
+    await asUser('P-002');
+  }
+
   /* ---------------- L. Company logo ---------------- */
   {
     await asUser('P-002'); await go('#/dashboard');

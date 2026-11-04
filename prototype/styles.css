@@ -981,3 +981,11 @@ body.auth-mode .main { margin-left: 0; }
 
 .chart-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
 .chart-head h4 { margin: 0; }
+
+/* Roles */
+.role-card .card-head { align-items: flex-start; }
+.perm-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.perm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 6px 14px; }
+.perm-matrix td:not(:first-child), .perm-matrix th:not(:first-child) { text-align: center; }
+.perm-matrix .pm-group td { background: var(--surface-2); font-weight: 700; font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--fg-2); }
+.pm-yes { color: var(--ok); }

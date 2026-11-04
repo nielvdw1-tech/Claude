@@ -8,7 +8,7 @@ Status key:
 - **Not implemented**
 
 "Tested" means one of the following:
-- the automated browser test (`tests/workflows.test.js`, **206/206 passing**, no JavaScript errors);
+- the automated browser test (`tests/workflows.test.js`, **211/211 passing**, no JavaScript errors);
 - the route smoke test (77 routes plus a second organisation, no errors);
 - the mobile layout check (31 routes at 390 px, no horizontal overflow).
 
@@ -90,6 +90,7 @@ Status key:
 | Stamped downloads of controlled documents (PDF pages, images, demo records); Word/Excel marked in the file name | Implemented | ST1–ST4 |
 | Several clients: data separated per company, consultant overview, new-client wizard | Partial | CL1–CL5; separation applied in the browser (the live system enforces it on the server) |
 | Privacy: medical details hidden until opened (logged), retention periods with review list, removing a former employee's personal details | Partial | PV1–PV4; retention decisions are the company's; nothing is deleted automatically |
+| System Administrator role with every permission; create, copy, edit and delete roles; open or close areas of the system and permissions per role (also for field-screen roles) | Partial | RL1–RL5; applied in the browser (the live system enforces it on the server) |
 | Roles and permissions | Partial | Client-side demonstration only; production must enforce them on the server |
 | Persistence and reset | Implemented | E8, E11 |
 | Out-of-scope modules removed (legal, risk, people, PPE, chemicals, emergency, audits) | Implemented | E4–E5; preserved in git history (commit `26b59bc`) |

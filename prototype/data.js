@@ -15,7 +15,7 @@ function buildSeed() {
   const T = (n, h = 9, m = 0) => { const x = new Date(base); x.setDate(x.getDate() + n); x.setHours(h, m, 0, 0); return x.toISOString(); };
   const demoFile = (name, kb) => ({ name, size: kb * 1024, type: name.endsWith('.pdf') ? 'application/pdf' : 'application/octet-stream', demo: true, seeded: true });
 
-  const S = { version: 15, seededOn: D(0) };
+  const S = { version: 16, seededOn: D(0) };
 
   /* ---------------- Organisations, sites, departments ---------------- */
   S.orgs = [
@@ -50,11 +50,13 @@ function buildSeed() {
     P('P-015', 'Hendrik Swart', 'Electrical Contractor', 'S-JHB', 'Workshop & Service', 'Contractor', null, 'hendrik@swartelectrical.demo', { company: 'Swart Electrical CC (fictional)' }),
     P('P-016', 'Fatima Patel', 'Workshop Supervisor', 'S-CPT', 'Workshop & Service', 'Employee', 'Supervisor', 'fatima.p@kestrel.demo'),
     P('P-017', 'Dawid Kruger', 'Operations Manager', 'S-RPV', 'Management', 'Employee', 'Branch Manager', 'dawid.k@ridgeway.demo'),
+    P('P-019', 'Marius Venter', 'System Administrator', 'S-JHB', 'Management', 'Employee', 'System Administrator', 'marius.v@kestrel.demo'),
     P('P-018', 'Lindiwe Khumalo', 'Workshop Technician', 'S-RPV', 'Workshop & Service', 'Employee', 'Employee', 'lindiwe.k@ridgeway.demo')
   ];
 
   /* ---------------- Roles & permissions (client-side DEMO only) ---------------- */
   S.roles = [
+    { name: 'System Administrator', desc: 'Can do everything in the system, including anything added later. This role cannot be changed or deleted.', perms: [], allPerms: true },
     { name: 'Managing Director', desc: 'Organisation-wide visibility; final approver for policies; can raise, assign and verify corrective actions and report incidents.', perms: ['notice.publish', 'view.all', 'doc.approve', 'action.create', 'action.verify', 'incident.report', 'report.view'] },
     { name: 'HSEQ Manager', desc: 'Owns document control, verification of corrective actions, incident investigation and configuration.', perms: ['notice.publish', 'view.all', 'doc.create', 'doc.approve', 'doc.issue', 'action.create', 'action.verify', 'incident.investigate', 'admin', 'report.view', 'inspect'] },
     { name: 'Safety Consultant', desc: 'External VDW consultant with full access: documents, approvals and issue, inspections, corrective actions, incidents, reports and configuration.', perms: ['clients.manage', 'notice.publish', 'view.all', 'doc.create', 'doc.approve', 'doc.issue', 'action.create', 'action.verify', 'incident.investigate', 'admin', 'report.view', 'inspect'] },
@@ -62,12 +64,15 @@ function buildSeed() {
     { name: 'Supervisor', desc: 'Conducts inspections, reports defects and incidents, updates actions assigned to them.', perms: ['view.branch', 'action.create', 'inspect', 'incident.report'] },
     { name: 'Employee', desc: 'Field access only: inspects assets by scanning their QR code and reports incidents.', perms: ['inspect.qr', 'incident.report'], fieldOnly: true }
   ];
-  S.permissionDefs = [
+  // Areas of the system (menu) a role can open — every role except the field-screen Employee starts with all of them
+  const AREAS = [['area.dashboard', 'Dashboard'], ['area.notices', 'Company notices'], ['area.documents', 'Document Manager'], ['area.assets', 'Assets & equipment (incl. QR labels)'], ['area.inspections', 'Inspections'], ['area.maintenance', 'Maintenance & defects'], ['area.incidents', 'Incident management'], ['area.actions', 'Corrective actions'], ['area.reports', 'Reports'], ['area.admin', 'Administration (to view; changes need "System configuration")']];
+  S.roles.filter(r => !r.fieldOnly && !r.allPerms).forEach(r => r.perms.push(...AREAS.map(a => a[0])));
+  S.permissionDefs = AREAS.map(a => [a[0], a[1], 'area']).concat([
     ['view.all', 'View all organisations / branches in scope'], ['view.branch', 'View records of assigned branch'], ['view.own', 'View own tasks & issued documents'],
     ['doc.create', 'Upload, create & revise documents'], ['doc.approve', 'Can be placed on a document approval route'], ['doc.issue', 'Issue approved documents for use'],
     ['inspect', 'Conduct inspections'], ['inspect.qr', 'Inspect an asset after scanning its QR code (field users)'], ['action.create', 'Raise corrective actions'], ['action.verify', 'Verify & close corrective actions'],
     ['incident.report', 'Report incidents'], ['incident.investigate', 'Investigate & close incidents'], ['notice.publish', 'Publish company notices'], ['report.view', 'Management reports'], ['admin', 'System configuration'], ['clients.manage', 'Set up and look after several client companies']
-  ];
+  ]);
 
   /* ---------------- Configuration ---------------- */
   S.config = {

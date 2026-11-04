@@ -36,6 +36,7 @@ To start again, open the user menu (top right) and choose **Reset demo data**.
 | Johan van Wyk (default) | HSEQ Manager | Approver, issues documents, verifies actions, investigates incidents |
 | Thandi Mokoena | Managing Director | Final approver for policies and safe work procedures; raises, assigns and verifies corrective actions; reports incidents |
 | Pieter Botha | Operations Manager | Operational reviewer on approval routes |
+| Marius Venter | System Administrator | **Everything**, including anything added later; manages roles and users |
 | Ayesha Khan | VDW Safety Consultant | **Full access** (same as HSEQ Manager): approvals, issuing, verification, investigations, administration |
 | Sipho Ndlovu / Lerato Dlamini | Branch Managers | Document authors; action owners |
 | Bongani Zulu / Fatima Patel | Supervisors | Inspections; action owners |
@@ -246,6 +247,19 @@ Who sees what:
   - **Former employees:** their personal details can be removed on request, while the safety records stay and show *Former employee*.
   - Which records to keep, and for how long, is for your company and its legal adviser to decide.
 
+### H. Roles and areas (Administration → Roles & permissions)
+- **System Administrator** can do everything, including permissions added later. This role can't be changed or deleted.
+- **Two layers per role:**
+  - **Areas of the system it can open:** Dashboard, Company notices, Document Manager, Assets, Inspections, Maintenance, Incidents, Corrective actions, Reports, Administration.
+  - **What it can do:** for example approve documents, verify actions, investigate incidents or publish notices.
+- **Creating and editing roles:**
+  - **New role** starts empty; **Copy** starts from an existing role.
+  - **Edit** opens or closes areas and permissions; people with that role get the change straight away.
+  - Custom roles can be renamed or deleted (once nobody has them). Built-in role names are fixed.
+- **Field-screen roles** (such as Employee) keep their simple phone screens. Any area opened for them is added to their menu under **Opened for your role**. For example, open the Document Manager for employees so they can read issued procedures without being able to upload or approve.
+- **Closed areas** are not shown in a person's menu, and opening one by link explains it is not open for their role.
+- **At least one person** must always be able to configure the system; the last such person can't lose that permission.
+
 ## 4. What works and what is simulated
 
 | Works in the browser | Simulated / not provided |
@@ -278,6 +292,7 @@ prototype/
 ├── app.js                        Core: state, routing, layout, notifications & tasks,
 │                                 corrective-action workflow, dashboard
 ├── mod-auth.js                   Sign-in (simulated): accounts, passwords, deactivation
+├── mod-roles.js                  Roles: areas of the system and permissions per role
 ├── mod-audit.js                  Locked records, amendments, hash-chained audit trail
 ├── mod-mail.js                   E-mail outbox (simulated) and notification settings
 ├── mod-backup.js                 Backup and restore of all records and stored files
@@ -303,6 +318,6 @@ prototype/
 └── README.md                     This file
 ```
 
-**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 206 workflow outcomes.
+**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 211 workflow outcomes.
 
 The earlier full HSEQ prototype, with legal, risk, people, PPE, chemicals, emergency and audits, is preserved in git history at commit `26b59bc`.
