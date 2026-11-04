@@ -23,7 +23,7 @@ function loadState() {
   S = buildSeed(); save();
 }
 function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); } catch (e) { console.warn('Local storage unavailable — changes will not persist.', e); } }
-function resetDemo() { S = buildSeed(); save(); if (typeof idbClear === 'function') idbClear(); }
+function resetDemo() { const u = S && S.ui && S.ui.user; S = buildSeed(); if (u && person(u)) S.ui.user = u; save(); if (typeof idbClear === 'function') idbClear(); }   // stays signed in as the same person
 
 /* ---------------- Utilities ---------------- */
 function isoDate(d) { const z = new Date(d.getTime() - d.getTimezoneOffset() * 60000); return z.toISOString().slice(0, 10); }
@@ -174,7 +174,7 @@ function orgSites() { return S.sites.filter(s => s.org === S.ui.org); }
 function scopeLabel() { return S.ui.site === 'ALL' ? (orgOf(S.ui.org).short + ' — all branches') : (orgOf(S.ui.org).short + ' — ' + site(S.ui.site).short); }
 function scopePill() { return `<div class="scope-pill">${icon(S.ui.site === 'ALL' ? 'building' : 'target', 'sm')} ${esc(scopeLabel())}</div>`; }
 function peopleInScope() { return S.people.filter(p => inScope(p)); }
-function personOptions(sel, filter) { const list = S.people.filter(p => p.org === S.ui.org && (!filter || filter(p))); return '<option value="">— Select —</option>' + list.map(p => `<option value="${p.id}" ${p.id === sel ? 'selected' : ''}>${esc(p.name)} — ${esc(p.jobTitle)}${p.site ? ' (' + esc(sname(p.site)) + ')' : ''}</option>`).join(''); }
+function personOptions(sel, filter) { const list = S.people.filter(p => p.org === S.ui.org && (p.status !== 'Deactivated' || p.id === sel) && (!filter || filter(p))); return '<option value="">— Select —</option>' + list.map(p => `<option value="${p.id}" ${p.id === sel ? 'selected' : ''}>${esc(p.name)} — ${esc(p.jobTitle)}${p.site ? ' (' + esc(sname(p.site)) + ')' : ''}</option>`).join(''); }
 function siteOptions(sel, includeAll = true) { return (includeAll ? `<option value="ALL" ${sel === 'ALL' ? 'selected' : ''}>All sites (organisation-wide)</option>` : '<option value="">— Select —</option>') + orgSites().map(s => `<option value="${s.id}" ${s.id === sel ? 'selected' : ''}>${esc(s.name)}</option>`).join(''); }
 function opts(list, sel, blank) { return (blank ? `<option value="">${esc(blank)}</option>` : '') + list.map(o => { const v = typeof o === 'object' ? o.value : o, l = typeof o === 'object' ? o.label : o; return `<option value="${esc(v)}" ${String(v) === String(sel) ? 'selected' : ''}>${esc(l)}</option>`; }).join(''); }
 function defaultSite() { return S.ui.site !== 'ALL' ? S.ui.site : (me() && me().org === S.ui.org ? me().site : orgSites()[0].id); }
@@ -517,7 +517,7 @@ const NAV = [
   { group: 'Administration', items: [['admin', 'Administration', 'settings']] }
 ];
 const NAV_FIELD = [{ group: 'Field', items: [['field', 'Scan & inspect', 'qr'], ['report', 'Report incident', 'alert'], ['notices', 'Notices', 'info']] }];
-const FIELD_ROUTES = ['field', 'report', 'qr', 'inspect', 'notices', 'notfound'];
+const FIELD_ROUTES = ['field', 'report', 'qr', 'inspect', 'notices', 'notfound', 'password'];
 function navCounts() {
   const c = {};
   c.actions = S.actions.filter(a => inSite(a, S.ui.site) && actionOverdue(a)).length;
@@ -565,8 +565,11 @@ function parseHash() {
 function navigate(h) { if (location.hash === h) rerender(); else location.hash = h; }
 let lastRoute = '';
 function rerender(keepScroll = true) {
+  if (!signedIn()) { renderSignIn(); return; }   // nobody signed in (or the account was deactivated)
+  document.body.classList.remove('auth-mode');
   runEscalations();
-  const { parts, q } = parseHash(); const key = parts[0] || 'dashboard';
+  let { parts, q } = parseHash(); let key = parts[0] || 'dashboard';
+  if (account(me()).mustChange && key !== 'password') { history.replaceState(null, '', '#/password'); parts = ['password']; key = 'password'; }   // a reset password must be changed first
   let fn = ROUTES[key] || ROUTES.notfound;
   // Field users (e.g. Employee) only see the field screens: QR inspections and incident reporting
   if (isFieldUser() && !FIELD_ROUTES.includes(key)) fn = (pp, qq) => ROUTES.field(pp, key === 'dashboard' ? {} : Object.assign({}, qq, { blocked: key }));
@@ -630,16 +633,19 @@ ACT.userMenu = (el) => {
   document.querySelectorAll('.dropdown').forEach(d => d.remove());
   const r = el.getBoundingClientRect(); const dd = document.createElement('div'); dd.className = 'dropdown';
   dd.style.top = (r.bottom + 6) + 'px'; dd.style.right = Math.max(8, window.innerWidth - r.right) + 'px'; dd.style.position = 'fixed';
-  const users = S.people.filter(p => p.sysRole);
-  dd.innerHTML = `<div class="dd-head">Switch demo user (role)</div>
+  const users = S.people.filter(p => p.sysRole && p.status !== 'Deactivated' && p.id !== S.ui.user), u = me();
+  dd.innerHTML = `<div class="dd-me"><span class="avatar">${initials(u.name)}</span><div><b>${esc(u.name)}</b><small>${esc(u.email)}</small><small>${esc(u.sysRole)} · ${esc(orgOf(u.org).short)}</small></div></div>
+    <button class="dd-item" data-act="go" data-href="#/password">${icon('lock', 'sm')} Change password</button>
+    <button class="dd-item" data-act="signOut">${icon('power', 'sm')} Sign out</button>
+    <hr><div class="dd-head">Demo: sign in as someone else</div>
     ${users.map(u => `<button class="dd-item ${u.id === S.ui.user ? 'current' : ''}" data-act="switchUser" data-id="${u.id}"><span class="avatar sm">${initials(u.name)}</span><span><b>${esc(u.name)}</b><br><small>${esc(u.sysRole)} · ${esc(orgOf(u.org).short)} · ${esc(sname(u.site))}</small></span></button>`).join('')}
     <hr><button class="dd-item" data-act="go" data-href="#/admin/roles">${icon('lock', 'sm')} Roles & permissions</button>
     <button class="dd-item" data-act="resetDemo">${icon('refresh', 'sm')} Reset demo data</button>
-    <div class="dd-head" style="text-transform:none;letter-spacing:0">Prototype only — no real sign-in. Role switching demonstrates intended permissions; production enforces access on the server.</div>`;
+    <div class="dd-head" style="text-transform:none;letter-spacing:0">Prototype: sign-in and permissions are checked in this browser only. The live system checks them on a secure server.</div>`;
   dd.style.maxHeight = '75vh'; dd.style.overflowY = 'auto';
   document.body.appendChild(dd);
 };
-ACT.switchUser = (el) => { const p = person(el.dataset.id); S.ui.user = p.id; if (p.org !== S.ui.org) { S.ui.org = p.org; S.ui.site = 'ALL'; } save(); document.querySelectorAll('.dropdown').forEach(d => d.remove()); toast(`Now acting as <b>${esc(p.name)}</b> (${esc(p.sysRole)}).`, 'info'); if (isFieldUser()) navigate('#/field'); else rerender(); };
+ACT.switchUser = (el) => { const p = person(el.dataset.id); if (!p || p.status === 'Deactivated') { toast('That account is deactivated.', 'error'); return; } S.ui.user = p.id; if (p.org !== S.ui.org) { S.ui.org = p.org; S.ui.site = 'ALL'; } save(); document.querySelectorAll('.dropdown').forEach(d => d.remove()); toast(`Now acting as <b>${esc(p.name)}</b> (${esc(p.sysRole)}).`, 'info'); if (isFieldUser()) navigate('#/field'); else rerender(); };
 ACT.resetDemo = () => confirmBox('Reset demo data?', 'This restores all demonstration records to their original state and discards changes made in this browser.', 'Reset demo data', () => { resetDemo(); LV.state = {}; toast('Demo data has been reset.'); navigate('#/dashboard'); }, 'danger solid');
 ACT.markRead = (el) => { S.readNotifs[el.dataset.key] = true; save(); };
 
@@ -713,6 +719,6 @@ ROUTES.notfound = () => ({ title: 'Not found', crumbs: [['Not found', '#']], htm
 /* ---------------- Boot ---------------- */
 document.addEventListener('DOMContentLoaded', () => {
   loadState();
-  if (!S.people.find(p => p.id === S.ui.user)) S.ui.user = 'P-002';
+  if (S.ui.user && !S.people.find(p => p.id === S.ui.user)) S.ui.user = null;   // unknown person → signed out
   rerender();
 });

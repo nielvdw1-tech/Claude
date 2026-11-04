@@ -380,6 +380,6 @@ function buildSeed() {
   ];
   S.events = []; // event-driven notifications created by user actions
   S.readNotifs = {};
-  S.ui = { org: 'ORG-1', site: 'ALL', user: 'P-002', navCollapsed: {} };
+  S.ui = { org: 'ORG-1', site: 'ALL', user: null, navCollapsed: {} };   // nobody signed in until someone signs in
   return S;
 }

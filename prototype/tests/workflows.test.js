@@ -13,6 +13,16 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
   p.on('pageerror', e => errs.push('PAGEERROR ' + e.message)); p.on('console', m => { if (m.type() === 'error') errs.push('CONSOLE ' + m.text()); });
   await p.goto(URL); await p.evaluate(() => localStorage.clear()); await p.goto(URL); await p.waitForTimeout(300);
 
+  /* ---------------- AU. Sign-in ---------------- */
+  {
+    const signin = async (email, pw) => { await p.fill('#signinForm [name=email]', email); await p.fill('#signinForm [name=password]', pw); await p.click('#signinForm button[type=submit]'); await p.waitForTimeout(200); };
+    ok('AU1 the system opens on the sign-in page; nothing is shown before signing in', await p.$('#signinForm') !== null && (await p.$('#sidebar .nav-item')) === null);
+    await signin('johan.vw@kestrel.demo', 'wrong-pass');
+    ok('AU2 a wrong password is refused', await p.$('#signinForm') !== null && (await p.innerText('#content')).includes('not correct'));
+    await signin('johan.vw@kestrel.demo', 'demo1234');
+    ok('AU3 the right e-mail and password sign the person in', (await p.evaluate(() => S.ui.user)) === 'P-002' && await p.$('#sidebar .nav-item') !== null);
+  }
+
   const go = async (h) => { await p.evaluate(x => { location.hash = x; }, h); await p.waitForTimeout(120); };
   const S = (fn) => p.evaluate(fn);
   const act = async (sel) => { await p.click(sel); await p.waitForTimeout(120); };
@@ -21,7 +31,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
   const mfill = async (name, val) => { await p.fill(`.modal [name="${name}"]`, val); };
   const msel = async (name, val) => { await p.selectOption(`.modal [name="${name}"]`, val); };
   const mfile = async (sel = '.modal input[type=file]', name = 'evidence.pdf') => { await p.setInputFiles(sel, { name, mimeType: 'application/pdf', buffer: Buffer.from('demo evidence') }); };
-  const asUser = async (id) => { await act('[data-act=userMenu]'); await act(`.dropdown [data-act=switchUser][data-id="${id}"]`); };
+  const asUser = async (id) => { if ((await p.evaluate(() => S.ui.user)) === id) return; await act('[data-act=userMenu]'); await act(`.dropdown [data-act=switchUser][data-id="${id}"]`); };
   const sign = async () => { const b = await (await p.$('#sigPad')).boundingBox(); await p.mouse.move(b.x + 20, b.y + 100); await p.mouse.down(); for (let k = 1; k <= 12; k++) await p.mouse.move(b.x + 20 + k * 15, b.y + 100 - (k % 2) * 40); await p.mouse.up(); await p.waitForTimeout(50); };
   const modalOpen = async () => (await p.$('.modal')) !== null;
   const has = async (sel) => (await p.$(sel)) !== null;
@@ -474,6 +484,37 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     const md = await p.$$eval('.ql-item', e => e.map(x => x.innerText.trim()));
     await go('#/incidents/new');
     ok('QL4 the Managing Director can report an incident (quick link and form)', md.some(x => x.startsWith('Report incident')) && await has('#incForm [data-act=incSubmit]'));
+  }
+
+  /* ---------------- AU. Accounts: add, reset, deactivate, sign out ---------------- */
+  {
+    const signin = async (email, pw) => { await p.fill('#signinForm [name=email]', email); await p.fill('#signinForm [name=password]', pw); await p.click('#signinForm button[type=submit]'); await p.waitForTimeout(200); };
+    await asUser('P-002'); await go('#/admin/users'); await act('[data-act=userNew]');
+    await mfill('name', 'Sam Botha'); await mfill('email', 'sam.b@kestrel.demo'); await mfill('jobTitle', 'Storeman'); await msel('site', 'S-JHB'); await msel('sysRole', 'Supervisor'); await mbtn('Add user'); await p.waitForTimeout(200);
+    const temp = (await p.innerText('.modal .temp-pw')).trim(); await mbtn('Done');
+    ok('AU4 an administrator adds a user, who gets a temporary password', /^[A-Z0-9]{8}$/.test(temp) && (await S("S.people.some(x => x.email === 'sam.b@kestrel.demo' && x.auth.mustChange)")), temp);
+    await act('[data-act=userMenu]'); await act('.dropdown [data-act=signOut]');
+    ok('AU5 signing out returns to the sign-in page', await p.$('#signinForm') !== null && (await S('S.ui.user')) === null);
+    await signin('sam.b@kestrel.demo', temp);
+    const forced = (await p.evaluate(() => location.hash)) === '#/password';
+    await p.fill('#pwForm [name=pw1]', 'short'); await p.fill('#pwForm [name=pw2]', 'short'); await act('[data-act=pwSave]');
+    const weak = (await p.evaluate(() => location.hash)) === '#/password';
+    await p.fill('#pwForm [name=pw1]', 'Stores2026'); await p.fill('#pwForm [name=pw2]', 'Stores2026'); await act('[data-act=pwSave]');
+    ok('AU6 a new user must choose their own password (rules enforced) before using the system', forced && weak && (await p.evaluate(() => location.hash)) === '#/dashboard' && !(await S("S.people.find(x => x.email === 'sam.b@kestrel.demo').auth.mustChange")));
+    await asUser('P-002'); await go('#/admin/users');
+    const sid = await S("S.people.find(x => x.email === 'sam.b@kestrel.demo').id");
+    await p.click(`[data-act=userDeactivate][data-id="${sid}"]`); await p.waitForTimeout(100); await p.click('.modal-foot button:has-text("Deactivate")'); await p.waitForTimeout(150);
+    await act('[data-act=userMenu]'); await act('.dropdown [data-act=signOut]');
+    await signin('sam.b@kestrel.demo', 'Stores2026');
+    ok('AU7 a deactivated person cannot sign in', (await p.innerText('#content')).includes('deactivated') && (await S('S.ui.user')) === null);
+    for (let k = 0; k < 5; k++) await signin('bongani.z@kestrel.demo', 'nope' + k);
+    await signin('bongani.z@kestrel.demo', 'demo1234');
+    ok('AU8 five wrong passwords lock the account', (await p.innerText('#content')).includes('Try again in') && (await S('S.ui.user')) === null);
+    await signin('johan.vw@kestrel.demo', 'demo1234'); await go('#/admin/users');
+    await p.click('[data-act=userReset][data-id="P-007"]'); await p.waitForTimeout(100); await p.click('.modal-foot button:has-text("Reset password")'); await p.waitForTimeout(150);
+    ok('AU9 an administrator reset unlocks the account and forces a new password', (await S("person('P-007').auth.mustChange")) && !(await S("person('P-007').auth.lockedUntil")));
+    await mbtn('Done');
+    await S("(() => { const a = person('P-007').auth; a.hash = passHash('P-007', 'demo1234'); a.mustChange = false; save(); })()");   // restore for later checks
   }
 
   /* ---------------- L. Company logo ---------------- */
