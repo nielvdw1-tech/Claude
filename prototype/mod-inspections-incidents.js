@@ -258,11 +258,25 @@ ROUTES.inspections = function (p) {
   ${(() => { const t = byId('templates', i.template.templateId); const cur = t && tplCurrent(t); return cur && cur.rev !== i.template.rev ? `<div class="alert info">${icon('info')}<div>This inspection was performed on <b>Rev ${i.template.rev}</b> of ${esc(i.template.docNumber)}. The current approved revision is Rev ${cur.rev}; the historical record retains the revision used at the time.</div></div>` : ''; })()}
   <div class="detail"><div class="stack"><div class="card"><div class="card-head"><h2>Checklist results</h2></div><div class="card-body flush"><table class="tbl stackable"><thead><tr><th>#</th><th>Item</th><th>Result</th><th>Comment / evidence</th></tr></thead><tbody>${i.template.questions.map((q, k) => { const r = i.results.find(x => x.qid === q.id) || {}; return `<tr class="${r.result === 'Fail' ? 'row-red' : ''}"><td data-label="#">${k + 1}</td><td data-label="Item">${esc(q.text)} ${q.critical ? badge('Critical', 'red', true) : ''}</td><td data-label="Result"><span class="${r.result === 'Pass' ? 'res-pass' : r.result === 'Fail' ? 'res-fail' : 'res-na'}">${esc(r.result || '—')}</span></td><td data-label="Comment">${esc(r.comment || '')}${photoStrip(resPhotos(r))}</td></tr>`; }).join('')}</tbody></table></div></div>
     ${i.summary ? `<div class="card"><div class="card-head"><h2>Findings / comments</h2></div><div class="card-body">${esc(i.summary)}</div></div>` : ''}</div>
-  <div class="stack"><div class="card"><div class="card-head"><h2>Inspection details</h2></div><div class="card-body"><div class="kv"><div>Date</div><div>${fmt(i.date)}</div><div>Asset / area</div><div>${i.asset ? `<a href="#/assets/${i.asset}">${esc(i.target)}</a>` : esc(i.target)}</div><div>Inspector</div><div>${esc(pname(i.inspector))}</div><div>Inspector signature</div><div>${sigHtml(i)}</div><div>Reviewer</div><div>${esc(pname(i.reviewer))}${i.reviewedOn ? ' · ' + fmt(i.reviewedOn) : ''}</div><div>Template</div><div>${esc(i.template.docNumber)} Rev ${i.template.rev} (${fmt(i.template.revDate)})</div></div></div></div>
+  <div class="stack"><div class="card"><div class="card-head"><h2>Inspection details</h2></div><div class="card-body"><div class="kv"><div>Date</div><div>${fmt(i.date)}</div><div>Asset / area</div><div>${i.asset ? `<a href="#/assets/${i.asset}">${esc(i.target)}</a>` : esc(i.target)}</div><div>Inspector</div><div>${esc(pname(i.inspector))}</div><div>Inspector signature</div><div>${sigHtml(i)}</div><div>Reviewer</div><div>${esc(pname(i.reviewer))}${i.reviewedOn ? ' · ' + fmt(i.reviewedOn) : ''}</div>${i.reviewSignature ? `<div>Reviewer signature</div><div>${revSigHtml(i)}</div>` : ''}<div>Template</div><div>${esc(i.template.docNumber)} Rev ${i.template.rev} (${fmt(i.template.revDate)})</div></div></div></div>
     <div class="card"><div class="card-head"><h2>Corrective actions</h2></div><div class="card-body">${i.actions.length ? `<ul class="link-list">${i.actions.map(x => { const a = byId('actions', x); return `<li><div class="ll-main"><a href="#/actions/${a.id}">${a.id}</a><div>${esc(a.title)} · ${esc(pname(a.owner))}</div></div>${sbadge(a.status)}</li>`; }).join('')}</ul>` : `<p class="muted">${(i.defects || []).some(d => (byId('defects', d) || {}).status === 'Awaiting Review') ? 'None raised yet — the defects are waiting for a supervisor or manager to review them.' : 'None raised.'}</p>`}${(i.defects || []).length ? `<ul class="link-list mt-s">${i.defects.map(x => { const d = byId('defects', x); return d ? `<li><div class="ll-main"><a href="#/assets/${i.asset}?tab=defects">${d.id}</a><div>Defect · ${esc(d.description)}${d.review ? ' · ' + esc(d.review.decision) : ''}</div></div>${sbadge(d.status)}</li>` : ''; }).join('')}</ul>` : ''}</div></div></div></div>`;
   return { title: i.id, nav: 'inspections', crumbs: [['Inspections', '#/inspections/records'], [i.id, '#']], html };
 };
-ACT.inspReview = (el) => { const i = byId('inspections', el.dataset.id); openModal({ title: 'Review & sign off inspection', sub: i.id, body: fld({ name: 'comment', label: 'Reviewer comment', type: 'textarea' }), buttons: [{ label: 'Sign off', cls: 'success', onClick: m => { i.status = 'Reviewed'; i.reviewer = S.ui.user; i.reviewedOn = TODAY; i.reviewComment = readForm(m).comment; log(`Reviewed inspection ${i.id}`, '#/inspections/' + i.id); save(); toast('Inspection reviewed and signed off.'); rerender(); } }] }); };
+ACT.inspReview = (el) => {
+  const i = byId('inspections', el.dataset.id);
+  if (i.inspector === S.ui.user) { toast('You carried out this inspection, so someone else must review and sign it off.', 'error'); return; }   // independent sign-off
+  REVSIG.sig = null;
+  openModal({ title: 'Review & sign off inspection', sub: `${i.id} · inspected by ${pname(i.inspector)} on ${fmt(i.date)}`,
+    body: `${fld({ name: 'comment', label: 'Reviewer comment', type: 'textarea', full: true })}
+      <div class="field full" id="revSigField"><label for="revSigPad">Reviewer signature<span class="req">*</span></label><div class="sig-wrap"><canvas id="revSigPad" class="sig-pad" aria-label="Signature pad: sign with your finger or mouse"></canvas><div class="sig-foot"><span>${esc(pname(S.ui.user))} · sign with your finger or mouse</span><button type="button" class="btn sm" data-act="sigClear" data-pad="rev">Clear</button></div></div></div>`,
+    onOpen: () => setTimeout(() => initSigPad('revSigPad', REVSIG, 'sig', 'revSigField'), 30),
+    buttons: [{ label: 'Sign off', cls: 'success', onClick: m => {
+      if (!REVSIG.sig) { document.getElementById('revSigField').classList.add('invalid'); toast('Please sign before signing off.', 'error'); return false; }
+      i.status = 'Reviewed'; i.reviewer = S.ui.user; i.reviewedOn = TODAY; i.reviewComment = readForm(m).comment;
+      i.reviewSignature = { by: S.ui.user, name: pname(S.ui.user), ts: nowTs(), image: REVSIG.sig }; REVSIG.sig = null;
+      log(`Reviewed and signed off inspection ${i.id}`, '#/inspections/' + i.id); save(); toast('Inspection reviewed and signed off.'); rerender();
+    } }] });
+};
 
 /* ---------------- Controlled, printable inspection report ---------------- */
 ROUTES.print = (p) => {
@@ -282,7 +296,7 @@ ROUTES.print = (p) => {
     ${i.actions.length ? `<table class="rt"><thead><tr><th>Action</th><th>Finding / required action</th><th>Owner</th><th>Due</th><th>Status</th></tr></thead><tbody>${i.actions.map(x => { const a2 = byId('actions', x); return `<tr><td class="mono">${a2.id}</td><td>${esc(a2.title)}<br><small>${esc(a2.action)}</small></td><td>${esc(pname(a2.owner))}</td><td>${fmt(a2.due)}</td><td>${esc(a2.status)}</td></tr>`; }).join('')}</tbody></table>` : '<p>No corrective actions required.</p>'}
     <div class="rep-section">Sign-off</div>
     <table class="rt"><tbody><tr><th style="width:25%">Inspector</th><td>${esc(pname(i.inspector))}</td><th style="width:15%">Date</th><td>${fmt(i.date)}</td></tr><tr><th>Reviewer</th><td>${esc(pname(i.reviewer))}</td><th>Date</th><td>${fmt(i.reviewedOn)}</td></tr></tbody></table>
-    <div class="grid g2 mt-s"><div class="sign-box">Inspector signature${i.signature ? `<img src="${i.signature.image}" alt="Signature of ${esc(i.signature.name)}"><small>${esc(i.signature.name)} · signed ${fmtTs(i.signature.ts)}</small>` : ''}</div><div class="sign-box">Reviewer signature</div></div>
+    <div class="grid g2 mt-s"><div class="sign-box">Inspector signature${i.signature ? `<img src="${i.signature.image}" alt="Signature of ${esc(i.signature.name)}"><small>${esc(i.signature.name)} · signed ${fmtTs(i.signature.ts)}</small>` : ''}</div><div class="sign-box">Reviewer signature${i.reviewSignature ? `<img src="${i.reviewSignature.image}" alt="Signature of ${esc(i.reviewSignature.name)}"><small>${esc(i.reviewSignature.name)} · signed ${fmtTs(i.reviewSignature.ts)}</small>` : ''}</div></div>
     <p class="muted" style="font-size:10px;margin-top:10px">Generated by the VDW HSEQ Management System prototype from demonstration data. Controlled header taken from approved template ${esc(i.template.docNumber)} Rev ${i.template.rev}; electronic signatures are simulated.</p>
   </td></tr></tbody></table></div>`;
   return { title: 'Report ' + i.id, nav: 'inspections', crumbs: [['Inspections', '#/inspections/records'], [i.id, '#/inspections/' + i.id], ['Controlled report', '#']], html };
@@ -417,17 +431,20 @@ ACT.incEffect = (el) => {
    The inspector signs on screen before submitting; the image is kept with the inspection record.
    Kept in INSP.sig so it survives a re-render of the form. */
 function sigHtml(i) { return i.signature ? `<span class="sig-show"><img src="${i.signature.image}" alt="Signature of ${esc(i.signature.name)}"><small>${esc(i.signature.name)} · ${fmtTs(i.signature.ts)}</small></span>` : '<span class="muted">Not captured (recorded before signatures were required)</span>'; }
-function initSigPad() {
-  const c = document.getElementById('sigPad'); if (!c) return;
+// A signature pad on canvas `canvasId`; the drawn image is kept in store[key] so it survives a re-render.
+function initSigPad(canvasId = 'sigPad', store = INSP, key = 'sig', fieldId = 'sigField') {
+  const c = document.getElementById(canvasId); if (!c) return;
   const ratio = window.devicePixelRatio || 1, w = c.clientWidth || 300, h = c.clientHeight || 150;
   c.width = w * ratio; c.height = h * ratio;
   const g = c.getContext('2d'); g.scale(ratio, ratio); g.lineWidth = 2.2; g.lineCap = g.lineJoin = 'round'; g.strokeStyle = '#10213f';
-  if (INSP.sig) { const img = new Image(); img.onload = () => g.drawImage(img, 0, 0, w, h); img.src = INSP.sig; }
+  if (store[key]) { const img = new Image(); img.onload = () => g.drawImage(img, 0, 0, w, h); img.src = store[key]; }
   let drawing = false, pts = 0;
   const pos = e => { const r = c.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
   c.addEventListener('pointerdown', e => { drawing = true; pts = 0; c.setPointerCapture(e.pointerId); const [x, y] = pos(e); g.beginPath(); g.moveTo(x, y); });
   c.addEventListener('pointermove', e => { if (!drawing) return; const [x, y] = pos(e); g.lineTo(x, y); g.stroke(); pts++; });
-  const end = () => { if (!drawing) return; drawing = false; if (pts > 3 || INSP.sig) { INSP.sig = c.toDataURL('image/png'); document.getElementById('sigField').classList.remove('invalid'); } };
+  const end = () => { if (!drawing) return; drawing = false; if (pts > 3 || store[key]) { store[key] = c.toDataURL('image/png'); const f = document.getElementById(fieldId); if (f) f.classList.remove('invalid'); } };
   c.addEventListener('pointerup', end); c.addEventListener('pointercancel', end); c.addEventListener('pointerleave', end);
 }
-ACT.sigClear = () => { INSP.sig = null; const c = document.getElementById('sigPad'); if (c) c.getContext('2d').clearRect(0, 0, c.width, c.height); };
+ACT.sigClear = (el) => { const rev = el && el.dataset && el.dataset.pad === 'rev'; if (rev) REVSIG.sig = null; else INSP.sig = null; const c = document.getElementById(rev ? 'revSigPad' : 'sigPad'); if (c) c.getContext('2d').clearRect(0, 0, c.width, c.height); };
+const REVSIG = { sig: null };
+function revSigHtml(i) { return i.reviewSignature ? `<span class="sig-show"><img src="${i.reviewSignature.image}" alt="Signature of ${esc(i.reviewSignature.name)}"><small>${esc(i.reviewSignature.name)} · ${fmtTs(i.reviewSignature.ts)}</small></span>` : ''; }

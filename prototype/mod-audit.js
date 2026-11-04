@@ -16,7 +16,7 @@
 const LOCKABLE = {
   incidents: { label: 'incident', link: id => '#/incidents/' + id, perm: 'incident.investigate', exclude: ['lock', 'amendments', 'history', 'effectiveness', 'effHistory', 'escalations', 'reporting', 'links'] },
   actions: { label: 'corrective action', link: id => '#/actions/' + id, perm: 'action.verify', exclude: ['lock', 'amendments', 'history', 'escalated'] },
-  inspections: { label: 'inspection', link: id => '#/inspections/' + id, perm: 'action.create', exclude: ['lock', 'amendments', 'reviewer', 'reviewedOn', 'status', 'reviewComment'] }
+  inspections: { label: 'inspection', link: id => '#/inspections/' + id, perm: 'action.create', exclude: ['lock', 'amendments', 'reviewer', 'reviewedOn', 'status', 'reviewComment', 'reviewSignature'] }
 };
 
 /* Fingerprint of the parts of a record that must not change once it is locked. */

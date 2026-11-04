@@ -685,6 +685,24 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await S("(S.ui.site = 'ALL', save())");
   }
 
+  /* ---------------- RS. Reviewer signature on inspections ---------------- */
+  {
+    await asUser('P-002');
+    // The person who carried out an inspection tries to sign it off themselves
+    const own = await S("(() => { const i = S.inspections.find(x => x.status === 'Completed'); const keep = S.ui.user; S.ui.user = i.inspector; ACT.inspReview({ dataset: { id: i.id } }); const opened = !!document.querySelector('.modal'); S.ui.user = keep; return i.id + (opened ? ':opened' : ':blocked'); })()");
+    const selfBlocked = own.endsWith(':blocked');
+    const iid = await S("S.inspections.find(x => x.inspector !== 'P-002' && x.status === 'Completed').id");
+    await go('#/inspections/' + iid); await btn('Review & sign off'); await mfill('comment', 'Checked against the asset; actions raised where needed.'); await mbtn('Sign off');
+    const needSig = await modalOpen() && (await p.$eval('#revSigField', e => e.classList.contains('invalid')));
+    ok('RS1 the inspector cannot sign off their own inspection; a reviewer must sign', selfBlocked && needSig, own || 'no own inspection');
+    const b = await (await p.$('#revSigPad')).boundingBox(); await p.mouse.move(b.x + 20, b.y + 90); await p.mouse.down(); for (let k = 1; k <= 12; k++) await p.mouse.move(b.x + 20 + k * 14, b.y + 90 - (k % 2) * 35); await p.mouse.up(); await p.waitForTimeout(60);
+    await mbtn('Sign off');
+    const rec = await S(`(() => { const i = byId('inspections','${iid}'); return { st: i.status, sig: !!(i.reviewSignature && i.reviewSignature.image.startsWith('data:image/png')), by: i.reviewSignature && i.reviewSignature.by }; })()`);
+    const page = await has('#content .sig-show img'), intact = await S(`recordIntact('inspections', byId('inspections','${iid}'))`);
+    await go('#/print/' + iid); const printed = (await p.$$eval('.sign-box img', e => e.length)) >= 1 && (await p.innerText('.sign-box:nth-child(2)')).includes('Johan van Wyk');
+    ok('RS2 the reviewer signature is stored, shown on the record and printed, and the locked record stays intact', rec.st === 'Reviewed' && rec.sig && rec.by === 'P-002' && page && printed && intact);
+  }
+
   /* ---------------- L. Company logo ---------------- */
   {
     await asUser('P-002'); await go('#/dashboard');
