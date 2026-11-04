@@ -8,7 +8,7 @@ Status key:
 - **Not implemented**
 
 "Tested" means one of the following:
-- the automated browser test (`tests/workflows.test.js`, **204/204 passing**, no JavaScript errors);
+- the automated browser test (`tests/workflows.test.js`, **206/206 passing**, no JavaScript errors);
 - the route smoke test (77 routes plus a second organisation, no errors);
 - the mobile layout check (31 routes at 390 px, no horizontal overflow).
 

@@ -238,7 +238,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await p.keyboard.press('Escape');
     await p.reload(); await p.waitForTimeout(400); await go('#/documents/' + did); await btn('Open document'); await p.waitForSelector('.fv-page canvas', { timeout: 15000 }).catch(() => {});
     ok('F4 file still opens after reloading the page', (await p.$$('.fv-page canvas')).length >= 1); await p.keyboard.press('Escape');
-    await go('#/documents/DOC-005'); await btn('Open document'); await p.waitForTimeout(200);
+    await go('#/documents/DOC-005'); await btn('Open draft'); await p.waitForTimeout(200);
     const sheet = await p.innerText('#fvBody');
     ok('F5 demo document opens a sample sheet with its controlled header and approval route', sheet.includes('KIE-SWP-022') && sheet.includes('HSEQ approval') && sheet.includes('Sample sheet'));
     await p.keyboard.press('Escape');
@@ -713,7 +713,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
       return { pages: pdf.numPages, text: t };
     }, fs.readFileSync(file).toString('base64'));
     await asUser('P-002'); await go('#/documents/DOC-001');
-    const [d1] = await Promise.all([p.waitForEvent('download'), p.click('.sh-actions [data-act=downloadDocFile]')]);
+    const [d1] = await Promise.all([p.waitForEvent('download'), p.click('.sh-actions [data-act=downloadDocFile]:not([data-ri])')]);
     const f1 = path.join(os.tmpdir(), 'vdw_st1.pdf'); await d1.saveAs(f1); await p.waitForTimeout(200);
     const t1 = await pdfText(f1);
     ok('ST1 downloading an issued document gives a PDF stamped UNCONTROLLED WHEN PRINTED, with number, revision and who downloaded it', /_UNCONTROLLED\.pdf$/.test(d1.suggestedFilename()) && t1.text.includes('UNCONTROLLED WHEN PRINTED') && t1.text.includes('KIE-POL-001') && t1.text.includes('Johan van Wyk'), d1.suggestedFilename());
@@ -724,13 +724,13 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
       const meta = storeFile(new File([await pdf.save()], 'draft-procedure.pdf', { type: 'application/pdf' })); await FILE_PENDING[meta.blobId];
       const d = S.documents.find(x => docStatus(x) === 'In Approval'); docLatest(d).file = meta; save(); return d.id; })()`);
     await go('#/documents/' + did);
-    const [d2] = await Promise.all([p.waitForEvent('download'), p.click('.sh-actions [data-act=downloadDocFile]')]);
+    const [d2] = await Promise.all([p.waitForEvent('download'), p.click('.sh-actions [data-act=downloadDocFile]:not([data-ri])')]);
     const f2 = path.join(os.tmpdir(), 'vdw_st2.pdf'); await d2.saveAs(f2); await p.waitForTimeout(200);
     const t2 = await pdfText(f2);
     ok('ST2 a draft PDF keeps every page and is stamped DRAFT — NOT FOR USE on each page', /_DRAFT\.pdf$/.test(d2.suggestedFilename()) && t2.pages === 2 && t2.text.includes('Original page 1') && t2.text.includes('Original page 2') && (t2.text.match(/DRAFT — NOT FOR USE/g) || []).length === 2, `${t2.pages} pages`);
     ok('ST3 each download is recorded in the document history', await S(`docLatest(byId('documents','${did}')).history.some(h => h.action.startsWith('Draft downloaded'))`));
     await S(`(async () => { const meta = storeFile(new File(['word content'], 'procedure.docx', { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' })); await FILE_PENDING[meta.blobId]; docLatest(byId('documents','${did}')).file = meta; save(); })()`);
-    await go('#/documents/' + did); await p.click('.sh-actions [data-act=downloadDocFile]'); await p.waitForTimeout(150);
+    await go('#/documents/' + did); await p.click('.sh-actions [data-act=downloadDocFile]:not([data-ri])'); await p.waitForTimeout(150);
     const warn = await p.innerText('.modal');
     const [d3] = await Promise.all([p.waitForEvent('download'), p.click('.modal-foot button:has-text("Download")')]);
     ok('ST4 a Word file cannot be stamped: the user is told, and the file name says DRAFT/UNCONTROLLED', warn.includes('cannot be added') && /_DRAFT\.docx$/.test(d3.suggestedFilename()), d3.suggestedFilename());
@@ -861,6 +861,18 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await act('[data-act=ltifrCompare]'); await p.waitForTimeout(250);
     ok('PY2 clicking it again hides the previous year', (await p.$$eval('#lcLtifr .lc-line', e => e.length)) === 1 && (await p.$eval('[data-act=ltifrCompare]', e => e.getAttribute('aria-pressed'))) === 'false');
     await asUser('P-002');
+  }
+
+  /* ---------------- SS. Downloaded demo document matches "Open document" ---------------- */
+  {
+    const fs = require('fs');
+    await asUser('P-002'); await go('#/documents/DOC-005');
+    const labels = await p.$$eval('.sh-actions button', e => e.map(x => x.innerText.trim()));
+    const [dl] = await Promise.all([p.waitForEvent('download'), p.click('.sh-actions [data-act=downloadDocFile][data-ri]')]);
+    const f = path.join(os.tmpdir(), 'vdw_ss1.pdf'); await dl.saveAs(f); await p.waitForTimeout(150);
+    const txt = await p.evaluate(async (b64) => { const lib = await ensurePdfJs(); const pdf = await lib.getDocument({ data: Uint8Array.from(atob(b64), c => c.charCodeAt(0)), isEvalSupported: false }).promise; const tc = await (await pdf.getPage(1)).getTextContent(); return tc.items.map(x => x.str).join(' '); }, fs.readFileSync(f).toString('base64'));
+    ok('SS1 with a draft in approval, the buttons say which revision they open or download, and the in-use download is stamped UNCONTROLLED', labels.some(l => /Open Rev 1 \(in use\)/.test(l)) && labels.some(l => /Download Rev 1 \(in use\)/.test(l)) && labels.some(l => /Download draft Rev 2/.test(l)) && /_Rev1_UNCONTROLLED\.pdf$/.test(dl.suggestedFilename()) && txt.includes('UNCONTROLLED WHEN PRINTED'), dl.suggestedFilename());
+    ok('SS2 the downloaded sheet has the same sections as the on-screen sheet', ['Controlled document', 'Overhead Crane', 'Document no:', 'CATEGORY', 'APPLIES TO', 'OWNER', 'AUTHOR', 'CHANGE SUMMARY', 'Sample sheet generated'].every(k => txt.includes(k)));
   }
 
   /* ---------------- L. Company logo ---------------- */
