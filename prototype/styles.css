@@ -968,3 +968,6 @@ body.auth-mode .main { margin-left: 0; }
 .client-cell { display: flex; align-items: center; gap: 10px; }
 .org-logo.cl, .org-initials.cl { width: 38px; height: 38px; font-size: 13px; }
 .org-logo.cl:has(img) { width: auto; max-width: 80px; }
+
+/* Privacy */
+.med-gate { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 10px 12px; border: 1px dashed var(--line-strong); border-radius: 8px; background: var(--surface-2); font-size: 13px; }

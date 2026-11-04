@@ -762,6 +762,24 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await S("(S.ui.org = 'ORG-1', S.ui.site = 'ALL', save())");
   }
 
+  /* ---------------- PV. Privacy (POPIA) ---------------- */
+  {
+    await asUser('P-002'); await go('#/incidents/INC-2026-005');
+    const hidden = !(await p.innerText('#content')).includes('Chemical irritation') && await has('[data-act=medShow]');
+    await act('[data-act=medShow]');
+    ok('PV1 medical details stay hidden until opened, and opening them is recorded', hidden && (await p.innerText('#content')).includes('Chemical irritation') && (await S("S.privacyLog[0].by === 'P-002' && S.privacyLog[0].action.includes('INC-2026-005')")));
+    await go('#/admin/privacy');
+    ok('PV2 administrators see who viewed medical details', (await p.innerText('#content')).includes('Viewed medical details of INC-2026-005'));
+    await p.fill('#retForm [name=inspections]', '1'); await p.fill('#retForm [name=incidents]', '1'); await act('[data-act=retSave]');
+    const want = await S("pastRetention('inspections').length"), txt = await p.innerText('#content');
+    ok('PV3 retention periods are set per type of record; records past them are listed for review, not deleted', (await S('S.config.retention.inspections')) === 1 && (want ? txt.includes(`${want} to review`) : txt.includes('None')) && txt.includes('never deleted automatically'), `${want} inspection(s) past 1 year`);
+    const sid = await S("(S.people.find(p => p.email === 'sam.b@kestrel.demo') || {}).id");
+    await p.click(`[data-act=privacyRemove][data-id="${sid}"]`); await p.waitForTimeout(100); await p.click('.modal-foot button:has-text("Remove personal details")'); await p.waitForTimeout(150);
+    const gone = await S(`(() => { const p = person('${sid}'); return p.name === 'Former employee (${sid})' && !p.email && !p.auth && !S.outbox.some(e => e.to === '${sid}'); })()`);
+    await S("(S.ui.org = 'ORG-1', save())"); await go('#/admin/audit'); await act('[data-act=auditVerify]');
+    ok('PV4 a former employee\'s personal details can be removed on request; records stay intact', gone && (await p.innerText('#content')).includes('Intact.'));
+  }
+
   /* ---------------- L. Company logo ---------------- */
   {
     await asUser('P-002'); await go('#/dashboard');

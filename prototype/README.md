@@ -204,6 +204,31 @@ Other pages are closed to employees. An inspection can only be started from the 
   - **Imported documents** are recorded as issued, with revision and review dates. Attach each current file afterwards.
 - **Downloads in the online preview:** backups, import templates and report CSV exports now ask you to confirm the download instead of being blocked.
 
+### G. More controls for running real clients
+- **Hours worked and LTIFR** (Administration → Hours worked):
+  - Enter hours worked per branch per month. Administrators get a task when last month is missing.
+  - The dashboard's LTI section shows the **rolling 12-month LTI frequency rate** per 200 000 hours (or 1 000 000, your choice), with a trend chart. Months without hours show as gaps.
+- **Control score history:**
+  - The score is saved every month for the company and each branch.
+  - The dashboard shows a **12-month trend** against the "on track" level, and the change since last month.
+  - The earlier months in the demo are fictional and labelled as such.
+- **Reviewer signature:**
+  - The manager who signs off an inspection must sign on screen.
+  - The signature appears on the record and in the printed report's reviewer box.
+  - Nobody can sign off an inspection they carried out themselves.
+- **Stamped downloads:** **Download** on a document (and in the viewer) gives a PDF with the control stamp on every page: *UNCONTROLLED WHEN PRINTED* or *DRAFT — NOT FOR USE*, with number, revision, who and when.
+  - Images are placed on a stamped page.
+  - Word and Excel files can't carry a stamp, so they download with *DRAFT* or *UNCONTROLLED* in the file name, after a warning.
+  - Every download is recorded in the document history.
+- **Several clients:**
+  - Everyone works in their own company only; the organisation selector offers nothing else.
+  - VDW safety consultants get **My clients**: each client's control score, open and overdue actions, open incidents and LTIs side by side. They can open any client, or set up a **new client** (company, branches, first administrator with a temporary password).
+- **Privacy (POPIA)** (Administration → Privacy):
+  - **Medical details:** injury details stay hidden until someone allowed to see them opens them, and every opening is recorded.
+  - **Retention:** you set retention periods per type of record, and records past them are listed for review (never deleted automatically).
+  - **Former employees:** their personal details can be removed on request, while the safety records stay and show *Former employee*.
+  - Which records to keep, and for how long, is for your company and its legal adviser to decide.
+
 ## 4. What works and what is simulated
 
 | Works in the browser | Simulated / not provided |
@@ -241,6 +266,11 @@ prototype/
 ├── mod-backup.js                 Backup and restore of all records and stored files
 ├── mod-qr.js                     Real QR codes, printable labels, camera / photo scanning
 ├── mod-import.js                 Bulk import from Excel (.xlsx) or CSV with preview
+├── mod-hours.js                  Hours worked per branch and the LTI frequency rate
+├── mod-history.js                Monthly control score snapshots and trend
+├── mod-stamp.js                  Stamped (controlled) downloads of documents
+├── mod-clients.js                Several clients: separation, overview, new-client wizard
+├── mod-privacy.js                Privacy (POPIA): medical-detail access log, retention, removal
 ├── mod-documents.js              Document control & sequential approval routes
 ├── mod-operations.js             Assets, QR pages, maintenance & defects
 ├── mod-inspections-incidents.js  Inspections, controlled templates & print report, incidents
@@ -250,11 +280,12 @@ prototype/
 ├── mod-dashboard.js              Dashboard: compliance status, 12-month trends, detail
 ├── vendor/pdfjs/                 PDF.js 3.11.174 (Apache-2.0) for viewing PDFs, works offline
 ├── vendor/qr/                    QR code generator (MIT) and reader jsQR (Apache-2.0)
+├── vendor/pdf-lib/               pdf-lib 1.17.1 (MIT) for stamped PDF downloads
 ├── tests/workflows.test.js       Automated end-to-end test (developers)
 ├── CHECKLIST.md                  Requirements checklist with status
 └── README.md                     This file
 ```
 
-**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 165 workflow outcomes.
+**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 187 workflow outcomes.
 
 The earlier full HSEQ prototype, with legal, risk, people, PPE, chemicals, emergency and audits, is preserved in git history at commit `26b59bc`.

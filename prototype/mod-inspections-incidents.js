@@ -323,7 +323,7 @@ function injuryCard(i) {
   if (!inv) return `<div class="card">${head}<div class="card-body"><div class="kv"><div>Classification</div><div>${injClassBadge(i)}</div></div><p class="muted mt-s">${icon('lock', 'sm')} Medical details are visible to investigators and HSEQ roles only.</p></div></div>`;
   return `<div class="card">${head}<div class="card-body">
     <h4>Reported by ${esc(pname(i.reporter))}</h4>
-    <div class="kv"><div>Nature of injury</div><div>${esc(j.nature || '—')}</div><div>Body part</div><div>${esc(j.body || '—')}</div><div>First aid given</div><div>${esc(j.firstAid || '—')}</div><div>Sent for medical treatment</div><div>${esc(j.sentForMedical || 'Not known')}</div></div>
+    ${medicalBlock(i)}
     <h4 class="mt">Classification</h4>
     <div class="kv"><div>Classification</div><div>${injClassBadge(i)}${c ? '' : ' <span class="due red">Required before the incident can be closed</span>'}</div>
       ${c ? `<div>Treated beyond first aid</div><div>${j.medical ? 'Yes' : 'No'}</div><div>Full shifts lost</div><div>${j.daysLost}</div><div>Shifts on restricted work</div><div>${j.restrictedDays || 0}</div><div>Back at normal work</div><div>${j.rtw ? fmt(j.rtw) : '<span class="due amber">Not yet</span>'}</div>

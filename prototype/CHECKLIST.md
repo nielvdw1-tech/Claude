@@ -8,7 +8,7 @@ Status key:
 - **Not implemented**
 
 "Tested" means one of the following:
-- the automated browser test (`tests/workflows.test.js`, **165/165 passing**, no JavaScript errors);
+- the automated browser test (`tests/workflows.test.js`, **187/187 passing**, no JavaScript errors);
 - the route smoke test (77 routes plus a second organisation, no errors);
 - the mobile layout check (31 routes at 390 px, no horizontal overflow).
 
@@ -81,6 +81,12 @@ Status key:
 | Tamper-evident audit trail (hash chain + record fingerprints) with integrity check | Partial | AT4–AT6; kept in the browser, so it can be rebuilt by someone determined; the live system keeps it on the server |
 | E-mail outbox for every notification, per-user notification settings | Partial | EM1–EM4; e-mails are written, not sent |
 | Backup and restore of all records and stored files, with checksum and version check | Implemented | BK1–BK3 |
+| Hours worked per branch per month; rolling 12-month LTIFR (per 200 000 or 1 000 000 hours) with trend | Implemented | HW1–HW4 |
+| Monthly control score history with 12-month trend and change since last month | Implemented | SH1–SH3; earlier demo months are fictional and labelled |
+| Reviewer signature on inspection sign-off; no self sign-off | Implemented | RS1–RS2 |
+| Stamped downloads of controlled documents (PDF pages, images, demo records); Word/Excel marked in the file name | Implemented | ST1–ST4 |
+| Several clients: data separated per company, consultant overview, new-client wizard | Partial | CL1–CL5; separation applied in the browser (the live system enforces it on the server) |
+| Privacy: medical details hidden until opened (logged), retention periods with review list, removing a former employee's personal details | Partial | PV1–PV4; retention decisions are the company's; nothing is deleted automatically |
 | Roles and permissions | Partial | Client-side demonstration only; production must enforce them on the server |
 | Persistence and reset | Implemented | E8, E11 |
 | Out-of-scope modules removed (legal, risk, people, PPE, chemicals, emergency, audits) | Implemented | E4–E5; preserved in git history (commit `26b59bc`) |
