@@ -54,7 +54,7 @@ function nextId(prefix, coll, pad = 3, start = 1) {
   let max = start - 1; (S[coll] || []).forEach(x => { const m = String(x.id).match(/(\d+)$/); if (m && x.id.startsWith(prefix)) max = Math.max(max, Number(m[1])); });
   return prefix + String(max + 1).padStart(pad, '0');
 }
-function log(text, link) { S.activity.unshift({ ts: nowTs(), by: S.ui.user, text, link: link || '' }); S.activity = S.activity.slice(0, 200); }
+function log(text, link) { S.activity.unshift({ ts: nowTs(), by: S.ui.user, text, link: link || '' }); S.activity = S.activity.slice(0, 200); if (S.audit && typeof auditAppend === 'function') auditAppend(text, link); }   // every logged event also goes into the hash-chained audit trail
 function addEvent(sev, cat, title, text, link, site) { S.events.unshift({ key: 'EV-' + Date.now() + '-' + Math.floor(Math.random() * 1000), sev, cat, title, text, link, date: TODAY, ts: nowTs(), site: site || 'ALL', org: S.ui.org }); }
 function fileMeta(f) { return f ? storeFile(f) : null; }   // storeFile (mod-files.js) keeps the content in browser storage for viewing
 function fsize(b) { if (!b && b !== 0) return ''; return b > 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB'; }
@@ -464,6 +464,8 @@ function actionTransition(a, to, comment, extra = {}) {
   if (to === 'Closed') a.closed = TODAY;
   if (to === 'Reopened') { a.closed = null; a.verification = null; }
   onActionStatus(a, to, from);
+  if (to === 'Verified' || to === 'Closed') lockRecord('actions', a, to.toLowerCase());   // final: corrections only as amendments
+  if (to === 'Reopened') unlockRecord('actions', a, comment || 'reopened');
   save();
 }
 /* Cross-module consequences of action status changes */
@@ -567,6 +569,7 @@ let lastRoute = '';
 function rerender(keepScroll = true) {
   if (!signedIn()) { renderSignIn(); return; }   // nobody signed in (or the account was deactivated)
   document.body.classList.remove('auth-mode');
+  ensureAudit();
   runEscalations();
   let { parts, q } = parseHash(); let key = parts[0] || 'dashboard';
   if (account(me()).mustChange && key !== 'password') { history.replaceState(null, '', '#/password'); parts = ['password']; key = 'password'; }   // a reset password must be changed first

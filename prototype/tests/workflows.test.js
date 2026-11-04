@@ -517,6 +517,31 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await S("(() => { const a = person('P-007').auth; a.hash = passHash('P-007', 'demo1234'); a.mustChange = false; save(); })()");   // restore for later checks
   }
 
+  /* ---------------- AT. Locked records, amendments, tamper-evident audit trail ---------------- */
+  {
+    await asUser('P-002'); await go('#/incidents/INC-2026-001');
+    const desc = await S("byId('incidents','INC-2026-001').description");
+    ok('AT1 a closed incident is locked and offers amendments instead of edits', (await p.innerText('.status-hero')).includes('Locked') && await has('.sh-actions [data-act=amendRec]'));
+    await act('.sh-actions [data-act=amendRec]'); await mfill('text', 'The time of the event was 10:45, not 10:20.'); await mbtn('Add amendment');
+    const blocked = await modalOpen(); await mfill('reason', 'Confirmed from CCTV footage.'); await mbtn('Add amendment');
+    ok('AT2 an amendment needs a reason, is shown on the record and leaves the original unchanged', blocked && (await S("byId('incidents','INC-2026-001').description")) === desc && (await p.innerText('#content')).includes('Confirmed from CCTV footage') && (await S("S.audit.some(e => e.text.startsWith('Amendment to incident INC-2026-001'))")));
+    const vid = await S("S.actions.find(a => a.status === 'Closed' && a.lock).id");
+    await go('#/actions/' + vid);
+    ok('AT3 verified/closed actions and submitted inspections are locked too', (await p.innerText('.status-hero')).includes('Locked') && (await S("S.inspections.every(x => !!x.lock)")));
+    await go('#/admin/audit'); await act('[data-act=auditVerify]');
+    ok('AT4 the integrity check confirms the audit trail and locked records are intact', (await p.innerText('#content')).includes('Intact.'));
+    await act('[data-act=auditTamper]'); await p.click('.modal-foot button:has-text("Tamper with record")'); await p.waitForTimeout(150); await act('[data-act=auditVerify]');
+    const tid = await S('S._tamperDemo.id'), report = await p.innerText('#content');
+    await go('#/incidents/' + tid); const warn = (await p.innerText('#content')).includes('Integrity warning');
+    ok('AT5 a record changed behind the system\'s back is detected and flagged on the record', report.includes('Integrity problem found') && report.includes(tid) && warn);
+    await go('#/admin/audit'); await act('[data-act=auditUntamper]'); await act('[data-act=auditVerify]');
+    const fixed = (await p.innerText('#content')).includes('Intact.');
+    await S("(() => { window._keep = S.audit[3].text; S.audit[3].text = 'Rewritten history'; })()"); await act('[data-act=auditVerify]');
+    const broken = (await p.innerText('#content')).includes('broken at entry 4');
+    await S("(() => { S.audit[3].text = window._keep; save(); })()");
+    ok('AT6 editing an old audit entry breaks the chain and is detected', fixed && broken);
+  }
+
   /* ---------------- L. Company logo ---------------- */
   {
     await asUser('P-002'); await go('#/dashboard');
