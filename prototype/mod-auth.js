@@ -152,6 +152,7 @@ ACT.userReset = (el) => {
   const p = person(el.dataset.id);
   confirmBox('Reset password', `${esc(p.name)} will be given a temporary password and must choose a new one at next sign-in.`, 'Reset password', () => {
     const pw = tempPassword(), a = account(p); a.hash = passHash(p.id, pw); a.mustChange = true; a.failed = 0; a.lockedUntil = null;
+    queueEmail([p.id], 'account', 'Your password has been reset', `${pname(S.ui.user)} reset your password for the HSEQ Management System. Your administrator will give you a temporary password; you will choose your own when you sign in. If you did not expect this, contact your administrator.`, '');
     log(`Reset the password of ${p.name}`, '#/admin/users'); save(); rerender(); setTimeout(() => showTempPassword(p, pw, 'Temporary password'), 60);   // after the confirm box has closed
   });
 };
@@ -170,5 +171,6 @@ ACT.userNew = () => openModal({ title: 'Add user', sub: 'The person receives a t
     if (!validateForm(m, fail => { const em = m.querySelector('[name=email]'); if (v.email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v.email.trim())) fail(em, 'Enter a valid e-mail address.'); else if (S.people.some(x => (x.email || '').toLowerCase() === v.email.trim().toLowerCase())) fail(em, 'Someone already uses this e-mail address.'); })) return false;
     const id = nextId('P-', 'people'), pw = tempPassword();
     const p = { id, name: v.name.trim(), jobTitle: v.jobTitle.trim(), site: v.site, org: siteOrgOf(v.site), dept: v.dept, type: 'Employee', sysRole: v.sysRole, email: v.email.trim(), status: 'Active', started: TODAY, auth: { hash: passHash(id, pw), mustChange: true, failed: 0, lockedUntil: null, lastSignIn: null } };
-    S.people.push(p); log(`Added user ${p.name} (${p.sysRole})`, '#/admin/users'); save(); rerender(); setTimeout(() => showTempPassword(p, pw, 'User added'), 60);
+    S.people.push(p); queueEmail([p.id], 'account', 'Your account for the HSEQ Management System', `${pname(S.ui.user)} created an account for you (${p.sysRole}, ${sname(p.site)}). Sign in with this e-mail address and the temporary password your administrator gives you; you will then choose your own password.`, '');
+    log(`Added user ${p.name} (${p.sysRole})`, '#/admin/users'); save(); rerender(); setTimeout(() => showTempPassword(p, pw, 'User added'), 60);
   } }] });

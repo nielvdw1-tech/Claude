@@ -916,3 +916,9 @@ body.auth-mode .main { margin-left: 0; }
 .temp-pw { font-size: 26px; letter-spacing: .12em; text-align: center; padding: 14px; margin: 12px 0; border: 1px dashed var(--line-strong); border-radius: 10px; background: var(--surface-2); color: var(--fg); }
 .row-muted td { opacity: .6; }
 @media (max-width: 760px) { .auth-wrap { grid-template-columns: minmax(0, 1fr); margin: 8px auto; } }
+
+/* E-mail preview */
+.mail-preview { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.mail-hdr { background: var(--surface-2); padding: 10px 14px; font-size: 13px; display: grid; gap: 3px; border-bottom: 1px solid var(--line); }
+.mail-hdr span { display: inline-block; width: 64px; color: var(--muted); }
+.mail-body { padding: 14px; font-size: 13.5px; line-height: 1.6; color: var(--fg); }

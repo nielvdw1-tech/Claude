@@ -72,7 +72,7 @@ function noticeDetail(id) {
 }
 
 ACT.noticeAck = (el) => { const n = S.notices.find(x => x.id === el.dataset.id); n.acks = n.acks || {}; n.acks[S.ui.user] = nowTs(); n.reads = n.reads || {}; n.reads[S.ui.user] = n.reads[S.ui.user] || nowTs(); log(`${pname(S.ui.user)} acknowledged notice "${n.title}"`, '#/notices/' + n.id); save(); toast('Thank you — your acknowledgement has been recorded.'); rerender(); };
-ACT.noticeRemind = (el) => { const n = S.notices.find(x => x.id === el.dataset.id); const out = noticeAudience(n).filter(x => !(n.acks || {})[x.id]); addEvent('amber', 'notices', `Reminder: please acknowledge "${n.title}"`, `${out.length} person(s) still to acknowledge.`, '#/notices/' + n.id, n.audience); log(`Reminder sent for notice "${n.title}" to ${out.length} person(s)`, '#/notices/' + n.id); save(); toast(`Reminder sent to ${out.length} person(s) (simulated — in-app only).`); };
+ACT.noticeRemind = (el) => { const n = S.notices.find(x => x.id === el.dataset.id); const out = noticeAudience(n).filter(x => !(n.acks || {})[x.id]); addEvent('amber', 'notices', `Reminder: please acknowledge "${n.title}"`, `Please read "${n.title}" and confirm that you have read and understood it.`, '#/notices/' + n.id, n.audience, out.map(x => x.id)); log(`Reminder sent for notice "${n.title}" to ${out.length} person(s)`, '#/notices/' + n.id); save(); toast(`Reminder sent to ${out.length} person(s) (simulated — in-app only).`); };
 ACT.noticeExpire = (el) => { const n = S.notices.find(x => x.id === el.dataset.id); confirmBox('Withdraw notice', `"${esc(n.title)}" will no longer be shown to staff. It stays on record with its read and acknowledgement history.`, 'Withdraw', () => { n.expires = addDays(TODAY, -1); log(`Withdrew notice "${n.title}"`, '#/notices/' + n.id); save(); toast('Notice withdrawn.'); rerender(); }, 'danger solid'); };
 ACT.noticeNew = () => openModal({ title: 'Publish notice', sub: 'Share a memo or important information with staff. They see it in Notices and on their home screen.', size: 'wide',
   body: `<div class="form-grid">${fld({ name: 'title', label: 'Title', required: true, full: true, placeholder: 'e.g. New pedestrian walkways in the warehouse' })}${fld({ name: 'body', label: 'Message', type: 'textarea', required: true, full: true, rows: 6 })}
@@ -86,7 +86,7 @@ ACT.noticeNew = () => openModal({ title: 'Publish notice', sub: 'Share a memo or
     const v = readForm(m); S.notices = S.notices || [];
     const n = { id: nextId('NT-', 'notices'), org: S.ui.org, title: v.title, body: v.body, priority: v.priority, audience: v.audience, ackRequired: v.ackRequired, attachment: v.attachment, expires: v.expires || null, publishedBy: S.ui.user, publishedOn: nowTs(), reads: { [S.ui.user]: nowTs() }, acks: {} };
     S.notices.push(n);
-    addEvent(v.priority === 'Important' ? 'red' : 'blue', 'notices', `${v.priority === 'Important' ? 'Important notice' : 'New notice'}: ${v.title}`, `From ${pname(S.ui.user)} to ${v.audience === 'ALL' ? 'all staff' : sname(v.audience) + ' staff'}.`, '#/notices/' + n.id, v.audience);
+    addEvent(v.priority === 'Important' ? 'red' : 'blue', 'notices', `${v.priority === 'Important' ? 'Important notice' : 'New notice'}: ${v.title}`, `From ${pname(S.ui.user)} to ${v.audience === 'ALL' ? 'all staff' : sname(v.audience) + ' staff'}.${v.ackRequired ? ' Please confirm that you have read and understood it.' : ''}`, '#/notices/' + n.id, v.audience, noticeAudience(n).map(x => x.id));
     log(`Published notice "${v.title}"`, '#/notices/' + n.id); save();
     toast(`Notice published to ${noticeAudience(n).length} people${v.ackRequired ? ' — acknowledgement requested' : ''}.`); navigate('#/notices/' + n.id);
   } }] });
@@ -115,7 +115,7 @@ function createIncidentAlert(i) {
     status: 'Pending approval', source: { type: 'Incident', id: i.id }, createdBy: S.ui.user, createdOn: nowTs(), publishedBy: null, publishedOn: nowTs(), approvals: alertRoute(i.org), reads: {}, acks: {} };
   S.notices.push(n);
   const c = noticeCurStep(n);
-  addEvent('amber', 'notices', `Safety alert awaiting approval: ${i.id}`, `${pname(c.person)} to review the draft notice before it is shared with staff.`, '#/notices/' + n.id, i.site);
+  addEvent('amber', 'notices', `Safety alert awaiting approval: ${i.id}`, `${pname(c.person)} to review the draft notice before it is shared with staff.`, '#/notices/' + n.id, i.site, [c.person]);
   i.history.push({ ts: nowTs(), by: S.ui.user, action: `Draft safety alert ${n.id} sent for approval (HSEQ Manager, then Safety Consultant)`, comment: '' });
   return n;
 }
@@ -157,11 +157,11 @@ ACT.alertApprove = (el) => {
       Object.assign(c, { status: 'Approved', ts: nowTs(), comment: v.comment || '' });
       if (!last) {
         const nx = n.approvals[c.step]; nx.status = 'Current';
-        addEvent('amber', 'notices', `Safety alert awaiting approval: ${n.source.id}`, `${pname(nx.person)} to review the draft notice before it is shared with staff.`, '#/notices/' + n.id, n.audience);
+        addEvent('amber', 'notices', `Safety alert awaiting approval: ${n.source.id}`, `${pname(nx.person)} to review the draft notice before it is shared with staff.`, '#/notices/' + n.id, n.audience, [nx.person]);
         toast(`Approved. Sent to ${pname(nx.person)} for ${nx.label.toLowerCase()}.`);
       } else {
         Object.assign(n, { status: 'Published', publishedBy: S.ui.user, publishedOn: nowTs(), reads: { [S.ui.user]: nowTs() } });
-        addEvent(n.priority === 'Important' ? 'red' : 'blue', 'notices', `Safety alert: ${n.title.replace(/^Safety alert:\s*/, '')}`, `Shared with ${n.audience === 'ALL' ? 'all staff' : sname(n.audience) + ' staff'} after approval.`, '#/notices/' + n.id, n.audience);
+        addEvent(n.priority === 'Important' ? 'red' : 'blue', 'notices', `Safety alert: ${n.title.replace(/^Safety alert:\s*/, '')}`, `Shared with ${n.audience === 'ALL' ? 'all staff' : sname(n.audience) + ' staff'} after approval.${n.ackRequired ? ' Please confirm that you have read and understood it.' : ''}`, '#/notices/' + n.id, n.audience, noticeAudience(n).map(x => x.id));
         toast(`Safety alert published to ${noticeAudience(n).length} people.`);
       }
       if (inc) inc.history.push({ ts: nowTs(), by: S.ui.user, action: last ? `Safety alert ${n.id} approved and published to staff` : `Safety alert ${n.id} approved (${c.label})`, comment: v.comment || '' });

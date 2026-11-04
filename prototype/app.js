@@ -55,7 +55,7 @@ function nextId(prefix, coll, pad = 3, start = 1) {
   return prefix + String(max + 1).padStart(pad, '0');
 }
 function log(text, link) { S.activity.unshift({ ts: nowTs(), by: S.ui.user, text, link: link || '' }); S.activity = S.activity.slice(0, 200); if (S.audit && typeof auditAppend === 'function') auditAppend(text, link); }   // every logged event also goes into the hash-chained audit trail
-function addEvent(sev, cat, title, text, link, site) { S.events.unshift({ key: 'EV-' + Date.now() + '-' + Math.floor(Math.random() * 1000), sev, cat, title, text, link, date: TODAY, ts: nowTs(), site: site || 'ALL', org: S.ui.org }); }
+function addEvent(sev, cat, title, text, link, site, to) { S.events.unshift({ key: 'EV-' + Date.now() + '-' + Math.floor(Math.random() * 1000), sev, cat, title, text, link, date: TODAY, ts: nowTs(), site: site || 'ALL', org: S.ui.org }); if (to && typeof queueEmail === 'function') queueEmail(to, cat, title, text, link); }   // `to`: people who would be e-mailed
 function fileMeta(f) { return f ? storeFile(f) : null; }   // storeFile (mod-files.js) keeps the content in browser storage for viewing
 function fsize(b) { if (!b && b !== 0) return ''; return b > 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB'; }
 /* A clickable file chip; ctx = { doc, ri } ties it to a document revision so the viewer can show its header */
@@ -333,6 +333,7 @@ function runEscalations() {
     i.escalations.push({ key: e.key, ts: nowTs(), to: e.to, reason: e.reason });
     i.history.push({ ts: nowTs(), by: 'System', action: `Escalated to ${e.to.map(pname).join(', ')}`, comment: e.reason });
     S.events.unshift({ key: 'EV-esc-' + i.id + e.key, sev: 'red', cat: 'incidents', title: `Escalated: ${i.id}`, text: `${e.reason} — ${i.title}.`, link: '#/incidents/' + i.id, date: TODAY, ts: nowTs(), site: i.site, org: i.org });
+    if (typeof queueEmail === 'function') queueEmail(e.to, 'incidents', `Escalated: ${i.id} — ${i.title}`, `${e.reason}. Please make sure the incident is dealt with.`, '#/incidents/' + i.id);
     changed = true; });
   if (changed) save();
 }
@@ -452,7 +453,7 @@ function createAction(o) {
   const id = nextId('ACT-', 'actions', 4, 1000);
   const site = o.site || defaultSite();
   const a = { id, org: (siteOrgOf(site)), title: o.title, action: o.action, source: o.source, sourceId: o.sourceId, priority: o.priority || 'Medium', site, owner: o.owner || '', createdBy: S.ui.user, created: TODAY, due: o.due || addDays(TODAY, (S.config.priorities.find(p => p.name === (o.priority || 'Medium')) || { days: 30 }).days), status: 'Created', progress: [], evidence: [], verification: null, closed: null, escalated: false, history: [{ ts: nowTs(), by: S.ui.user, action: 'Created', from: '', to: '', comment: o.comment || '' }] };
-  if (a.owner) { a.status = 'Assigned'; a.history.push({ ts: nowTs(), by: S.ui.user, action: 'Assigned', from: '', to: a.owner, comment: '' }); addEvent('blue', 'actions', `Action assigned: ${a.id}`, `${pname(a.owner)} was assigned "${a.title}" (simulated notification — no email sent).`, '#/actions/' + a.id, a.site); }
+  if (a.owner) { a.status = 'Assigned'; a.history.push({ ts: nowTs(), by: S.ui.user, action: 'Assigned', from: '', to: a.owner, comment: '' }); addEvent('blue', 'actions', `Action assigned: ${a.id}`, `${pname(a.owner)} was assigned "${a.title}", due ${fmt(a.due)}.`, '#/actions/' + a.id, a.site, [a.owner]); }
   S.actions.push(a);
   log(`Raised ${a.id} from ${a.source} ${a.sourceId || ''}: ${a.title}`, '#/actions/' + a.id);
   return a;
@@ -519,7 +520,7 @@ const NAV = [
   { group: 'Administration', items: [['admin', 'Administration', 'settings']] }
 ];
 const NAV_FIELD = [{ group: 'Field', items: [['field', 'Scan & inspect', 'qr'], ['report', 'Report incident', 'alert'], ['notices', 'Notices', 'info']] }];
-const FIELD_ROUTES = ['field', 'report', 'qr', 'inspect', 'notices', 'notfound', 'password'];
+const FIELD_ROUTES = ['field', 'report', 'qr', 'inspect', 'notices', 'notfound', 'password', 'settings'];
 function navCounts() {
   const c = {};
   c.actions = S.actions.filter(a => inSite(a, S.ui.site) && actionOverdue(a)).length;
@@ -639,6 +640,7 @@ ACT.userMenu = (el) => {
   const users = S.people.filter(p => p.sysRole && p.status !== 'Deactivated' && p.id !== S.ui.user), u = me();
   dd.innerHTML = `<div class="dd-me"><span class="avatar">${initials(u.name)}</span><div><b>${esc(u.name)}</b><small>${esc(u.email)}</small><small>${esc(u.sysRole)} · ${esc(orgOf(u.org).short)}</small></div></div>
     <button class="dd-item" data-act="go" data-href="#/password">${icon('lock', 'sm')} Change password</button>
+    <button class="dd-item" data-act="go" data-href="#/settings">${icon('bell', 'sm')} Notification settings</button>
     <button class="dd-item" data-act="signOut">${icon('power', 'sm')} Sign out</button>
     <hr><div class="dd-head">Demo: sign in as someone else</div>
     ${users.map(u => `<button class="dd-item ${u.id === S.ui.user ? 'current' : ''}" data-act="switchUser" data-id="${u.id}"><span class="avatar sm">${initials(u.name)}</span><span><b>${esc(u.name)}</b><br><small>${esc(u.sysRole)} · ${esc(orgOf(u.org).short)} · ${esc(sname(u.site))}</small></span></button>`).join('')}
@@ -699,7 +701,7 @@ ROUTES.notifications = (p, q) => {
   if (tab === 'unread') list = unread;
   if (q.cat) list = list.filter(n => n.cat === q.cat);
   const icMap = { documents: 'docs', assets: 'forklift', incidents: 'alert', actions: 'target', notices: 'info' };
-  const body = tab === 'tasks'
+  const body = tab === 'email' ? myEmailHtml() : tab === 'tasks'
     ? `<div class="card"><div class="card-head"><h2>My tasks — ${esc(me().name)}</h2><span class="ch-sub">${esc(myRole().name)} · ${esc(scopeLabel())}</span></div><div class="card-body flush">
       ${tasks.length ? tasks.map(t => `<div class="notif"><div class="n-ic ic-${t.sev}">${icon('tasks')}</div><div class="n-body"><div class="n-title">${esc(t.title)}</div><div class="n-text">${esc(t.sub)}</div></div><a class="btn sm primary" href="${t.link}">Open</a></div>`).join('') : `<div class="empty">${icon('checkCircle')}<div>No tasks assigned to you in this scope. Switch user from the user menu to see other people's tasks.</div></div>`}
     </div></div>`
@@ -707,8 +709,8 @@ ROUTES.notifications = (p, q) => {
       ${list.length ? list.map(n => `<div class="notif ${S.readNotifs[n.key] ? '' : 'unread'}"><div class="n-ic ic-${n.sev}">${icon(icMap[n.cat] || 'bell')}</div><div class="n-body"><div class="n-title">${esc(n.title)}</div><div class="n-text">${esc(n.text)}</div><div class="n-meta"><span>${CAT_LABEL[n.cat] || n.cat}</span><span>${esc(sname(n.site))}</span>${n.date ? `<span>${dueText(n.date)}</span>` : ''}</div></div><div class="btn-row"><a class="btn sm primary" href="${n.link}" data-act-read="${esc(n.key)}">Open record</a>${S.readNotifs[n.key] ? '' : `<button class="btn sm" data-act="readOne" data-key="${esc(n.key)}">Mark read</button>`}</div></div>`).join('') : `<div class="empty">${icon('bell')}<div>No notifications.</div></div>`}
     </div>`;
   const html = `${pageHead('Notifications & tasks', 'Central task and notification centre. Alerts are generated automatically from the underlying records (review dates, expiries, schedules, overdue actions) and each links to the record that needs attention.', `<button class="btn" data-act="readAll">${icon('check', 'sm')} Mark all as read</button><a class="btn" href="#/admin/notifications">${icon('settings', 'sm')} Notification settings</a>`, scopePill())}
-    <div class="alert info">${icon('info')}<div>In-app notifications only. <b>Email and SMS delivery are simulated</b> — the production system would send them from the server according to the notification settings.</div></div>
-    ${tabsHtml('#/notifications', [['all', 'All', all.length], ['unread', 'Unread', unread.length, 'red'], ['tasks', 'My tasks', tasks.length]], tab)}
+    <div class="alert info">${icon('info')}<div>E-mails that the live system would send are shown under <b>My e-mail</b>. Nothing is sent from the prototype.</div></div>
+    ${tabsHtml('#/notifications', [['all', 'All', all.length], ['unread', 'Unread', unread.length, 'red'], ['tasks', 'My tasks', tasks.length], ['email', 'My e-mail', (S.outbox || []).filter(e => e.to === S.ui.user).length]], tab)}
     ${body}`;
   return { title: 'Notifications & tasks', crumbs: [['Notifications & tasks', '#/notifications']], html, after: () => {
     document.querySelectorAll('[data-act-read]').forEach(a => a.addEventListener('click', () => { S.readNotifs[a.dataset.actRead] = true; save(); }));

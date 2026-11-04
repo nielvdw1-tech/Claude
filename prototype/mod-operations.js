@@ -155,7 +155,7 @@ function createDefect(a, description, severity, oos, sourceInspection) {
   const id = nextId('DF-', 'defects', 3, 300);
   const d = { id, asset: a.id, reported: TODAY, by: S.ui.user, description, severity, status: 'Open', outOfService: !!oos, action: null, source: sourceInspection };
   S.defects.push(d); assetHistory(a, `Defect ${id} reported (${severity}): ${description}`);
-  if (oos && a.status !== 'Out of Service') { a.status = 'Out of Service'; assetHistory(a, `Asset placed OUT OF SERVICE due to ${severity.toLowerCase()} defect ${id}`); addEvent('red', 'assets', `${a.tag} placed out of service`, `${severity} defect ${id}: ${description}`, '#/assets/' + a.id + '?tab=defects', a.site); }
+  if (oos && a.status !== 'Out of Service') { a.status = 'Out of Service'; assetHistory(a, `Asset placed OUT OF SERVICE due to ${severity.toLowerCase()} defect ${id}`); addEvent('red', 'assets', `${a.tag} placed out of service`, `${severity} defect ${id}: ${description}. Do not use ${a.tag} until it is returned to service.`, '#/assets/' + a.id + '?tab=defects', a.site, [a.responsible, (site(a.site) || {}).manager]); }
   log(`Defect ${id} on ${a.tag}${oos ? ' — out of service' : ''}`, '#/assets/' + a.id + '?tab=defects');
   return d;
 }

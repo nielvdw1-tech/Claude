@@ -204,7 +204,7 @@ function startRoute(r) {
 }
 function notifyCurrent(d) {
   const r = docLatest(d), c = curStep(r);
-  if (c) addEvent('blue', 'documents', `Approval requested: ${d.number}`, `${pname(c.person)} — step ${c.step} of ${r.route.length} (${c.label}) for ${d.title}. Simulated notification.`, '#/documents/' + d.id, d.site);
+  if (c) addEvent('blue', 'documents', `Approval requested: ${d.number}`, `${pname(c.person)} — step ${c.step} of ${r.route.length} (${c.label}) for ${d.title}. Please review and approve or return it.`, '#/documents/' + d.id, d.site, [c.person]);
 }
 
 /* ---------------- Document actions ---------------- */
@@ -278,13 +278,13 @@ function stepDecision(d, decision, comment) {
     c.status = 'Approved'; r.history.push({ ts: nowTs(), by: S.ui.user, action: `Approved — step ${c.step}: ${c.label}`, comment });
     const next = r.route.find(s => s.step === c.step + 1);
     if (next) { next.status = 'Current'; notifyCurrent(d); log(`${d.number}: step ${c.step} approved; now with ${pname(next.person)}`, '#/documents/' + d.id); toast(`Step ${c.step} approved. Passed to ${esc(pname(next.person))} (step ${next.step} of ${r.route.length}).`); }
-    else { r.status = 'Approved'; r.approvedOn = TODAY; r.history.push({ ts: nowTs(), by: S.ui.user, action: 'All approval steps complete — approved', comment: '' }); addEvent('green', 'documents', `Approved — ready to issue: ${d.number}`, `${d.title} completed its approval route.`, '#/documents/' + d.id, d.site); log(`${d.number} ${revLabel(r)} fully approved`, '#/documents/' + d.id); toast('All approvers have signed off. The document is approved and ready to issue.'); }
+    else { r.status = 'Approved'; r.approvedOn = TODAY; r.history.push({ ts: nowTs(), by: S.ui.user, action: 'All approval steps complete — approved', comment: '' }); addEvent('green', 'documents', `Approved — ready to issue: ${d.number}`, `${d.title} completed its approval route and can be issued for use.`, '#/documents/' + d.id, d.site, [r.author, ...S.people.filter(p => p.org === d.org && hasPerm(p, 'doc.issue')).map(p => p.id)]); log(`${d.number} ${revLabel(r)} fully approved`, '#/documents/' + d.id); toast('All approvers have signed off. The document is approved and ready to issue.'); }
   } else {
     c.status = decision === 'Rejected' ? 'Rejected' : 'Returned';
     r.route.filter(s => s.status === 'Pending').forEach(s => { s.status = 'Cancelled'; });
     r.status = decision === 'Rejected' ? 'Rejected' : 'Returned for Correction';
     r.history.push({ ts: nowTs(), by: S.ui.user, action: `${decision === 'Rejected' ? 'Rejected' : 'Returned for correction'} — step ${c.step}: ${c.label}`, comment });
-    addEvent('amber', 'documents', `${decision === 'Rejected' ? 'Rejected' : 'Returned for correction'}: ${d.number}`, `${pname(r.author)} to act — ${comment}`, '#/documents/' + d.id, d.site);
+    addEvent('amber', 'documents', `${decision === 'Rejected' ? 'Rejected' : 'Returned for correction'}: ${d.number}`, `${pname(r.author)} to act — ${comment}`, '#/documents/' + d.id, d.site, [r.author]);
     log(`${d.number}: ${r.status} at step ${c.step}`, '#/documents/' + d.id); toast(`${esc(d.number)} ${r.status.toLowerCase()}. The author has been notified (simulated).`);
   }
   save(); return true;

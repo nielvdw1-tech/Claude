@@ -60,7 +60,7 @@ ACT.incSubmit = () => {
   const i = { id, org: siteOrgOf(v.site), type: v.type, title: v.title, date: v.date, time: v.time, site: v.site, location: v.location, reporter: S.ui.user, persons: v.person ? [v.person] : [], others: v.others, description: v.description, immediate: v.immediate, injury: v.type === 'Injury' ? { nature: v.nature, body: v.body, firstAid: v.firstAid, sentForMedical: v.sentForMedical, medical: v.sentForMedical === 'Yes', fatal: false, daysLost: 0, restrictedDays: 0, rtw: null, classification: null, classHistory: [] } : null, actualSev: +v.actualSev, potentialSev: +v.potentialSev, witnesses: v.witnesses, attachments: files, investigator: null, status: 'Reported', investigation: null, links: { assets: v.asset ? [v.asset] : [], docs: [] }, reporting: { required: 'To be determined', status: 'Not assessed', ref: '' }, closure: null, actions: [], history: [{ ts: nowTs(), by: S.ui.user, action: 'Incident reported', comment: '' }] };
   S.incidents.push(i);
   createIncidentAlert(i);   // draft safety alert for staff — published only after HSEQ Manager + Safety Consultant approval
-  addEvent('red', 'incidents', `New incident reported: ${id}`, `${v.type} at ${sname(v.site)} — ${v.title}. Investigator to be assigned.`, '#/incidents/' + id, v.site);
+  addEvent('red', 'incidents', `New incident reported: ${id}`, `${v.type} at ${sname(v.site)} — ${v.title}. Investigator to be assigned.`, '#/incidents/' + id, v.site, [(site(v.site) || {}).manager, ...hseqManagers(siteOrgOf(v.site))]);
   if (v.asset) { const a = byId('assets', v.asset); assetHistory(a, `Involved in incident ${id}: ${v.title}`); }
   log(`Reported ${id}: ${v.title}`, '#/incidents/' + id); save(); toast(`${id} reported. The branch manager and HSEQ team have been notified (simulated).`); navigate(isFieldUser() ? '#/field' : '#/incidents/' + id);
 };
@@ -104,7 +104,7 @@ function incidentDetail(id) {
   </div></div>`;
   return { title: i.id, nav: 'incidents', crumbs: [['Incidents & injuries', '#/incidents'], [i.id, '#']], html };
 }
-ACT.incAssign = (el) => { const i = byId('incidents', el.dataset.id); openModal({ title: 'Assign investigator', sub: i.id, body: `<div class="form-grid">${fld({ name: 'inv', label: 'Investigation owner', type: 'select', options: personOptions(site(i.site).manager, p => !!p.sysRole), required: true })}${fld({ name: 'due', label: 'Investigation due', type: 'date', value: addDays(TODAY, 7), required: true })}</div>`, buttons: [{ label: 'Assign & start investigation', cls: 'primary', onClick: m => { if (!validateForm(m)) return false; const v = readForm(m); i.investigator = v.inv; i.status = 'Under Investigation'; i.invDue = v.due; i.history.push({ ts: nowTs(), by: S.ui.user, action: `Investigation assigned to ${pname(v.inv)} (due ${fmt(v.due)})`, comment: '' }); addEvent('amber', 'incidents', `Investigation assigned: ${i.id}`, `${pname(v.inv)} to investigate "${i.title}".`, '#/incidents/' + i.id, i.site); log(`Assigned investigation of ${i.id}`, '#/incidents/' + i.id); save(); toast('Investigator assigned.'); rerender(); } }] }); };
+ACT.incAssign = (el) => { const i = byId('incidents', el.dataset.id); openModal({ title: 'Assign investigator', sub: i.id, body: `<div class="form-grid">${fld({ name: 'inv', label: 'Investigation owner', type: 'select', options: personOptions(site(i.site).manager, p => !!p.sysRole), required: true })}${fld({ name: 'due', label: 'Investigation due', type: 'date', value: addDays(TODAY, 7), required: true })}</div>`, buttons: [{ label: 'Assign & start investigation', cls: 'primary', onClick: m => { if (!validateForm(m)) return false; const v = readForm(m); i.investigator = v.inv; i.status = 'Under Investigation'; i.invDue = v.due; i.history.push({ ts: nowTs(), by: S.ui.user, action: `Investigation assigned to ${pname(v.inv)} (due ${fmt(v.due)})`, comment: '' }); addEvent('amber', 'incidents', `Investigation assigned: ${i.id}`, `${pname(v.inv)} to investigate "${i.title}" by ${fmt(v.due)}.`, '#/incidents/' + i.id, i.site, [v.inv]); log(`Assigned investigation of ${i.id}`, '#/incidents/' + i.id); save(); toast('Investigator assigned.'); rerender(); } }] }); };
 ACT.incInvestigate = (el) => {
   const i = byId('incidents', el.dataset.id), inv = i.investigation || {};
   openModal({ title: 'Record investigation', sub: `${i.id} — use the "5 whys" to move from the immediate cause to the root cause.`, size: 'wide', body: `<div class="form-grid">
@@ -243,7 +243,7 @@ ACT.inspSubmit = () => {
   lockRecord('inspections', ins, 'submitted and signed');
   const prev = s.nextDue; s.nextDue = addDays(ins.date, s.freqDays); s.lastDone = ins.date;
   if (a) assetHistory(a, `Inspection ${id} completed on ${t.docNumber} Rev ${r.rev} — ${ins.results.filter(x => x.result === 'Fail').length} failed item(s); next inspection ${fmt(s.nextDue)}`);
-  if (reviews) addEvent(oos ? 'red' : 'amber', 'assets', `${reviews} defect(s) to review: ${a.tag}`, `Reported by ${pname(S.ui.user)} during ${id}. ${defectReviewers(a).map(pname).join(' / ')} to decide on corrective action.`, '#/assets/' + a.id + '?tab=defects', a.site);
+  if (reviews) addEvent(oos ? 'red' : 'amber', 'assets', `${reviews} defect(s) to review: ${a.tag}`, `Reported by ${pname(S.ui.user)} during ${id}. ${defectReviewers(a).map(pname).join(' / ')} to decide on corrective action.`, '#/assets/' + a.id + '?tab=defects', a.site, defectReviewers(a));
   log(`Completed inspection ${id} (${s.target}) — ${ins.actions.length} action(s) raised${reviews ? `, ${reviews} defect(s) sent for review` : ''}`, '#/inspections/' + id);
   INSP.sched = null; INSP.answers = {}; INSP.sig = null; save();
   toast(`${id} submitted. ${ins.actions.length ? ins.actions.length + ' corrective action(s) raised. ' : ''}${reviews ? `${reviews} defect(s) sent to ${esc(defectReviewers(a).map(pname).join(' / '))} for review. ` : ''}${oos ? `<b>${esc(a.tag)} placed OUT OF SERVICE.</b> ` : ''}Next inspection scheduled ${fmt(s.nextDue)} (was ${fmt(prev)}).`);
@@ -407,7 +407,7 @@ ACT.incEffect = (el) => {
       i.effHistory = (i.effHistory || []).concat([i.effectiveness]); i.effectiveness = null;
       unlockRecord('incidents', i, 'reopened after a "not effective" review'); i.status = 'Actions in Progress'; i.closure = null;
       i.history.push({ ts: nowTs(), by: S.ui.user, action: 'Effectiveness review: NOT effective — incident reopened', comment: v.comment });
-      addEvent('red', 'incidents', `Incident reopened: ${i.id}`, `Corrective actions were not effective — ${i.title}.`, '#/incidents/' + i.id, i.site);
+      addEvent('red', 'incidents', `Incident reopened: ${i.id}`, `Corrective actions were not effective — ${i.title}.`, '#/incidents/' + i.id, i.site, [i.investigator, ...hseqManagers(i.org)]);
       log(`Effectiveness review for ${i.id}: not effective — reopened`, '#/incidents/' + i.id); save(); toast('Incident reopened. Raise a new corrective action.'); rerender();
       setTimeout(() => ACT.incAction({ dataset: { id: i.id } }), 60);
     } }] });

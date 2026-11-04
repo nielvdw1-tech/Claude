@@ -542,6 +542,30 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     ok('AT6 editing an old audit entry breaks the chain and is detected', fixed && broken);
   }
 
+  /* ---------------- EM. E-mail outbox and notification settings ---------------- */
+  {
+    await asUser('P-002');
+    const before = await S("(S.outbox || []).length");
+    await go('#/actions'); await btn('New action'); await mbtn('Continue'); await p.waitForTimeout(100);
+    await mfill('title', 'Fix loose handrail at mezzanine'); await mfill('action', 'Tighten and re-anchor the handrail.'); await msel('owner', 'P-008'); await mbtn('Raise action');
+    const em = await S("S.outbox[0]");
+    ok('EM1 raising an action queues an e-mail to the owner with a full message', (await S("S.outbox.length")) > before && em.to === 'P-008' && em.subject.startsWith('Action assigned') && em.body.includes('Hello Ruan') && em.status.includes('Not sent'), em.subject);
+    await asUser('P-008'); await go('#/notifications/email');
+    const mine = await p.innerText('#content');
+    await p.click('#content tr.rowlink'); await p.waitForTimeout(150);
+    const prev = await p.innerText('.modal');
+    ok('EM2 the recipient sees the e-mail under My e-mail and can open the full text', mine.includes('Action assigned') && prev.includes('ruan.p@kestrel.demo') && prev.includes('Fix loose handrail'));
+    await p.keyboard.press('Escape');
+    await go('#/settings'); await p.uncheck('#prefsForm [name=actions]'); await act('[data-act=prefsSave]');
+    await asUser('P-002'); const n0 = await S("S.outbox.filter(e => e.to === 'P-008').length");
+    await go('#/actions'); await btn('New action'); await mbtn('Continue'); await p.waitForTimeout(100);
+    await mfill('title', 'Replace cracked floor tile'); await mfill('action', 'Replace the tile.'); await msel('owner', 'P-008'); await mbtn('Raise action');
+    ok('EM3 a person who turns off a kind of e-mail no longer receives it', (await S("S.outbox.filter(e => e.to === 'P-008').length")) === n0);
+    await S("(person('P-008').emailPrefs = null, save())");
+    await go('#/admin/outbox');
+    ok('EM4 administrators see every queued e-mail in the outbox', (await p.$$eval('#content tr.rowlink', e => e.length)) > 0 && (await p.innerText('#content')).includes('Nothing is sent from the prototype'));
+  }
+
   /* ---------------- L. Company logo ---------------- */
   {
     await asUser('P-002'); await go('#/dashboard');
