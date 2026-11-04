@@ -32,6 +32,8 @@ function last12Months() {
   return out;
 }
 function monthLabel(m, withYear) { return MONTHS[+m.slice(5) - 1] + (withYear ? ' ' + m.slice(2, 4) : ''); }
+// opts.decimal: rates (e.g. LTIFR) get a tight axis; counts keep a minimum of 4 so single events don't fill the chart
+function niceMaxDec(v) { if (!(v > 0)) return 1; const p = Math.pow(10, Math.floor(Math.log10(v))), n = v / p; return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * p; }
 function niceMax(v) { if (v <= 4) return 4; const p = Math.pow(10, Math.floor(Math.log10(v))), n = v / p; return (n <= 2 ? 2 : n <= 5 ? 5 : 10) * p; }
 // An action counts as completed on the day it was verified (or closed, for older records).
 function actionDoneDate(a) {
@@ -92,12 +94,12 @@ const tip = (rows) => `data-tip="${esc(JSON.stringify(rows))}"`;
 /* ---------------- Chart pieces ---------------- */
 // Column chart, one series (12 months). Values on the latest and the highest column only; the rest via axis, tooltip and table.
 function columnChart(months, vals, opts) {
-  const max = niceMax(Math.max(1, ...vals)), hi = vals.indexOf(Math.max(...vals)), last = vals.length - 1;
-  const ticks = [0, max / 2, max];
+  const max = opts.decimal ? niceMaxDec(Math.max(...vals)) : niceMax(Math.max(1, ...vals)), hi = vals.indexOf(Math.max(...vals)), last = vals.length - 1;
+  const ticks = [0, max / 2, max].map(t => opts.decimal ? +t.toFixed(2) : t);
   return `<div class="vc" role="img" aria-label="${esc(opts.aria)}">
     <div class="vc-plot">${ticks.map(t => `<div class="vc-grid" style="bottom:${(t / max) * 100}%"><span>${t}</span></div>`).join('')}
       <div class="vc-cols">${months.map((m, k) => `<div class="vc-col" tabindex="0" ${tip([[monthLabel(m, true), ''], [String(vals[k]), opts.unit], ...(opts.detail ? opts.detail(k) : [])])} aria-label="${esc(monthLabel(m, true))}: ${vals[k]} ${esc(opts.unit)}"${opts.href ? ` data-act="go" data-href="${opts.href}"` : ''}>
-        <span class="vc-bar${k === last ? ' cur' : ''}" style="height:${(vals[k] / max) * 100}%">${(k === hi || k === last) && vals[k] ? `<em>${vals[k]}</em>` : ''}</span></div>`).join('')}</div>
+        ${opts.missing && opts.missing(k) ? '<span class="vc-na" title="No data">?</span>' : `<span class="vc-bar${k === last ? ' cur' : ''}" style="height:${(vals[k] / max) * 100}%">${(k === hi || k === last) && vals[k] ? `<em>${vals[k]}</em>` : ''}</span>`}</div>`).join('')}</div>
     </div>
     <div class="vc-x">${months.map((m, k) => `<span>${k % 2 === last % 2 ? monthLabel(m, m.endsWith('-01') || k === 0) : ''}</span>`).join('')}</div>
   </div>`;
@@ -286,13 +288,16 @@ ROUTES.dashboard = () => {
       ${kpi('LTIs, last 12 months', lti12.length, `${shiftsPerMonth.reduce((a, b) => a + b, 0)} shift(s) lost`, lti12.length ? 'red' : 'green', '#/incidents?type=Injury', 'alert')}
       ${kpi('LTIs this year', ltiYtd, `Since 1 Jan ${TODAY.slice(0, 4)}`, ltiYtd ? 'amber' : 'green', '#/incidents?type=Injury', 'clipboard')}
       ${kpi('Injuries not yet classified', unclassified, 'Could still become LTIs', unclassified ? 'amber' : 'green', '#/incidents?type=Injury', 'search')}
+      ${(() => { const lm = prevMonth(TODAY.slice(0, 7)), f = ltifr(sid, lm); return kpi('LTIFR (rolling 12 months)', f.value == null ? '—' : f.value.toFixed(2), f.value == null ? `Hours worked missing for ${f.missing} branch-month(s)` : `${f.ltis} LTI(s) in ${fmtNum(f.hours)} hours · per ${fmtNum(ltifrBase())} · to ${monthLabel(lm, true)}`, f.value == null ? 'amber' : f.value > 0 ? 'red' : 'green', '#/admin/hours', 'chart'); })()}
     </div>
     <div class="grid g2 mt">
       <div><h4>LTIs per month</h4>${columnChart(months, ltiPerMonth, { unit: 'LTIs', aria: `Lost time injuries per month: ${months.map((m, k) => `${monthLabel(m, true)} ${ltiPerMonth[k]}`).join(', ')}`, href: '#/incidents?type=Injury', detail: ltiIds })}</div>
       <div><h4>Shifts lost per month</h4>${columnChart(months, shiftsPerMonth, { unit: 'shifts lost', aria: `Shifts lost to lost time injuries per month: ${months.map((m, k) => `${monthLabel(m, true)} ${shiftsPerMonth[k]}`).join(', ')}`, href: '#/incidents?type=Injury', detail: ltiIds })}</div>
     </div>
-    <p class="muted mt-s">${icon('info', 'sm')} An LTI frequency rate (LTIs per hours worked) needs the hours worked per branch, which the system does not record yet.</p>
-    ${dataTable(['Month', 'LTIs', 'Shifts lost', 'Incidents'], months.map((m, k) => [monthLabel(m, true), ltiPerMonth[k], shiftsPerMonth[k], lti12.filter(i => i.date.startsWith(m)).map(i => i.id).join(', ') || '—']))}
+    ${(() => { const fm = monthsBack(12, prevMonth(TODAY.slice(0, 7))), fr = fm.map(m => ltifr(sid, m)), vals = fr.map(f => f.value == null ? 0 : f.value), gaps = fr.filter(f => f.value == null).length;
+      return `<div class="mt"><h4>LTI frequency rate — rolling 12 months, per ${fmtNum(ltifrBase())} hours worked</h4>${columnChart(fm, vals, { unit: 'LTIFR', decimal: true, missing: k => fr[k].value == null, aria: `Rolling 12-month LTIFR: ${fm.map((m, k) => `${monthLabel(m, true)} ${fr[k].value == null ? 'not available' : fr[k].value}`).join(', ')}`, href: '#/admin/hours', detail: k => fr[k].value == null ? [['—', `hours missing for ${fr[k].missing} branch-month(s)`]] : [[String(fr[k].ltis), 'LTIs'], [fmtNum(fr[k].hours), 'hours worked']] })}
+        ${gaps ? `<p class="muted mt-s">${icon('alert', 'sm')} ${gaps} month(s) cannot be calculated because hours worked are missing. <a href="#/admin/hours">Enter hours worked</a>.</p>` : ''}</div>`; })()}
+    ${dataTable(['Month', 'LTIs', 'Shifts lost', 'Incidents', 'Rolling 12-month LTIFR'], months.map((m, k) => { const f = ltifr(sid, m); return [monthLabel(m, true), ltiPerMonth[k], shiftsPerMonth[k], lti12.filter(i => i.date.startsWith(m)).map(i => i.id).join(', ') || '—', f.value == null ? 'hours missing' : f.value.toFixed(2)]; }))}
   </div></div>
   <div class="grid g2 mb">
     <div class="card"><div class="card-head"><h2>Corrective actions raised and completed</h2><span class="ch-sub">Per month · completed = verified</span></div><div class="card-body">

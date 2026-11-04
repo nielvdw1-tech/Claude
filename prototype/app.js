@@ -8,7 +8,7 @@
    ========================================================================== */
 'use strict';
 
-const STORE_KEY = 'vdw-hseq-prototype-v12';
+const STORE_KEY = 'vdw-hseq-prototype-v13';
 let S = null;                        // application state (demo data)
 const TODAY = (() => { const d = new Date(); d.setHours(0, 0, 0, 0); return isoDate(d); })();
 const ROUTES = {};                   // page renderers registered by module files
@@ -18,7 +18,7 @@ const ACT = {};                      // click handlers: data-act="name"
 function loadState() {
   try {
     const raw = localStorage.getItem(STORE_KEY);
-    if (raw) { const parsed = JSON.parse(raw); if (parsed && parsed.version === 12) { S = parsed; return; } }
+    if (raw) { const parsed = JSON.parse(raw); if (parsed && parsed.version === 13) { S = parsed; return; } }
   } catch (e) { console.warn('Could not read local storage; using fresh demo data.', e); }
   S = buildSeed(); save();
 }
@@ -427,6 +427,7 @@ function myTasks() {
   if (can('incident.investigate')) S.incidents.filter(i => inSite(i, S.ui.site) && i.injury && !i.injury.classification && i.status !== 'Closed').forEach(i => out.push({ title: `Classify injury: ${i.id}`, sub: i.title, link: '#/incidents/' + i.id, sev: 'amber' }));
   if (can('incident.investigate')) S.incidents.filter(i => inSite(i, S.ui.site) && i.status === 'Reported').forEach(i => out.push({ title: `Assign investigator: ${i.id}`, sub: i.title, link: '#/incidents/' + i.id, sev: 'red' }));
   (S.notices || []).filter(n => n.status === 'Pending approval' && n.org === S.ui.org && (noticeCurStep(n) || {}).person === uid).forEach(n => { const c = noticeCurStep(n); out.push({ title: `Approve safety alert: ${n.title.replace(/^Safety alert:\s*/, '')}`, sub: `From ${n.source.id} · step ${c.step} of ${n.approvals.length} — ${c.label}`, link: '#/notices/' + n.id, sev: 'amber' }); });
+  if (typeof hoursTasks === 'function') hoursTasks().forEach(t => out.push(t));
   if (typeof myNotices === 'function') myNotices().filter(n => noticeNeedsAck(n)).forEach(n => out.push({ title: `Acknowledge notice: ${n.title}`, sub: `From ${pname(n.publishedBy)} · ${fmt(n.publishedOn)}`, link: '#/notices/' + n.id, sev: n.priority === 'Important' ? 'red' : 'amber' }));
   return out;
 }

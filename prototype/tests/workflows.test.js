@@ -455,13 +455,13 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await p.click('.pad [data-act=focusSite][data-site="ALL"]'); await p.waitForTimeout(250);
     const openActs = await S("S.actions.filter(a => a.org === S.ui.org && actionOpen(a)).length");
     const segTotal = await p.$$eval('.seg em', e => e.reduce((a, x) => a + Number(x.textContent), 0));
-    ok('DB4 the 12-month charts render with data tables', (await p.$$eval('.vc-col', e => e.length)) === 36 && (await p.$$eval('#lcActions .lc-line', e => e.length)) === 2 && segTotal === openActs && (await p.$$eval('.viz-table', e => e.length)) === 5, `${segTotal} of ${openActs} open`);
+    ok('DB4 the 12-month charts render with data tables', (await p.$$eval('.vc-col', e => e.length)) === 48 && (await p.$$eval('#lcActions .lc-line', e => e.length)) === 2 && segTotal === openActs && (await p.$$eval('.viz-table', e => e.length)) === 5, `${segTotal} of ${openActs} open`);
     const cols = await p.$$('.vc-col'); await cols[cols.length - 1].scrollIntoViewIfNeeded(); await p.waitForTimeout(150); await cols[cols.length - 1].hover(); await p.waitForTimeout(120);
     ok('DB5 hovering a column shows a tooltip with the month and value', await p.$eval('#vizTip', e => e.style.display === 'block' && /[0-9]/.test(e.textContent)).catch(() => false));
     const lti = await S("(() => { const all = S.incidents.filter(i => i.org === S.ui.org && injClass(i) === 'Lost Time Injury').sort((a, b) => a.date.localeCompare(b.date)); const last = all[all.length - 1]; return { n12: all.filter(i => i.date.slice(0, 7) >= last12Months()[0]).length, since: last ? -daysTo(last.date) : null, id: last && last.id }; })()");
     const ltiTxt = await p.innerText('#ltiCard');
     const ltiCols = await p.$$eval('#ltiCard .vc-col', e => e.length);
-    ok('DB6 the LTI trend shows days since the last LTI, LTIs and shifts lost per month', ltiCols === 24 && ltiTxt.includes('Days since last LTI') && ltiTxt.includes(String(lti.since)) && ltiTxt.includes(lti.id) && /shifts lost per month/i.test(ltiTxt), `${lti.n12} LTI(s), ${lti.since} days since ${lti.id}`);
+    ok('DB6 the LTI trend shows days since the last LTI, LTIs and shifts lost per month', ltiCols === 36 && ltiTxt.includes('Days since last LTI') && ltiTxt.includes(String(lti.since)) && ltiTxt.includes(lti.id) && /shifts lost per month/i.test(ltiTxt), `${lti.n12} LTI(s), ${lti.since} days since ${lti.id}`);
   }
 
   /* ---------------- QL. Quick links per user ---------------- */
@@ -649,6 +649,28 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await go('#/admin/import'); await act('[data-act=impType][data-v=assets]');
     await upload('wrong.csv', 'text/csv', Buffer.from('Tag number,Description\nA1,Something\n'));
     ok('IM5 a sheet without the required columns is explained, not imported', (await p.innerText('#content')).includes('required columns were not found'));
+  }
+
+  /* ---------------- HW. Hours worked and the LTI frequency rate ---------------- */
+  {
+    await asUser('P-002'); await go('#/notifications/tasks');
+    const lm = await S("prevMonth(TODAY.slice(0, 7))");
+    ok('HW1 a missing month of hours worked shows as a task for administrators', (await p.innerText('#content')).includes('Enter hours worked for'));
+    await go('#/admin/hours');
+    await p.fill(`[name="h_S-CPT_${lm}"]`, '-500'); await act('[data-act=hoursSave]');
+    const refused = (await S(`hoursOf('S-CPT', '${lm}')`)) === null;
+    await p.fill(`[name="h_S-CPT_${lm}"]`, '3850'); await act('[data-act=hoursSave]');
+    await go('#/notifications/tasks');
+    ok('HW2 hours are entered per branch per month; invalid values are refused; the task clears', refused && (await S(`hoursOf('S-CPT', '${lm}')`)) === 3850 && !(await p.innerText('#content')).includes('Enter hours worked for'));
+    const f = await S(`ltifr('ALL', '${lm}')`);
+    const manual = await S(`(() => { const ms = monthsBack(12, '${lm}'); let h = 0; orgSites().forEach(s => ms.forEach(m => h += hoursOf(s.id, m))); const n = S.incidents.filter(i => i.org === S.ui.org && injClass(i) === 'Lost Time Injury' && ms.includes(i.date.slice(0, 7))).length; return Math.round(n * 200000 / h * 100) / 100; })()`);
+    await S("(S.ui.site = 'ALL', save())"); await go('#/dashboard');
+    const ltiTxt = await p.innerText('#ltiCard');
+    ok('HW3 the dashboard shows the rolling 12-month LTIFR, calculated from LTIs and hours worked', f.value === manual && ltiTxt.includes(f.value.toFixed(2)) && /LTI frequency rate/i.test(ltiTxt), `LTIFR ${f.value}`);
+    await go('#/admin/hours'); await p.selectOption('#baseForm [name=base]', '1000000'); await act('[data-act=ltifrBaseSave]');
+    const f2 = await S(`ltifr('ALL', '${lm}')`);
+    ok('HW4 the LTIFR base can be 200 000 or 1 000 000 hours', Math.abs(f2.value - f.value * 5) < 0.02, `${f.value} → ${f2.value}`);
+    await S("(S.config.ltifrBase = 200000, save())");
   }
 
   /* ---------------- L. Company logo ---------------- */

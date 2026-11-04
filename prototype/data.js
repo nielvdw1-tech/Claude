@@ -15,7 +15,7 @@ function buildSeed() {
   const T = (n, h = 9, m = 0) => { const x = new Date(base); x.setDate(x.getDate() + n); x.setHours(h, m, 0, 0); return x.toISOString(); };
   const demoFile = (name, kb) => ({ name, size: kb * 1024, type: name.endsWith('.pdf') ? 'application/pdf' : 'application/octet-stream', demo: true, seeded: true });
 
-  const S = { version: 12, seededOn: D(0) };
+  const S = { version: 13, seededOn: D(0) };
 
   /* ---------------- Organisations, sites, departments ---------------- */
   S.orgs = [
@@ -91,6 +91,7 @@ function buildSeed() {
     // the competent person sets the company's own definitions in Administration → Injury classification.
     // Review periods (days): defect review by a supervisor, assigning an investigator, effectiveness review after closure
     reviewRules: { defectReviewDays: 2, assignInvestigatorDays: 3, effectivenessDays: 30 },
+    ltifrBase: 200000,   // LTIs per 200 000 hours worked (the company can choose 1 000 000)
     injuryClasses: [
       { name: 'First Aid Case', short: 'FAC', colour: 'green', desc: 'Treated with first aid only (for example cleaning a wound, a plaster or an ice pack). Back at normal work on the next shift.' },
       { name: 'Medical Treatment Case', short: 'MTC', colour: 'amber', desc: 'Treated by a doctor, nurse or clinic beyond first aid (for example stitches or prescription medicine). Back at normal work on the next shift.' },
@@ -348,6 +349,15 @@ function buildSeed() {
   S.incidents.forEach(i => { if (!i.actions) i.actions = []; });
 
   /* ---------------- Company notices (memos / important information) ---------------- */
+  /* ---------------- Hours worked per branch per month (fictional, from headcount) ----------------
+     24 complete months up to last month; last month is still missing for Montague Gardens (shows the reminder). */
+  S.hours = {};
+  { const now = new Date(D(0) + 'T00:00:00');
+    S.sites.forEach((s, si) => { S.hours[s.id] = {};
+      for (let k = 1; k <= 24; k++) { const d = new Date(now); d.setDate(1); d.setMonth(now.getMonth() - k); const m = isoDate(d).slice(0, 7);
+        if (k === 1 && s.id === 'S-CPT') continue;
+        S.hours[s.id][m] = Math.round(s.headcount * (168 + ((k * 7 + si * 13) % 15))); } }); }
+
   S.notices = [
     { id: 'NT-001', org: 'ORG-1', title: 'New pedestrian walkways and forklift rules in the warehouse', priority: 'Important', audience: 'S-JHB', ackRequired: true, expires: null,
       body: 'From Monday, pedestrians must use the newly painted green walkways in the Germiston warehouse at all times.\n\nForklifts must stop at every walkway crossing and sound the horn. Do not walk behind a reversing forklift.\n\nYour supervisor will brief you at the next toolbox talk. Please confirm that you have read and understood this notice.',
