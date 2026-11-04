@@ -8,7 +8,7 @@ Status key:
 - **Not implemented**
 
 "Tested" means one of the following:
-- the automated browser test (`tests/workflows.test.js`, **196/196 passing**, no JavaScript errors);
+- the automated browser test (`tests/workflows.test.js`, **202/202 passing**, no JavaScript errors);
 - the route smoke test (77 routes plus a second organisation, no errors);
 - the mobile layout check (31 routes at 390 px, no horizontal overflow).
 
@@ -71,6 +71,7 @@ Status key:
 | Dashboard: compliance status first (overall score, four areas with status labels and drivers, status by branch), then 12-month trend charts (incl. LTI trend: days since last LTI, LTIs and shifts lost per month) with tooltips and data tables, then detail tiles | Implemented | DB1–DB6 |
 | Quick links on the dashboard based on the user's role and waiting work, with counts | Implemented | QL1–QL3 |
 | Branch / organisation selection and comparison | Implemented | E1–E2 |
+| Branch managers, supervisors and employees limited to their own branch (selector, lists, dashboard, reports, search, record pages, forms), except records they are personally part of; MD, HSEQ Manager and consultant see all branches | Partial | BR1–BR6; applied in the browser (the live system enforces it on the server) |
 | Task centre per user | Implemented | E3 |
 | Back button on every page below the main menu level (previous page, or the page above when opened directly) | Implemented | BB1–BB4 |
 | Reports with print and CSV | Implemented | E9 |

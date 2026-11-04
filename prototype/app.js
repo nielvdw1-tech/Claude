@@ -171,12 +171,26 @@ function inScope(rec, opts = {}) {
   return !rec.site || rec.site === 'ALL' || rec.site === S.ui.site;
 }
 function scoped(coll) { return (S[coll] || []).filter(r => inScope(r)); }
-function orgSites() { return S.sites.filter(s => s.org === S.ui.org); }
+/* Branch-limited people (everyone without company-wide access: branch managers, supervisors, employees)
+   work in their own branch only: the branch list, selectors, lists, search and record pages are limited to it.
+   Company-wide records (site 'ALL', e.g. policies) stay visible to everyone in the company. */
+function branchLimited() { const p = me(); return !!p && p.org === S.ui.org && !can('view.all'); }
+function orgSites() { const all = S.sites.filter(s => s.org === S.ui.org); return branchLimited() ? all.filter(s => s.id === me().site) : all; }
+function ensureBranchAccess() { if (branchLimited() && S.ui.site !== me().site) { S.ui.site = me().site; save(); } }
+// People see records of another branch that they are personally part of: asked to approve, own, investigate, inspected…
+function involvedIn(rec, uid) {
+  if (!rec) return false;
+  if (['owner', 'author', 'createdBy', 'reporter', 'investigator', 'inspector', 'reviewer', 'responsible', 'assignee'].some(k => rec[k] === uid)) return true;
+  if ((rec.persons || []).includes(uid)) return true;
+  if ((rec.revisions || []).some(r => r.author === uid || (r.route || []).some(st => st.person === uid))) return true;
+  return false;
+}
+function recordOutsideBranch(rec) { return branchLimited() && !!rec && !!rec.site && rec.site !== 'ALL' && rec.site !== me().site && !involvedIn(rec, S.ui.user); }
 function scopeLabel() { return S.ui.site === 'ALL' ? (orgOf(S.ui.org).short + ' — all branches') : (orgOf(S.ui.org).short + ' — ' + site(S.ui.site).short); }
 function scopePill() { return `<div class="scope-pill">${icon(S.ui.site === 'ALL' ? 'building' : 'target', 'sm')} ${esc(scopeLabel())}</div>`; }
 function peopleInScope() { return S.people.filter(p => inScope(p)); }
 function personOptions(sel, filter) { const list = S.people.filter(p => p.org === S.ui.org && (p.status !== 'Deactivated' || p.id === sel) && (!filter || filter(p))); return '<option value="">— Select —</option>' + list.map(p => `<option value="${p.id}" ${p.id === sel ? 'selected' : ''}>${esc(p.name)} — ${esc(p.jobTitle)}${p.site ? ' (' + esc(sname(p.site)) + ')' : ''}</option>`).join(''); }
-function siteOptions(sel, includeAll = true) { return (includeAll ? `<option value="ALL" ${sel === 'ALL' ? 'selected' : ''}>All sites (organisation-wide)</option>` : '<option value="">— Select —</option>') + orgSites().map(s => `<option value="${s.id}" ${s.id === sel ? 'selected' : ''}>${esc(s.name)}</option>`).join(''); }
+function siteOptions(sel, includeAll = true) { return (branchLimited() ? '' : includeAll ? `<option value="ALL" ${sel === 'ALL' ? 'selected' : ''}>All sites (organisation-wide)</option>` : '<option value="">— Select —</option>')   /* branch-limited: only their own branch, already chosen */ + orgSites().map(s => `<option value="${s.id}" ${s.id === sel ? 'selected' : ''}>${esc(s.name)}</option>`).join(''); }
 function opts(list, sel, blank) { return (blank ? `<option value="">${esc(blank)}</option>` : '') + list.map(o => { const v = typeof o === 'object' ? o.value : o, l = typeof o === 'object' ? o.label : o; return `<option value="${esc(v)}" ${String(v) === String(sel) ? 'selected' : ''}>${esc(l)}</option>`; }).join(''); }
 function defaultSite() { return S.ui.site !== 'ALL' ? S.ui.site : (me() && me().org === S.ui.org ? me().site : orgSites()[0].id); }
 
@@ -411,19 +425,19 @@ function buildNotifs() {
 }
 function myTasks() {
   const uid = S.ui.user, out = [];
-  S.documents.filter(d => inSite(d, S.ui.site)).forEach(d => { const r = docLatest(d), c = curStep(r);
+  S.documents.filter(d => inSite(d, S.ui.site) || (inSite(d, 'ALL') && involvedIn(d, uid))).forEach(d => { const r = docLatest(d), c = curStep(r);
     if (c && c.person === uid) out.push({ title: `Approve ${d.number}: ${d.title}`, sub: `Step ${c.step} of ${r.route.length} — ${c.label}`, link: '#/documents/' + d.id, sev: 'amber' });
     if (r.status === 'Approved' && can('doc.issue')) out.push({ title: `Issue ${d.number}: ${d.title}`, sub: `${revLabel(r)} fully approved — not yet issued`, link: '#/documents/' + d.id, sev: 'blue' });
     if (r.status === 'Returned for Correction' && r.author === uid) out.push({ title: `Correct & resubmit ${d.number}`, sub: 'Returned for correction', link: '#/documents/' + d.id, sev: 'amber' });
     if (r.status === 'Draft' && r.author === uid) out.push({ title: `Submit ${d.number} for approval`, sub: 'Draft not yet submitted', link: '#/documents/' + d.id, sev: 'blue' });
   });
-  S.actions.filter(a => inSite(a, S.ui.site) && actionOpen(a) && a.owner === uid).forEach(a => out.push({ title: `${a.id}: ${a.title}`, sub: `Action · ${a.status} · due ${fmt(a.due)}`, link: '#/actions/' + a.id, sev: actionOverdue(a) ? 'red' : 'blue' }));
+  S.actions.filter(a => inSite(a, 'ALL') && actionOpen(a) && a.owner === uid).forEach(a => out.push({ title: `${a.id}: ${a.title}`, sub: `Action · ${a.status} · due ${fmt(a.due)}`, link: '#/actions/' + a.id, sev: actionOverdue(a) ? 'red' : 'blue' }));
   if (can('action.verify')) S.actions.filter(a => inSite(a, S.ui.site) && a.status === 'Submitted for Verification' && a.owner !== uid).forEach(a => out.push({ title: `Verify ${a.id}: ${a.title}`, sub: `Evidence submitted by ${pname(a.owner)}`, link: '#/actions/' + a.id, sev: 'blue' }));
-  S.schedules.filter(s => inSite(s, S.ui.site) && s.assignee === uid && daysTo(s.nextDue) <= 7).forEach(s => out.push({ title: `Inspect: ${s.target}`, sub: `Due ${fmt(s.nextDue)}`, link: '#/inspect/' + s.id, sev: daysTo(s.nextDue) < 0 ? 'red' : 'amber' }));
-  S.incidents.filter(i => inSite(i, S.ui.site) && i.investigator === uid && !['Closed'].includes(i.status)).forEach(i => out.push({ title: `Investigate ${i.id}: ${i.title}`, sub: i.status, link: '#/incidents/' + i.id, sev: 'amber' }));
+  S.schedules.filter(s => inSite(s, 'ALL') && s.assignee === uid && daysTo(s.nextDue) <= 7).forEach(s => out.push({ title: `Inspect: ${s.target}`, sub: `Due ${fmt(s.nextDue)}`, link: '#/inspect/' + s.id, sev: daysTo(s.nextDue) < 0 ? 'red' : 'amber' }));
+  S.incidents.filter(i => inSite(i, 'ALL') && i.investigator === uid && !['Closed'].includes(i.status)).forEach(i => out.push({ title: `Investigate ${i.id}: ${i.title}`, sub: i.status, link: '#/incidents/' + i.id, sev: 'amber' }));
   if (can('action.create')) S.defects.filter(d => d.status === 'Awaiting Review').forEach(d => { const a = byId('assets', d.asset); if (!a || !inSite(a, S.ui.site)) return; const late = daysTo(d.reviewDue) < 0;
     if (defectReviewers(a).includes(uid) || (late && hseqManagers(a.org).includes(uid))) out.push({ title: `Review defect ${d.id}: ${a.tag}`, sub: `${d.description} · reported by ${pname(d.by)} · review by ${fmt(d.reviewDue)}`, link: '#/assets/' + a.id + '?tab=defects', sev: late ? 'red' : 'amber' }); });
-  S.incidents.filter(i => inSite(i, S.ui.site)).forEach(i => { const e = incEscalation(i); if (e && e.to.includes(uid)) out.push({ title: `Escalated: ${i.id} — ${i.title}`, sub: e.reason, link: '#/incidents/' + i.id, sev: 'red' }); });
+  S.incidents.filter(i => inSite(i, 'ALL')).forEach(i => { const e = incEscalation(i); if (e && e.to.includes(uid)) out.push({ title: `Escalated: ${i.id} — ${i.title}`, sub: e.reason, link: '#/incidents/' + i.id, sev: 'red' }); });
   if (can('incident.investigate')) S.incidents.filter(i => inSite(i, S.ui.site) && i.status === 'Closed' && i.effectiveness && !i.effectiveness.done && daysTo(i.effectiveness.due) <= 7 && !effOverdue(i) && (i.investigator === uid || hseqManagers(i.org).includes(uid))).forEach(i => out.push({ title: `Effectiveness review: ${i.id}`, sub: `Due ${fmt(i.effectiveness.due)} — check the corrective actions worked`, link: '#/incidents/' + i.id, sev: 'amber' }));
   if (can('incident.investigate')) S.incidents.filter(i => inSite(i, S.ui.site) && i.injury && !i.injury.classification && i.status !== 'Closed').forEach(i => out.push({ title: `Classify injury: ${i.id}`, sub: i.title, link: '#/incidents/' + i.id, sev: 'amber' }));
   if (can('incident.investigate')) S.incidents.filter(i => inSite(i, S.ui.site) && i.status === 'Reported').forEach(i => out.push({ title: `Assign investigator: ${i.id}`, sub: i.title, link: '#/incidents/' + i.id, sev: 'red' }));
@@ -541,7 +555,7 @@ function renderSidebar(active) {
     <label for="orgSel">Organisation</label>
     <select id="orgSel" ${myOrgs().length < 2 ? 'disabled' : ''}>${myOrgs().map(o => `<option value="${o.id}" ${o.id === S.ui.org ? 'selected' : ''}>${esc(o.short)}</option>`).join('')}</select>
     <label for="siteSel">Branch / site</label>
-    <select id="siteSel"><option value="ALL">All branches (organisation view)</option>${sites.map(s => `<option value="${s.id}" ${s.id === S.ui.site ? 'selected' : ''}>${esc(s.short)}</option>`).join('')}</select>
+    <select id="siteSel" ${branchLimited() ? 'disabled title="You work in your own branch"' : ''}>${branchLimited() ? '' : '<option value="ALL">All branches (organisation view)</option>'}${sites.map(s => `<option value="${s.id}" ${s.id === S.ui.site ? 'selected' : ''}>${esc(s.short)}</option>`).join('')}</select>
   </div>
   <nav class="sb-nav" aria-label="Main navigation">
     ${(isFieldUser() ? NAV_FIELD : NAV).map((g, gi) => `<div class="nav-group ${S.ui.navCollapsed && S.ui.navCollapsed[gi] ? 'collapsed' : ''}"><button class="nav-group-title" data-act="toggleNavGroup" data-g="${gi}" aria-expanded="${!(S.ui.navCollapsed && S.ui.navCollapsed[gi])}">${esc(g.group)} ${icon('chevron')}</button><div class="nav-items">
@@ -591,11 +605,15 @@ function rerender(keepScroll = true) {
   if (!signedIn()) { const ph = parseHash(); if (ph.parts[0] === 'qr') { renderPublicQr(ph.parts[1]); return; } renderSignIn(); return; }   // not signed in: only an equipment QR page, or the sign-in page
   document.body.classList.remove('auth-mode');
   ensureOrgAccess();   // only the companies this person may see
+  ensureBranchAccess();   // branch-limited people stay in their own branch
   ensureAudit();
   runEscalations();
   let { parts, q } = parseHash(); let key = parts[0] || 'dashboard';
   if (account(me()).mustChange && key !== 'password') { history.replaceState(null, '', '#/password'); parts = ['password']; key = 'password'; }   // a reset password must be changed first
   let fn = ROUTES[key] || ROUTES.notfound;
+  // A record page from another branch (opened by link, search or bookmark) is not shown to branch-limited people
+  const REC_ROUTE = { incidents: 'incidents', actions: 'actions', assets: 'assets', inspections: 'inspections', documents: 'documents', print: 'inspections', inspect: 'schedules' };
+  if (REC_ROUTE[key] && parts[1] && recordOutsideBranch(byId(REC_ROUTE[key], parts[1]))) fn = () => ({ title: 'Other branch', crumbs: [['Not available', '#']], html: `<div class="alert info">${icon('lock')}<div><b>This record belongs to another branch.</b> You work in ${esc(site(me().site).name)}, so you only see that branch's records and company-wide documents.</div></div>` });
   // Field users (e.g. Employee) only see the field screens: QR inspections and incident reporting
   if (isFieldUser() && !FIELD_ROUTES.includes(key)) fn = (pp, qq) => ROUTES.field(pp, key === 'dashboard' ? {} : Object.assign({}, qq, { blocked: key }));
   let page;
@@ -643,7 +661,7 @@ document.addEventListener('input', (e) => {
 document.addEventListener('change', (e) => {
   const el = e.target;
   if (el.id === 'orgSel') { if (!canSeeOrg(el.value)) { toast('You do not have access to that company.', 'error'); rerender(); return; } S.ui.org = el.value; S.ui.site = 'ALL'; save(); toast(`Switched to ${esc(orgOf(el.value).name)}.`, 'info'); if (parseHash().parts.length > 1) navigate('#/dashboard'); else rerender(); }
-  if (el.id === 'siteSel') { S.ui.site = el.value; save(); toast(el.value === 'ALL' ? 'Showing organisation-wide view (all branches).' : `Showing branch: ${esc(site(el.value).name)}.`, 'info'); rerender(); }
+  if (el.id === 'siteSel') { if (branchLimited()) { rerender(); return; } S.ui.site = el.value; save(); toast(el.value === 'ALL' ? 'Showing organisation-wide view (all branches).' : `Showing branch: ${esc(site(el.value).name)}.`, 'info'); rerender(); }
 });
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && modalStack.length) closeModal();
@@ -675,14 +693,14 @@ ACT.userMenu = (el) => {
   dd.style.maxHeight = '75vh'; dd.style.overflowY = 'auto';
   document.body.appendChild(dd);
 };
-ACT.switchUser = (el) => { const p = person(el.dataset.id); if (!p || p.status === 'Deactivated') { toast('That account is deactivated.', 'error'); return; } S.ui.user = p.id; if (p.org !== S.ui.org) { S.ui.org = p.org; S.ui.site = 'ALL'; } save(); document.querySelectorAll('.dropdown').forEach(d => d.remove()); toast(`Now acting as <b>${esc(p.name)}</b> (${esc(p.sysRole)}).`, 'info'); if (isFieldUser()) navigate('#/field'); else rerender(); };
+ACT.switchUser = (el) => { const p = person(el.dataset.id); if (!p || p.status === 'Deactivated') { toast('That account is deactivated.', 'error'); return; } S.ui.user = p.id; S.ui.org = p.org; S.ui.site = 'ALL'; /* each person starts in their own default view */ save(); document.querySelectorAll('.dropdown').forEach(d => d.remove()); toast(`Now acting as <b>${esc(p.name)}</b> (${esc(p.sysRole)}).`, 'info'); if (isFieldUser()) navigate('#/field'); else rerender(); };
 ACT.resetDemo = () => confirmBox('Reset demo data?', 'This restores all demonstration records to their original state and discards changes made in this browser.', 'Reset demo data', () => { resetDemo(); LV.state = {}; toast('Demo data has been reset.'); navigate('#/dashboard'); }, 'danger solid');
 ACT.markRead = (el) => { S.readNotifs[el.dataset.key] = true; save(); };
 
 /* ---------------- Global search ---------------- */
 function searchIndex() {
   const ix = [];
-  const add = (type, id, title, sub, link, rec) => { if (!rec || inScope(rec, { ignoreSite: true })) ix.push({ type, id, title, sub, link, text: (id + ' ' + title + ' ' + sub).toLowerCase() }); };
+  const add = (type, id, title, sub, link, rec) => { if (!rec || inScope(rec, { ignoreSite: !branchLimited() })) ix.push({ type, id, title, sub, link, text: (id + ' ' + title + ' ' + sub).toLowerCase() }); };
   S.documents.forEach(d => add('Document', d.number, d.title, d.category + ' · ' + docStatus(d), '#/documents/' + d.id, d));
   S.assets.forEach(a => add('Asset', a.tag, a.name, a.serial + ' ' + a.qr, '#/assets/' + a.id, a));
   S.inspections.forEach(i => add('Inspection', i.id, i.template.title, i.target, '#/inspections/' + i.id, i));
@@ -712,7 +730,7 @@ function barRow(label, v, href, colour) { return `<div class="bar-row ${href ? '
 function kpi(label, value, sub, tone, href, ic) { return `<button class="kpi t-${tone}" data-act="go" data-href="${href}"><div class="k-label">${ic ? icon(ic, 'sm') : ''}${esc(label)}</div><div class="k-value">${value}</div><div class="k-sub">${sub}</div><span class="k-go">${icon('arrowR', 'sm')}</span></button>`; }
 
 // ROUTES.dashboard lives in mod-dashboard.js
-ACT.focusSite = (el) => { S.ui.site = el.dataset.site; save(); toast(el.dataset.site === 'ALL' ? 'Organisation-wide view.' : `Focused on ${esc(site(el.dataset.site).name)}.`, 'info'); rerender(); };
+ACT.focusSite = (el) => { if (branchLimited()) return; S.ui.site = el.dataset.site; save(); toast(el.dataset.site === 'ALL' ? 'Organisation-wide view.' : `Focused on ${esc(site(el.dataset.site).name)}.`, 'info'); rerender(); };
 
 /* ==========================================================================
    NOTIFICATIONS & TASKS

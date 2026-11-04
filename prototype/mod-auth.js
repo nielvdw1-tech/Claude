@@ -45,7 +45,7 @@ function pwProblem(pw) { if (pw.length < 8) return 'Use at least 8 characters.';
 function startSession(p) {
   NAV_STACK.length = 0;   // a new session starts a new back history
   const a = account(p); a.failed = 0; a.lockedUntil = null; a.lastSignIn = nowTs();
-  S.ui.user = p.id; if (p.org !== S.ui.org) { S.ui.org = p.org; S.ui.site = 'ALL'; }
+  S.ui.user = p.id; S.ui.org = p.org; S.ui.site = 'ALL';   // each sign-in starts in the person's own default view (branch-limited people are then narrowed to their branch)
   log(`${p.name} signed in`, ''); save();
   document.body.classList.remove('auth-mode');
   if (a.mustChange) { location.hash = '#/password'; rerender(); return; }

@@ -823,6 +823,33 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await asUser('P-002');
   }
 
+  /* ---------------- BR. Branch managers and supervisors work in their own branch ---------------- */
+  {
+    const siteOpts = () => p.$$eval('#siteSel option', e => e.map(x => x.value));
+    await asUser('P-003'); await go('#/incidents');   // Sipho Ndlovu, Branch Manager, Pinetown
+    const opts1 = await siteOpts(), disabled = await p.$eval('#siteSel', e => e.disabled), list = await p.innerText('#content');
+    await go('#/documents'); const docs = await p.innerText('#content');
+    ok('BR1 a branch manager sees only their branch: no "all branches", only Pinetown incidents, plus company-wide documents', opts1.join() === 'S-DBN' && disabled && list.includes('INC-2026-005') && !list.includes('INC-2026-001') && docs.includes('KIE-POL-001'), opts1.join());
+    await go('#/incidents/INC-2026-001');
+    ok('BR2 opening another branch\'s record (link, bookmark) is refused', (await p.innerText('#content')).includes('belongs to another branch'));
+    await go('#/dashboard'); const rows = await p.$$eval('.tbl.hm tbody tr', e => e.length);
+    await p.fill('#globalSearch', 'INC-2026-001'); await p.waitForTimeout(200); const found = await p.innerText('#searchResults').catch(() => '');
+    ok('BR3 the dashboard and search are limited to the branch too', rows === 1 && !found.includes('INC-2026-001'), `${rows} branch row(s)`);
+    // A Pinetown corrective action owned by a Germiston supervisor
+    await asUser('P-002'); const xa = await S("createAction({ title: 'Replace Pinetown racking upright', action: 'Replace the damaged upright.', owner: 'P-007', site: 'S-DBN', source: 'Manual', priority: 'High' }).id");
+    await asUser('P-007'); await go('#/notifications/tasks'); const inTasks = (await p.innerText('#content')).includes(xa);
+    await go('#/actions/' + xa);
+    ok('BR4 records from another branch that the person is part of (e.g. owns or must approve) stay open to them and appear in their tasks', inTasks && !(await p.innerText('#content')).includes('belongs to another branch') && (await p.innerText('#content')).includes('Replace Pinetown racking upright'), xa);
+    await asUser('P-003'); await go('#/documents'); await act('[data-act=newDoc]');
+    const docSites = await p.$$eval('.modal [name=site] option', e => e.map(x => x.value)); await p.keyboard.press('Escape');
+    ok('BR6 forms offer a branch-limited person only their own branch, already selected', docSites.join() === 'S-DBN', docSites.join());
+    await asUser('P-007'); await go('#/incidents');
+    const sup = await p.innerText('#content');
+    await asUser('P-001'); await go('#/incidents');
+    ok('BR5 supervisors are limited the same way; the MD, HSEQ Manager and consultant see all branches', (await S("(person('P-007').site)")) === 'S-JHB' && !sup.includes('INC-2026-005') && (await siteOpts()).includes('ALL') && (await p.innerText('#content')).includes('INC-2026-005'));
+    await asUser('P-002');
+  }
+
   /* ---------------- L. Company logo ---------------- */
   {
     await asUser('P-002'); await go('#/dashboard');

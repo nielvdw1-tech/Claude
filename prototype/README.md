@@ -23,6 +23,10 @@ To start again, open the user menu (top right) and choose **Reset demo data**.
 
 - **Sidebar:** organisation and branch selectors, plus the pages: Dashboard, Notifications & Tasks, Document Manager, Assets & Equipment, Inspections, Maintenance & Defects, Incident Management, Corrective Actions, Reports and Administration.
 - **Top bar:** global search (press `/`), **My tasks** (✓ icon), notifications and the user menu.
+- **Own branch only:** branch managers, supervisors and employees work in their own branch.
+  - Their branch selector is fixed, and lists, the dashboard, reports and search show that branch only, plus company-wide documents such as policies.
+  - Records from another branch stay visible to them only if they are part of the record: for example asked to approve it, owning an action on it, or investigating it. Those also appear in their tasks.
+  - The Managing Director, HSEQ Manager and Safety Consultant see all branches.
 - **Back:** every page below the main menu level has a **Back** button at the top left. It returns to the page you came from, or, if you opened the page directly (for example from a QR code), to the page above it.
 - **User menu (top right):** change your password, set which e-mails you receive (**Notification settings**), **sign out**, or, for demos, sign in as someone else in one click.
 - **Switch demo user:** use the user menu to act as someone else. Approvals and corrective actions depend on *who* you are, so this is how you see each step. Where a step belongs to someone else, the page offers **Act as current approver** or **Act as owner** to switch in one click.
@@ -298,6 +302,6 @@ prototype/
 └── README.md                     This file
 ```
 
-**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 196 workflow outcomes.
+**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 202 workflow outcomes.
 
 The earlier full HSEQ prototype, with legal, risk, people, PPE, chemicals, emergency and audits, is preserved in git history at commit `26b59bc`.
