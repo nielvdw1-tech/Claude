@@ -14,7 +14,8 @@ A clickable, working prototype focused on the three parts VDW needs most:
 
 1. Open the `prototype` folder.
 2. Double-click **`index.html`**. It opens in your browser; Chrome or Edge is recommended.
-3. You don't need to install anything, sign in or be online.
+3. You don't need to install anything or be online.
+4. **Sign in.** The sign-in page lists the demo accounts: click a person to sign in as them. Every demo account uses the password **demo1234**. You can also type the e-mail address and password.
 
 To start again, open the user menu (top right) and choose **Reset demo data**.
 
@@ -22,6 +23,7 @@ To start again, open the user menu (top right) and choose **Reset demo data**.
 
 - **Sidebar:** organisation and branch selectors, plus the pages: Dashboard, Notifications & Tasks, Document Manager, Assets & Equipment, Inspections, Maintenance & Defects, Incident Management, Corrective Actions, Reports and Administration.
 - **Top bar:** global search (press `/`), **My tasks** (✓ icon), notifications and the user menu.
+- **User menu (top right):** change your password, set which e-mails you receive (**Notification settings**), **sign out**, or, for demos, sign in as someone else in one click.
 - **Switch demo user:** use the user menu to act as someone else. Approvals and corrective actions depend on *who* you are, so this is how you see each step. Where a step belongs to someone else, the page offers **Act as current approver** or **Act as owner** to switch in one click.
 
 | Demo user | Role | Typical part in the demos |
@@ -167,23 +169,42 @@ Other pages are closed to employees. An inspection can only be started from the 
 - Use the **Branch / site** selector to scope everything to one branch. **Reports → Branch comparison** shows them side by side.
 - **Notifications & Tasks → My tasks** shows each person their own work: documents awaiting their approval, actions to complete or verify, inspections due and investigations.
 
+### E. Built-in controls (towards going live)
+- **Sign-in and accounts** (Administration → Users & roles):
+  - Administrators **add users**, who get a temporary password and must choose their own at first sign-in.
+  - Administrators can **reset passwords** and **deactivate** people who leave. Deactivated people can't sign in and aren't offered as owners or approvers. Before deactivating, the system warns about the person's open work.
+  - Five wrong passwords lock an account for 15 minutes.
+- **Locked records and amendments:** closed incidents, verified or closed corrective actions and submitted inspections are **locked**. Corrections are added as **amendments** with a reason, and the original stays unchanged.
+- **Tamper-evident audit trail** (Administration → Audit trail):
+  - Every event is chained to the one before it, and every locked record has a fingerprint.
+  - **Check integrity** shows whether anything was changed or removed. A demo button tampers with a closed incident so you can see it detected; a changed record is also flagged on its own page.
+- **E-mail outbox:**
+  - Everything the live system would e-mail is recorded with its recipient and full text: approvals, assignments, verification requests, returned evidence, escalations, defect reviews, out-of-service assets, notices, safety alerts and account changes.
+  - Each person sees theirs under **Notifications & Tasks → My e-mail**, and administrators see all of them under **Administration → E-mail outbox**.
+  - People choose which e-mails they get under **Notification settings**. **Nothing is actually sent.**
+- **Backup and restore** (Administration → Backup & data):
+  - One file holds all records and all uploaded files, with a checksum.
+  - Restoring shows what is in the backup first. A damaged or edited backup, or one from another version, is refused.
+  - Use it to keep a copy or to move the prototype to another computer. The online preview blocks downloads, so make backups from the folder copy.
+
 ## 4. What works and what is simulated
 
 | Works in the browser | Simulated / not provided |
 |---|---|
 | Upload form with file selection, sequential approval routes, return / reject / resubmit, issue, revisions; **in-app viewing of PDFs, images and text files** | **Files:** kept in this browser only (up to 20 MB each); Word/Excel files have no in-app preview |
 | Asset register, QR pages, type-specific certificates, scheduled inspections, controlled templates, defects, out-of-service control | **QR codes:** a simulated pattern and a "scan" dialog |
-| Corrective actions with owner workflow, evidence, independent verification, rejection, reopening, escalation | **Sign-in & security:** user switching is a demo; permissions are applied in the browser only |
-| Incident reporting, investigation, root cause, actions, closure | **Email / SMS:** in-app notifications only |
-| Dashboard, task centre, reports (print + CSV), administration incl. approval routes | **Audit trail:** kept in browser storage and editable |
+| Corrective actions with owner workflow, evidence, independent verification, rejection, reopening, escalation | **Sign-in & security:** sign-in, passwords and permissions are checked in the browser only, so they are not secure |
+| Incident reporting, investigation, root cause, actions, closure | **Email / SMS:** e-mails are written to an outbox but not sent; no SMS |
+| Dashboard, task centre, reports (print + CSV), administration incl. approval routes | **Audit trail:** hash-chained so changes are detected, but kept in the browser, where someone could rebuild it |
+| Sign-in with accounts, locked records with amendments, tamper-evident audit trail, e-mail outbox, backup and restore | **Backups:** made by hand; the live system backs up automatically |
 
 ## 5. Next steps for production
 
 1. Move the data into the Supabase database. The existing app in `/app` and `/supabase` already has tables for assets, inspections, corrective actions and documents.
-2. Add real sign-in, with server-side permissions per organisation, branch and role.
+2. Move sign-in to a secure server (the prototype shows the flow), with server-side permissions per organisation, branch and role.
 3. Store documents and evidence securely, with version history.
-4. Send approval and action notifications by email.
-5. Keep a server-side audit trail that can't be altered.
+4. Send the e-mails that the prototype writes to its outbox, from the server.
+5. Keep the audit trail on the server, signed and out of users' reach (the prototype shows the hash chain and locked records).
 6. Add electronic signatures on approvals.
 7. Generate printable QR labels.
 8. Support offline mobile inspections.
@@ -197,6 +218,10 @@ prototype/
 ├── data.js                       Fictional demonstration data (seed)
 ├── app.js                        Core: state, routing, layout, notifications & tasks,
 │                                 corrective-action workflow, dashboard
+├── mod-auth.js                   Sign-in (simulated): accounts, passwords, deactivation
+├── mod-audit.js                  Locked records, amendments, hash-chained audit trail
+├── mod-mail.js                   E-mail outbox (simulated) and notification settings
+├── mod-backup.js                 Backup and restore of all records and stored files
 ├── mod-documents.js              Document control & sequential approval routes
 ├── mod-operations.js             Assets, QR pages, maintenance & defects
 ├── mod-inspections-incidents.js  Inspections, controlled templates & print report, incidents
@@ -210,6 +235,6 @@ prototype/
 └── README.md                     This file
 ```
 
-**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 134 workflow outcomes.
+**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 156 workflow outcomes.
 
 The earlier full HSEQ prototype, with legal, risk, people, PPE, chemicals, emergency and audits, is preserved in git history at commit `26b59bc`.

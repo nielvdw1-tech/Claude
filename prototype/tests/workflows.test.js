@@ -566,6 +566,29 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     ok('EM4 administrators see every queued e-mail in the outbox', (await p.$$eval('#content tr.rowlink', e => e.length)) > 0 && (await p.innerText('#content')).includes('Nothing is sent from the prototype'));
   }
 
+  /* ---------------- BK. Backup and restore ---------------- */
+  {
+    const fs = require('fs');
+    await asUser('P-002'); await go('#/admin/data');
+    const [dl] = await Promise.all([p.waitForEvent('download'), p.click('[data-act=backupDownload]')]);
+    const bpath = path.join(os.tmpdir(), 'vdw_backup_test.json'); await dl.saveAs(bpath); await p.waitForTimeout(150);
+    const bk = JSON.parse(fs.readFileSync(bpath, 'utf8'));
+    const nActs = await S('S.actions.length'), nFiles = Object.keys(bk.files).length;
+    ok('BK1 a full backup holds all records and the stored files, with a checksum', bk.format === 'vdw-hseq-backup' && bk.data.actions.length === nActs && nFiles > 0 && /^[0-9a-f]{64}$/.test(bk.checksum), `${nFiles} file(s)`);
+    const restore = async (file) => { const [fc] = await Promise.all([p.waitForEvent('filechooser'), p.click('[data-act=backupRestore]')]); await fc.setFiles(file); await p.waitForTimeout(300); };
+    const bad = JSON.parse(JSON.stringify(bk)); bad.data.actions[0].title = 'Edited outside the system'; const badPath = path.join(os.tmpdir(), 'vdw_backup_bad.json'); fs.writeFileSync(badPath, JSON.stringify(bad));
+    await restore(badPath); const badMsg = await p.innerText('.modal'); await p.keyboard.press('Escape');
+    const old = JSON.parse(JSON.stringify(bk)); old.dataVersion = 1; const oldPath = path.join(os.tmpdir(), 'vdw_backup_old.json'); fs.writeFileSync(oldPath, JSON.stringify(old));
+    await restore(oldPath); const oldMsg = await p.innerText('.modal'); await p.keyboard.press('Escape');
+    ok('BK2 a damaged or edited backup, or one from another version, is refused', badMsg.includes('changed or damaged') && oldMsg.includes('different version') && (await S('S.actions.length')) === nActs);
+    await go('#/actions'); await btn('New action'); await mbtn('Continue'); await p.waitForTimeout(100);
+    await mfill('title', 'Added after the backup'); await mfill('action', 'Test.'); await msel('owner', 'P-007'); await mbtn('Raise action');
+    await S('idbClear()'); await go('#/admin/data');
+    await restore(bpath); const summary = await p.innerText('.modal'); await mbtn('Replace everything with this backup'); await p.waitForTimeout(800);
+    const blob = await S(`(async () => { const id = [...referencedBlobs(S)][0]; return !!(await idbGet(id)); })()`);
+    ok('BK3 restoring shows what is in the backup, then brings back the records and the stored files', summary.includes('verified') && (await S('S.actions.length')) === nActs && !(await S("S.actions.some(a => a.title === 'Added after the backup')")) && blob && (await S('S.ui.user')) === 'P-002');
+  }
+
   /* ---------------- L. Company logo ---------------- */
   {
     await asUser('P-002'); await go('#/dashboard');
