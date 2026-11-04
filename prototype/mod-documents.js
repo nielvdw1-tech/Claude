@@ -112,7 +112,7 @@ function docDetail(id) {
   if (st === 'Issued for Use') { btn('doc.create', 'docReviewed', 'Record periodic review'); btn('doc.create', 'docNewRevision', 'Start new revision', 'primary'); btn('doc.issue', 'docObsolete', 'Make obsolete', 'danger'); }
   if (st === 'Obsolete') btn('doc.issue', 'docArchive', 'Archive');
   if (latest.file) B.unshift(`<button class="btn ${isApprover ? 'primary' : ''}" data-act="viewDocFile" data-id="${d.id}">${icon('eye', 'sm')} Open document</button>`);
-  if (latest.file) B.splice(1, 0, `<button class="btn" data-act="printDocFile" data-id="${d.id}" title="Print ${esc(latest.file.name)}">${icon('print', 'sm')} Print</button>`);
+  if (latest.file) B.splice(1, 0, `<button class="btn" data-act="printDocFile" data-id="${d.id}" title="Print ${esc(latest.file.name)}">${icon('print', 'sm')} Print</button>`, `<button class="btn" data-act="downloadDocFile" data-id="${d.id}" title="Download a stamped copy of ${esc(latest.file.name)}">${icon('download', 'sm')} Download</button>`);
   if (issued && issued !== latest && issued.file) B.unshift(`<button class="btn" data-act="viewDocFile" data-id="${d.id}" data-ri="${d.revisions.indexOf(issued)}">${icon('eye', 'sm')} Open ${revLabel(issued)} (in use)</button>`);
   const rel = docRelated(d);
   const allHist = [];

@@ -703,6 +703,39 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     ok('RS2 the reviewer signature is stored, shown on the record and printed, and the locked record stays intact', rec.st === 'Reviewed' && rec.sig && rec.by === 'P-002' && page && printed && intact);
   }
 
+  /* ---------------- ST. Stamped downloads of controlled documents ---------------- */
+  {
+    const fs = require('fs');
+    const pdfText = async (file) => p.evaluate(async (b64) => {   // read the downloaded PDF back with PDF.js
+      const lib = await ensurePdfJs(); const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+      const pdf = await lib.getDocument({ data: bytes, isEvalSupported: false }).promise; let t = '';
+      for (let i = 1; i <= pdf.numPages; i++) { const tc = await (await pdf.getPage(i)).getTextContent(); t += tc.items.map(x => x.str).join(' ') + '\n'; }
+      return { pages: pdf.numPages, text: t };
+    }, fs.readFileSync(file).toString('base64'));
+    await asUser('P-002'); await go('#/documents/DOC-001');
+    const [d1] = await Promise.all([p.waitForEvent('download'), p.click('.sh-actions [data-act=downloadDocFile]')]);
+    const f1 = path.join(os.tmpdir(), 'vdw_st1.pdf'); await d1.saveAs(f1); await p.waitForTimeout(200);
+    const t1 = await pdfText(f1);
+    ok('ST1 downloading an issued document gives a PDF stamped UNCONTROLLED WHEN PRINTED, with number, revision and who downloaded it', /_UNCONTROLLED\.pdf$/.test(d1.suggestedFilename()) && t1.text.includes('UNCONTROLLED WHEN PRINTED') && t1.text.includes('KIE-POL-001') && t1.text.includes('Johan van Wyk'), d1.suggestedFilename());
+    // A real PDF on a draft revision: every page keeps its content and gets the DRAFT stamp
+    const did = await S(`(async () => {
+      const { PDFDocument, StandardFonts } = await ensurePdfLib(); const pdf = await PDFDocument.create(); const f = await pdf.embedFont(StandardFonts.Helvetica);
+      for (let k = 1; k <= 2; k++) pdf.addPage([595, 842]).drawText('Original page ' + k, { x: 60, y: 600, size: 14, font: f });
+      const meta = storeFile(new File([await pdf.save()], 'draft-procedure.pdf', { type: 'application/pdf' })); await FILE_PENDING[meta.blobId];
+      const d = S.documents.find(x => docStatus(x) === 'In Approval'); docLatest(d).file = meta; save(); return d.id; })()`);
+    await go('#/documents/' + did);
+    const [d2] = await Promise.all([p.waitForEvent('download'), p.click('.sh-actions [data-act=downloadDocFile]')]);
+    const f2 = path.join(os.tmpdir(), 'vdw_st2.pdf'); await d2.saveAs(f2); await p.waitForTimeout(200);
+    const t2 = await pdfText(f2);
+    ok('ST2 a draft PDF keeps every page and is stamped DRAFT — NOT FOR USE on each page', /_DRAFT\.pdf$/.test(d2.suggestedFilename()) && t2.pages === 2 && t2.text.includes('Original page 1') && t2.text.includes('Original page 2') && (t2.text.match(/DRAFT — NOT FOR USE/g) || []).length === 2, `${t2.pages} pages`);
+    ok('ST3 each download is recorded in the document history', await S(`docLatest(byId('documents','${did}')).history.some(h => h.action.startsWith('Draft downloaded'))`));
+    await S(`(async () => { const meta = storeFile(new File(['word content'], 'procedure.docx', { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' })); await FILE_PENDING[meta.blobId]; docLatest(byId('documents','${did}')).file = meta; save(); })()`);
+    await go('#/documents/' + did); await p.click('.sh-actions [data-act=downloadDocFile]'); await p.waitForTimeout(150);
+    const warn = await p.innerText('.modal');
+    const [d3] = await Promise.all([p.waitForEvent('download'), p.click('.modal-foot button:has-text("Download")')]);
+    ok('ST4 a Word file cannot be stamped: the user is told, and the file name says DRAFT/UNCONTROLLED', warn.includes('cannot be added') && /_DRAFT\.docx$/.test(d3.suggestedFilename()), d3.suggestedFilename());
+  }
+
   /* ---------------- L. Company logo ---------------- */
   {
     await asUser('P-002'); await go('#/dashboard');

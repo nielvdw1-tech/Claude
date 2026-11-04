@@ -125,7 +125,7 @@ async function openFileViewer(o) {
   if (!blob) return msg('alert', 'The file content is not available in this browser. It may have been added in another browser, or the browser storage was cleared. Upload the file again to view it here.');
   const url = URL.createObjectURL(blob);
   const embedded = (() => { try { return window.self !== window.top; } catch (e) { return true; } })();   // downloads are blocked inside the hosted preview
-  foot.innerHTML = `${icon('lock', 'sm')} Kept in this browser only (prototype) · ${fsize(blob.size)}${embedded ? '' : ` · <a href="${url}" download="${esc(o.name)}">Download</a>`}`;
+  foot.innerHTML = `${icon('lock', 'sm')} Kept in this browser only (prototype) · ${fsize(blob.size)}${o.doc ? ` · <button type="button" class="link-btn" data-act="downloadDocFile" data-id="${esc(o.doc)}" data-ri="${esc(o.ri)}">Download stamped copy</button>` : embedded ? '' : ` · <a href="${url}" download="${esc(o.name)}">Download</a>`}`;   // controlled documents only leave the system stamped
   try {
     if (kind === 'pdf') { box.innerHTML = `<div class="fv-msg">${icon('clock')} Rendering PDF…</div>`; await renderPdf(blob, box); }
     else if (kind === 'image') box.innerHTML = `<div class="fv-img"><img src="${url}" alt="${esc(o.name)}"></div>`;
