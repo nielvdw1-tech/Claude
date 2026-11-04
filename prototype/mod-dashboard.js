@@ -120,39 +120,44 @@ function dataTable(head, rows) {
   return `<details class="viz-table"><summary>Data table</summary><div class="table-wrap"><table class="tbl compact"><thead><tr>${head.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${r.map(c => `<td>${esc(String(c))}</td>`).join('')}</tr>`).join('')}</tbody></table></div></details>`;
 }
 
-/* ---------------- Line chart (two series, drawn after mount at the real width) ---------------- */
-const LINE = { data: null };
-function drawLineChart() {
-  const box = document.getElementById('lcActions'); if (!box || !LINE.data) return;
-  const { months, series } = LINE.data, W = Math.max(280, box.clientWidth), H = 220, L = 30, R = 96, T = 14, B = 26;
-  const max = niceMax(Math.max(1, ...series.flatMap(s => s.vals))), n = months.length;
+/* ---------------- Line charts (drawn after mount at the real width) ----------------
+   LINES[boxId] = { months, series: [{ name, short, v: '--css-var', vals: [number|null] }], aria, max?, ref?: { v, label } }
+   A null value is a month without data: the line breaks there. */
+const LINES = {};
+function drawLine(id) {
+  const box = document.getElementById(id), D = LINES[id]; if (!box || !D) return;
+  const { months, series } = D, W = Math.max(280, box.clientWidth), H = 220, L = 30, R = 96, T = 14, B = 26;
+  const all = series.flatMap(s => s.vals).filter(v => v != null), max = D.max || niceMax(Math.max(1, ...all)), n = months.length;
   const x = k => L + (k * (W - L - R)) / (n - 1), y = v => T + (1 - v / max) * (H - T - B);
-  const path = s => s.vals.map((v, k) => `${k ? 'L' : 'M'}${x(k).toFixed(1)},${y(v).toFixed(1)}`).join('');
-  const ends = series.map(s => ({ s, yy: y(s.vals[n - 1]) }));
-  if (Math.abs(ends[0].yy - ends[1].yy) < 14) { const mid = (ends[0].yy + ends[1].yy) / 2, up = ends[0].yy <= ends[1].yy ? 0 : 1; ends[up].ly = mid - 8; ends[1 - up].ly = mid + 8; }
-  box.innerHTML = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" tabindex="0" role="img" aria-label="${esc(LINE.data.aria)}. Use the left and right arrow keys to read each month.">
+  const path = s => s.vals.map((v, k) => v == null ? '' : `${k && s.vals[k - 1] != null ? 'L' : 'M'}${x(k).toFixed(1)},${y(v).toFixed(1)}`).join('');
+  const lastIdx = s => { for (let k = n - 1; k >= 0; k--) if (s.vals[k] != null) return k; return -1; };
+  const ends = series.map(s => ({ s, k: lastIdx(s) })).filter(e => e.k >= 0).map(e => Object.assign(e, { yy: y(e.s.vals[e.k]) }));
+  if (ends.length === 2 && Math.abs(ends[0].yy - ends[1].yy) < 14) { const mid = (ends[0].yy + ends[1].yy) / 2, up = ends[0].yy <= ends[1].yy ? 0 : 1; ends[up].ly = mid - 8; ends[1 - up].ly = mid + 8; }
+  box.innerHTML = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" tabindex="0" role="img" aria-label="${esc(D.aria)}. Use the left and right arrow keys to read each month.">
     ${[0, max / 2, max].map(t => `<line class="lc-grid" x1="${L}" x2="${W - R}" y1="${y(t)}" y2="${y(t)}"/><text class="lc-tick" x="${L - 6}" y="${y(t) + 4}" text-anchor="end">${t}</text>`).join('')}
+    ${D.ref ? `<line class="lc-ref" x1="${L}" x2="${W - R}" y1="${y(D.ref.v)}" y2="${y(D.ref.v)}"/><text class="lc-ref-t" x="${W - R + 6}" y="${y(D.ref.v) + 4}">${esc(D.ref.label)}</text>` : ''}
     ${months.map((m, k) => k % 2 === (n - 1) % 2 ? `<text class="lc-tick" x="${x(k)}" y="${H - 8}" text-anchor="middle">${monthLabel(m, m.endsWith('-01') || k === 0)}</text>` : '').join('')}
     ${series.map(s => `<path class="lc-line" d="${path(s)}" style="stroke:var(${s.v})"/>`).join('')}
-    <line class="lc-cross" id="lcCross" y1="${T}" y2="${H - B}" x1="-10" x2="-10"/>
-    ${series.map((s, i) => `<circle class="lc-dot" id="lcDot${i}" r="4" cx="-10" cy="-10" style="fill:var(${s.v})"/>`).join('')}
-    ${ends.map(e => `<circle class="lc-dot" r="4" cx="${x(n - 1)}" cy="${e.yy}" style="fill:var(${e.s.v})"/><text class="lc-end" x="${x(n - 1) + 8}" y="${(e.ly || e.yy) + 4}">${e.s.vals[n - 1]} ${esc(e.s.short)}</text>`).join('')}
+    <line class="lc-cross" y1="${T}" y2="${H - B}" x1="-10" x2="-10"/>
+    ${series.map((s, i) => `<circle class="lc-dot lc-hov" data-i="${i}" r="4" cx="-10" cy="-10" style="fill:var(${s.v})"/>`).join('')}
+    ${ends.map(e => `<circle class="lc-dot" r="4" cx="${x(e.k)}" cy="${e.yy}" style="fill:var(${e.s.v})"/><text class="lc-end" x="${x(e.k) + 8}" y="${(e.ly || e.yy) + 4}">${e.s.vals[e.k]}${esc(e.s.unit || '')} ${esc(e.s.short)}</text>`).join('')}
     <rect class="lc-hit" x="${L}" y="${T}" width="${W - L - R}" height="${H - T - B}"/>
   </svg>`;
-  const svg = box.querySelector('svg'), hit = svg.querySelector('.lc-hit');
+  const svg = box.querySelector('svg'), hit = svg.querySelector('.lc-hit'), cross = svg.querySelector('.lc-cross');
   const show = (k) => {
-    k = Math.max(0, Math.min(n - 1, k)); LINE.k = k;
-    const cx = x(k); svg.querySelector('#lcCross').setAttribute('x1', cx); svg.querySelector('#lcCross').setAttribute('x2', cx);
-    series.forEach((s, i) => { const d = svg.querySelector('#lcDot' + i); d.setAttribute('cx', cx); d.setAttribute('cy', y(s.vals[k])); });
-    const r = svg.getBoundingClientRect(), el = { dataset: { tip: JSON.stringify([[monthLabel(months[k], true), ''], ...series.map(s => [String(s.vals[k]), s.name, s.v])]) } };
+    k = Math.max(0, Math.min(n - 1, k)); D.k = k;
+    const cx = x(k); cross.setAttribute('x1', cx); cross.setAttribute('x2', cx);
+    series.forEach((s, i) => { const d = svg.querySelector(`.lc-hov[data-i="${i}"]`); if (s.vals[k] == null) d.setAttribute('cx', -10); else { d.setAttribute('cx', cx); d.setAttribute('cy', y(s.vals[k])); } });
+    const r = svg.getBoundingClientRect(), el = { dataset: { tip: JSON.stringify([[monthLabel(months[k], true), (D.note && D.note(k)) || ''], ...series.map(s => [s.vals[k] == null ? '—' : String(s.vals[k]) + (s.unit || ''), s.vals[k] == null ? s.name + ' · no data' : s.name, s.v])]) } };
     vizTipShow(el, r.left + cx, r.top + T);
   };
   hit.addEventListener('pointermove', e => { const r = svg.getBoundingClientRect(); show(Math.round(((e.clientX - r.left - L) / (W - L - R)) * (n - 1))); });
-  hit.addEventListener('pointerleave', () => { vizTipHide(); svg.querySelector('#lcCross').setAttribute('x1', -10); svg.querySelector('#lcCross').setAttribute('x2', -10); series.forEach((s, i) => svg.querySelector('#lcDot' + i).setAttribute('cx', -10)); });
-  svg.addEventListener('keydown', e => { if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); show((LINE.k == null ? n - 1 : LINE.k) + (e.key === 'ArrowRight' ? 1 : -1)); } });
-  svg.addEventListener('focus', () => show(LINE.k == null ? n - 1 : LINE.k));
+  hit.addEventListener('pointerleave', () => { vizTipHide(); cross.setAttribute('x1', -10); cross.setAttribute('x2', -10); svg.querySelectorAll('.lc-hov').forEach(d => d.setAttribute('cx', -10)); });
+  svg.addEventListener('keydown', e => { if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); show((D.k == null ? n - 1 : D.k) + (e.key === 'ArrowRight' ? 1 : -1)); } });
+  svg.addEventListener('focus', () => show(D.k == null ? n - 1 : D.k));
   svg.addEventListener('blur', vizTipHide);
 }
+function drawLineChart() { Object.keys(LINES).forEach(drawLine); }
 let LINE_RESIZE = null;
 window.addEventListener('resize', () => { clearTimeout(LINE_RESIZE); LINE_RESIZE = setTimeout(drawLineChart, 120); });
 
@@ -200,6 +205,8 @@ function quickLinks() {
 
 /* ---------------- The page ---------------- */
 ROUTES.dashboard = () => {
+  recordScoreHistory();   // month-to-date snapshot for the trend
+  Object.keys(LINES).forEach(k => delete LINES[k]);
   const sid = S.ui.site, comp = compliance(sid), drv = partDrivers(sid), months = last12Months();
   const branchRows = orgSites().map(s => ({ s, c: compliance(s.id) }));
 
@@ -229,8 +236,7 @@ ROUTES.dashboard = () => {
   const ltiIds = k => lti12.filter(i => i.date.startsWith(months[k])).map(i => [i.id, `${i.injury.daysLost} shift(s) lost`]);
   const raised = months.map(m => acts.filter(a => (a.created || '').startsWith(m)).length);
   const done = months.map(m => acts.filter(a => (actionDoneDate(a) || '').startsWith(m)).length);
-  LINE.data = { months, aria: 'Corrective actions raised and completed per month, last 12 months', series: [{ name: 'Raised', short: 'raised', v: '--viz-1', vals: raised }, { name: 'Completed (verified)', short: 'completed', v: '--viz-2', vals: done }] };
-  LINE.k = null;
+  LINES.lcActions = { months, aria: 'Corrective actions raised and completed per month, last 12 months', series: [{ name: 'Raised', short: 'raised', v: '--viz-1', vals: raised }, { name: 'Completed (verified)', short: 'completed', v: '--viz-2', vals: done }] };
   const dueParts = [
     { label: 'On time', cls: 'good', icon: 'checkCircle', n: open.filter(a => daysTo(a.due) > 7).length, href: '#/actions?status=open' },
     { label: 'Due within 7 days', cls: 'warn', icon: 'clock', n: open.filter(a => daysTo(a.due) >= 0 && daysTo(a.due) <= 7).length, href: '#/actions?status=open' },
@@ -248,6 +254,7 @@ ROUTES.dashboard = () => {
       <div class="cs-k">Overall control score</div>
       <div class="cs-pie-row">${scorePie(comp.overall, 150, 'Overall control score')}</div>
       <div class="cs-center">${statusChip(comp.overall)}</div>
+      ${scoreDelta(sid)}
       <p class="cs-note">${esc(scopeLabel())} · weighted from the four areas (Administration → Control scoring). Indicative, from demonstration data.</p>
     </div></div>
     ${Object.keys(comp.parts).map(k => { const v = comp.parts[k], d = drv[k]; return `<button class="card cs-part st-edge-${band(v).cls}" data-act="go" data-href="${PART_LINKS[k]}">
@@ -267,6 +274,8 @@ ROUTES.dashboard = () => {
   <div class="viz-legend pad">${Object.values(STATUS_BAND).map(x => `<span class="st-chip st-${x.cls}">${icon(x.icon, 'sm')}${x.label}</span>`).join('')}<span class="muted">On track 85% and above · Needs attention 70–84% · At risk below 70%</span></div>
   ${S.ui.site !== 'ALL' ? `<div class="pad"><button class="btn sm" data-act="focusSite" data-site="ALL">${icon('building', 'sm')} Return to organisation-wide view</button></div>` : ''}
   </div></div>
+
+  ${scoreHistoryCard(sid)}
 
   <h3 class="dash-sec">${icon('chart', 'sm')} Trends — last 12 months</h3>
   <div class="grid g2 mb">
@@ -301,7 +310,7 @@ ROUTES.dashboard = () => {
   </div></div>
   <div class="grid g2 mb">
     <div class="card"><div class="card-head"><h2>Corrective actions raised and completed</h2><span class="ch-sub">Per month · completed = verified</span></div><div class="card-body">
-      <div class="viz-legend">${LINE.data.series.map(s => `<span><i class="lg-line" style="background:var(${s.v})"></i>${esc(s.name)}</span>`).join('')}</div>
+      <div class="viz-legend">${LINES.lcActions.series.map(s => `<span><i class="lg-line" style="background:var(${s.v})"></i>${esc(s.name)}</span>`).join('')}</div>
       <div id="lcActions" class="lc"></div>
       ${dataTable(['Month', 'Raised', 'Completed'], months.map((m, k) => [monthLabel(m, true), raised[k], done[k]]))}
     </div></div>

@@ -455,7 +455,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await p.click('.pad [data-act=focusSite][data-site="ALL"]'); await p.waitForTimeout(250);
     const openActs = await S("S.actions.filter(a => a.org === S.ui.org && actionOpen(a)).length");
     const segTotal = await p.$$eval('.seg em', e => e.reduce((a, x) => a + Number(x.textContent), 0));
-    ok('DB4 the 12-month charts render with data tables', (await p.$$eval('.vc-col', e => e.length)) === 48 && (await p.$$eval('#lcActions .lc-line', e => e.length)) === 2 && segTotal === openActs && (await p.$$eval('.viz-table', e => e.length)) === 5, `${segTotal} of ${openActs} open`);
+    ok('DB4 the 12-month charts render with data tables', (await p.$$eval('.vc-col', e => e.length)) === 48 && (await p.$$eval('#lcActions .lc-line', e => e.length)) === 2 && segTotal === openActs && (await p.$$eval('.viz-table', e => e.length)) === 6, `${segTotal} of ${openActs} open`);
     const cols = await p.$$('.vc-col'); await cols[cols.length - 1].scrollIntoViewIfNeeded(); await p.waitForTimeout(150); await cols[cols.length - 1].hover(); await p.waitForTimeout(120);
     ok('DB5 hovering a column shows a tooltip with the month and value', await p.$eval('#vizTip', e => e.style.display === 'block' && /[0-9]/.test(e.textContent)).catch(() => false));
     const lti = await S("(() => { const all = S.incidents.filter(i => i.org === S.ui.org && injClass(i) === 'Lost Time Injury').sort((a, b) => a.date.localeCompare(b.date)); const last = all[all.length - 1]; return { n12: all.filter(i => i.date.slice(0, 7) >= last12Months()[0]).length, since: last ? -daysTo(last.date) : null, id: last && last.id }; })()");
@@ -671,6 +671,18 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     const f2 = await S(`ltifr('ALL', '${lm}')`);
     ok('HW4 the LTIFR base can be 200 000 or 1 000 000 hours', Math.abs(f2.value - f.value * 5) < 0.02, `${f.value} → ${f2.value}`);
     await S("(S.config.ltifrBase = 200000, save())");
+  }
+
+  /* ---------------- SH. Control score history ---------------- */
+  {
+    await asUser('P-001'); await S("(S.ui.site = 'ALL', save())"); await go('#/dashboard'); await p.waitForTimeout(300);
+    const cur = await S("S.scoreHistory[S.ui.org][TODAY.slice(0, 7)].ALL.overall"), live = await S("compliance('ALL').overall");
+    const pts = await S("scoreSeries('ALL', monthsBack(12)).filter(Boolean).length"), demo = await S("monthsBack(12).filter(scoreDemoMonth).length");
+    ok('SH1 the control score is kept as a monthly snapshot; this month matches the live score', cur === live && pts === 12 && demo === 11, `${live}%`);
+    ok('SH2 the dashboard shows a 12-month score trend (demo months labelled) and the change since last month', (await p.$$eval('#lcScore .lc-line', e => e.length)) === 1 && (await p.innerText('#content')).includes('fictional demonstration history') && /since [A-Z][a-z]{2} \d{2}/.test(await p.innerText('.cs-hero')));
+    await p.click('.tbl.hm [data-act=focusSite][data-site="S-DBN"]'); await p.waitForTimeout(250);
+    ok('SH3 the trend follows the branch selected', (await S("S.scoreHistory[S.ui.org][TODAY.slice(0, 7)]['S-DBN'].overall")) === (await S("compliance('S-DBN').overall")) && (await p.innerText('#content')).includes('Pinetown'));
+    await S("(S.ui.site = 'ALL', save())");
   }
 
   /* ---------------- L. Company logo ---------------- */
