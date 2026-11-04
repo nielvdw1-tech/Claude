@@ -224,6 +224,7 @@ Who sees what:
 - **Hours worked and LTIFR** (Administration → Hours worked):
   - Enter hours worked per branch per month. Administrators get a task when last month is missing.
   - The dashboard's LTI section shows the **rolling 12-month LTI frequency rate** per 200 000 hours (or 1 000 000, your choice), with a trend chart. Months without hours show as gaps.
+  - The **Previous year** button next to the chart adds an orange line with the rolling LTIFR for the same months a year earlier; click it again to hide it.
 - **Control score history:**
   - The score is saved every month for the company and each branch.
   - The dashboard shows a **12-month trend** against the "on track" level, and the change since last month.
@@ -302,6 +303,6 @@ prototype/
 └── README.md                     This file
 ```
 
-**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 202 workflow outcomes.
+**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 204 workflow outcomes.
 
 The earlier full HSEQ prototype, with legal, risk, people, PPE, chemicals, emergency and audits, is preserved in git history at commit `26b59bc`.

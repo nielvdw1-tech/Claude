@@ -203,6 +203,8 @@ function quickLinks() {
   }).join('')}</nav>`;
 }
 
+ACT.ltifrCompare = () => { S.ui.ltifrCompare = !S.ui.ltifrCompare; save(); rerender(); };   // show / hide the previous year's LTIFR line
+
 /* ---------------- The page ---------------- */
 ROUTES.dashboard = () => {
   recordScoreHistory();   // month-to-date snapshot for the trend
@@ -303,12 +305,14 @@ ROUTES.dashboard = () => {
       <div><h4>LTIs per month</h4>${columnChart(months, ltiPerMonth, { unit: 'LTIs', aria: `Lost time injuries per month: ${months.map((m, k) => `${monthLabel(m, true)} ${ltiPerMonth[k]}`).join(', ')}`, href: '#/incidents?type=Injury', detail: ltiIds })}</div>
       <div><h4>Shifts lost per month</h4>${columnChart(months, shiftsPerMonth, { unit: 'shifts lost', aria: `Shifts lost to lost time injuries per month: ${months.map((m, k) => `${monthLabel(m, true)} ${shiftsPerMonth[k]}`).join(', ')}`, href: '#/incidents?type=Injury', detail: ltiIds })}</div>
     </div>
-    ${(() => { const fm = monthsBack(12, prevMonth(TODAY.slice(0, 7))), fr = fm.map(m => ltifr(sid, m)), gaps = fr.filter(f => f.value == null).length;
+    ${(() => { const fm = monthsBack(12, prevMonth(TODAY.slice(0, 7))), fr = fm.map(m => ltifr(sid, m)), gaps = fr.filter(f => f.value == null).length, cmp = !!S.ui.ltifrCompare;
+      const yearAgo = m => monthsBack(13, m)[0], pr = cmp ? fm.map(m => ltifr(sid, yearAgo(m))) : [];
       // Line chart: a month without hours worked is a gap in the line, not a zero
       LINES.lcLtifr = { months: fm, decimal: true, aria: `Rolling 12-month LTIFR: ${fm.map((m, k) => `${monthLabel(m, true)} ${fr[k].value == null ? 'not available' : fr[k].value}`).join(', ')}`,
-        note: k => fr[k].value == null ? `hours missing for ${fr[k].missing} branch-month(s)` : `${fr[k].ltis} LTI(s) in ${fmtNum(fr[k].hours)} hours`,
-        series: [{ name: 'LTIFR', short: 'LTIFR', v: '--viz-1', vals: fr.map(f => f.value) }] };
-      return `<div class="mt"><h4>LTI frequency rate — rolling 12 months, per ${fmtNum(ltifrBase())} hours worked</h4><div id="lcLtifr" class="lc"></div>
+        note: k => (fr[k].value == null ? `hours missing for ${fr[k].missing} branch-month(s)` : `${fr[k].ltis} LTI(s) in ${fmtNum(fr[k].hours)} hours`) + (cmp ? ` · a year earlier: ${monthLabel(yearAgo(fm[k]), true)}, ${pr[k].value == null ? 'no data' : pr[k].ltis + ' LTI(s)'}` : ''),
+        series: [{ name: 'LTIFR', short: 'LTIFR', v: '--viz-1', vals: fr.map(f => f.value) }].concat(cmp ? [{ name: 'Same month, previous year', short: 'prev. year', v: '--viz-2', vals: pr.map(f => f.value) }] : []) };
+      return `<div class="mt"><div class="chart-head"><h4>LTI frequency rate — rolling 12 months, per ${fmtNum(ltifrBase())} hours worked</h4><button type="button" class="btn sm ${cmp ? 'primary' : ''}" data-act="ltifrCompare" aria-pressed="${cmp}" title="Show the line for the same months of the previous year">${icon('chart', 'sm')} Previous year</button></div>
+        ${cmp ? `<div class="viz-legend">${LINES.lcLtifr.series.map(s => `<span><i class="lg-line" style="background:var(${s.v})"></i>${esc(s.name)}</span>`).join('')}</div>` : ''}<div id="lcLtifr" class="lc"></div>
         ${gaps ? `<p class="muted mt-s">${icon('alert', 'sm')} ${gaps} month(s) cannot be calculated because hours worked are missing. <a href="#/admin/hours">Enter hours worked</a>.</p>` : ''}</div>`; })()}
     ${dataTable(['Month', 'LTIs', 'Shifts lost', 'Incidents', 'Rolling 12-month LTIFR'], months.map((m, k) => { const f = ltifr(sid, m); return [monthLabel(m, true), ltiPerMonth[k], shiftsPerMonth[k], lti12.filter(i => i.date.startsWith(m)).map(i => i.id).join(', ') || '—', f.value == null ? 'hours missing' : f.value.toFixed(2)]; }))}
   </div></div>

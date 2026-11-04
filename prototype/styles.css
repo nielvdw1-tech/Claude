@@ -978,3 +978,6 @@ body.auth-mode .main { margin-left: 0; }
 .big-actions > :only-child { grid-column: 1 / -1; }
 
 .qr-public { max-width: 560px; margin: 16px auto; padding: 0 4px; }
+
+.chart-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.chart-head h4 { margin: 0; }

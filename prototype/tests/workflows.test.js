@@ -850,6 +850,19 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await asUser('P-002');
   }
 
+  /* ---------------- PY. LTIFR compared with the previous year ---------------- */
+  {
+    await asUser('P-001'); await go('#/dashboard'); await p.waitForTimeout(250);
+    const before = await p.$$eval('#lcLtifr .lc-line', e => e.length);
+    await act('[data-act=ltifrCompare]'); await p.waitForTimeout(250);
+    const after = await p.$$eval('#lcLtifr .lc-line', e => e.length);
+    const prev = await S("(() => { const m = prevMonth(TODAY.slice(0, 7)); return { shown: LINES.lcLtifr.series[1].vals.slice(-1)[0], want: ltifr('ALL', monthsBack(13, m)[0]).value }; })()");
+    ok('PY1 a button next to the LTIFR chart adds the previous year\'s line for the same months', before === 1 && after === 2 && prev.shown === prev.want && prev.want > 0 && (await p.innerText('#ltiCard')).includes('Same month, previous year'), `previous year ${prev.want}`);
+    await act('[data-act=ltifrCompare]'); await p.waitForTimeout(250);
+    ok('PY2 clicking it again hides the previous year', (await p.$$eval('#lcLtifr .lc-line', e => e.length)) === 1 && (await p.$eval('[data-act=ltifrCompare]', e => e.getAttribute('aria-pressed'))) === 'false');
+    await asUser('P-002');
+  }
+
   /* ---------------- L. Company logo ---------------- */
   {
     await asUser('P-002'); await go('#/dashboard');
