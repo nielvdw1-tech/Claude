@@ -37,6 +37,8 @@ const PPE_SYSTEM_NAME = "PPE Management System";
 function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu("PPE Management")
+    .addItem("Refresh Dashboard", "refreshPPEDashboard")
+    .addSeparator()
     .addItem("Issue PPE", "showIssuePPESidebar")
     .addItem("Request PPE", "showPPERequestSidebar")
     .addItem("Review PPE Requests", "showPPERequestApprovalSidebar")
