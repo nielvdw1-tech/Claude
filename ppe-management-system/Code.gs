@@ -1747,7 +1747,7 @@ function setPPERequestDecision_(
  * Used by PPERequest.html and ManagerPPERequest.html.
  */
 function getPPERequestSidebarData() {
-  return {
+  const data = {
     employees:
       getActivePPEEmployees(getPPESheet_("Employees")),
 
@@ -1759,6 +1759,10 @@ function getPPERequestSidebarData() {
         getPPESheet_("PPE Issue Register")
       )
   };
+
+  // Converts anything the browser can't receive (e.g. dates)
+  // into plain text, so the form never gets empty data.
+  return JSON.parse(JSON.stringify(data));
 }
 
 function getPPEIssueHistoryForRequests(issueSheet) {
