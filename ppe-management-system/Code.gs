@@ -381,6 +381,7 @@ const PPE_EMPLOYEE_FIELDS = {
   overallJacketSize: "Overall Jacket Size",
   blackPantsSize: "Black Pants Size",
   skirtSize: "Skirt Size",
+  denimJeansSize: "Denim Jeans Size",
   gloveSize: "Glove Size",
   employeeEmail: "Employee Email"
 };
