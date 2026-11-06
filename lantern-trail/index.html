@@ -1,0 +1,836 @@
+<title>The Lantern Trail</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Patrick+Hand&display=swap">
+<style>
+/* Layout: an explorer's bedtime trail. A night-sky hero, a map of 56 trail stones in 8 expeditions,
+   and one night's page at a time, read top to bottom in the order Mom does it. */
+:root{
+  --bg:#EDF4F1; --surface:#FFFFFF; --surface-2:#E0ECE7; --ink:#1A2A40; --muted:#56667C; --line:#C7D6D0;
+  --amber:#D98A1E; --amber-soft:#FCEBCC; --on-amber:#1A2A40;
+  --forest:#2A7553; --forest-soft:#D6EDE2; --on-forest:#FFFFFF;
+  --berry:#B23A62; --sky:#2B67AA;
+  --bubble:#FFFFFF; --bubble-ink:#1A2A40; --bubble-line:#1A2A40; --bubble-cite:#2B67AA;
+  --hero:#0F1D38; --hero-2:#22386B; --hero-ink:#F4F1E6; --hero-muted:#B8C4DC;
+  --ex1:#3E9B5A; --ex2:#2F7FC1; --ex3:#8A5CC2; --ex4:#1E9AA0; --ex5:#D4802A; --ex6:#C44A72; --ex7:#C9A227; --ex8:#D2543A;
+  --talk:#2B67AA; --listen:#2A7553; --trust:#8A5CC2; --love:#B23A62;
+  --display:"Fredoka","Baloo 2","Trebuchet MS",system-ui,sans-serif;
+  --body:"Atkinson Hyperlegible",Verdana,"Segoe UI",system-ui,sans-serif;
+  --hand:"Patrick Hand","Comic Sans MS","Chalkboard SE",cursive;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0C1522; --surface:#142135; --surface-2:#1B2B45; --ink:#E7EDF6; --muted:#A0B1C8; --line:#2A3B58;
+  --amber:#FFBC52; --amber-soft:#3A2D16; --on-amber:#1A2A40;
+  --forest:#5FC493; --forest-soft:#163629; --on-forest:#0C1522;
+  --berry:#F07CA2; --sky:#7FB2EF;
+  --bubble:#FFF8E8; --bubble-ink:#1A2A40; --bubble-line:#FFBC52; --bubble-cite:#2B67AA;
+  --hero:#081123; --hero-2:#1A2C55; --hero-ink:#F4F1E6; --hero-muted:#AFBCD6;
+  --ex1:#5CC27A; --ex2:#5EA6E6; --ex3:#AE87E6; --ex4:#3CC4C9; --ex5:#F0A04E; --ex6:#EE7AA0; --ex7:#E8C24A; --ex8:#F07A5E;
+  --talk:#7FB2EF; --listen:#5FC493; --trust:#AE87E6; --love:#F07CA2;
+  color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#0C1522; --surface:#142135; --surface-2:#1B2B45; --ink:#E7EDF6; --muted:#A0B1C8; --line:#2A3B58;
+  --amber:#FFBC52; --amber-soft:#3A2D16; --on-amber:#1A2A40;
+  --forest:#5FC493; --forest-soft:#163629; --on-forest:#0C1522;
+  --berry:#F07CA2; --sky:#7FB2EF;
+  --bubble:#FFF8E8; --bubble-ink:#1A2A40; --bubble-line:#FFBC52; --bubble-cite:#2B67AA;
+  --hero:#081123; --hero-2:#1A2C55; --hero-ink:#F4F1E6; --hero-muted:#AFBCD6;
+  --ex1:#5CC27A; --ex2:#5EA6E6; --ex3:#AE87E6; --ex4:#3CC4C9; --ex5:#F0A04E; --ex6:#EE7AA0; --ex7:#E8C24A; --ex8:#F07A5E;
+  --talk:#7FB2EF; --listen:#5FC493; --trust:#AE87E6; --love:#F07CA2;
+  color-scheme:dark }
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.6}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--hero)}
+a{color:inherit}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;line-height:1.15;margin:0}
+p{margin:0}
+.gutter{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.inner{max-width:900px;margin:0 auto}
+:focus-visible{outline:3px solid var(--amber);outline-offset:3px;border-radius:6px}
+
+/* top bar */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--hero);color:var(--hero-ink);padding-block:10px}
+.bar .inner{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between}
+.brand{font-family:var(--display);font-weight:700;font-size:1.15rem;text-decoration:none;display:flex;align-items:center;gap:8px}
+.brand svg{flex:none}
+.tabs{display:flex;gap:4px;flex-wrap:wrap}
+.tabs a{text-decoration:none;font-family:var(--display);font-weight:500;font-size:.95rem;padding:6px 12px;border-radius:999px;color:var(--hero-muted)}
+.tabs a:hover{color:var(--hero-ink)}
+.tabs a[aria-current="page"]{background:var(--amber);color:var(--on-amber)}
+
+/* hero */
+.hero{background:linear-gradient(180deg,var(--hero),var(--hero-2));color:var(--hero-ink);padding-block:28px 0;overflow:hidden}
+.hero .inner{display:grid;gap:18px}
+.hero h1{font-size:clamp(2.1rem,6vw,3.4rem);font-weight:700;letter-spacing:.01em}
+.hero h1 span{color:var(--amber)}
+.hero .lede{font-size:1.1rem;color:var(--hero-muted);max-width:56ch}
+.theme-verse{font-family:var(--hand);font-size:1.35rem;color:var(--hero-ink)}
+.theme-verse small{font-family:var(--body);font-size:.8rem;color:var(--hero-muted);letter-spacing:.06em;text-transform:uppercase;margin-left:6px}
+.hero-row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.btn{display:inline-flex;align-items:center;gap:8px;font-family:var(--display);font-weight:600;font-size:1.05rem;border:0;cursor:pointer;text-decoration:none;border-radius:999px;padding:12px 22px;background:var(--amber);color:var(--on-amber)}
+.btn:hover{filter:brightness(1.06)}
+.btn.ghost{background:transparent;color:inherit;box-shadow:inset 0 0 0 2px currentColor}
+.progress{display:flex;align-items:center;gap:10px;font-size:.95rem;color:var(--hero-muted)}
+.progress .track{width:160px;max-width:40vw;height:10px;border-radius:99px;background:rgba(255,255,255,.15);overflow:hidden}
+.progress .fill{height:100%;background:var(--amber);border-radius:99px}
+.hero-art{display:block;width:100%;height:auto;max-width:100%;margin-top:6px}
+
+/* map */
+.map{padding-block:28px 56px}
+.map .inner{display:grid;gap:34px}
+.ex-head{display:grid;gap:4px;margin-bottom:12px}
+.ex-tag{font-family:var(--display);font-weight:600;font-size:.82rem;letter-spacing:.08em;text-transform:uppercase;color:var(--exc)}
+.ex-head h2{font-size:1.55rem}
+.ex-head p{color:var(--muted);font-size:.95rem;max-width:62ch}
+.stones{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.stone{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:center;text-decoration:none;background:var(--surface);border:2px solid var(--line);border-radius:16px;padding:10px 12px;min-width:0}
+.stone:hover{border-color:var(--exc)}
+.stone .num{grid-row:span 2;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:1.05rem;background:var(--surface-2);color:var(--ink)}
+.stone .st{font-family:var(--display);font-weight:500;font-size:.92rem;line-height:1.2;min-width:0}
+.stone .sg{font-size:.78rem;color:var(--muted);min-width:0}
+.stone.done{border-color:var(--exc)}
+.stone.done .num{background:var(--exc);color:var(--surface)}
+.stone.camp{border-style:dashed}
+.stone.next{box-shadow:0 0 0 3px var(--amber)}
+
+/* day page */
+.page{padding-block:24px 64px}
+.page .inner{max-width:760px;display:grid;gap:26px}
+.crumbs{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-family:var(--display);font-size:.95rem}
+.crumbs a{text-decoration:none;color:var(--muted)}
+.crumbs a:hover{color:var(--ink)}
+.day-head{display:grid;gap:6px}
+.eyebrow{font-family:var(--display);font-weight:600;font-size:.85rem;letter-spacing:.08em;text-transform:uppercase;color:var(--exc)}
+.day-head h1{font-size:clamp(1.9rem,5.5vw,2.7rem);font-weight:700}
+.ref{color:var(--muted);font-size:.95rem}
+.scene{margin:0;border-radius:22px;overflow:hidden;border:3px solid var(--exc);background:var(--surface-2);max-width:100%}
+.scene svg{display:block;width:100%;height:auto}
+.trait{display:flex;align-items:center;gap:14px;background:var(--surface);border:2px solid var(--exc);border-radius:18px;padding:14px 18px}
+.trait small{display:block;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.trait strong{font-family:var(--display);font-weight:700;font-size:1.45rem;line-height:1.2}
+.gem{flex:none}
+section.step{display:grid;gap:12px}
+.sign{justify-self:start;display:inline-flex;align-items:baseline;gap:8px;font-family:var(--display);font-weight:600;font-size:1.05rem;background:var(--forest);color:var(--on-forest);padding:6px 26px 6px 14px;clip-path:polygon(0 0,calc(100% - 14px) 0,100% 50%,calc(100% - 14px) 100%,0 100%)}
+.sign b{font-weight:700;font-size:.8rem;opacity:.8;letter-spacing:.05em}
+.tip{font-size:.9rem;color:var(--muted);font-style:italic}
+.story p{font-size:1.14rem;line-height:1.7;max-width:64ch}
+.story{gap:14px}
+.bubble{position:relative;background:var(--bubble);color:var(--bubble-ink);border:3px solid var(--bubble-line);border-radius:30px;padding:20px 24px 18px;margin:0 0 18px;max-width:600px}
+.bubble::after{content:"";position:absolute;left:44px;bottom:-22px;width:30px;height:22px;background:var(--bubble);border-right:3px solid var(--bubble-line);border-bottom:3px solid var(--bubble-line);transform:skewX(35deg);border-bottom-right-radius:6px}
+.bubble q{display:block;font-family:var(--hand);font-size:clamp(1.45rem,4.5vw,1.85rem);line-height:1.3;quotes:"\201C" "\201D"}
+.bubble cite{display:block;margin-top:8px;font-style:normal;font-family:var(--display);font-weight:600;font-size:.92rem;color:var(--bubble-cite)}
+.treasure{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.treasure li{display:grid;grid-template-columns:22px 1fr;gap:10px;align-items:start;font-size:1.05rem}
+.treasure li svg{margin-top:4px}
+.talk{margin:0;padding-left:1.3em;display:grid;gap:8px;font-size:1.05rem}
+.prayer{background:var(--forest-soft);border-radius:18px;padding:18px 22px;display:grid;gap:4px}
+.prayer .line{font-family:var(--hand);font-size:1.4rem;line-height:1.35}
+.prayer .own{margin-top:10px;font-size:.95rem;color:var(--muted)}
+.mission{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center;border:3px dashed var(--amber);border-radius:18px;padding:16px 18px;background:var(--amber-soft)}
+.mission p{font-size:1.08rem;min-width:0}
+.cbadge{display:grid;place-items:center;gap:2px;width:64px;font-family:var(--display);font-weight:600;font-size:.78rem;letter-spacing:.04em;text-transform:uppercase;color:var(--pc)}
+.collect{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;border-top:2px solid var(--line);padding-top:22px}
+.collect .btn.isdone{background:var(--forest);color:var(--on-forest)}
+.pn{display:flex;gap:10px;flex-wrap:wrap}
+.pn a{font-family:var(--display);font-weight:500;text-decoration:none;padding:8px 14px;border-radius:999px;background:var(--surface);border:2px solid var(--line)}
+.pn a:hover{border-color:var(--ink)}
+.gems{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.gems a{display:flex;gap:10px;align-items:center;text-decoration:none;background:var(--surface);border:2px solid var(--line);border-radius:14px;padding:10px 12px;min-width:0}
+.gems a span{min-width:0}
+.gems b{display:block;font-family:var(--display);font-weight:600;line-height:1.2}
+.gems small{color:var(--muted);font-size:.82rem}
+.card{background:var(--surface);border:2px solid var(--line);border-radius:18px;padding:18px 20px;display:grid;gap:10px}
+.card p{max-width:64ch}
+.invite{border-color:var(--amber)}
+.cert{text-align:center;border:4px double var(--exc);border-radius:22px;padding:26px 20px;background:var(--surface);display:grid;gap:10px;justify-items:center}
+.cert h3{font-size:1.7rem}
+.cert .nm{font-family:var(--hand);font-size:2.2rem;color:var(--exc);border-bottom:2px solid var(--line);min-width:min(260px,80%);padding:0 10px}
+.cert input{font:inherit;padding:8px 12px;border-radius:10px;border:2px solid var(--line);background:var(--bg);color:var(--ink);max-width:100%}
+.cert .row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center}
+
+/* guide + compass */
+.prose{display:grid;gap:22px}
+.prose h1{font-size:clamp(1.9rem,5vw,2.6rem)}
+.prose h2{font-size:1.4rem}
+.prose p,.prose li{max-width:66ch}
+.rhythm{list-style:none;margin:0;padding:0;display:grid;gap:10px;counter-reset:r}
+.rhythm li{counter-increment:r;display:grid;grid-template-columns:40px 1fr;gap:12px;align-items:start;background:var(--surface);border:2px solid var(--line);border-radius:14px;padding:12px 14px}
+.rhythm li::before{content:counter(r);width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--forest);color:var(--on-forest);font-family:var(--display);font-weight:700}
+.rhythm b{font-family:var(--display);font-weight:600}
+.tips{margin:0;padding-left:1.2em;display:grid;gap:8px}
+.dates{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.dates div{background:var(--surface);border:2px solid var(--line);border-radius:14px;padding:10px 12px}
+.dates b{display:block;font-family:var(--display);font-size:1.1rem}
+.dates span{font-size:.9rem;color:var(--muted)}
+.compass-wrap{display:grid;grid-template-columns:minmax(0,220px) 1fr;gap:24px;align-items:center}
+.compass-wrap svg{width:100%;height:auto;max-width:220px}
+.points{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.point{background:var(--surface);border:2px solid var(--pc);border-radius:16px;padding:14px 16px;display:grid;gap:6px}
+.point h3{font-size:1.25rem;color:var(--pc)}
+.point p{font-size:.98rem}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);font-family:var(--display);font-weight:500;padding:12px 20px;border-radius:999px;z-index:20;max-width:calc(100% - 32px);text-align:center}
+@media (max-width:640px){
+  .compass-wrap{grid-template-columns:1fr;justify-items:center}
+  .points{grid-template-columns:1fr}
+  .story p{font-size:1.08rem}
+  .mission{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:no-preference){
+  .pop{animation:pop .5s ease}
+  @keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.25) rotate(-8deg)}100%{transform:scale(1)}}
+}
+</style>
+
+<header class="bar gutter">
+  <div class="inner">
+    <a class="brand" href="#map"><svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><rect x="9" y="2" width="8" height="3" rx="1.5" fill="currentColor"/><path d="M7 7h12l-1 14H8z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="13" cy="14" r="3.5" fill="#FFBC52"/><rect x="6" y="21" width="14" height="3" rx="1.5" fill="currentColor"/></svg>The Lantern Trail</a>
+    <nav class="tabs" aria-label="Sections">
+      <a href="#map" data-tab="map">Trail Map</a>
+      <a href="#guide" data-tab="guide">For Mom</a>
+      <a href="#compass" data-tab="compass">Friendship Compass</a>
+    </nav>
+  </div>
+</header>
+<main id="app"></main>
+
+<script>
+/* ---------- EXPEDITIONS ---------- */
+const EX=[
+ {n:1,name:"The Maker's Garden",from:1,to:7,blurb:"Where it all begins: God who made the stars, the lions and you.",v:["In the beginning God created the heavens and the earth.","Genesis 1:1"]},
+ {n:2,name:"The Great Rescue Road",from:8,to:14,blurb:"Baskets, burning bushes and a path through the sea. God rescues his people.",v:["The Lord will fight for you. You only need to be still.","Exodus 14:14"]},
+ {n:3,name:"Brave Hearts Mountain",from:15,to:21,blurb:"A boy who listened, a boy who fought a giant, and lions with their mouths shut.",v:["Be strong and brave. The Lord your God will be with you wherever you go.","Joshua 1:9"]},
+ {n:4,name:"The River of Second Chances",from:22,to:28,blurb:"A giant fish, a fiery furnace, a brave queen, and a promise of a Rescuer.",v:["The Lord’s love never runs out. His kindness is new every morning.","Lamentations 3:22–23"]},
+ {n:5,name:"Walking with Jesus",from:29,to:35,blurb:"Jesus shows us exactly what God is like: calming storms and hugging children.",v:["Anyone who has seen me has seen the Father.","John 14:9"]},
+ {n:6,name:"The Friend Who Finds Me",from:36,to:42,blurb:"Lost sheep, a running father and a man up a tree. Jesus comes looking for us.",v:["The Son of Man came to look for the lost and to save them.","Luke 19:10"]},
+ {n:7,name:"The Christmas Star Trail",from:43,to:50,blurb:"Angels, a long donkey ride and a baby in a manger, all the way to Christmas Day.",v:["God loved the world so much that he gave his one and only Son.","John 3:16"]},
+ {n:8,name:"The Greatest Adventure",from:51,to:56,blurb:"The cross, the empty tomb and the mission Jesus gives to every explorer.",v:["And surely I am with you always, to the very end.","Matthew 28:20"]}
+];
+const CP={T:["Talk","Talk to God (prayer)","talk"],L:["Listen","Listen to God (his Word)","listen"],R:["Trust","Trust and obey God","trust"],V:["Love","Love God and love others","love"]};
+
+/* ---------- 56 NIGHTS ---------- */
+const D=[
+{t:"The Biggest Build Ever",r:"Genesis 1",g:"Creator",tr:"God is the Creator",sc:"dawn garden ; 🦁70,165,44 🌳310,152,64 🐦200,70,26 🦋250,118,22",
+s:["Long, long ago, before there were trees or puppies or even the sun, there was nothing at all. Nothing… except God. God has always been there.","Then God spoke. ‘Let there be light!’ And WHOOSH! Light burst out everywhere. Day by day God kept building. He made the sky and the deep blue sea. He made mountains to climb and trees to swing in. He hung the sun up to warm the day, and scattered the stars across the night like glitter.","Then God filled his world with life: fish that splash, birds that swoop, lions that ROAR and tiny ants that march. God looked at everything he had made and smiled. ‘It is very good!’","Every time you see a sunset, a beetle or a big wave, you are looking at something God made with his own great imagination."],
+v:["In the beginning God created the heavens and the earth.","Genesis 1:1"],
+l:["God made everything, even the stars too far away to see.","God is powerful: he only had to speak!","God is creative. He loves making beautiful things."],
+q:["What is your favourite thing that God made?","If you could ask God how he made something, what would you ask?"],
+p:"Dear God, / you made the sky and the sea, / the lions and the stars. / Thank you for your beautiful world. / You are amazing! Amen.",
+m:["T","Tomorrow, find one thing outside that God made and say, ‘Thank you, God, for the ___!’"]},
+
+{t:"Made by God's Hands",r:"Genesis 1:26 – 2:7",g:"My Maker",tr:"God made me, and he made me special",sc:"day garden ; 🌳70,150,58 🧒200,165,48 🌸290,168,24 🌸322,172,20",
+s:["At the end of making everything, God saved the best for last. He scooped up dust from the ground and shaped it carefully, like you shape playdough. Then God breathed into it, and the first man, Adam, opened his eyes and took a big breath! Later God made Eve, the first woman.","People were different from everything else God made. God made people to be a little bit like him: to think, to love, to laugh, to make things, and to be his friends.","And here is something wonderful: God made YOU too. He chose your eyes and your smile and the way you laugh. He knew you before you were even born. There is no one else in the whole world exactly like you, and God thinks you are wonderful."],
+v:["I praise you because you made me in an amazing and wonderful way.","Psalm 139:14"],
+l:["God made you on purpose. You are not an accident.","God made people so they could be his friends.","Because God made everyone, every person is special to him."],
+q:["What is something God gave you that you love? (Hands that build? Legs that run?)","Who is someone else God made special?"],
+p:"Dear God, / thank you for making me. / Thank you for my hands, my feet and my smile. / Help me remember I am yours. Amen.",
+m:["V","Tell someone in your family one thing that makes them special."]},
+
+{t:"Where Are You?",r:"Genesis 3",g:"Loving",tr:"God loves me even when I get it wrong",sc:"sunset garden ; 🌳80,150,64 🍎96,104,20 🐍185,170,30 🌿305,168,38",
+s:["God put Adam and Eve in a beautiful garden called Eden. In the cool of the evening, God came walking in the garden to spend time with them. Imagine going for a walk with God!","God gave them only one rule: ‘Don’t eat from that one tree.’ But a sneaky snake whispered, ‘Go on. God doesn’t really want what’s best for you.’ Eve ate the fruit, and Adam did too. Suddenly they felt sad and scared, and they hid behind the bushes.","Then they heard God calling: ‘Where are you?’ God already knew where they were. He was calling because he still wanted to be with them.","Disobeying God (we call it sin) broke their friendship with him, and things had to change. But that very same day God made a promise: one day he would send a Rescuer to fix everything. Can you guess who that Rescuer is? Jesus!"],
+v:["But the Lord God called to the man, ‘Where are you?’","Genesis 3:9"],
+l:["God wants to be close to us. He even went walking with Adam and Eve.","When we do wrong, we want to hide, but God comes looking for us.","God had a rescue plan from the very beginning: Jesus."],
+q:["How do you feel inside when you have done something wrong?","What can we do instead of hiding? (Tell God and say sorry.)"],
+p:"Dear God, / thank you that you always come looking for me. / When I do wrong, help me not to hide. / Help me run to you and say sorry. Amen.",
+m:["T","If you do something wrong tomorrow, don’t hide it. Say sorry to God and to the person."]},
+
+{t:"The Big Boat and the Rainbow",r:"Genesis 6 – 9",g:"Promise-Keeper",tr:"God always keeps his promises",sc:"day sea rainbow,ark ; 🐘165,100,26 🦒210,98,30 🕊️320,60,26",
+s:["Many years later, people had forgotten God. They were mean and hurt each other, and it made God’s heart very sad. But one man, Noah, still loved God and listened to him.","God told Noah, ‘Build a giant boat, an ark!’ Noah had never seen a flood, but he trusted God. Bang, bang, bang went his hammer, for years and years! Then the animals came, two by two: elephants stomping, monkeys chattering, giraffes ducking their heads to fit through the door.","Then the rain came. It rained and rained for forty days and forty nights, until water covered the whole earth. But inside the ark, Noah, his family and the animals were safe, because God was looking after them.","When the water finally went down, God put a beautiful rainbow in the sky. ‘This is my promise,’ God said. ‘I will never flood the whole earth again.’ And God has kept that promise every single day since."],
+v:["I have put my rainbow in the clouds. It is the sign of my promise.","Genesis 9:13"],
+l:["God always keeps his promises.","God takes care of people who trust him, even in storms.","Noah obeyed God even when it seemed strange."],
+q:["When you see a rainbow, what can it remind you of?","Has someone ever made you a promise and kept it? How did it feel?"],
+p:"Dear God, / thank you that you always keep your promises. / When I see a rainbow, / help me remember you are faithful. Amen.",
+m:["R","Make a promise to someone tomorrow (like ‘I will help tidy up’) and keep it, just like God does."]},
+
+{t:"Count the Stars",r:"Genesis 15 & 21",g:"Almighty",tr:"Nothing is too hard for God",sc:"night desert ; ⛺110,165,50 👴185,166,36",
+s:["Abraham and his wife Sarah were very old, older than great-grandparents! And they had no children. They wished and wished for a baby.","One night God took Abraham outside. ‘Look up at the sky,’ God said. ‘Count the stars, if you can.’ Abraham looked up. One, two, three… hundreds… thousands! There were far too many to count. ‘Your family will be like that,’ God said. ‘Too many to count.’","Abraham thought, ‘How can that happen? We are too old!’ But Abraham believed God. And guess what? When Abraham was 100 years old, baby Isaac was born! Sarah laughed and laughed with happiness. Isaac’s name even means ‘he laughs’.","God can do what no one else can do. Nothing is too hard for him."],
+v:["Nothing is too hard for you.","Jeremiah 32:17"],
+l:["Nothing is too hard for God.","God hears the wishes and prayers of our hearts.","Sometimes we have to wait, but God never forgets."],
+q:["What is something that seems too hard for you? Is it too hard for God?","How many stars do you think there are? (God knows every one!)"],
+p:"Dear God, / you made all the stars and you know how many there are. / Nothing is too hard for you. / Help me trust you with big things. Amen.",
+m:["T","Look at the stars with Mom and thank God for being so big."]},
+
+{t:"Joseph's Colourful Coat",r:"Genesis 37 – 50",g:"In Charge",tr:"God is in charge and can turn bad into good",sc:"day desert pyramids ; 🐫80,168,42 🧥200,160,34 🌾335,170,28",
+s:["Joseph had eleven brothers, and his dad gave him a special, colourful coat. His brothers were so jealous that they did a very mean thing: they sold Joseph to traders, who took him far away to Egypt.","In Egypt more bad things happened. Joseph was even put in prison, though he had done nothing wrong. But the Bible says, ‘The Lord was with Joseph.’ Joseph kept doing what was right, and God helped him understand dreams.","One day the king of Egypt had a strange dream, and God helped Joseph explain it: seven years of plenty of food were coming, and then seven hungry years. The king made Joseph a great leader to store up food! When the hungry years came, Joseph’s brothers came to Egypt to buy food, and there was Joseph!","Joseph forgave them and hugged them. ‘You planned to hurt me,’ he said, ‘but God turned it into good.’"],
+v:["You planned to harm me. But God planned it for good.","Genesis 50:20"],
+l:["God is with us even when sad or unfair things happen.","God is in charge and can turn bad things into good things.","Joseph forgave his brothers, and God helps us forgive too."],
+q:["When was a time you felt sad or left out? Was God with you?","Is it easy or hard to forgive? Why?"],
+p:"Dear God, / thank you that you are with me / even when things are hard. / Help me forgive like Joseph did. Amen.",
+m:["V","Is there someone you need to forgive? Tomorrow, be extra kind to them."]},
+
+{c:1,t:"Campfire Night: The Maker's Garden",sc:"night campfire ; 🔥200,165,54 ⛺80,165,44",
+intro:"Well done, explorer! You finished your first expedition. Tonight we sit by the campfire, look at the treasures we found and remember what we learned about God.",
+game:"Creation charades: act out an animal God made (stomp like an elephant, hop like a frog) and let Mom guess. Then swap!",
+q:["Which story from this week was your favourite?","Which treasure about God do you like best?"],
+p:"Dear God, / you are my Creator. / You made me, you love me, / and you keep your promises. / Thank you! Amen.",
+m:["L","Say this week’s Treasure Verse to someone without peeking."]},
+
+{t:"A Basket on the River",r:"Exodus 2",g:"Protector",tr:"God watches over me",sc:"day river ; 🌾150,150,32 🧺215,150,30 🌾270,150,32 👸330,165,38",
+s:["In Egypt, a new king was afraid of God’s people, so he made a terrible rule: all the baby boys must be thrown into the river. One mum had a beautiful baby boy. She hid him for three months, but he kept getting bigger and louder!","So she made a little basket and covered it with sticky tar so it would float like a boat. She tucked her baby inside and set it in the tall grass by the river Nile. His big sister Miriam hid nearby to watch.","Who should come down to the river? The king’s own daughter, the princess! She heard the baby cry and felt sorry for him. ‘I will keep him,’ she said. Quick-thinking Miriam ran up: ‘Shall I find a lady to feed the baby for you?’ And she fetched… his very own mum!","The princess named him Moses. God had watched over that little basket every single second."],
+v:["The Lord will watch over your coming and going, now and forever.","Psalm 121:8"],
+l:["God sees you and watches over you all the time, even while you sleep.","God can use anyone, even a big sister, to help with his plans.","God protects his people."],
+q:["Where do you need God to watch over you?","How did Miriam help?"],
+p:"Dear God, / thank you that you watch over me / when I’m awake and when I’m asleep. / I am safe in your hands. Amen.",
+m:["R","When you feel scared tomorrow, say, ‘God is watching over me.’"]},
+
+{t:"The Bush That Wouldn't Burn",r:"Exodus 3",g:"Holy",tr:"God is holy: perfect and like no one else",sc:"day mountain ; 🔥200,140,40 🌿200,168,46 🐑90,172,30 🐑122,174,24",
+s:["Moses grew up and became a shepherd in the desert. One day, while looking after his sheep near a mountain, he saw something very strange: a bush on fire! The flames crackled and glowed, but the bush wasn’t burning up!","Moses went closer for a look. Then a voice came from the bush: ‘Moses! Moses!’ It was God! ‘Take off your sandals,’ God said, ‘because you are standing on holy ground.’","Holy means God is perfect and pure and completely special. There is no one like him. Moses hid his face. Then God said, ‘I have seen my people being hurt in Egypt. I have heard them crying. I am going to rescue them, and I am sending you.’","Moses asked, ‘What is your name?’ God answered, ‘I AM WHO I AM.’ God has always been, and always will be."],
+v:["Holy, holy, holy is the Lord.","Isaiah 6:3"],
+l:["God is holy: perfect, pure and like no one else.","God sees and hears when his people are hurting.","God knows your name, just like he knew Moses’ name."],
+q:["Why do you think Moses took off his sandals?","How can we show God he is special to us? (Singing, praying quietly, listening.)"],
+p:"Holy God, / there is no one like you. / You are perfect and good. / Thank you that you know my name. Amen.",
+m:["V","Sing a song to God tomorrow, just for him."]},
+
+{t:"A Path Through the Sea",r:"Exodus 14",g:"Mighty",tr:"God is mighty and he rescues",sc:"day redsea ; 🚶190,165,32 🚶218,170,28 🐑244,172,22",
+s:["God sent Moses to the king of Egypt: ‘Let my people go!’ After many signs from God, the king finally said yes. Off went God’s people, thousands and thousands of them!","But then the king changed his mind. He sent his army with horses and chariots to chase them. God’s people came to the edge of the Red Sea. Water in front. An army behind. Nowhere to go! They were very scared.","Moses said, ‘Don’t be afraid! The Lord will fight for you.’ Moses held out his staff, and God sent a strong wind. WHOOOOSH! The sea split in two, with walls of water on each side and dry ground in the middle! God’s people walked right through to the other side.","When they were all safe, the water came crashing back down. God had rescued them! They sang and danced and praised their mighty God."],
+v:["The Lord will fight for you. You only need to be still.","Exodus 14:14"],
+l:["God is mighty. Even the sea obeys him.","When we feel stuck, God can make a way.","God is a rescuer."],
+q:["What do you think it was like to walk between walls of water?","What makes you feel stuck or scared?"],
+p:"Mighty God, / you can do anything! / When I feel stuck, / help me trust you to make a way. Amen.",
+m:["R","Learn the sea action: hands together, then push them apart like the sea opening. Do it when you feel scared."]},
+
+{t:"Bread from the Sky",r:"Exodus 16",g:"Provider",tr:"God gives me what I need",sc:"dawn desert flakes ; ⛺90,162,44 🐦255,70,22 🐦292,60,18",
+s:["After crossing the sea, God’s people walked into the desert. It was hot and sandy, and there were no shops, no farms and no food. Soon tummies were rumbling. ‘We’re hungry!’ the people grumbled.","God said, ‘I will rain down bread from heaven for you.’ The next morning, the ground was covered with little white flakes, like frost. ‘What is it?’ the people asked. In their language that sounds like ‘manna’, so that is what they called it! It tasted like biscuits made with honey. Yum!","Every morning God sent fresh manna, enough for everyone. In the evenings he sent birds called quail for meat. For forty years in the desert, God never once forgot to feed them.","God knows what we need, and he loves to take care of us."],
+v:["My God will meet all your needs.","Philippians 4:19"],
+l:["God gives us what we need.","We can ask God for what we need, every day.","Instead of grumbling, we can say thank you."],
+q:["What are some things God gives you every day?","What could you say instead of grumbling?"],
+p:"Dear God, / thank you for my food, / my bed and my family. / You give me everything I need. Amen.",
+m:["T","Before every meal tomorrow, say a thank-you prayer."]},
+
+{t:"Rules from a Loving Father",r:"Exodus 19 – 20",g:"Good",tr:"God is good, and his ways are best",sc:"storm mountain ; ⚡262,70,34 🪨195,172,30",
+s:["God led his people to a big mountain called Mount Sinai. The mountain rumbled with thunder, lightning flashed, and a thick cloud covered the top. God called Moses to come up the mountain.","There God gave Moses ten special rules, written on two stone tablets. Love God most of all. Don’t make anything more important than God. Honour your mum and dad. Don’t steal. Don’t lie. Don’t want what belongs to others.","Why did God give rules? Not to spoil the fun! God’s rules are like the railing on a high bridge: they keep us safe. God is good, and his ways are always best for us. He gave the rules because he loves his people and wants them to live happily together.","Later, Jesus said all the rules fit into two: love God with all your heart, and love other people."],
+v:["Taste and see that the Lord is good.","Psalm 34:8"],
+l:["God is good, and everything he tells us to do is good for us.","God’s rules show us how to love him and love others.","Obeying God is one way of loving him back."],
+q:["What rules does Mom have that keep you safe? Why does she make them?","Which of God’s rules is easy for you? Which one is hard?"],
+p:"Dear God, / you are good, and your ways are best. / Help me love you most of all / and love the people around me. Amen.",
+m:["R","Obey the first time you are asked tomorrow, with no grumbling!"]},
+
+{t:"The Wall That Fell Down",r:"Joshua 6",g:"Trustworthy",tr:"God can be trusted",sc:"day desert walls ; 🎺110,170,32 🎺290,170,32",
+s:["After forty years, God’s people finally reached the land God had promised them. Their new leader was Joshua. But in the way stood the city of Jericho, with huge, thick walls and gates shut tight.","God gave Joshua a very unusual plan: ‘March around the city once a day for six days. Don’t say a word. On the seventh day, march around seven times. Then blow the trumpets and shout!’","That sounded strange! Who knocks down walls by walking? But Joshua and the people trusted God. Day one: march, march, march. Day two… Day six… Then on day seven, around and around they went, seven times. The priests blew their trumpets, TOOOOOT! And everyone shouted as loud as they could.","CRASH! The great walls tumbled down flat! God had done exactly what he said."],
+v:["Trust in the Lord with all your heart.","Proverbs 3:5"],
+l:["God can be trusted, even when his plan seems strange.","Obeying God brings big victories.","God does what he says he will do."],
+q:["Why do you think God asked them to march quietly?","Who do you trust most? Why?"],
+p:"Dear God, / I trust you with all my heart. / Even when I don’t understand, / help me obey you. Amen.",
+m:["R","March around your bed seven times tomorrow night, then shout, ‘God can be trusted!’"]},
+
+{c:1,t:"Campfire Night: The Great Rescue Road",sc:"night campfire ; 🔥200,165,54 ⛺320,165,44",
+intro:"What a road we have travelled! A baby in a basket, a burning bush, a sea that opened and walls that fell. Tonight we sit by the fire and remember how God rescues his people.",
+game:"Rescue Road retell: Mom says a clue (basket, fire, sea, bread, trumpet). You shout which story it is and one thing it shows about God.",
+q:["Which rescue was the most exciting?","Has God ever helped you when you were scared?"],
+p:"Dear God, / you are my Protector and my Provider. / You are holy, mighty and good. / I can trust you. Amen.",
+m:["L","Say this week’s Treasure Verse with the sea action."]},
+
+{t:"A Voice in the Night",r:"1 Samuel 3",g:"Speaks to Me",tr:"God talks to me, and I can listen",sc:"night town ; 🪔210,150,34 🛏️130,174,40",
+s:["Samuel was a boy who lived in God’s house, the temple, helping an old priest named Eli. One night, while Samuel was lying in bed, he heard a voice: ‘Samuel!’","He jumped up and ran to Eli. ‘Here I am! You called me.’ ‘I didn’t call you,’ said Eli. ‘Go back to bed.’ It happened again. And again! Three times!","Then Eli understood. ‘It is God calling you. Next time, say, “Speak, Lord, I’m listening.”’ So Samuel lay down, and the voice came again: ‘Samuel! Samuel!’ This time Samuel said, ‘Speak, Lord. Your servant is listening.’ And God told Samuel important things.","God talked to a boy! Today God speaks to us mostly through the Bible, and sometimes with a quiet thought in our hearts that reminds us of what is good and true."],
+v:["Speak, Lord. I am listening.","1 Samuel 3:10"],
+l:["God talks to children, not just grown-ups.","God speaks to us through the Bible.","Being friends with God means talking AND listening."],
+q:["How can we listen to God?","Let’s be very quiet for ten seconds and think about God. What came into your mind?"],
+p:"Dear God, / speak to me. I am listening. / Help me hear you when I read the Bible / and do what you say. Amen.",
+m:["L","Ask Mom to read you one Bible verse tomorrow and tell you what it means."]},
+
+{t:"The Shepherd Boy Chosen",r:"1 Samuel 16",g:"Sees My Heart",tr:"God looks at my heart",sc:"day hills ; 🐑80,162,32 🐑120,168,26 🧒215,168,44 👑217,118,26",
+s:["God sent the prophet Samuel (yes, the same Samuel, now all grown up!) to the house of a man named Jesse. ‘One of Jesse’s sons will be the next king,’ God said.","Jesse’s oldest son walked in. He was tall and strong. ‘Surely this is the one!’ thought Samuel. But God said, ‘No. People look at the outside, but I look at the heart.’ Seven sons walked past, and God said no to every one.","‘Do you have any more sons?’ Samuel asked. ‘Only the youngest, David. He’s out looking after the sheep.’ They fetched David, still smelling like sheep! And God said, ‘This is the one.’","David was the youngest and the smallest, but he had a heart that loved God. God chose him to be king."],
+v:["People look at the outside, but the Lord looks at the heart.","1 Samuel 16:7"],
+l:["God cares most about what is inside: our heart.","You don’t have to be big to be important to God.","God sees what no one else sees."],
+q:["What does it mean to have a heart that loves God?","How can we see other people the way God does?"],
+p:"Dear God, / thank you that you see my heart. / Make my heart kind and brave / and full of love for you. Amen.",
+m:["V","Be kind tomorrow to someone who often gets left out."]},
+
+{t:"The Giant Goes Down",r:"1 Samuel 17",g:"My Strength",tr:"God makes me brave",sc:"day hills ; 🧒110,168,42 🪨160,172,22 🛡️305,160,44",
+s:["God’s people were at war, and the enemy had a giant called Goliath. He was nearly three metres tall, taller than a basketball hoop! Every day he stomped out and roared, ‘Who will fight me?’ And all the soldiers ran away, shaking.","Young David came to bring food to his brothers. He heard Goliath shouting and said, ‘Who does he think he is, talking about God’s people like that? I’ll fight him!’","The king offered David his armour, but it was far too big and clanky. So David took only his shepherd’s sling and picked five smooth stones from a stream.","Goliath laughed at him. But David called out, ‘You come with a sword, but I come in the name of the Lord!’ David swung his sling, whirr, whirr, whirr, and let go. The stone hit Goliath right on the forehead. THUD! The giant fell flat on his face. God had won the battle!"],
+v:["Be strong and brave. The Lord your God will be with you wherever you go.","Joshua 1:9"],
+l:["God makes us brave, not because we are big, but because he is with us.","Our ‘giants’ (big fears or problems) are small to God.","We can face hard things in God’s name."],
+q:["What is a ‘giant’ you might face? (A fear, or something hard to do.)","What would David say to you about it?"],
+p:"Dear God, / you are bigger than any giant. / When I’m scared, make me brave, / because you are with me. Amen.",
+m:["R","Pick one brave thing to do tomorrow (try a new food, say hi to someone new) and do it with God."]},
+
+{t:"The Good Shepherd Song",r:"Psalm 23",g:"Takes Care of Me",tr:"God is my shepherd who takes care of me",sc:"sunset hills ; 🐑100,162,34 🐑150,170,28 🐑200,166,26 🎵300,90,28",
+s:["Remember David the shepherd boy? Out in the fields with his sheep, David would play his harp and write songs to God. One of his songs is one of the most famous songs in the whole world. It is called Psalm 23.","David knew all about sheep. Sheep can’t find their own food. They wander off. They get scared of wolves. They need a shepherd to lead them to green grass and cool water, and to chase away wild animals with his rod and staff.","So David thought, ‘God is like my shepherd! And I am like his sheep!’ God leads us. God feeds us. God protects us. When we go through dark, scary places, God walks right beside us, and he leads us home.","At the end of his song David says, ‘I will live in the house of the Lord forever.’"],
+v:["The Lord is my shepherd. I have everything I need.","Psalm 23:1"],
+l:["God is like a good shepherd who takes care of his sheep.","Even in dark places, God is beside us.","We can follow God like sheep follow their shepherd."],
+q:["How does a shepherd look after sheep? How does God look after you?","Let’s say it on five fingers: The – Lord – is – my – shepherd."],
+p:"Dear Lord, / you are my shepherd. / Lead me, feed me and keep me safe. / I will follow you. Amen.",
+m:["L","Practise saying ‘The Lord is my shepherd’ on your five fingers."]},
+
+{t:"Fire from Heaven",r:"1 Kings 18",g:"The Only God",tr:"There is only one true God, and he hears me",sc:"day mountain ; 🔥200,122,46 🪨200,154,34",
+s:["In Elijah’s day, the people had started to pray to a pretend god called Baal. So God’s prophet Elijah held a contest on top of Mount Carmel. ‘Let’s each build an altar,’ he said. ‘The god who answers with fire is the real God!’","The 450 prophets of Baal went first. They shouted and danced from morning till lunchtime: ‘Baal, answer us!’ Nothing. Not one puff of smoke. Elijah teased them: ‘Shout louder! Maybe he’s asleep!’","Then it was Elijah’s turn. He even poured water all over his altar, twelve big jars, until everything was soaking wet! Then Elijah prayed a simple prayer: ‘Lord, show everyone that you are God.’","WHOOSH! Fire fell from heaven and burned up everything, even the water! All the people fell down and cried, ‘The Lord, he is God!’"],
+v:["The Lord, he is God!","1 Kings 18:39"],
+l:["There is only one true God, and he is alive.","God hears and answers prayer.","Elijah didn’t need to shout. God heard his simple prayer."],
+q:["Why couldn’t Baal answer? (He wasn’t real.)","Does God hear us when we pray quietly?"],
+p:"Dear God, / you are the one true God. / You are alive, and you hear me / when I pray. Amen.",
+m:["T","Pray a short prayer for someone tomorrow, and watch for what God does."]},
+
+{t:"Daniel and the Lions",r:"Daniel 6",g:"Ever Near",tr:"God is always with me",sc:"night cave ; 🦁90,172,42 🧎205,172,38 🦁320,170,42 ✨205,112,24",
+s:["Daniel loved God and prayed to him three times every day, at his window. Some jealous men tricked the king into making a new law: ‘For thirty days, nobody may pray to anyone except the king. Anyone who does will be thrown to the lions!’","Did Daniel stop praying? No! He went to his window, knelt down and prayed to God, just like always. The jealous men ran to tell the king. The king was very sad, because he liked Daniel, but the law could not be changed. Daniel was thrown into a den of hungry lions, and a big stone was rolled over the opening.","The king couldn’t sleep all night. Early next morning he ran to the den. ‘Daniel! Has your God saved you?’","‘Yes, O king!’ called Daniel. ‘My God sent his angel and shut the lions’ mouths!’ There was not one scratch on him. Then the king told everyone to honour Daniel’s God."],
+v:["My God sent his angel, and his angel shut the mouths of the lions.","Daniel 6:22"],
+l:["God is with us everywhere, even in a lions’ den.","Talking to God every day was very important to Daniel.","We can keep loving God even when other people don’t."],
+q:["Why did Daniel keep praying?","When are good times in your day to talk to God?"],
+p:"Dear God, / you are always with me, / at home, at school, everywhere. / Help me talk to you every day like Daniel. Amen.",
+m:["T","Pick three times tomorrow to pray, like Daniel: morning, lunchtime and bedtime."]},
+
+{c:1,t:"Campfire Night: Brave Hearts Mountain",sc:"night campfire ; 🔥200,165,54 🏔️320,150,50",
+intro:"You climbed Brave Hearts Mountain! A boy who listened, a shepherd chosen to be king, a giant who fell and lions who couldn’t bite. Let’s warm our hands by the fire and remember.",
+game:"Pillow mountain: build a mountain of pillows. Each time you climb to the top, shout one thing that is true about God.",
+q:["Who was the bravest person this week?","What made them brave?"],
+p:"Dear God, / you speak to me, you see my heart, / and you make me brave. / You are always with me. Amen.",
+m:["L","Say Joshua 1:9 with a strong-arms pose."]},
+
+{t:"Jonah and the Giant Fish",r:"Jonah 1 – 3",g:"Merciful",tr:"God gives second chances",sc:"storm sea ; ⛵120,108,42 🐋280,168,60",
+s:["God told Jonah, ‘Go to the city of Nineveh and tell the people to stop doing bad things.’ But Jonah didn’t want to go. So he jumped on a boat going the opposite way!","Out at sea, God sent a huge storm. The waves crashed and the boat creaked. Jonah knew it was because he had run away from God. ‘Throw me into the sea,’ he told the sailors, ‘and the storm will stop.’ SPLASH! In went Jonah… and GULP! A giant fish swallowed him whole!","For three days and three nights Jonah sat inside the fish’s belly. Yuck! There he prayed, ‘I’m sorry, God. Please help me!’ God heard him. The fish spat Jonah out, BLEURGH, onto the beach.","God gave Jonah a second chance, and this time Jonah went to Nineveh. The people of Nineveh said sorry to God too, and God forgave them. God loves to give second chances."],
+v:["The Lord’s love never runs out. His kindness is new every morning.","Lamentations 3:22–23"],
+l:["God gives second chances.","You can never run so far that God can’t find you.","God loves all people, even people we find hard to like."],
+q:["Why did Jonah run away?","Do you need a second chance with someone? Does God give you one?"],
+p:"Dear God, / thank you for second chances. / When I run away from what’s right, / bring me back to you. Amen.",
+m:["V","Give someone a second chance tomorrow when they make a mistake."]},
+
+{t:"Three Friends in the Fire",r:"Daniel 3",g:"King of Kings",tr:"God is the King over everything",sc:"sunset desert statue ; 👑80,165,30 🔥290,168,42 🔥325,168,34",
+s:["King Nebuchadnezzar (try saying that fast!) built a giant golden statue, as tall as a big tree. ‘When the music plays, everyone must bow down to my statue,’ he ordered. ‘Whoever doesn’t will be thrown into a blazing furnace!’","The music played. Everyone bowed… except three young men: Shadrach, Meshach and Abednego. ‘We will only worship the true God,’ they said. ‘Our God can save us. And even if he doesn’t, we still won’t bow.’","The king was furious. ‘Make the fire seven times hotter!’ The three friends were tied up and thrown in. But then the king jumped up. ‘Wait! I see FOUR men walking around in the fire, and they’re not tied up!’","God was in the fire with them! They came out without even smelling of smoke. The king said, ‘No other god can save like this!’"],
+v:["The Lord is the great King over all the earth.","Psalm 47:2"],
+l:["God is the true King, greater than any king.","Only God deserves our worship. He is the most important.","God is with us in the hottest, hardest moments."],
+q:["What things can become more important to us than God? (Toys? Screens?)","What made the three friends so brave?"],
+p:"Dear God, / you are the King of everything. / You are the most important / in my life. Amen.",
+m:["V","Before playing tomorrow, say, ‘God, you are number one!’"]},
+
+{t:"The Brave Queen",r:"Esther 2 – 8",g:"Has a Plan",tr:"God has a good plan, even when I can't see it",sc:"day town ; 👸200,168,46 👑200,118,26",
+s:["Esther was a Jewish girl who became queen of Persia. But a wicked man named Haman tricked the king into making a law to destroy all of God’s people, the Jews. Esther’s people were in big danger!","Her cousin Mordecai said, ‘Esther, maybe God made you queen for such a time as this!’ But there was a problem. Nobody was allowed to see the king without being invited, not even the queen. If he didn’t hold out his golden sceptre, she could be killed.","Esther asked all God’s people to pray for three days. Then, bravely, she walked into the throne room. The king looked up… and held out his golden sceptre! Esther told him about Haman’s wicked plan. The king was angry with Haman, and God’s people were saved.","God’s name isn’t even written in the book of Esther, but God was working behind the scenes the whole time."],
+v:["‘I know the plans I have for you,’ says the Lord. ‘Plans to give you hope.’","Jeremiah 29:11"],
+l:["God has a good plan, even when we can’t see him working.","God puts us where we are for a reason.","Praying before doing brave things helps."],
+q:["Why did Esther ask people to pray first?","Where has God put you? (Your family, your school.) How can you help there?"],
+p:"Dear God, / thank you for your good plans for me. / Help me be brave like Esther / wherever you put me. Amen.",
+m:["R","Ask Mom to pray with you before something hard tomorrow."]},
+
+{t:"Ruth's Kind Heart",r:"Ruth 1 – 4",g:"Kind",tr:"God is kind and cares for sad and lonely people",sc:"sunset hills ; 🌾70,166,38 🌾112,172,30 👩205,168,42 👵255,168,40",
+s:["Naomi was very sad. She had moved far away, and both her husband and her sons had died. ‘I’m going home to Bethlehem,’ she told her daughter-in-law, Ruth. ‘Go back to your own family.’","But Ruth hugged her tight. ‘Where you go, I will go. Your God will be my God.’ So Ruth went with Naomi all the way to Bethlehem.","They had no food, so Ruth went to the fields to pick up the leftover grain behind the harvesters. The field belonged to a kind man named Boaz. ‘Let her pick as much as she wants,’ Boaz told his workers, ‘and drop some extra on purpose for her!’","Later Boaz married Ruth, and they had a baby boy. Naomi was happy again! And guess what? Ruth became the great-grandmother of King David. Many years later, Jesus was born into her family!"],
+v:["The Lord is good to everyone. He is kind to all he has made.","Psalm 145:9"],
+l:["God cares for lonely and sad people.","God often shows his kindness through kind people.","God can bring happiness after sadness."],
+q:["How did Boaz show God’s kindness?","Who might be lonely that we could be kind to?"],
+p:"Dear God, / thank you for being so kind to me. / Help me be kind like Ruth and Boaz / to people who are sad. Amen.",
+m:["V","Make a drawing or a card for someone who might be lonely."]},
+
+{t:"The Little Girl Who Helped",r:"2 Kings 5",g:"Healer",tr:"God heals, and he uses children too",sc:"day river ; 🐎80,168,42 🧒305,168,36",
+s:["Naaman was a great army captain, strong and brave. But he had a terrible skin sickness called leprosy, and no doctor could make it better.","In Naaman’s house lived a young servant girl from Israel. She was far from home, but she still trusted God. She said to Naaman’s wife, ‘I wish my master would go to God’s prophet Elisha. He would heal him!’","So Naaman went. Elisha sent a message: ‘Go and wash in the Jordan River seven times.’ Naaman was cross. ‘That muddy river? I thought he would wave his hand and heal me!’ But his servants said, ‘Why not try?’","So Naaman dipped down once… twice… three, four, five, six… SEVEN times. When he came up, his skin was as soft and clean as a little boy’s! ‘Now I know,’ said Naaman, ‘there is no God in all the world except the God of Israel.’"],
+v:["Don’t let anyone look down on you because you are young. Be an example.","1 Timothy 4:12"],
+l:["God heals, and he cares about our bodies.","God can use children to tell others about him.","Doing things God’s way works best, even when it seems silly."],
+q:["How did the little girl help Naaman?","Who could you tell about God?"],
+p:"Dear God, / thank you that you can use me, even though I’m small. / Please help people who are sick, / like… (name someone). Amen.",
+m:["V","Tell a friend or family member one thing you have learned about God."]},
+
+{t:"The Promise of a Rescuer",r:"Isaiah 7 & 9, Micah 5",g:"Rescuer",tr:"God planned to send a Rescuer for the whole world",sc:"night hills star ; 📜110,170,32 🕯️300,170,30",
+s:["Do you remember the promise God made in the garden, way back on Day 3? He promised a Rescuer who would fix what sin had broken.","Many years later God gave his prophet Isaiah a message about that Rescuer. Isaiah wrote it down like clues on a treasure map: ‘A young woman will have a baby boy. He will be called Immanuel, which means God with us.’ And: ‘A child will be born to us. He will be called Wonderful Counsellor, Mighty God, Everlasting Father, Prince of Peace.’ Another prophet, Micah, even said which little town he would be born in: Bethlehem!","God’s people waited. And waited. Hundreds of years went by. Some people forgot. But God never forgets a promise.","Can you guess who the baby would be? That’s right: Jesus! Soon our trail will lead to the most amazing birthday ever."],
+v:["A child will be born to us… He will be called Wonderful Counsellor, Mighty God, Everlasting Father, Prince of Peace.","Isaiah 9:6"],
+l:["God planned to send Jesus long before he was born.","God always keeps his promises, even when it takes a long time.","Jesus is ‘God with us’."],
+q:["Which of Jesus’ names do you like best?","Is it hard to wait for something? What helps?"],
+p:"Dear God, / thank you for your promise to send Jesus. / Thank you that you never forget. / Help me wait with a happy heart. Amen.",
+m:["L","Learn one of Jesus’ names from Isaiah 9:6 and tell someone what it means."]},
+
+{c:1,t:"Campfire Night: The River of Second Chances",sc:"night campfire ; 🔥200,165,54 🌊320,165,40",
+intro:"We sailed down the River of Second Chances! A fish that swallowed Jonah, a fire that couldn’t burn, a brave queen, a kind friend and a promise of a Rescuer. Let’s remember by the fire.",
+game:"River jump: lay a blanket on the floor as a river. Every time you name a treasure about God, jump across!",
+q:["Which treasure about God surprised you?","Why do you think God gives second chances?"],
+p:"Dear God, / you are merciful and kind. / You are the King, and you have a plan. / Thank you for sending a Rescuer. Amen.",
+m:["L","Say Lamentations 3:22–23 when you wake up tomorrow, because God’s kindness is new every morning!"]},
+
+{t:"God's Voice at the River",r:"Matthew 3",g:"Father",tr:"God is my loving Father",sc:"day river ; 🕊️200,62,32 🧔205,150,34",
+s:["When Jesus grew up, he went to the Jordan River, where his cousin John was baptising people: dipping them under the water to show they wanted a fresh, clean start with God.","‘Baptise me too,’ said Jesus. John was surprised. ‘You should be baptising me!’ But Jesus went into the water. When he came up, something amazing happened. The sky opened, and God’s Spirit came down like a dove and landed on Jesus. Then a voice spoke from heaven: ‘This is my Son, whom I love. I am very pleased with him.’","At the river we see God in three ways all at once: the Father speaking, Jesus the Son in the water, and the Holy Spirit like a dove. One God: Father, Son and Holy Spirit.","And here is the best part: when we follow Jesus, God becomes our Father too, and he loves us like that."],
+v:["See how much the Father loves us! He calls us his children.","1 John 3:1"],
+l:["God is one God: Father, Son and Holy Spirit.","God the Father loves Jesus, and he loves you too.","Jesus came to show us what God is like."],
+q:["How does it feel when Mom says she is proud of you? God feels that way about his children.","What do you think the dove looked like?"],
+p:"Dear Father in heaven, / thank you for loving me. / Thank you for Jesus, your Son. / I want to be your child. Amen.",
+m:["L","Ask Mom to tell you about a baptism she remembers."]},
+
+{t:"Come, Follow Me!",r:"Luke 5, Matthew 4",g:"Leader",tr:"Jesus invites me to follow him",sc:"dawn beach ; ⛵140,104,46 🐟232,140,20 🐟258,148,18 🐟284,138,20",
+s:["Peter and his brother Andrew were fishermen. One morning they were very tired and grumpy. They had fished ALL night and caught nothing. Not one tiny fish!","Jesus got into Peter’s boat and said, ‘Go out to deep water and let down your nets.’ Peter said, ‘Master, we worked all night and caught nothing… but because you say so, I will.’ Splash went the nets, and suddenly they were so full of wriggling, jumping fish that the nets began to tear! They needed another boat to help, and both boats nearly sank!","Peter fell on his knees, amazed. Jesus smiled and said, ‘Come, follow me. From now on you will fish for people!’ He meant they would help bring people to God. Peter, Andrew, James and John left their boats and followed Jesus.","Jesus is still inviting people today: ‘Come, follow me.’ And that includes you!"],
+v:["‘Come, follow me,’ Jesus said.","Matthew 4:19"],
+l:["Jesus invites us to be his friends and followers.","Following Jesus means listening to him and doing what he says.","Jesus has a job for us: helping others know him."],
+q:["What does it mean to follow someone? Let’s play follow-the-leader for one minute!","What would you tell someone about Jesus?"],
+p:"Dear Jesus, / thank you for inviting me to follow you. / I want to be on your team. / Show me how to follow you. Amen.",
+m:["R","Play follow-the-leader tomorrow and remember: Jesus leads, we follow."]},
+
+{t:"Quiet! Be Still!",r:"Mark 4:35–41",g:"Peace",tr:"Jesus is stronger than my fears",sc:"storm sea ; ⛵200,118,52 ⚡305,52,32",
+s:["One evening Jesus and his friends got into a boat to cross the lake. Jesus was so tired that he lay down at the back of the boat on a cushion and fell fast asleep.","Suddenly a huge storm came. The wind howled, WHOOO! Waves crashed over the sides, and the boat started filling with water. Even the fishermen were terrified! They woke Jesus up: ‘Teacher, don’t you care that we’re going to drown?’","Jesus stood up. He looked at the wind and the waves and said, ‘Quiet! Be still!’ And at once the wind stopped. The waves went flat. Everything was completely calm.","His friends whispered to each other, ‘Who is this? Even the wind and the waves obey him!’ They were learning that Jesus is God. The One who made the sea is in charge of the sea."],
+v:["When I am afraid, I will trust in you.","Psalm 56:3"],
+l:["Jesus is more powerful than any storm.","Jesus cares when we are scared.","We can call to Jesus when we are afraid, just like his friends did."],
+q:["What storms make you feel scared? (Thunder, the dark, bad dreams?)","What can you say to Jesus when you feel scared?"],
+p:"Dear Jesus, / you can calm any storm. / When I feel scared, / help me remember you are with me. Amen.",
+m:["R","Learn Psalm 56:3 by heart and say it if you feel scared at night."]},
+
+{t:"One Boy's Lunch",r:"John 6:1–14",g:"Generous",tr:"Jesus does big things with small gifts",sc:"day hills ; 👦110,168,42 🍞172,170,30 🐟212,170,28 🧺262,172,34",
+s:["A huge crowd followed Jesus up a hill to hear him teach: five thousand men, plus all the women and children! By evening everyone was very hungry. ‘Where can we buy food for all these people?’ Jesus asked his friend Philip. Philip said, ‘Even if we worked for months, we couldn’t buy enough!’","Then Andrew found a boy who had a little lunch: five small loaves of bread and two little fish. The boy gave it all to Jesus. ‘But what is that among so many?’ said Andrew.","Jesus took the bread, looked up to heaven and thanked God. Then he broke it and kept handing it out… and handing it out… and HANDING IT OUT! Everybody ate until they were full. There were even twelve baskets of leftovers!","It all started with one boy who was willing to share what he had."],
+v:["Here is a boy with five small loaves and two small fish.","John 6:9"],
+l:["Jesus cares about our everyday needs, even rumbling tummies!","Jesus can do something big with whatever we give him.","Sharing what we have makes Jesus happy."],
+q:["How do you think the boy felt watching his lunch feed everyone?","What could you give Jesus? (Your time, your toys, your kindness.)"],
+p:"Dear Jesus, / here is what I have: / my hands, my heart and my time. / Please use them for you. Amen.",
+m:["V","Share something of yours tomorrow, like a snack or a toy."]},
+
+{t:"Let the Children Come",r:"Mark 10:13–16",g:"Friend of Kids",tr:"Jesus loves children and always has time for me",sc:"day hills ; 🧒150,170,38 ❤️177,112,24 👧205,170,38 🌳322,152,58",
+s:["Parents loved Jesus, so they brought their children to him so he could bless them. But Jesus’ disciples said, ‘Shoo! Go away! Jesus is far too busy and important for kids!’","When Jesus saw this, he wasn’t happy with his disciples at all. ‘Let the little children come to me!’ he said. ‘Don’t stop them! God’s kingdom belongs to people like these.’","Then Jesus took the children in his arms. He put his hands on their heads and blessed them. Maybe he laughed with them, listened to their stories and gave them big hugs.","Jesus is never too busy for you. You don’t have to be grown-up, clever or good enough first. You can come to him anytime, just as you are."],
+v:["Let the little children come to me.","Mark 10:14"],
+l:["Jesus loves children and is never too busy for them.","You can talk to Jesus anytime, anywhere.","Grown-ups can learn from the way children trust Jesus."],
+q:["If you could sit on Jesus’ lap, what would you tell him?","Let’s tell him that right now!"],
+p:"Dear Jesus, / thank you that you are never too busy for me. / I’m coming to you just as I am. / I love you. Amen.",
+m:["T","Tell Jesus about your day tomorrow, like you would tell a friend."]},
+
+{t:"Eyes on Jesus",r:"Matthew 14:22–33",g:"Holds Me Up",tr:"Jesus holds me up when I trust him",sc:"night sea ; 🚣90,118,42 ✋262,140,32",
+s:["Late one night Jesus’ friends were out in a boat on a windy lake. Jesus had stayed behind to pray. Just before sunrise, they saw something coming toward them across the water. ‘A GHOST!’ they screamed.","‘Don’t be afraid,’ said a voice. ‘It is I.’ It was Jesus, walking on the water!","Brave Peter said, ‘Lord, if it’s you, tell me to come to you.’ ‘Come,’ said Jesus. So Peter climbed out of the boat… and walked on the water too! Step, step, step! But then he looked at the big waves and the howling wind, got scared and started to sink. ‘Lord, save me!’ he shouted.","Straight away Jesus reached out his hand and caught him. ‘Why did you doubt?’ he asked gently. They climbed into the boat, the wind stopped, and everyone worshipped Jesus."],
+v:["Let us keep looking to Jesus.","Hebrews 12:2"],
+l:["When we keep our eyes on Jesus, we can do amazing things.","When we start to sink, Jesus catches us straight away.","We can always shout, ‘Jesus, help me!’"],
+q:["What made Peter start to sink?","What are the ‘waves’ that make you forget about Jesus?"],
+p:"Dear Jesus, / help me keep my eyes on you. / When I start to sink, / thank you for catching me. Amen.",
+m:["R","Whenever you feel worried tomorrow, whisper, ‘Jesus, help me!’"]},
+
+{c:1,t:"Campfire Night: Walking with Jesus",sc:"night campfire ; 🔥200,165,54 ⛵320,160,40",
+intro:"We have been walking with Jesus! We heard God say, ‘This is my Son’, we watched nets fill with fish, a storm stop and a lunch feed thousands. Jesus shows us exactly what God is like.",
+game:"Miracle actions: Mom calls out a story, you act it out. Calm the storm (arms out, ‘Be still!’), walk on water (tiptoe on a line), share a lunch (hand out pretend bread).",
+q:["Which thing that Jesus did was the most amazing?","What does that show us about God?"],
+p:"Dear Jesus, / you are God’s Son. / You calm my storms, you love kids, / and you hold me up. I will follow you. Amen.",
+m:["L","Say John 14:9 and tell Mom what it means."]},
+
+{t:"The Man Who Shouted",r:"Mark 10:46–52",g:"Hears Me",tr:"Jesus hears me when I call",sc:"day town ; 🌴55,160,54 🧥250,174,30 🚶305,170,38",
+s:["Bartimaeus was blind. He couldn’t see the blue sky or the faces of his friends. Every day he sat by the road begging for money.","One day he heard a big crowd. ‘What’s happening?’ he asked. ‘Jesus is coming!’ Bartimaeus had heard about Jesus. So he shouted as loud as he could: ‘JESUS! HAVE MERCY ON ME!’ People told him, ‘Shh! Be quiet!’ But he shouted even louder: ‘JESUS!’","Jesus stopped. In that big noisy crowd, Jesus heard one man. ‘Call him over,’ he said. Bartimaeus threw off his coat and jumped up. ‘What do you want me to do for you?’ Jesus asked. ‘Teacher, I want to see!’","‘Go,’ said Jesus. ‘Your faith has healed you.’ Right away Bartimaeus could see! And the first face he saw was Jesus. Then he followed Jesus down the road, praising God."],
+v:["What do you want me to do for you?","Mark 10:51"],
+l:["Jesus hears us, even in a noisy crowd.","We can ask Jesus for what we need.","Don’t give up when you pray."],
+q:["If Jesus asked you, ‘What do you want me to do for you?’, what would you say?","How do you think Bartimaeus felt when he could see?"],
+p:"Dear Jesus, / thank you that you hear me / every time I call. / Tonight I want to ask you for… Amen.",
+m:["T","Tell Jesus tomorrow about one thing you really need."]},
+
+{t:"Zacchaeus Up a Tree",r:"Luke 19:1–10",g:"Friend",tr:"Jesus wants to be friends with everyone",sc:"day town tree ; 💰130,174,24 🧔302,84,28",
+s:["Zacchaeus was a tax collector. He took too much money from people and kept it for himself. Nobody liked him. And he was very short!","When Jesus came to his town, Zacchaeus wanted to see him, but the crowd was too tall. So he ran ahead and climbed a sycamore tree. Up, up, up he went!","Jesus walked right under that tree, stopped and looked up. ‘Zacchaeus, come down quickly! I’m coming to your house today!’ Everyone grumbled. ‘Jesus is going to the house of a cheat!’","But being with Jesus changed Zacchaeus’s heart. ‘Lord,’ he said, ‘I’ll give half of everything I have to the poor. And if I cheated anyone, I’ll pay them back four times as much!’ Jesus smiled. ‘Today, rescue has come to this house.’"],
+v:["The Son of Man came to look for the lost and to save them.","Luke 19:10"],
+l:["Jesus knows your name.","Jesus wants to be friends with everybody, even people others don’t like.","Being friends with Jesus changes our hearts."],
+q:["How do you think Zacchaeus felt when Jesus called his name?","Who could you be a friend to?"],
+p:"Dear Jesus, / thank you for being my friend. / Change my heart / to be more like yours. Amen.",
+m:["V","Be a friend to someone new tomorrow."]},
+
+{t:"The Lost Sheep",r:"Luke 15:1–7",g:"Finder",tr:"Jesus never stops looking for me",sc:"sunset hills ; 🪨262,154,34 🐑232,124,30",
+s:["Jesus told a story. A shepherd had 100 sheep. Every evening he counted them: ‘97, 98, 99…’ One was missing! One little sheep had wandered off and was lost.","Did the shepherd say, ‘Oh well, I still have 99’? No way! He left the 99 safe in the field and went looking. Over the rocks, through the thorny bushes, up the steep hills, calling and calling. And at last he heard a little ‘baaa!’","The shepherd scooped up his lost sheep, put it on his shoulders and carried it all the way home. Then he called his friends: ‘Party! I found my lost sheep!’","Jesus said, ‘That’s what God is like. There is a big party in heaven when even one lost person comes home to God.’ You are that precious to him."],
+v:["Be happy with me! I have found my lost sheep.","Luke 15:6"],
+l:["Every single person matters to God.","God never stops looking for us.","Heaven celebrates when someone comes home to God."],
+q:["Have you ever been lost? How did it feel to be found?","How does it feel to know God would search for you?"],
+p:"Dear Jesus, / thank you that you came looking for me. / I’m so glad I’m yours. / Help me never wander away. Amen.",
+m:["V","Play hide-and-seek tomorrow and remember: Jesus always finds us."]},
+
+{t:"The Running Father",r:"Luke 15:11–32",g:"Forgiving",tr:"God runs to me and forgives me",sc:"sunset hills ; 🏠70,150,42 🧔150,168,36 🏃300,170,36",
+s:["Jesus told another story. A man had two sons. The younger son said, ‘Dad, give me my share of your money now!’ Then he left home and went far away. He wasted all his money on silly things until he had nothing left.","Then he got a job feeding pigs. He was so hungry that even the pigs’ food looked yummy! Then he remembered: ‘Even my dad’s workers have plenty to eat! I’ll go home and say, “Dad, I’m sorry. I’m not good enough to be your son. Let me be a worker.”’","So he started the long walk home. But while he was still far away, his father saw him. And his father RAN! He threw his arms around his son and kissed him. ‘Bring the best robe! Put a ring on his finger! Let’s have a party! My son was lost, and now he’s found!’","Jesus told this story so we would know: God is like that father. When we come back to him, he runs to us."],
+v:["While he was still a long way off, his father saw him. He ran to his son and hugged him.","Luke 15:20"],
+l:["God the Father loves us even when we mess up.","When we say sorry, God forgives us completely.","We don’t have to earn God’s love. He runs to us."],
+q:["What did the son expect his dad to say?","What does this story tell us about God?"],
+p:"Dear Father God, / thank you that when I say sorry, / you run to me and forgive me. / Thank you for loving me so much. Amen.",
+m:["T","If you mess up tomorrow, tell God sorry and remember the running father."]},
+
+{t:"Only One Said Thank You",r:"Luke 17:11–19",g:"Caring",tr:"Jesus cares, and he loves a thankful heart",sc:"day hills ; 🏘️70,150,44 🚶180,170,32 🙌255,170,36",
+s:["Ten men had leprosy, a sickness that made sores on their skin. Because it could spread, they had to live outside the town, all alone. No hugs. No visits.","When they saw Jesus, they stood far off and shouted, ‘Jesus, Master, have pity on us!’ Jesus felt sorry for them. ‘Go and show yourselves to the priests,’ he said. (The priests checked whether people were well again.)","As they walked, their sores disappeared! Their skin was healed! Nine of them ran off, so excited. But one man stopped. He turned around and ran back to Jesus, shouting, ‘Praise God!’ He knelt at Jesus’ feet and said, ‘Thank you!’","Jesus asked, ‘Weren’t there ten? Where are the other nine?’ Then he said to the man, ‘Get up and go. Your faith has made you well.’"],
+v:["Give thanks to the Lord, for he is good.","Psalm 107:1"],
+l:["Jesus cares about people who are sick and lonely.","God loves it when we come back to say thank you.","A thankful heart is a happy heart."],
+q:["Why do you think nine didn’t come back?","Let’s name ten things to thank God for, one on each finger!"],
+p:"Dear Jesus, / thank you, thank you, thank you / for… (name your ten things). / I don’t want to forget to say thank you. Amen.",
+m:["T","Say thank you to God and to three people tomorrow."]},
+
+{t:"The House on the Rock",r:"Matthew 7:24–27",g:"My Rock",tr:"Jesus is my rock",sc:"storm beach rock ; 🏠88,112,42 🏚️310,166,38",
+s:["Jesus told a story about two builders. The wise man built his house on hard, solid rock. Dig, dig, dig. It took a long time, but he kept going until his house sat firmly on the rock.","The foolish man said, ‘Too much work!’ He built his house on soft sand by the beach. Quick and easy!","Then the storm came. The rain poured down, the streams rose up, and the wind blew and beat against the houses. What happened to the house on the rock? It stood firm! It didn’t fall, because it was built on the rock. And the house on the sand? SPLAT! It fell with a great crash!","Jesus said, ‘Everyone who hears my words and does them is like the wise man.’ When we listen to Jesus AND do what he says, our lives are strong, even in hard times."],
+v:["Everyone who hears my words and does them is like a wise man who built his house on the rock.","Matthew 7:24"],
+l:["Jesus is like a strong rock we can build our lives on.","Hearing Jesus isn’t enough. We also do what he says.","Hard times will come, but Jesus keeps us standing."],
+q:["How can we ‘build on the rock’?","If we build a block tower on the floor and one on a pillow, which one will stand?"],
+p:"Dear Jesus, / you are my rock. / Help me listen to you / and do what you say. Amen.",
+m:["L","Do the block-tower test with Mom: one tower on the floor, one on a pillow."]},
+
+{c:1,t:"Campfire Night: The Friend Who Finds Me",sc:"night campfire ; 🔥200,165,54 🐑320,168,36",
+intro:"This week we found out that Jesus is the Friend who finds us. He heard a man shouting, called a man down from a tree, searched for a lost sheep and showed us a Father who runs.",
+game:"Hide-and-seek: when Mom finds you, shout, ‘Jesus finds me!’ Then swap and you find Mom.",
+q:["How does it feel to know Jesus never stops looking for you?","Who do you want to tell about Jesus the Friend?"],
+p:"Dear Jesus, / you hear me, you find me / and you forgive me. / You are my Friend and my Rock. Amen.",
+m:["L","Say Luke 19:10 with a ‘looking’ action: hand above your eyes."]},
+
+{t:"An Angel Visits Mary",r:"Luke 1:26–38",g:"Chooses Me",tr:"God chooses ordinary people for his big plans",sc:"day town ; 👼260,112,46 ✨312,70,22",
+s:["Now our trail goes back in time, to see how Jesus’ adventure on earth began.","In a little town called Nazareth lived a young woman named Mary. She was going to marry a carpenter named Joseph. She was not rich or famous. But one day an angel named Gabriel appeared to her! ‘Greetings! The Lord is with you,’ he said.","Mary was scared. ‘Don’t be afraid, Mary,’ said Gabriel. ‘God is pleased with you. You are going to have a baby boy, and you will call him Jesus. He will be the Son of God, and his kingdom will never end!’","‘How can this happen?’ Mary asked. ‘The Holy Spirit will make it happen,’ said the angel. ‘Nothing is impossible with God.’ And Mary said, ‘I am the Lord’s servant. Let it happen just as you said.’ Mary said YES to God."],
+v:["I am the Lord’s servant. Let it happen to me as you have said.","Luke 1:38"],
+l:["God chooses ordinary people for his big plans.","Mary said yes to God, even though she didn’t understand everything.","Nothing is impossible with God."],
+q:["How do you think Mary felt when she saw the angel?","How can you say ‘yes’ to God?"],
+p:"Dear God, / thank you that you choose ordinary people like me. / Like Mary, / I say yes to you. Amen.",
+m:["R","Say ‘Yes, Mom!’ happily the first time tomorrow. It is practice for saying yes to God."]},
+
+{t:"Joseph's Dream",r:"Matthew 1:18–25",g:"God With Us",tr:"God came to be with us",sc:"night town star ; 💤130,150,26 👼265,104,42",
+s:["When Joseph heard that Mary was going to have a baby, he was confused and worried. What should he do?","One night, while Joseph was sleeping, an angel appeared to him in a dream. ‘Joseph, don’t be afraid to take Mary as your wife. The baby inside her is from the Holy Spirit. She will have a son, and you are to name him Jesus, because he will save his people from their sins.’","Remember Isaiah’s clue from Day 27? The angel said this was exactly what God had promised: ‘They will call him Immanuel,’ which means ‘God with us.’","When Joseph woke up, he did exactly what the angel said. He married Mary and got ready to look after God’s Son. God was coming to be with his people: not far away up in the sky, but right here, as one of us!"],
+v:["They will call him Immanuel, which means ‘God with us.’","Matthew 1:23"],
+l:["Jesus is God, who came to be with us.","The name Jesus means ‘God saves’.","Joseph obeyed God straight away."],
+q:["What does ‘God with us’ mean for you tonight?","How did Joseph obey God?"],
+p:"Dear God, / thank you for coming to be with us in Jesus. / You are with me right now, / here in my room. Amen.",
+m:["L","Count how many times you hear the name ‘Jesus’ in Christmas songs tomorrow."]},
+
+{t:"The Long Trip to Bethlehem",r:"Luke 2:1–5, Micah 5:2",g:"Faithful",tr:"God takes care of every little detail",sc:"sunset desert star ; 🐴170,168,46 🚶222,168,38",
+s:["The Roman emperor, Caesar Augustus, made a law: ‘Everyone must go to their family’s hometown to be counted!’ Joseph’s family came from Bethlehem, the town of King David.","So Joseph and Mary packed up and set off. It was a long, long trip, about as far as driving for two hours, but they had to walk! Over hills and dusty roads it went. Mary was about to have her baby. It took many days.","Why does this matter? Remember the clue from the prophet Micah, hundreds of years before? He said the Rescuer would be born in Bethlehem! Mary lived in Nazareth, far away. But God used an emperor’s law to bring Mary to exactly the right town at exactly the right time.","God takes care of every tiny detail. He is never late, and his promises always come true."],
+v:["But you, Bethlehem… out of you will come a ruler.","Micah 5:2"],
+l:["God is faithful. His promises come true right down to the details.","God is in charge, even of kings and emperors.","Long, hard journeys are easier when God is with us."],
+q:["What is the longest trip you have been on?","What little details of your life does God care about?"],
+p:"Dear God, / you take care of every little detail. / Thank you that your promises / always come true. Amen.",
+m:["R","Set out a nativity set (or draw one). Put Mary and Joseph far from the stable and move them a little closer each night."]},
+
+{t:"No Room!",r:"Luke 2:6–7",g:"Humble King",tr:"The King of everything came small, for everyone",sc:"night hills stable,star ; 🐄130,172,32 👶200,160,28 🐑272,172,28",
+s:["When Mary and Joseph finally arrived in Bethlehem, the town was packed with people. Knock, knock. ‘Sorry, no room!’ Knock, knock. ‘Full up!’ There was nowhere to stay, and Mary’s baby was coming soon.","At last they found a place where animals were kept. It wasn’t a palace. It was probably smelly, with straw on the floor, a donkey and maybe some cows and sheep. And there, that very night, baby Jesus was born!","Mary wrapped him snugly in strips of cloth and laid him in a manger, a feeding box for animals.","Think about this: Jesus is the King of the whole universe. He made the stars and the oceans! But he didn’t come with a crown and a castle. He came as a tiny baby in a stable. That is called being humble. Jesus came small so that everyone, rich or poor, could come close to him."],
+v:["She wrapped him in cloths and laid him in a manger, because there was no room for them.","Luke 2:7"],
+l:["Jesus, the King of everything, came as a small baby.","Jesus is humble, and he came for everyone.","We can make room in our hearts for Jesus."],
+q:["If Jesus came to our house, where would you want him to sleep?","How can we make room for Jesus in our hearts?"],
+p:"Dear Jesus, / you came as a little baby / because you love us. / There is always room for you in my heart. Amen.",
+m:["V","Do one helpful job tomorrow without being asked, like clearing the table or packing away."]},
+
+{t:"Angels in the Night Sky",r:"Luke 2:8–20",g:"Joy",tr:"God's good news is joy for everyone",sc:"night hills ; 👼150,72,36 👼252,60,30 🐑100,170,30 🔥305,170,28",
+s:["Out in the fields near Bethlehem, some shepherds were watching their sheep in the dark. It was a quiet, ordinary night. Then suddenly, FLASH! An angel appeared, and God’s glory shone all around them! The shepherds were terrified.","‘Don’t be afraid!’ said the angel. ‘I bring you good news of great joy for all people! Today in Bethlehem a Saviour has been born. He is Christ the Lord! You will find the baby wrapped in cloths and lying in a manger.’","Then the whole sky filled with angels, more than you could count, singing: ‘Glory to God in the highest, and peace on earth!’","The shepherds ran to Bethlehem and found baby Jesus, just as the angel had said. Then they told everyone they met! God told the good news first to ordinary shepherds, because Jesus came for everyone."],
+v:["I bring you good news that will bring great joy for all the people.","Luke 2:10"],
+l:["The good news of Jesus is for everyone.","God’s news brings great joy.","When we meet Jesus, we want to tell others."],
+q:["What would you do if you saw a sky full of angels?","Who can we tell the good news to?"],
+p:"Dear God, / thank you for the good news of Jesus! / Fill my heart with joy / and help me tell others. Amen.",
+m:["V","Sing a Christmas song for someone tomorrow."]},
+
+{t:"Follow the Star!",r:"Matthew 2:1–12",g:"Guide",tr:"God leads people who look for him",sc:"night desert star ; 🐫110,168,46 🐫172,170,40 🎁252,172,28",
+s:["Far away in the east, some wise men studied the stars. One night they saw a brand-new, extra-bright star. ‘A new king has been born!’ they said. ‘Let’s go and worship him!’","So they packed their camels with treasure and set off on a long adventure, following the star across deserts and mountains. They went to King Herod’s palace in Jerusalem first, asking, ‘Where is the baby who was born to be king?’ (Herod wasn’t happy about another king at all!) The teachers looked in God’s Word and said, ‘Bethlehem!’","The star went ahead of them and stopped right over the house where Jesus was. The wise men were filled with joy! They bowed down and worshipped Jesus, and gave him gifts of gold, frankincense and myrrh.","They searched for Jesus, and God led them all the way to him."],
+v:["You will look for me and find me when you look for me with all your heart.","Jeremiah 29:13"],
+l:["God leads people who are searching for him.","Jesus is worth a long journey to find.","We can give Jesus our best gift: our hearts."],
+q:["What gift would you give baby Jesus?","How does God lead us to him today? (The Bible, church, Mom and Dad.)"],
+p:"Dear God, / thank you for leading me to Jesus. / I give him my best gift: / my whole heart. Amen.",
+m:["V","Make or wrap a little gift for someone in your family."]},
+
+{t:"The Best Present Ever",r:"John 3:16, 1 John 4:8",g:"Love",tr:"God is love",sc:"night town star ; 🎁240,172,28 🎄305,162,46",
+s:["Tomorrow is Christmas! Can you feel the excitement? Presents under the tree, yummy food, family together.","But why do we give presents at Christmas? Because God gave the very first and very best Christmas present: Jesus!","Do you remember Adam and Eve hiding in the garden? Sin (the wrong things we do) puts a wall between us and God. We can’t climb over that wall on our own. So God, who loves us so much, sent Jesus to break down the wall and bring us back to him. That is why the angel said, ‘A Saviour has been born!’ A saviour is a rescuer.","God didn’t send Jesus because we were good enough. He sent him because he loves us. Not just a little, but SO much. The Bible says, ‘God is love.’ Love is what God is like, all the way through."],
+v:["God loved the world so much that he gave his one and only Son.","John 3:16"],
+l:["Jesus is God’s gift to us.","God sent Jesus because he loves us so much.","Jesus came to rescue us and bring us back to God."],
+q:["What is the best present you have ever been given?","How is Jesus an even better present?"],
+p:"Dear God, / thank you for the best present ever: Jesus! / Thank you for loving me so much. / I love you too. Amen.",
+m:["V","Tomorrow, before opening presents, sing ‘Happy Birthday’ to Jesus."]},
+
+{c:1,xmas:1,t:"Christmas Campfire: Happy Birthday, Jesus!",sc:"night hills stable,star ; 👶200,160,28 🎉80,90,30 🎂320,170,34",
+intro:"Merry Christmas, explorer! Today we celebrate the birthday of Jesus. Remember the promise God made in the garden, the clues he gave Isaiah and Micah, the angel’s visit to Mary, the long trip to Bethlehem and the baby in the manger? Every promise came true. God gave us his very best gift.",
+game:"Act out the Christmas story with toys or the nativity set. Then light a candle (with Mom!) and sing ‘Happy Birthday’ to Jesus.",
+q:["What was your favourite part of the Christmas story?","What gift can you give Jesus today?"],
+p:"Happy birthday, Jesus! / Thank you for coming to be with us. / You are God’s best gift, / and I’m so glad you came. Amen.",
+m:["V","Give someone a hug today and tell them, ‘Jesus came because God loves you!’"]},
+
+{t:"Jesus' Greatest Rescue",r:"Luke 23",g:"Saviour",tr:"Jesus loves me so much that he gave his life for me",sc:"sunset hills cross ; ❤️312,80,26",
+s:["Baby Jesus grew up and did amazing things. He healed people, calmed storms and loved everyone. But some leaders were jealous and angry with Jesus. They didn’t believe he was God’s Son.","One sad day, they arrested Jesus and put him on a wooden cross to die. Jesus had never done anything wrong, not even once! So why did he let it happen? Jesus could have called a million angels to help him. But he chose to stay on the cross, because of love.","Remember the wall that sin puts between us and God? On the cross, Jesus took all the wrong things we have ever done onto himself, so we could be forgiven. It was like a friend stepping in to take the blame for us. On the cross, Jesus even prayed for the people hurting him: ‘Father, forgive them.’","Then Jesus died, and his friends put his body in a tomb, a cave cut into rock. They were so sad. But wait… this is not the end of the story!"],
+v:["God showed his great love for us by sending Christ to die for us while we were still sinners.","Romans 5:8"],
+l:["Jesus chose the cross because he loves us.","Jesus took the punishment for our wrong things so we can be forgiven.","Jesus forgave even the people who hurt him."],
+q:["How does it make you feel that Jesus loves you that much?","The cross is now a sign of God’s love. Where have you seen crosses?"],
+p:"Dear Jesus, / thank you for loving me so much / that you died on the cross for me. / Thank you for taking away my sin. Amen.",
+m:["T","Make a cross with two sticks or two crayons to remind you of Jesus’ love."]},
+
+{t:"He Is Alive!",r:"Matthew 28:1–10",g:"Alive!",tr:"Jesus is alive and stronger than death",sc:"dawn hills tomb ; ✨140,90,22 🌸300,172,24 🌸325,170,20",
+s:["Early on Sunday morning, three days after Jesus died, some women went to the tomb. They were sad, and they wondered, ‘Who will roll away the huge stone from the door?’","But when they got there, RUMBLE! The earth shook, and the stone was already rolled away! An angel was sitting on it, shining as bright as lightning. ‘Don’t be afraid,’ said the angel. ‘I know you are looking for Jesus. He is not here. He has risen, just as he said!’","The tomb was EMPTY! The women ran to tell the disciples, scared and joyful all at once. And on the way, guess who met them? JESUS! Alive! They fell at his feet and worshipped him.","Jesus beat death! He is stronger than anything. And because he is alive, everyone who trusts in him will live forever with God too."],
+v:["He is not here; he has risen, just as he said!","Matthew 28:6"],
+l:["Jesus is alive! He came back to life.","Jesus is stronger than death, sin and anything scary.","Because Jesus lives, we can be with God forever."],
+q:["How do you think the women felt when they saw Jesus?","Let’s shout it together: ‘Jesus is ALIVE!’"],
+p:"Dear Jesus, / you are alive! / You beat sin and death. / Thank you that I can live with you forever. Amen.",
+m:["V","Tell someone tomorrow: ‘Jesus is alive!’"]},
+
+{t:"Breakfast on the Beach",r:"John 21",g:"Makes Me New",tr:"Jesus forgives me and gives me a fresh start",sc:"dawn beach ; ⛵120,100,38 🔥230,170,32 🐟272,172,22",
+s:["Before Jesus died, his friend Peter had done something that made him very sad. Three times, people asked him, ‘Do you know Jesus?’ And three times, Peter was scared and said, ‘No! I don’t know him!’ Afterwards Peter cried and cried.","After Jesus came back to life, Peter went fishing with his friends. They fished all night and caught nothing (sound familiar?). In the morning, a man on the beach called, ‘Throw your net on the right side!’ They did, and the net filled with 153 fish! ‘It’s the Lord!’ said John. Peter was so excited that he jumped into the water and swam to shore!","Jesus had made a fire and was cooking breakfast. After they ate, Jesus asked Peter, ‘Peter, do you love me?’ ‘Yes, Lord, you know I love you.’ Jesus asked him three times, once for each time Peter had said no. Then Jesus said, ‘Take care of my sheep.’","Jesus didn’t just forgive Peter. He gave him an important job again."],
+v:["If we confess our sins, he will forgive us.","1 John 1:9"],
+l:["Jesus forgives us when we say sorry.","Jesus doesn’t give up on us when we fail.","Jesus gives us a fresh start and a job to do."],
+q:["How do you think Peter felt when Jesus asked, ‘Do you love me?’","What would you say if Jesus asked you?"],
+p:"Dear Jesus, / thank you that you forgive me / and never give up on me. / Yes, Jesus, I love you! Amen.",
+m:["V","Have a special breakfast with Mom and talk about Jesus’ beach breakfast."]},
+
+{t:"The Helper Comes",r:"Acts 1 – 2",g:"Helper",tr:"God lives in me by his Holy Spirit",sc:"day town ; 🌬️90,60,34 🔥200,100,22 🔥230,95,22 🔥260,100,22",
+s:["After forty days, Jesus took his friends up a hill. ‘I’m going back to my Father in heaven,’ he said. ‘But I won’t leave you alone. I will send you the Holy Spirit, the Helper.’ Then Jesus went up into the sky until a cloud hid him.","His friends waited and prayed together in a room in Jerusalem. Ten days later there was a sound like a mighty wind, WHOOOOSH, that filled the whole house. Little flames, like fire, rested on each of them, and they were filled with the Holy Spirit! Suddenly they could speak in languages they had never learned, and they bravely told everyone about Jesus. That day about 3,000 people decided to follow Jesus!","The Holy Spirit is God living inside everyone who follows Jesus. He helps us when we are sad, makes us brave, reminds us of what Jesus said and helps us do what is right.","You never have to go anywhere without God."],
+v:["I will ask the Father, and he will give you another Helper to be with you forever.","John 14:16"],
+l:["The Holy Spirit is God living in those who follow Jesus.","The Holy Spirit helps us, comforts us and makes us brave.","We never have to be alone."],
+q:["What would you like the Holy Spirit to help you with?","You can’t see the wind, but you can see what it does. How is the Holy Spirit like that?"],
+p:"Dear God, / thank you for the Holy Spirit, my Helper. / Please fill me and help me / to be kind, brave and good. Amen.",
+m:["R","Blow bubbles or watch the wind in the trees, and remember the Holy Spirit."]},
+
+{t:"Go and Tell the World!",r:"Matthew 28:16–20",g:"Always With Me",tr:"Jesus is with me always, and he sends me on his adventure",sc:"day mountain ; 🌍322,62,32 👣200,172,28",
+s:["Before Jesus went back to heaven, he gathered his friends on a mountain and gave them the biggest adventure mission ever!","‘Go to all the people in the world,’ he said, ‘and make them my followers. Baptise them, and teach them to obey everything I have taught you.’ That is a huge job! The whole world? How could a few friends do that?","Then Jesus gave them the best promise of all: ‘And remember, I am with you always, to the very end.’","And they did it! They told people, who told more people, who told more people… for 2,000 years! The good news travelled across seas and mountains and deserts, until one day someone told your family, and now Mom is telling you! You are part of Jesus’ great adventure. And the best part? Jesus is with you every step of the way."],
+v:["And surely I am with you always, to the very end.","Matthew 28:20"],
+l:["Jesus gave his followers a mission: tell the world about him.","The good news has been passed on for 2,000 years, all the way to you!","Jesus is always with us on his mission."],
+q:["Who told Mom about Jesus? (Mom, share your story!)","Who could you tell?"],
+p:"Dear Jesus, / thank you that you are always with me. / Send me on your adventure. / Help me tell others about you. Amen.",
+m:["V","Invite a friend to church, or tell them a Bible story you learned."]},
+
+{c:1,fin:1,t:"Grand Campfire: The Adventure Has Only Begun",sc:"night campfire star ; 🔥200,165,54 ⛺80,165,44 🧭320,166,36",
+intro:"You did it, explorer! Fifty-six nights on the Lantern Trail. You have collected treasure after treasure about who God is: Creator, Holy, Mighty, Good, Kind, King, Friend, Saviour. But this is not the end. Being friends with God is an adventure that lasts forever.",
+game:"Treasure map review: scroll through the Trail Map together. Let him pick his three favourite treasures and tell you why.",
+q:["What is your very favourite thing you learned about God?","What do you want to say to God tonight?"],
+p:"Dear God, / thank you for the Lantern Trail. / Thank you for showing me who you are. / I want to keep knowing you better and better, / every day of my life. Amen.",
+m:["T","Keep using the Friendship Compass every day: Talk, Listen, Trust, Love."]}
+];
+D.forEach((d,i)=>{d.n=i+1;d.ex=EX.find(e=>d.n>=e.from&&d.n<=e.to)});
+
+/* ---------- SCENES ---------- */
+const SKY={day:["#78C3F0","#D5EFFB"],dawn:["#F4A07A","#FDE5C1"],sunset:["#E3667B","#F8C778"],night:["#07122C","#253A70"],storm:["#3C4658","#8A95A6"]};
+let uid=0;
+function starPts(cx,cy,r1,r2){let p=[];for(let i=0;i<10;i++){const a=Math.PI/5*i-Math.PI/2,r=i%2?r2:r1;p.push((cx+r*Math.cos(a)).toFixed(1)+","+(cy+r*Math.sin(a)).toFixed(1))}return p.join(" ")}
+function rnd(seed){let s=seed;return()=>{s=(s*9301+49297)%233280;return s/233280}}
+function scene(code,seed){
+  const [head,pr=""]=code.split(";");const w=head.trim().split(/\s+/);const sky=w[0],land=w[1],ex=(w[2]||"").split(",");
+  const id="g"+(uid++);const r=rnd(seed||7);const [c1,c2]=SKY[sky];
+  let s=`<svg viewBox="0 0 400 180" role="img" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></linearGradient></defs><rect width="400" height="180" fill="url(#${id})"/>`;
+  if(sky==="night"){for(let i=0;i<40;i++){s+=`<circle cx="${(r()*400).toFixed(0)}" cy="${(r()*100).toFixed(0)}" r="${(r()*1.4+.4).toFixed(1)}" fill="#FFF6D8" opacity="${(r()*.6+.4).toFixed(2)}"/>`}
+    if(!ex.includes("star"))s+=`<circle cx="340" cy="38" r="15" fill="#FFF3C4"/><circle cx="347" cy="33" r="13" fill="${c1}"/>`}
+  if(sky==="day")s+=`<circle cx="345" cy="38" r="22" fill="#FFD24A"/><circle cx="345" cy="38" r="32" fill="#FFD24A" opacity=".25"/>`;
+  if(sky==="dawn")s+=`<circle cx="70" cy="118" r="30" fill="#FFCD6A"/>`;
+  if(sky==="sunset")s+=`<circle cx="330" cy="112" r="32" fill="#FFB24C"/>`;
+  if(sky==="storm")s+=`<ellipse cx="90" cy="34" rx="90" ry="26" fill="#566174"/><ellipse cx="260" cy="26" rx="120" ry="28" fill="#4C576A"/><g stroke="#C9D3E0" stroke-width="1.5" opacity=".7">${Array.from({length:22},()=>{const x=r()*400,y=r()*120+30;return `<line x1="${x.toFixed(0)}" y1="${y.toFixed(0)}" x2="${(x-6).toFixed(0)}" y2="${(y+14).toFixed(0)}"/>`}).join("")}</g>`;
+  if(ex.includes("star"))s+=`<circle cx="300" cy="40" r="30" fill="#FFF3C4" opacity=".18"/><polygon points="${starPts(300,40,16,6.5)}" fill="#FFE27A"/>`;
+  if(ex.includes("rainbow"))["#E85D5D","#F2A33A","#F5D547","#5DBB63","#4A90D9","#8E6CCF"].forEach((c,i)=>{const R=150-i*8;s+=`<path d="M${200-R} 150 A${R} ${R} 0 0 1 ${200+R} 150" fill="none" stroke="${c}" stroke-width="8" opacity=".85"/>`});
+  const L={
+    hills:`<ellipse cx="90" cy="182" rx="210" ry="62" fill="#86C98A"/><ellipse cx="330" cy="190" rx="230" ry="70" fill="#5AA866"/>`,
+    sea:`<rect y="100" width="400" height="80" fill="${sky==="storm"?"#2A4F74":sky==="night"?"#1D3C6B":"#2F7FC1"}"/>`+[112,128,146,164].map((y,i)=>`<path d="M0 ${y} q25 -8 50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0" fill="none" stroke="#FFFFFF" stroke-opacity=".35" stroke-width="2" transform="translate(${i%2?-25:0} 0)"/>`).join(""),
+    beach:`<rect y="96" width="400" height="84" fill="${sky==="storm"?"#2A4F74":"#3A8CCB"}"/><path d="M0 108 q25 -6 50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0" fill="none" stroke="#FFFFFF" stroke-opacity=".4" stroke-width="2"/><path d="M0 150 Q200 124 400 146 L400 180 L0 180Z" fill="#EBD08E"/>`,
+    desert:`<ellipse cx="80" cy="188" rx="230" ry="62" fill="#E8C372"/><ellipse cx="340" cy="194" rx="230" ry="66" fill="#D7A754"/>`,
+    mountain:`<polygon points="50,160 200,30 350,160" fill="#7B8699"/><polygon points="168,60 200,30 232,60 216,66 200,56 184,66" fill="#F1F4F8"/><rect y="150" width="400" height="30" fill="#6AA86F"/>`,
+    river:`<ellipse cx="90" cy="182" rx="210" ry="62" fill="#86C98A"/><ellipse cx="330" cy="190" rx="230" ry="70" fill="#5AA866"/><path d="M0 150 Q100 136 200 146 T400 140 L400 162 Q300 168 200 166 T0 172Z" fill="#4A9BE0"/>`,
+    town:`<rect y="148" width="400" height="32" fill="#D8B878"/>`+[[20,108],[88,118],[262,112],[330,104]].map(([x,y])=>`<rect x="${x}" y="${y}" width="56" height="${150-y}" fill="#EEDFBE"/><rect x="${x+21}" y="${130}" width="14" height="20" fill="#9A6B3F"/><rect x="${x+6}" y="${y+8}" width="10" height="9" fill="#9A6B3F"/>`).join("")+`<circle cx="116" cy="118" r="14" fill="#EEDFBE"/>`,
+    cave:`<rect y="140" width="400" height="40" fill="#6B5A45"/><path d="M0 0 L130 0 Q95 80 70 180 L0 180Z" fill="#4A3C2F"/><path d="M400 0 L270 0 Q305 80 330 180 L400 180Z" fill="#4A3C2F"/>`,
+    redsea:`<rect y="118" width="400" height="62" fill="#E5C88A"/><path d="M0 40 Q90 30 150 60 L160 180 L0 180Z" fill="#2F7FC1"/><path d="M150 60 L160 180" stroke="#BFE2FF" stroke-width="5"/><path d="M400 40 Q310 30 250 60 L240 180 L400 180Z" fill="#2F7FC1"/><path d="M250 60 L240 180" stroke="#BFE2FF" stroke-width="5"/>`,
+    garden:`<ellipse cx="90" cy="182" rx="210" ry="62" fill="#8ACF84"/><ellipse cx="330" cy="190" rx="230" ry="70" fill="#5DAF62"/>`+Array.from({length:18},()=>`<circle cx="${(r()*400).toFixed(0)}" cy="${(r()*30+148).toFixed(0)}" r="3" fill="${r()>.5?"#FF8FB1":"#FFE066"}"/>`).join(""),
+    campfire:`<path d="M0 120 L30 70 L60 120Z M40 125 L80 55 L120 125Z M300 120 L335 60 L370 120Z M350 125 L380 75 L410 125Z" fill="#183326"/><ellipse cx="200" cy="190" rx="300" ry="62" fill="#2E4C39"/><circle cx="200" cy="150" r="60" fill="#FFB347" opacity=".18"/><rect x="165" y="160" width="70" height="9" rx="4" fill="#7A4B2A" transform="rotate(12 200 165)"/><rect x="165" y="160" width="70" height="9" rx="4" fill="#8B5A33" transform="rotate(-12 200 165)"/>`
+  };
+  s+=L[land]||"";
+  if(ex.includes("pyramids"))s+=`<polygon points="250,140 300,80 350,140" fill="#C99A4B"/><polygon points="320,142 352,104 384,142" fill="#B98A3E"/>`;
+  if(ex.includes("walls"))s+=`<rect x="80" y="92" width="240" height="58" fill="#C8A56A"/>`+Array.from({length:12},(_,i)=>`<rect x="${80+i*20}" y="84" width="11" height="10" fill="#C8A56A"/>`).join("")+`<rect x="185" y="112" width="30" height="38" rx="15" fill="#7A5631"/>`;
+  if(ex.includes("statue"))s+=`<rect x="185" y="62" width="30" height="90" fill="#E5B93C"/><circle cx="200" cy="52" r="14" fill="#E5B93C"/><rect x="175" y="148" width="50" height="10" fill="#B98A2A"/>`;
+  if(ex.includes("ark"))s+=`<polygon points="100,112 300,112 278,140 122,140" fill="#8B5A33"/><rect x="150" y="90" width="100" height="24" fill="#A06A3D"/><polygon points="145,92 200,74 255,92" fill="#7A4B2A"/>`;
+  if(ex.includes("stable"))s+=`<rect x="140" y="112" width="120" height="58" fill="#8B5A33"/><polygon points="128,114 200,78 272,114" fill="#6E4325"/><rect x="178" y="134" width="44" height="36" fill="#3A2416"/><rect x="180" y="158" width="40" height="8" fill="#E9C46A"/>`;
+  if(ex.includes("cross"))s+=`<rect x="196" y="50" width="9" height="100" fill="#5B3A29"/><rect x="174" y="72" width="53" height="9" fill="#5B3A29"/>`;
+  if(ex.includes("tomb"))s+=`<ellipse cx="200" cy="150" rx="100" ry="58" fill="#8D8A84"/><ellipse cx="190" cy="140" rx="22" ry="26" fill="#2B2622"/><circle cx="262" cy="148" r="24" fill="#A9A59E"/>`;
+  if(ex.includes("tree"))s+=`<rect x="292" y="80" width="18" height="80" fill="#7A4B2A"/><circle cx="300" cy="72" r="46" fill="#3E8E4F"/><circle cx="270" cy="88" r="26" fill="#4A9C5A"/><circle cx="330" cy="88" r="26" fill="#4A9C5A"/>`;
+  if(ex.includes("rock"))s+=`<polygon points="30,180 50,132 90,122 130,134 150,180" fill="#7C7A74"/>`;
+  if(ex.includes("flakes"))s+=Array.from({length:40},()=>`<circle cx="${(r()*400).toFixed(0)}" cy="${(r()*44+134).toFixed(0)}" r="2" fill="#FFFFFF"/>`).join("");
+  if(sky==="night"&&land!=="campfire")s+=`<rect y="90" width="400" height="90" fill="#081430" opacity=".3"/>`;
+  pr.trim().split(/\s+/).filter(Boolean).forEach(t=>{const m=t.match(/^(.+?)(\d+),(\d+),(\d+)$/u);if(m)s+=`<text x="${m[2]}" y="${m[3]}" font-size="${m[4]}" text-anchor="middle" font-family="'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif">${m[1]}</text>`});
+  return s+"</svg>";
+}
+function gem(c,size=26){return `<svg class="gem" width="${size}" height="${size}" viewBox="0 0 26 26" aria-hidden="true"><polygon points="7,3 19,3 24,10 13,24 2,10" fill="${c}"/><polygon points="7,3 19,3 16,10 10,10" fill="#FFFFFF" opacity=".35"/><polygon points="2,10 10,10 13,24" fill="#000000" opacity=".12"/></svg>`}
+const exc=e=>`var(--ex${e.n})`;
+
+/* ---------- STATE ---------- */
+let done=new Set();
+try{done=new Set(JSON.parse(localStorage.getItem("lt-done")||"[]"))}catch(e){}
+function save(){try{localStorage.setItem("lt-done",JSON.stringify([...done]))}catch(e){}}
+function nextDay(){for(let i=1;i<=56;i++)if(!done.has(i))return i;return 56}
+const app=document.getElementById("app");
+
+/* ---------- VIEWS ---------- */
+function heroArt(){
+  let st="";const r=rnd(11);for(let i=0;i<50;i++)st+=`<circle cx="${(r()*800).toFixed(0)}" cy="${(r()*110).toFixed(0)}" r="${(r()*1.5+.4).toFixed(1)}" fill="#FFF6D8" opacity="${(r()*.6+.3).toFixed(2)}"/>`;
+  const pts=[[40,170],[130,150],[220,162],[310,140],[400,152],[490,132],[580,146],[670,124],[760,134]];
+  const lan=pts.map(([x,y],i)=>`<circle cx="${x}" cy="${y-2}" r="${i===8?16:7}" fill="#FFBC52" opacity="${i===8?.35:.9}"/>`).join("");
+  return `<svg class="hero-art" viewBox="0 0 800 200" aria-hidden="true" preserveAspectRatio="xMidYMax meet">${st}<circle cx="700" cy="40" r="16" fill="#FFF3C4"/><circle cx="707" cy="35" r="14" fill="#0F1D38"/><path d="M0 200 Q150 120 320 168 T640 140 T800 150 L800 200Z" fill="#1E3A3A"/><path d="M0 200 Q200 150 420 182 T800 170 L800 200Z" fill="#16302C"/><path d="M40 170 Q130 140 220 162 T400 152 T580 146 T760 134" fill="none" stroke="#FFBC52" stroke-width="3" stroke-dasharray="2 10" stroke-linecap="round" opacity=".8"/>${lan}<text x="760" y="142" font-size="26" text-anchor="middle" font-family="'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif">🏮</text><text x="60" y="168" font-size="30" text-anchor="middle" font-family="'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif">🧒</text></svg>`;
+}
+function showMap(){
+  const n=nextDay(),cnt=done.size;
+  let h=`<section class="hero gutter"><div class="inner">
+    <h1>The <span>Lantern</span> Trail</h1>
+    <p class="lede">A bedtime adventure for you and your little explorer: 56 nights to discover who God is, what he is like, and how to be his friend.</p>
+    <p class="theme-verse">“Your word is a lamp for my feet and a light on my path.”<small>Psalm 119:105</small></p>
+    <div class="hero-row"><a class="btn" href="#day-${n}">${cnt?"Continue the trail":"Start the trail"}: Day ${n}</a><a class="btn ghost" href="#guide">How it works</a>
+    <div class="progress"><div class="track"><div class="fill" style="width:${cnt/56*100}%"></div></div>${cnt} of 56 treasures</div></div>
+    ${heroArt()}</div></section><section class="map gutter"><div class="inner">`;
+  EX.forEach(e=>{
+    h+=`<div style="--exc:${exc(e)}"><div class="ex-head"><span class="ex-tag">Expedition ${e.n} · Days ${e.from}–${e.to}</span><h2>${e.name}</h2><p>${e.blurb}</p></div><div class="stones">`;
+    for(let i=e.from;i<=e.to;i++){const d=D[i-1];
+      h+=`<a class="stone${done.has(i)?" done":""}${d.c?" camp":""}${i===n&&!done.has(i)?" next":""}" href="#day-${i}"><span class="num">${done.has(i)?"✓":i}</span><span class="st">${d.c?(d.xmas?"Christmas Campfire":d.fin?"Grand Campfire":"Campfire Night"):d.t}</span><span class="sg">${d.c?"Review night":(done.has(i)?"Found: ":"")+d.g}</span></a>`}
+    h+=`</div></div>`});
+  app.innerHTML=h+`</div></section>`;
+}
+function sign(n,label){return `<h2 class="sign"><b>${n}</b>${label}</h2>`}
+function bubble(v){return `<blockquote class="bubble"><q>${v[0]}</q><cite>${v[1]}</cite></blockquote>`}
+function prayer(p,own=true){return `<div class="prayer">${p.split(" / ").map(l=>`<span class="line">${l}</span>`).join("")}${own?`<p class="own">Now let him add his own words to God, or a simple ‘thank you for…’.</p>`:""}</div>`}
+function mission(m){const c=CP[m[0]];return `<div class="mission" style="--pc:var(--${c[2]})"><div class="cbadge">${compassMini(c[2])}<span>${c[0]}</span></div><p>${m[1]}</p></div>`}
+function compassMini(k){const a={talk:0,listen:90,trust:180,love:270}[k];return `<svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="18" fill="none" stroke="currentColor" stroke-width="2.5"/><g transform="rotate(${a} 20 20)"><polygon points="20,5 25,20 15,20" fill="currentColor"/><polygon points="20,35 25,20 15,20" fill="currentColor" opacity=".3"/></g></svg>`}
+function showDay(n){
+  if(n<1||n>56){location.hash="";return}
+  const d=D[n-1],e=d.ex;let h=`<section class="page gutter" style="--exc:${exc(e)}"><div class="inner">
+  <div class="crumbs"><a href="#map">← Trail Map</a><span class="pn">${n>1?`<a href="#day-${n-1}">‹ Day ${n-1}</a>`:""}${n<56?`<a href="#day-${n+1}">Day ${n+1} ›</a>`:""}</span></div>
+  <header class="day-head"><span class="eyebrow">Day ${n} · Expedition ${e.n}: ${e.name}</span><h1>${d.t}</h1>${d.r?`<span class="ref">Bible story: ${d.r}</span>`:""}</header>
+  <figure class="scene">${scene(d.sc,n*13)}</figure>`;
+  if(!d.c){
+    h+=`<div class="trait">${gem(exc(e),40)}<div><small>Tonight's treasure about God</small><strong>${d.tr}</strong></div></div>
+    <section class="step">${sign(1,"Light the lantern")}<p class="tip">Dim the lights, switch on a torch or bedside lamp, and say together: “Your word is a lamp for my feet.”</p></section>
+    <section class="step story">${sign(2,"Story trail")}${d.s.map(p=>`<p>${p}</p>`).join("")}</section>
+    <section class="step">${sign(3,"God's Word says")}${bubble(d.v)}<p class="tip">Say it three times: in a whisper, in a normal voice, then in a big explorer voice!</p></section>
+    <section class="step">${sign(4,"Treasure found")}<ul class="treasure">${d.l.map(x=>`<li>${gem(exc(e),18)}<span>${x}</span></li>`).join("")}</ul></section>
+    <section class="step">${sign(5,"Adventure talk")}<ol class="talk">${d.q.map(x=>`<li>${x}</li>`).join("")}</ol></section>
+    <section class="step">${sign(6,"Talk to God")}<p class="tip">Mom says a line, he repeats it.</p>${prayer(d.p)}</section>
+    <section class="step">${sign(7,"Explorer mission for tomorrow")}${mission(d.m)}</section>`;
+  }else{
+    const ds=D.slice(e.from-1,e.to).filter(x=>!x.c);
+    h+=`<section class="step">${sign(1,"Around the campfire")}<p class="story" style="font-size:1.12rem;max-width:64ch">${d.intro}</p></section>
+    <section class="step">${sign(2,"Treasures from this expedition")}<p class="tip">Point to each one. Can he remember the story that goes with it?</p><div class="gems">${ds.map(x=>`<a href="#day-${x.n}">${gem(exc(e),28)}<span><b>${x.tr}</b><small>Day ${x.n} · ${x.t}</small></span></a>`).join("")}</div></section>
+    <section class="step">${sign(3,"Treasure Verse")}${bubble(e.v)}<p class="tip">This expedition's verse to learn by heart. Make up actions for each part.</p></section>
+    <section class="step">${sign(4,"Campfire game")}<div class="card"><p>${d.game}</p></div></section>
+    <section class="step">${sign(5,"Adventure talk")}<ol class="talk">${d.q.map(x=>`<li>${x}</li>`).join("")}</ol></section>
+    <section class="step">${sign(6,"Talk to God")}${prayer(d.p)}</section>
+    <section class="step">${sign(7,"Explorer mission")}${mission(d.m)}</section>`;
+    if(d.fin){h+=`<section class="step">${sign("★","Would you like to follow Jesus?")}<div class="card invite"><p><b>For Mom:</b> Over these nights he has heard that God made him, loves him, came looking for him, and sent Jesus to rescue him. If he says he wants to be Jesus' friend and follower, you can pray this together. Only if he wants to: never press. If he is not ready, that is fine. The trail keeps going, and you can come back to this any night.</p>${prayer("Dear Jesus, / I believe you are God's Son. / Thank you for dying on the cross for me / and coming alive again. / I'm sorry for the wrong things I do. / Please forgive me. / I want to follow you and be your friend forever. / Please fill me with your Holy Spirit. Amen.",false)}<p>If he prays this, celebrate! Write the date in his Bible and tell someone who loves him. Heaven is having a party (remember the lost sheep?).</p></div></section>
+    <section class="step">${sign("★","Explorer certificate")}<div class="cert"><span class="eyebrow">The Lantern Trail</span><h3>Official Trail Explorer</h3><span class="nm" id="certName">${esc(getName())||"&nbsp;"}</span><p>has walked all 56 nights of the Lantern Trail and discovered that God is Creator, Holy, Mighty, Good, Kind, King, Friend and Saviour, and that he is with me always.</p><div class="row"><label for="explorer">Explorer's name</label><input id="explorer" type="text" maxlength="30" value="${esc(getName())}" placeholder="Type his name"></div><p class="tip">Take a screenshot of this certificate to keep, or copy it onto paper together.</p></div></section>`}
+  }
+  const isd=done.has(n);
+  h+=`<div class="collect"><button class="btn${isd?" isdone":""}" id="collect" type="button">${gem(isd?"var(--on-forest)":"var(--on-amber)",22)}<span>${isd?"Treasure collected!":"We did it! Collect the treasure"}</span></button><span class="pn">${n>1?`<a href="#day-${n-1}">‹ Day ${n-1}</a>`:""}${n<56?`<a href="#day-${n+1}">Day ${n+1} ›</a>`:`<a href="#map">Trail Map</a>`}</span></div></div></section>`;
+  app.innerHTML=h;
+  document.getElementById("collect").onclick=ev=>{
+    if(done.has(n))done.delete(n);else{done.add(n);toast(d.c?"Campfire badge earned!":"Treasure found: "+d.tr+"!")}
+    save();const b=ev.currentTarget,on=done.has(n);b.classList.toggle("isdone",on);b.querySelector("span").textContent=on?"Treasure collected!":"We did it! Collect the treasure";b.querySelector("svg").outerHTML=gem(on?"var(--on-forest)":"var(--on-amber)",22);if(on)b.querySelector("svg").classList.add("pop");
+  };
+  const inp=document.getElementById("explorer");
+  if(inp)inp.oninput=()=>{try{localStorage.setItem("lt-name",inp.value)}catch(e){}document.getElementById("certName").innerHTML=esc(inp.value)||"&nbsp;"};
+}
+function getName(){try{return localStorage.getItem("lt-name")||""}catch(e){return ""}}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+let tt;function toast(m){let t=document.querySelector(".toast");if(!t){t=document.createElement("div");t.className="toast";t.setAttribute("role","status");document.body.appendChild(t)}t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,2600)}
+
+function showGuide(){
+  app.innerHTML=`<section class="page gutter"><div class="inner prose">
+  <header class="day-head"><span class="eyebrow" style="--exc:var(--forest)">For Mom</span><h1>How the Lantern Trail works</h1></header>
+  <p>Each night is one stop on the trail. Every Bible story uncovers a <b>treasure</b>: one part of God's character, such as <i>God is holy</i>, <i>God provides</i> or <i>Jesus never stops looking for me</i>. Over 56 nights your son collects them all, and learns along the way what it means to be friends with God.</p>
+  <p>There are 8 expeditions. Each one ends with a <b>Campfire Night</b>: a review evening with a game, the week's Treasure Verse and no new story, so the truths sink in.</p>
+  <h2>Tonight's rhythm (10 to 15 minutes)</h2>
+  <ol class="rhythm">
+   <li><span><b>Light the lantern.</b> Dim the lights and switch on a torch or bedside lamp. It becomes his signal that trail time has started.</span></li>
+   <li><span><b>Story trail.</b> Read the story aloud. Let him make the sound effects (WHOOSH, CRASH, ROAR) and point at the picture.</span></li>
+   <li><span><b>God's Word says.</b> Read the verse in the speech bubble. Say it three times: whisper, normal, big explorer voice.</span></li>
+   <li><span><b>Treasure found.</b> Read the three short lessons. The first one is usually the main idea.</span></li>
+   <li><span><b>Adventure talk.</b> Ask one or two questions. Short answers are fine. You don't have to use them all.</span></li>
+   <li><span><b>Talk to God.</b> You say a line, he repeats it. Then give him a moment to add his own words.</span></li>
+   <li><span><b>Explorer mission.</b> A small thing to try tomorrow. Tap “We did it! Collect the treasure” to light up that stone on the map.</span></li>
+  </ol>
+  <h2>Where the trail lands</h2>
+  <p>If Day 1 is <b>6 November</b>, the trail follows the calendar like this:</p>
+  <div class="dates"><div><b>Day 1</b><span>6 November</span></div><div><b>Day 26</b><span>1 December</span></div><div><b>Day 43</b><span>18 December: Christmas trail starts</span></div><div><b>Day 49</b><span>24 December</span></div><div><b>Day 50</b><span>25 December: Christmas Campfire</span></div><div><b>Day 56</b><span>31 December: Grand Campfire</span></div></div>
+  <p>If you start later or miss a few nights, don't worry. Just jump to <b>Day 43 on 18 December</b> so that Day 50 falls on Christmas Day, and read any skipped stories in the new year or on a campfire night.</p>
+  <h2>Tips for a 5-year-old</h2>
+  <ul class="tips">
+   <li>Wiggles are normal. Let him hold the torch, a toy or a small cross while you read.</li>
+   <li>Act it out: march around the bed for Jericho, rock the bed for Jonah's storm.</li>
+   <li>Kids learn most from watching your own friendship with God. Share a short “God helped me today when…” story now and then.</li>
+   <li>Keep it warm and short rather than complete. Missing a part is better than a tired, grumpy end to the day.</li>
+   <li>Keep a children's Bible nearby. When he asks for more, read the same story from it.</li>
+   <li>The verses are given in simple wording for young children. The references let you look them up in your own Bible.</li>
+  </ul>
+  <p class="tip">Your progress and his name on the certificate are saved in this browser on this device only.</p>
+  <p><a class="btn" href="#day-${nextDay()}">Go to Day ${nextDay()}</a></p>
+  </div></section>`;
+}
+function showCompass(){
+  const pts=[["T","talk","Talk","We talk to God in prayer. We can tell him anything: thank you, sorry, please, and what happened today. He always hears."],["L","listen","Listen","God talks to us mostly through the Bible. When we read his stories and verses, we get to know what he is like."],["R","trust","Trust","Friends trust each other. We believe God is good and do what he says, even when it is hard or seems strange."],["V","love","Love","We love God most of all, and we show it by loving the people around us: sharing, forgiving and being kind."]];
+  app.innerHTML=`<section class="page gutter"><div class="inner prose">
+  <header class="day-head"><span class="eyebrow" style="--exc:var(--forest)">Friendship Compass</span><h1>How to be friends with God</h1></header>
+  <p>Being friends with God is a lot like being friends with anyone. You spend time together, you talk, you listen, you trust each other and you show love. Every Explorer Mission on the trail points to one of these four directions, so he practises a real relationship with God, not just facts about him.</p>
+  <div class="compass-wrap"><svg viewBox="0 0 200 200" aria-label="Compass with four points: Talk, Listen, Trust, Love"><circle cx="100" cy="100" r="92" fill="var(--surface)" stroke="var(--line)" stroke-width="4"/><circle cx="100" cy="100" r="70" fill="none" stroke="var(--line)" stroke-width="2" stroke-dasharray="3 6"/><polygon points="100,22 112,100 88,100" fill="var(--talk)"/><polygon points="178,100 100,112 100,88" fill="var(--listen)"/><polygon points="100,178 88,100 112,100" fill="var(--trust)"/><polygon points="22,100 100,88 100,112" fill="var(--love)"/><circle cx="100" cy="100" r="9" fill="var(--amber)"/><text x="100" y="16" text-anchor="middle" font-family="Fredoka,sans-serif" font-weight="600" font-size="13" fill="var(--talk)">TALK</text><text x="100" y="196" text-anchor="middle" font-family="Fredoka,sans-serif" font-weight="600" font-size="13" fill="var(--trust)">TRUST</text><text x="186" y="80" text-anchor="end" font-family="Fredoka,sans-serif" font-weight="600" font-size="13" fill="var(--listen)">LISTEN</text><text x="14" y="80" font-family="Fredoka,sans-serif" font-weight="600" font-size="13" fill="var(--love)">LOVE</text></svg>
+  <div class="points">${pts.map(p=>`<div class="point" style="--pc:var(--${p[1]})"><h3>${p[2]}</h3><p>${p[3]}</p></div>`).join("")}</div></div>
+  <h2>How do I become God's friend?</h2>
+  <p>Explain it to him in three simple steps, the same way the trail tells it:</p>
+  <ol class="tips"><li><b>God made me and loves me</b> (Days 1–3). He wants to be close to me.</li><li><b>Sin puts a wall between us</b> (Days 3 and 49). The wrong things we do break our friendship with God.</li><li><b>Jesus broke down the wall</b> (Days 49–52). He died for my sin and came alive again. When I say sorry and ask Jesus to be my Lord and friend, God forgives me, I become his child, and his Holy Spirit lives in me.</li></ol>
+  <p>The Grand Campfire on Day 56 includes a simple prayer he can pray if he wants to follow Jesus.</p>
+  </div></section>`;
+}
+function route(){
+  const h=location.hash.slice(1);let tab="map";
+  if(/^day-\d+$/.test(h)){showDay(parseInt(h.slice(4),10));tab="day"}
+  else if(h==="guide"){showGuide();tab="guide"}
+  else if(h==="compass"){showCompass();tab="compass"}
+  else showMap();
+  document.querySelectorAll(".tabs a").forEach(a=>{if(a.dataset.tab===tab)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current")});
+  window.scrollTo(0,0);
+}
+window.addEventListener("hashchange",route);
+route();
+</script>
