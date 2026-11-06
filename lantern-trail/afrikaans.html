@@ -1,0 +1,841 @@
+<title>Die Lanternpad</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Patrick+Hand&display=swap">
+<style>
+/* Layout: an explorer's bedtime trail. A night-sky hero, a map of 56 trail stones in 8 expeditions,
+   and one night's page at a time, read top to bottom in the order Mom does it. */
+:root{
+  --bg:#EDF4F1; --surface:#FFFFFF; --surface-2:#E0ECE7; --ink:#1A2A40; --muted:#56667C; --line:#C7D6D0;
+  --amber:#D98A1E; --amber-soft:#FCEBCC; --on-amber:#1A2A40;
+  --forest:#2A7553; --forest-soft:#D6EDE2; --on-forest:#FFFFFF;
+  --berry:#B23A62; --sky:#2B67AA;
+  --bubble:#FFFFFF; --bubble-ink:#1A2A40; --bubble-line:#1A2A40; --bubble-cite:#2B67AA;
+  --hero:#0F1D38; --hero-2:#22386B; --hero-ink:#F4F1E6; --hero-muted:#B8C4DC;
+  --ex1:#3E9B5A; --ex2:#2F7FC1; --ex3:#8A5CC2; --ex4:#1E9AA0; --ex5:#D4802A; --ex6:#C44A72; --ex7:#C9A227; --ex8:#D2543A;
+  --talk:#2B67AA; --listen:#2A7553; --trust:#8A5CC2; --love:#B23A62;
+  --display:"Fredoka","Baloo 2","Trebuchet MS",system-ui,sans-serif;
+  --body:"Atkinson Hyperlegible",Verdana,"Segoe UI",system-ui,sans-serif;
+  --hand:"Patrick Hand","Comic Sans MS","Chalkboard SE",cursive;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0C1522; --surface:#142135; --surface-2:#1B2B45; --ink:#E7EDF6; --muted:#A0B1C8; --line:#2A3B58;
+  --amber:#FFBC52; --amber-soft:#3A2D16; --on-amber:#1A2A40;
+  --forest:#5FC493; --forest-soft:#163629; --on-forest:#0C1522;
+  --berry:#F07CA2; --sky:#7FB2EF;
+  --bubble:#FFF8E8; --bubble-ink:#1A2A40; --bubble-line:#FFBC52; --bubble-cite:#2B67AA;
+  --hero:#081123; --hero-2:#1A2C55; --hero-ink:#F4F1E6; --hero-muted:#AFBCD6;
+  --ex1:#5CC27A; --ex2:#5EA6E6; --ex3:#AE87E6; --ex4:#3CC4C9; --ex5:#F0A04E; --ex6:#EE7AA0; --ex7:#E8C24A; --ex8:#F07A5E;
+  --talk:#7FB2EF; --listen:#5FC493; --trust:#AE87E6; --love:#F07CA2;
+  color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#0C1522; --surface:#142135; --surface-2:#1B2B45; --ink:#E7EDF6; --muted:#A0B1C8; --line:#2A3B58;
+  --amber:#FFBC52; --amber-soft:#3A2D16; --on-amber:#1A2A40;
+  --forest:#5FC493; --forest-soft:#163629; --on-forest:#0C1522;
+  --berry:#F07CA2; --sky:#7FB2EF;
+  --bubble:#FFF8E8; --bubble-ink:#1A2A40; --bubble-line:#FFBC52; --bubble-cite:#2B67AA;
+  --hero:#081123; --hero-2:#1A2C55; --hero-ink:#F4F1E6; --hero-muted:#AFBCD6;
+  --ex1:#5CC27A; --ex2:#5EA6E6; --ex3:#AE87E6; --ex4:#3CC4C9; --ex5:#F0A04E; --ex6:#EE7AA0; --ex7:#E8C24A; --ex8:#F07A5E;
+  --talk:#7FB2EF; --listen:#5FC493; --trust:#AE87E6; --love:#F07CA2;
+  color-scheme:dark }
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.6}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--hero)}
+a{color:inherit}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;line-height:1.15;margin:0}
+p{margin:0}
+.gutter{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.inner{max-width:900px;margin:0 auto}
+:focus-visible{outline:3px solid var(--amber);outline-offset:3px;border-radius:6px}
+
+/* top bar */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--hero);color:var(--hero-ink);padding-block:10px}
+.bar .inner{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between}
+.brand{font-family:var(--display);font-weight:700;font-size:1.15rem;text-decoration:none;display:flex;align-items:center;gap:8px}
+.brand svg{flex:none}
+.tabs{display:flex;gap:4px;flex-wrap:wrap}
+.tabs a{text-decoration:none;font-family:var(--display);font-weight:500;font-size:.95rem;padding:6px 12px;border-radius:999px;color:var(--hero-muted)}
+.tabs a:hover{color:var(--hero-ink)}
+.tabs a[aria-current="page"]{background:var(--amber);color:var(--on-amber)}
+
+/* hero */
+.hero{background:linear-gradient(180deg,var(--hero),var(--hero-2));color:var(--hero-ink);padding-block:28px 0;overflow:hidden}
+.hero .inner{display:grid;gap:18px}
+.hero h1{font-size:clamp(2.1rem,6vw,3.4rem);font-weight:700;letter-spacing:.01em}
+.hero h1 span{color:var(--amber)}
+.hero .lede{font-size:1.1rem;color:var(--hero-muted);max-width:56ch}
+.theme-verse{font-family:var(--hand);font-size:1.35rem;color:var(--hero-ink)}
+.theme-verse small{font-family:var(--body);font-size:.8rem;color:var(--hero-muted);letter-spacing:.06em;text-transform:uppercase;margin-left:6px}
+.hero-row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.btn{display:inline-flex;align-items:center;gap:8px;font-family:var(--display);font-weight:600;font-size:1.05rem;border:0;cursor:pointer;text-decoration:none;border-radius:999px;padding:12px 22px;background:var(--amber);color:var(--on-amber)}
+.btn:hover{filter:brightness(1.06)}
+.btn.ghost{background:transparent;color:inherit;box-shadow:inset 0 0 0 2px currentColor}
+.progress{display:flex;align-items:center;gap:10px;font-size:.95rem;color:var(--hero-muted)}
+.progress .track{width:160px;max-width:40vw;height:10px;border-radius:99px;background:rgba(255,255,255,.15);overflow:hidden}
+.progress .fill{height:100%;background:var(--amber);border-radius:99px}
+.hero-art{display:block;width:100%;height:auto;max-width:100%;margin-top:6px}
+
+/* map */
+.map{padding-block:28px 56px}
+.map .inner{display:grid;gap:34px}
+.ex-head{display:grid;gap:4px;margin-bottom:12px}
+.ex-tag{font-family:var(--display);font-weight:600;font-size:.82rem;letter-spacing:.08em;text-transform:uppercase;color:var(--exc)}
+.ex-head h2{font-size:1.55rem}
+.ex-head p{color:var(--muted);font-size:.95rem;max-width:62ch}
+.stones{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.stone{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:center;text-decoration:none;background:var(--surface);border:2px solid var(--line);border-radius:16px;padding:10px 12px;min-width:0}
+.stone:hover{border-color:var(--exc)}
+.stone .num{grid-row:span 2;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:1.05rem;background:var(--surface-2);color:var(--ink)}
+.stone .st{font-family:var(--display);font-weight:500;font-size:.92rem;line-height:1.2;min-width:0}
+.stone .sg{font-size:.78rem;color:var(--muted);min-width:0}
+.stone.done{border-color:var(--exc)}
+.stone.done .num{background:var(--exc);color:var(--surface)}
+.stone.camp{border-style:dashed}
+.stone.next{box-shadow:0 0 0 3px var(--amber)}
+
+/* day page */
+.page{padding-block:24px 64px}
+.page .inner{max-width:760px;display:grid;gap:26px}
+.crumbs{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-family:var(--display);font-size:.95rem}
+.crumbs a{text-decoration:none;color:var(--muted)}
+.crumbs a:hover{color:var(--ink)}
+.day-head{display:grid;gap:6px}
+.eyebrow{font-family:var(--display);font-weight:600;font-size:.85rem;letter-spacing:.08em;text-transform:uppercase;color:var(--exc)}
+.day-head h1{font-size:clamp(1.9rem,5.5vw,2.7rem);font-weight:700}
+.ref{color:var(--muted);font-size:.95rem}
+.scene{margin:0;border-radius:22px;overflow:hidden;border:3px solid var(--exc);background:var(--surface-2);max-width:100%}
+.scene svg{display:block;width:100%;height:auto}
+.trait{display:flex;align-items:center;gap:14px;background:var(--surface);border:2px solid var(--exc);border-radius:18px;padding:14px 18px}
+.trait small{display:block;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.trait strong{font-family:var(--display);font-weight:700;font-size:1.45rem;line-height:1.2}
+.gem{flex:none}
+section.step{display:grid;gap:12px}
+.sign{justify-self:start;display:inline-flex;align-items:baseline;gap:8px;font-family:var(--display);font-weight:600;font-size:1.05rem;background:var(--forest);color:var(--on-forest);padding:6px 26px 6px 14px;clip-path:polygon(0 0,calc(100% - 14px) 0,100% 50%,calc(100% - 14px) 100%,0 100%)}
+.sign b{font-weight:700;font-size:.8rem;opacity:.8;letter-spacing:.05em}
+.tip{font-size:.9rem;color:var(--muted);font-style:italic}
+.story p{font-size:1.14rem;line-height:1.7;max-width:64ch}
+.story{gap:14px}
+.bubble{position:relative;background:var(--bubble);color:var(--bubble-ink);border:3px solid var(--bubble-line);border-radius:30px;padding:20px 24px 18px;margin:0 0 18px;max-width:600px}
+.bubble::after{content:"";position:absolute;left:44px;bottom:-22px;width:30px;height:22px;background:var(--bubble);border-right:3px solid var(--bubble-line);border-bottom:3px solid var(--bubble-line);transform:skewX(35deg);border-bottom-right-radius:6px}
+.bubble q{display:block;font-family:var(--hand);font-size:clamp(1.45rem,4.5vw,1.85rem);line-height:1.3;quotes:"\201C" "\201D"}
+.bubble cite{display:block;margin-top:8px;font-style:normal;font-family:var(--display);font-weight:600;font-size:.92rem;color:var(--bubble-cite)}
+.treasure{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.treasure li{display:grid;grid-template-columns:22px 1fr;gap:10px;align-items:start;font-size:1.05rem}
+.treasure li svg{margin-top:4px}
+.talk{margin:0;padding-left:1.3em;display:grid;gap:8px;font-size:1.05rem}
+.prayer{background:var(--forest-soft);border-radius:18px;padding:18px 22px;display:grid;gap:4px}
+.prayer .line{font-family:var(--hand);font-size:1.4rem;line-height:1.35}
+.prayer .own{margin-top:10px;font-size:.95rem;color:var(--muted)}
+.mission{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center;border:3px dashed var(--amber);border-radius:18px;padding:16px 18px;background:var(--amber-soft)}
+.mission p{font-size:1.08rem;min-width:0}
+.cbadge{display:grid;place-items:center;gap:2px;width:64px;font-family:var(--display);font-weight:600;font-size:.78rem;letter-spacing:.04em;text-transform:uppercase;color:var(--pc)}
+.goodnight{display:grid;gap:4px;text-align:center;background:var(--hero);color:var(--hero-ink);border-radius:18px;padding:18px 20px}
+.goodnight span{font-family:var(--display);font-weight:600;font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--amber)}
+.goodnight p{font-family:var(--hand);font-size:1.5rem;line-height:1.3}
+.collect{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;border-top:2px solid var(--line);padding-top:22px}
+.collect .btn.isdone{background:var(--forest);color:var(--on-forest)}
+.pn{display:flex;gap:10px;flex-wrap:wrap}
+.pn a{font-family:var(--display);font-weight:500;text-decoration:none;padding:8px 14px;border-radius:999px;background:var(--surface);border:2px solid var(--line)}
+.pn a:hover{border-color:var(--ink)}
+.gems{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.gems a{display:flex;gap:10px;align-items:center;text-decoration:none;background:var(--surface);border:2px solid var(--line);border-radius:14px;padding:10px 12px;min-width:0}
+.gems a span{min-width:0}
+.gems b{display:block;font-family:var(--display);font-weight:600;line-height:1.2}
+.gems small{color:var(--muted);font-size:.82rem}
+.card{background:var(--surface);border:2px solid var(--line);border-radius:18px;padding:18px 20px;display:grid;gap:10px}
+.card p{max-width:64ch}
+.invite{border-color:var(--amber)}
+.cert{text-align:center;border:4px double var(--exc);border-radius:22px;padding:26px 20px;background:var(--surface);display:grid;gap:10px;justify-items:center}
+.cert h3{font-size:1.7rem}
+.cert .nm{font-family:var(--hand);font-size:2.2rem;color:var(--exc);border-bottom:2px solid var(--line);min-width:min(260px,80%);padding:0 10px}
+.cert input{font:inherit;padding:8px 12px;border-radius:10px;border:2px solid var(--line);background:var(--bg);color:var(--ink);max-width:100%}
+.cert .row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center}
+
+/* guide + compass */
+.prose{display:grid;gap:22px}
+.prose h1{font-size:clamp(1.9rem,5vw,2.6rem)}
+.prose h2{font-size:1.4rem}
+.prose p,.prose li{max-width:66ch}
+.rhythm{list-style:none;margin:0;padding:0;display:grid;gap:10px;counter-reset:r}
+.rhythm li{counter-increment:r;display:grid;grid-template-columns:40px 1fr;gap:12px;align-items:start;background:var(--surface);border:2px solid var(--line);border-radius:14px;padding:12px 14px}
+.rhythm li::before{content:counter(r);width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--forest);color:var(--on-forest);font-family:var(--display);font-weight:700}
+.rhythm b{font-family:var(--display);font-weight:600}
+.tips{margin:0;padding-left:1.2em;display:grid;gap:8px}
+.dates{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.dates div{background:var(--surface);border:2px solid var(--line);border-radius:14px;padding:10px 12px}
+.dates b{display:block;font-family:var(--display);font-size:1.1rem}
+.dates span{font-size:.9rem;color:var(--muted)}
+.compass-wrap{display:grid;grid-template-columns:minmax(0,220px) 1fr;gap:24px;align-items:center}
+.compass-wrap svg{width:100%;height:auto;max-width:220px}
+.points{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.point{background:var(--surface);border:2px solid var(--pc);border-radius:16px;padding:14px 16px;display:grid;gap:6px}
+.point h3{font-size:1.25rem;color:var(--pc)}
+.point p{font-size:.98rem}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);font-family:var(--display);font-weight:500;padding:12px 20px;border-radius:999px;z-index:20;max-width:calc(100% - 32px);text-align:center}
+@media (max-width:640px){
+  .compass-wrap{grid-template-columns:1fr;justify-items:center}
+  .points{grid-template-columns:1fr}
+  .story p{font-size:1.08rem}
+  .mission{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:no-preference){
+  .pop{animation:pop .5s ease}
+  @keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.25) rotate(-8deg)}100%{transform:scale(1)}}
+}
+</style>
+
+<header class="bar gutter">
+  <div class="inner">
+    <a class="brand" href="#map"><svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><rect x="9" y="2" width="8" height="3" rx="1.5" fill="currentColor"/><path d="M7 7h12l-1 14H8z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="13" cy="14" r="3.5" fill="#FFBC52"/><rect x="6" y="21" width="14" height="3" rx="1.5" fill="currentColor"/></svg>Die Lanternpad</a>
+    <nav class="tabs" aria-label="Afdelings">
+      <a href="#map" data-tab="map">Roetekaart</a>
+      <a href="#guide" data-tab="guide">Vir Mamma</a>
+      <a href="#compass" data-tab="compass">Vriendskapskompas</a>
+    </nav>
+  </div>
+</header>
+<main id="app"></main>
+
+<script>
+/* ---------- EKSPEDISIES ---------- */
+const EX=[
+ {n:1,name:"Die Skepper se Tuin",from:1,to:7,blurb:"Waar alles begin: God wat die sterre, die leeus en jou gemaak het.",v:["In die begin het God die hemel en die aarde geskep.","Genesis 1:1"]},
+ {n:2,name:"Die Groot Reddingspad",from:8,to:14,blurb:"’n Mandjie, ’n brandende bos en ’n pad deur die see. God red sy mense.",v:["Die Here sal vir julle veg. Julle hoef net stil te wees.","Eksodus 14:14"]},
+ {n:3,name:"Dapperhart-berg",from:15,to:21,blurb:"’n Seun wat geluister het, ’n seun wat teen ’n reus geveg het, en leeus met toe bekke.",v:["Wees sterk en dapper. Die Here jou God is by jou oral waar jy gaan.","Josua 1:9"]},
+ {n:4,name:"Die Rivier van Tweede Kanse",from:22,to:28,blurb:"’n Reusevis, ’n vuuroond, ’n dapper koningin en ’n belofte van ’n Redder.",v:["Die Here se liefde raak nooit op nie. Sy goedheid is elke oggend nuut.","Klaagliedere 3:22–23"]},
+ {n:5,name:"Saam met Jesus op Pad",from:29,to:35,blurb:"Jesus wys ons presies hoe God is: Hy laat storms bedaar en druk kinders styf vas.",v:["Wie My gesien het, het die Vader gesien.","Johannes 14:9"]},
+ {n:6,name:"Die Vriend wat my Vind",from:36,to:42,blurb:"’n Verlore skapie, ’n pa wat hardloop en ’n man in ’n boom. Jesus kom soek na ons.",v:["Die Seun van die mens het gekom om te soek en te red wat verlore is.","Lukas 19:10"]},
+ {n:7,name:"Die Kersster-roete",from:43,to:50,blurb:"Engele, ’n lang donkierit en ’n baba in ’n krip, tot by Kersdag.",v:["God het die wêreld so liefgehad dat Hy sy enigste Seun gegee het.","Johannes 3:16"]},
+ {n:8,name:"Die Grootste Avontuur",from:51,to:56,blurb:"Die kruis, die leë graf en die opdrag wat Jesus aan elke ontdekker gee.",v:["Ek is by julle al die dae tot aan die einde.","Matteus 28:20"]}
+];
+const CP={T:["Praat","Praat met God (gebed)","talk"],L:["Luister","Luister na God (sy Woord)","listen"],R:["Vertrou","Vertrou en gehoorsaam God","trust"],V:["Liefhê","Het God en ander lief","love"]};
+
+/* ---------- 56 AANDE ---------- */
+const D=[
+{t:"Die Grootste Bouwerk Ooit",r:"Genesis 1",g:"Skepper",tr:"God is die Skepper",sc:"dawn garden ; 🦁70,165,44 🌳310,152,64 🐦200,70,26 🦋250,118,22",
+s:["Lank, lank gelede, voordat daar bome of hondjies of selfs die son was, was daar niks nie. Niks… behalwe God. God was nog altyd daar.","Toe het God gepraat. ‘Laat daar lig wees!’ En WOESJ! Lig het oral uitgebars. Dag na dag het God verder gebou. Hy het die lug en die diep blou see gemaak. Hy het berge gemaak om op te klim en bome om in te swaai. Hy het die son opgehang om die dag warm te maak, en die sterre soos glitter oor die nag gestrooi.","Toe het God sy wêreld vol lewe gemaak: visse wat spat, voëls wat swiep, leeus wat BRUL en klein miertjies wat marsjeer. God het na alles gekyk wat Hy gemaak het en geglimlag. ‘Dit is baie goed!’","Elke keer as jy ’n sonsondergang, ’n kewer of ’n groot golf sien, kyk jy na iets wat God met sy groot verbeelding gemaak het."],
+v:["In die begin het God die hemel en die aarde geskep.","Genesis 1:1"],
+l:["God het alles gemaak, selfs die sterre wat te ver is om te sien.","God is sterk: Hy moes net praat!","God is kreatief. Hy hou daarvan om mooi dinge te maak."],
+q:["Wat is jou gunstelingding wat God gemaak het?","As jy vir God kon vra hoe Hy iets gemaak het, wat sou jy vra?"],
+p:"Liewe God, / U het die lug en die see gemaak, / die leeus en die sterre. / Dankie vir u mooi wêreld. / U is wonderlik! Amen.",
+m:["T","Soek môre een ding buite wat God gemaak het en sê: ‘Dankie, God, vir die ___!’"]},
+
+{t:"Deur God se Hande Gemaak",r:"Genesis 1:26 – 2:7",g:"My Maker",tr:"God het my gemaak, en Hy het my spesiaal gemaak",sc:"day garden ; 🌳70,150,58 🧒200,165,48 🌸290,168,24 🌸322,172,20",
+s:["Aan die einde van alles het God die beste vir laaste gehou. Hy het stof van die grond opgeskep en dit versigtig gevorm, soos jy klei vorm. Toe het God daarin geblaas, en die eerste man, Adam, het sy oë oopgemaak en ’n groot asem gehaal! Later het God Eva gemaak, die eerste vrou.","Mense was anders as alles wat God gemaak het. God het mense ’n bietjie soos Hy gemaak: om te dink, lief te hê, te lag, dinge te maak, en om sy eie kinders te wees, naby aan Hom.","En hier is iets wonderliks: God het JOU ook gemaak. Hy het jou oë en jou glimlag gekies en die manier waarop jy lag. Hy het jou geken nog voordat jy gebore is. Daar is niemand anders in die hele wêreld presies soos jy nie, en God dink jy is wonderlik."],
+v:["Ek loof U, want U het my wonderlik en mooi gemaak.","Psalm 139:14"],
+l:["God het jou met ’n doel gemaak. Jy is nie ’n ongeluk nie.","God het mense gemaak om sy kinders te wees, naby aan Hom.","Omdat God almal gemaak het, is elke mens spesiaal vir Hom."],
+q:["Wat het God vir jou gegee waarvoor jy baie lief is? (Hande wat bou? Bene wat hardloop?)","Wie is iemand anders wat God spesiaal gemaak het?"],
+p:"Liewe God, / dankie dat U my gemaak het. / Dankie vir my hande, my voete en my glimlag. / Help my om te onthou ek is u kind. Amen.",
+m:["V","Sê môre vir iemand in jou familie een ding wat hulle spesiaal maak."]},
+
+{t:"Waar Is Jy?",r:"Genesis 3",g:"Liefdevol",tr:"God het my lief, selfs as ek iets verkeerd doen",sc:"sunset garden ; 🌳80,150,64 🍎96,104,20 🐍185,170,30 🌿305,168,38",
+s:["God het Adam en Eva in ’n pragtige tuin gesit wat Eden genoem is. In die koelte van die aand het God in die tuin kom wandel om tyd saam met hulle te spandeer. Stel jou voor jy gaan stap saam met God!","God het hulle net een reël gegee: ‘Moenie van daardie een boom eet nie.’ Maar ’n skelm slang het gefluister: ‘Ag toe. God wil nie regtig die beste vir julle hê nie.’ Eva het van die vrug geëet, en Adam ook. Skielik het hulle hartseer en bang gevoel, en hulle het agter die bosse weggekruip.","Toe hoor hulle God roep: ‘Waar is jy?’ God het klaar geweet waar hulle is. Hy het geroep omdat Hy nog steeds by hulle wou wees.","Om ongehoorsaam te wees aan God (ons noem dit sonde) het hulle ver van God, hulle liefdevolle Vader, laat voel, en dinge moes verander. Maar daardie selfde dag het God ’n belofte gemaak: eendag sou Hy ’n Redder stuur om alles reg te maak. Kan jy raai wie daardie Redder is? Jesus!"],
+v:["Maar die Here God het na die man geroep: ‘Waar is jy?’","Genesis 3:9"],
+l:["God wil naby ons wees. Hy het selfs saam met Adam en Eva gaan stap.","As ons iets verkeerd doen, wil ons wegkruip, maar God kom soek ons.","God het van die heel begin af ’n reddingsplan gehad: Jesus."],
+q:["Hoe voel jy binne-in as jy iets verkeerd gedoen het?","Wat kan ons doen in plaas daarvan om weg te kruip? (Vir God vertel en jammer sê.)"],
+p:"Liewe God, / dankie dat U altyd na my kom soek. / As ek iets verkeerd doen, help my om nie weg te kruip nie. / Help my om na U toe te hardloop en jammer te sê. Amen.",
+m:["T","As jy môre iets verkeerd doen, moenie dit wegsteek nie. Sê jammer vir God en vir die persoon."]},
+
+{t:"Die Groot Boot en die Reënboog",r:"Genesis 6 – 9",g:"Beloftehouer",tr:"God hou altyd sy beloftes",sc:"day sea rainbow,ark ; 🐘165,100,26 🦒210,98,30 🕊️320,60,26",
+s:["Baie jare later het mense van God vergeet. Hulle was gemeen en het mekaar seergemaak, en dit het God se hart baie hartseer gemaak. Maar een man, Noag, was nog lief vir God en het na Hom geluister.","God het vir Noag gesê: ‘Bou ’n reusagtige boot, ’n ark!’ Noag het nog nooit ’n vloed gesien nie, maar hy het God vertrou. Klop, klop, klop het sy hamer gegaan, jare en jare lank! Toe het die diere gekom, twee-twee: olifante wat stamp, ape wat babbel, kameelperde wat hul koppe moes buk om deur die deur te kom.","Toe kom die reën. Dit het gereën en gereën, veertig dae en veertig nagte lank, totdat water die hele aarde bedek het. Maar binne-in die ark was Noag, sy familie en die diere veilig, want God het na hulle gekyk.","Toe die water eindelik gesak het, het God ’n pragtige reënboog in die lug gesit. ‘Dit is my belofte,’ het God gesê. ‘Ek sal nooit weer die hele aarde laat oorstroom nie.’ En God het daardie belofte elke enkele dag gehou."],
+v:["Ek het my reënboog in die wolke gesit. Dit is die teken van my belofte.","Genesis 9:13"],
+l:["God hou altyd sy beloftes.","God sorg vir mense wat Hom vertrou, selfs in storms.","Noag was gehoorsaam aan God, selfs toe dit vreemd gelyk het."],
+q:["As jy ’n reënboog sien, waaraan kan dit jou herinner?","Het iemand al ooit vir jou ’n belofte gemaak en dit gehou? Hoe het dit gevoel?"],
+p:"Liewe God, / dankie dat U altyd u beloftes hou. / As ek ’n reënboog sien, / help my om te onthou U is getrou. Amen.",
+m:["R","Maak môre ’n belofte aan iemand (soos ‘Ek sal help opruim’) en hou dit, net soos God doen."]},
+
+{t:"Tel die Sterre",r:"Genesis 15 & 21",g:"Almagtig",tr:"Niks is te moeilik vir God nie",sc:"night desert ; ⛺110,165,50 👴185,166,36",
+s:["Abraham en sy vrou Sara was baie oud, ouer as oupagrootjies! En hulle het geen kinders gehad nie. Hulle het gewens en gewens vir ’n baba.","Een nag het God Abraham na buite geneem. ‘Kyk op na die hemel,’ het God gesê. ‘Tel die sterre, as jy kan.’ Abraham het opgekyk. Een, twee, drie… honderde… duisende! Daar was te veel om te tel. ‘Jou familie sal so wees,’ het God gesê. ‘Te veel om te tel.’","Abraham het gedink: ‘Hoe kan dit gebeur? Ons is te oud!’ Maar Abraham het God geglo. En raai wat? Toe Abraham 100 jaar oud was, is baba Isak gebore! Sara het gelag en gelag van blydskap. Isak se naam beteken selfs ‘hy lag’.","God kan doen wat niemand anders kan doen nie. Niks is te moeilik vir Hom nie."],
+v:["Niks is vir U te moeilik nie.","Jeremia 32:17"],
+l:["Niks is te moeilik vir God nie.","God hoor die wense en gebede van ons harte.","Soms moet ons wag, maar God vergeet nooit nie."],
+q:["Wat lyk vir jou te moeilik? Is dit te moeilik vir God?","Hoeveel sterre dink jy is daar? (God ken elkeen!)"],
+p:"Liewe God, / U het al die sterre gemaak en U weet hoeveel daar is. / Niks is vir U te moeilik nie. / Help my om U met groot dinge te vertrou. Amen.",
+m:["T","Kyk saam met Mamma na die sterre en dank God dat Hy so groot is."]},
+
+{t:"Josef se Kleurryke Mantel",r:"Genesis 37 – 50",g:"In Beheer",tr:"God is in beheer en kan sleg in goed verander",sc:"day desert pyramids ; 🐫80,168,42 🧥200,160,34 🌾335,170,28",
+s:["Josef het elf broers gehad, en sy pa het vir hom ’n spesiale, kleurryke mantel gegee. Sy broers was so jaloers dat hulle iets baie gemeens gedoen het: hulle het Josef aan handelaars verkoop, wat hom ver weg na Egipte geneem het.","In Egipte het nog slegte dinge gebeur. Josef is selfs in die tronk gegooi, al het hy niks verkeerd gedoen nie. Maar die Bybel sê: ‘Die Here was by Josef.’ Josef het aangehou om reg te doen, en God het hom gehelp om drome te verstaan.","Eendag het die koning van Egipte ’n vreemde droom gehad, en God het Josef gehelp om dit te verduidelik: sewe jaar met baie kos kom, en daarna sewe honger jare. Die koning het Josef ’n groot leier gemaak om kos op te gaar! Toe die honger jare kom, het Josef se broers na Egipte gekom om kos te koop, en daar was Josef!","Josef het hulle vergewe en hulle styf vasgedruk. ‘Julle het beplan om my seer te maak,’ het hy gesê, ‘maar God het dit in iets goeds verander.’"],
+v:["Julle het kwaad teen my beplan, maar God het dit ten goede bedoel.","Genesis 50:20"],
+l:["God is by ons, selfs as hartseer of onregverdige dinge gebeur.","God is in beheer en kan slegte dinge in goeie dinge verander.","Josef het sy broers vergewe, en God help ons ook om te vergewe."],
+q:["Wanneer het jy al hartseer of uitgelos gevoel? Was God by jou?","Is dit maklik of moeilik om te vergewe? Hoekom?"],
+p:"Liewe God, / dankie dat U by my is, / selfs as dinge moeilik is. / Help my om te vergewe soos Josef. Amen.",
+m:["V","Is daar iemand wat jy moet vergewe? Wees môre ekstra gaaf met hulle."]},
+
+{c:1,t:"Kampvuuraand: Die Skepper se Tuin",sc:"night campfire ; 🔥200,165,54 ⛺80,165,44",
+intro:"Mooi so, ontdekker! Jy het jou eerste ekspedisie klaargemaak. Vanaand sit ons by die kampvuur, kyk na die skatte wat ons gevind het en onthou wat ons oor God geleer het.",
+game:"Skepping-charades: speel ’n dier na wat God gemaak het (stamp soos ’n olifant, spring soos ’n padda) en laat Mamma raai. Ruil dan om!",
+q:["Watter storie van hierdie week was jou gunsteling?","Van watter skat oor God hou jy die meeste?"],
+p:"Liewe God, / U is my Skepper. / U het my gemaak, U het my lief, / en U hou u beloftes. / Dankie! Amen.",
+m:["L","Sê hierdie week se Skatvers vir iemand sonder om te loer."]},
+
+{t:"’n Mandjie op die Rivier",r:"Eksodus 2",g:"Beskermer",tr:"God waak oor my",sc:"day river ; 🌾150,150,32 🧺215,150,30 🌾270,150,32 👸330,165,38",
+s:["In Egipte was ’n nuwe koning bang vir God se mense, en hy het ’n verskriklike reël gemaak: al die babaseuntjies moes in die rivier gegooi word. Een ma het ’n pragtige babaseuntjie gehad. Sy het hom drie maande lank weggesteek, maar hy het al hoe groter en harder geword!","Toe maak sy ’n mandjie en smeer dit met taai teer sodat dit soos ’n bootjie sou dryf. Sy het haar baba daarin toegemaak en dit in die lang riete langs die Nylrivier neergesit. Sy groot sussie Mirjam het naby weggekruip om te kyk.","En wie kom na die rivier? Die koning se eie dogter, die prinses! Sy het die baba hoor huil en jammer vir hom gevoel. ‘Ek sal hom hou,’ het sy gesê. Slim Mirjam het nader gehardloop: ‘Moet ek ’n vrou gaan soek om die baba vir u te voed?’ En sy het… sy eie ma gaan haal!","Die prinses het hom Moses genoem. God het elke enkele sekonde oor daardie mandjie gewaak."],
+v:["Die Here waak oor jou as jy kom en as jy gaan, nou en vir altyd.","Psalm 121:8"],
+l:["God sien jou en waak heeltyd oor jou, selfs terwyl jy slaap.","God kan enigiemand gebruik, selfs ’n groot sussie, om met sy planne te help.","God beskerm sy mense."],
+q:["Waar het jy nodig dat God oor jou waak?","Hoe het Mirjam gehelp?"],
+p:"Liewe God, / dankie dat U oor my waak / as ek wakker is en as ek slaap. / Ek is veilig in u hande. Amen.",
+m:["R","As jy môre bang voel, sê: ‘God waak oor my.’"]},
+
+{t:"Die Bos wat nie Uitbrand nie",r:"Eksodus 3",g:"Heilig",tr:"God is heilig: volmaak, en daar is niemand soos Hy nie",sc:"day mountain ; 🔥200,140,40 🌿200,168,46 🐑90,172,30 🐑122,174,24",
+s:["Moses het grootgeword en ’n skaapwagter in die woestyn geword. Eendag, terwyl hy naby ’n berg na sy skape kyk, sien hy iets baie vreemds: ’n bos wat brand! Die vlamme het geknetter en gegloei, maar die bos het nie uitgebrand nie!","Moses het nader gegaan om te kyk. Toe kom ’n stem uit die bos: ‘Moses! Moses!’ Dit was God! ‘Trek jou sandale uit,’ het God gesê, ‘want jy staan op heilige grond.’","Heilig beteken God is volmaak en rein en heeltemal spesiaal. Daar is niemand soos Hy nie. Moses het sy gesig weggedraai. Toe sê God: ‘Ek het gesien hoe my mense in Egipte seergemaak word. Ek het hulle hoor huil. Ek gaan hulle red, en Ek stuur jou.’","Moses het gevra: ‘Wat is u naam?’ God het geantwoord: ‘EK IS WIE EK IS.’ God was nog altyd, en sal altyd wees."],
+v:["Heilig, heilig, heilig is die Here.","Jesaja 6:3"],
+l:["God is heilig: volmaak, rein en soos niemand anders nie.","God sien en hoor wanneer sy mense seerkry.","God ken jou naam, net soos Hy Moses se naam geken het."],
+q:["Hoekom dink jy het Moses sy sandale uitgetrek?","Hoe kan ons vir God wys dat Hy spesiaal is vir ons? (Sing, stil bid, luister.)"],
+p:"Heilige God, / daar is niemand soos U nie. / U is volmaak en goed. / Dankie dat U my naam ken. Amen.",
+m:["V","Sing môre ’n liedjie vir God, net vir Hom."]},
+
+{t:"’n Pad deur die See",r:"Eksodus 14",g:"Magtig",tr:"God is magtig en Hy red",sc:"day redsea ; 🚶190,165,32 🚶218,170,28 🐑244,172,22",
+s:["God het Moses na die koning van Egipte gestuur: ‘Laat my volk gaan!’ Ná baie tekens van God het die koning uiteindelik ja gesê. Daar gaan God se mense, duisende en duisende van hulle!","Maar toe verander die koning van plan. Hy stuur sy leër met perde en strydwaens agter hulle aan. God se mense het by die Rooi See gekom. Water voor. ’n Leër agter. Nêrens om heen te gaan nie! Hulle was baie bang.","Moses het gesê: ‘Moenie bang wees nie! Die Here sal vir julle veg.’ Moses het sy staf uitgesteek, en God het ’n sterk wind gestuur. WOESJ! Die see het in twee gesplits, met mure van water aan elke kant en droë grond in die middel! God se mense het reg deur tot aan die ander kant gestap.","Toe almal veilig was, het die water teruggestort. God het hulle gered! Hulle het gesing en gedans en hulle magtige God geprys."],
+v:["Die Here sal vir julle veg. Julle hoef net stil te wees.","Eksodus 14:14"],
+l:["God is magtig. Selfs die see luister na Hom.","As ons vasgekeer voel, kan God ’n pad maak.","God is ’n Redder."],
+q:["Hoe dink jy was dit om tussen mure van water te loop?","Wat laat jou vasgekeer of bang voel?"],
+p:"Magtige God, / U kan enigiets doen! / As ek vasgekeer voel, / help my om U te vertrou om ’n pad te maak. Amen.",
+m:["R","Leer die see-aksie: hande saam, druk hulle dan uitmekaar soos die see wat oopgaan. Doen dit as jy bang voel."]},
+
+{t:"Brood uit die Hemel",r:"Eksodus 16",g:"Voorsiener",tr:"God gee my wat ek nodig het",sc:"dawn desert flakes ; ⛺90,162,44 🐦255,70,22 🐦292,60,18",
+s:["Ná die see het God se mense die woestyn in gestap. Dit was warm en sanderig, en daar was geen winkels, geen plase en geen kos nie. Gou het mae begin grom. ‘Ons is honger!’ het die mense gekla.","God het gesê: ‘Ek sal brood uit die hemel vir julle laat reën.’ Die volgende oggend was die grond vol klein wit vlokkies, soos ryp. ‘Wat is dit?’ het die mense gevra. In hulle taal klink dit soos ‘manna’, en dit is wat hulle dit genoem het! Dit het gesmaak soos koekies met heuning. Lekker!","Elke oggend het God vars manna gestuur, genoeg vir almal. Saans het Hy voëls gestuur, kwartels, vir vleis. Veertig jaar lank in die woestyn het God nie een keer vergeet om hulle kos te gee nie.","God weet wat ons nodig het, en Hy sorg graag vir ons."],
+v:["My God sal in al julle behoeftes voorsien.","Filippense 4:19"],
+l:["God gee ons wat ons nodig het.","Ons kan God elke dag vra vir wat ons nodig het.","In plaas daarvan om te kla, kan ons dankie sê."],
+q:["Watter dinge gee God elke dag vir jou?","Wat kan jy sê in plaas daarvan om te kla?"],
+p:"Liewe God, / dankie vir my kos, / my bed en my familie. / U gee my alles wat ek nodig het. Amen.",
+m:["T","Sê môre voor elke ete ’n dankie-gebed."]},
+
+{t:"Reëls van ’n Liefdevolle Vader",r:"Eksodus 19 – 20",g:"Goed",tr:"God is goed, en sy pad is die beste",sc:"storm mountain ; ⚡262,70,34 🪨195,172,30",
+s:["God het sy mense na ’n groot berg gelei wat die berg Sinai genoem word. Die berg het gedreun van die donder, weerlig het geflits, en ’n dik wolk het die bopunt bedek. God het Moses geroep om op die berg te kom.","Daar het God vir Moses tien spesiale reëls gegee, op twee kliptafels geskryf. Het God die liefste van almal. Moenie enigiets belangriker as God maak nie. Eer jou ma en pa. Moenie steel nie. Moenie lieg nie. Moenie begeer wat aan ander behoort nie.","Hoekom het God reëls gegee? Nie om die pret te bederf nie! God se reëls is soos die reling op ’n hoë brug: hulle hou ons veilig. God is goed, en sy pad is altyd die beste vir ons. Hy het die reëls gegee omdat Hy sy kinders liefhet en wil hê hulle moet gelukkig saam lewe.","Later het Jesus gesê al die reëls pas in twee: het God lief met jou hele hart, en het ander mense lief."],
+v:["Proe en sien dat die Here goed is.","Psalm 34:9"],
+l:["God is goed, en alles wat Hy vir ons sê om te doen, is goed vir ons.","God se reëls wys ons hoe om Hom en ander lief te hê.","Om God te gehoorsaam is een manier om Hom terug lief te hê."],
+q:["Watter reëls het Mamma wat jou veilig hou? Hoekom maak sy hulle?","Watter een van God se reëls is maklik vir jou? Watter een is moeilik?"],
+p:"Liewe God, / U is goed, en u pad is die beste. / Help my om U die liefste van almal te hê / en die mense rondom my lief te hê. Amen.",
+m:["R","Luister môre die eerste keer as jy gevra word, sonder om te kla!"]},
+
+{t:"Die Muur wat Omgeval Het",r:"Josua 6",g:"Betroubaar",tr:"God kan vertrou word",sc:"day desert walls ; 🎺110,170,32 🎺290,170,32",
+s:["Ná veertig jaar het God se mense eindelik by die land gekom wat God aan hulle belowe het. Hulle nuwe leier was Josua. Maar in die pad was die stad Jerigo, met groot, dik mure en hekke wat styf toe was.","God het vir Josua ’n baie snaakse plan gegee: ‘Marsjeer ses dae lank een keer per dag om die stad. Moenie ’n woord sê nie. Op die sewende dag, marsjeer sewe keer om. Blaas dan die trompette en skree!’","Dit het vreemd geklink! Wie slaan mure plat deur te loop? Maar Josua en die mense het God vertrou. Dag een: marsjeer, marsjeer, marsjeer. Dag twee… Dag ses… Toe op dag sewe, om en om het hulle gegaan, sewe keer. Die priesters het hulle trompette geblaas, TOETOEEET! En almal het so hard as hulle kon geskree.","KRAAAK! Die groot mure het platgeval! God het presies gedoen wat Hy gesê het."],
+v:["Vertrou op die Here met jou hele hart.","Spreuke 3:5"],
+l:["God kan vertrou word, selfs as sy plan vreemd lyk.","Om God te gehoorsaam bring groot oorwinnings.","God doen wat Hy sê Hy sal doen."],
+q:["Hoekom dink jy het God hulle gevra om stil te marsjeer?","Wie vertrou jy die meeste? Hoekom?"],
+p:"Liewe God, / ek vertrou U met my hele hart. / Selfs as ek nie verstaan nie, / help my om U te gehoorsaam. Amen.",
+m:["R","Marsjeer môreaand sewe keer om jou bed en skree dan: ‘God kan vertrou word!’"]},
+
+{c:1,t:"Kampvuuraand: Die Groot Reddingspad",sc:"night campfire ; 🔥200,165,54 ⛺320,165,44",
+intro:"Wat ’n pad het ons gestap! ’n Baba in ’n mandjie, ’n brandende bos, ’n see wat oopgegaan het en mure wat omgeval het. Vanaand sit ons by die vuur en onthou hoe God sy mense red.",
+game:"Reddingspad-oorvertel: Mamma sê ’n leidraad (mandjie, vuur, see, brood, trompet). Jy skree watter storie dit is en een ding wat dit oor God wys.",
+q:["Watter redding was die opwindendste?","Het God jou al gehelp toe jy bang was?"],
+p:"Liewe God, / U is my Beskermer en my Voorsiener. / U is heilig, magtig en goed. / Ek kan U vertrou. Amen.",
+m:["L","Sê hierdie week se Skatvers saam met die see-aksie."]},
+
+{t:"’n Stem in die Nag",r:"1 Samuel 3",g:"Praat met My",tr:"God praat met my, en ek kan luister",sc:"night town ; 🪔210,150,34 🛏️130,174,40",
+s:["Samuel was ’n seun wat in God se huis, die tempel, gewoon het en ’n ou priester met die naam Eli gehelp het. Een nag, terwyl Samuel in die bed lê, hoor hy ’n stem: ‘Samuel!’","Hy het opgespring en na Eli gehardloop. ‘Hier is ek! U het my geroep.’ ‘Ek het jou nie geroep nie,’ sê Eli. ‘Gaan terug bed toe.’ Dit het weer gebeur. En weer! Drie keer!","Toe het Eli verstaan. ‘Dit is God wat jou roep. Volgende keer sê jy: “Praat, Here, ek luister.”’ Samuel het gaan lê, en die stem het weer gekom: ‘Samuel! Samuel!’ Hierdie keer het Samuel gesê: ‘Praat, Here. U dienaar luister.’ En God het vir Samuel belangrike dinge vertel.","God het met ’n seun gepraat! Vandag praat God met ons meestal deur die Bybel, en soms met ’n stil gedagte in ons hart wat ons herinner aan wat goed en waar is."],
+v:["Praat, Here. Ek luister.","1 Samuel 3:10"],
+l:["God praat met kinders, nie net met grootmense nie.","God praat met ons deur die Bybel.","As kind van God en vriend van Jesus praat ons met Hom EN luister ons na Hom."],
+q:["Hoe kan ons na God luister?","Kom ons is tien sekondes baie stil en dink aan God. Wat het in jou gedagtes opgekom?"],
+p:"Liewe God, / praat met my. Ek luister. / Help my om U te hoor as ek die Bybel lees / en te doen wat U sê. Amen.",
+m:["L","Vra môre vir Mamma om vir jou een Bybelvers te lees en te vertel wat dit beteken."]},
+
+{t:"Die Skaapwagter wat Gekies Is",r:"1 Samuel 16",g:"Sien My Hart",tr:"God kyk na my hart",sc:"day hills ; 🐑80,162,32 🐑120,168,26 🧒215,168,44 👑217,118,26",
+s:["God het die profeet Samuel (ja, dieselfde Samuel, nou heeltemal groot!) na die huis van ’n man met die naam Isai gestuur. ‘Een van Isai se seuns sal die volgende koning wees,’ het God gesê.","Isai se oudste seun het ingestap. Hy was lank en sterk. ‘Dit is sekerlik hy!’ het Samuel gedink. Maar God het gesê: ‘Nee. Mense kyk na die buitekant, maar Ek kyk na die hart.’ Sewe seuns het verbygestap, en God het nee gesê vir elkeen.","‘Het jy nog seuns?’ vra Samuel. ‘Net die jongste, Dawid. Hy is buite by die skape.’ Hulle het Dawid gaan haal, hy het nog na skape geruik! En God het gesê: ‘Dit is hy.’","Dawid was die jongste en die kleinste, maar hy het ’n hart gehad wat lief was vir God. God het hom gekies om koning te wees."],
+v:["Mense kyk na die buitekant, maar die Here kyk na die hart.","1 Samuel 16:7"],
+l:["God gee die meeste om oor wat binne is: ons hart.","Jy hoef nie groot te wees om vir God belangrik te wees nie.","God sien wat niemand anders sien nie."],
+q:["Wat beteken dit om ’n hart te hê wat lief is vir God?","Hoe kan ons ander mense sien soos God hulle sien?"],
+p:"Liewe God, / dankie dat U my hart sien. / Maak my hart gaaf en dapper / en vol liefde vir U. Amen.",
+m:["V","Wees môre gaaf met iemand wat dikwels uitgelos word."]},
+
+{t:"Die Reus Val Plat",r:"1 Samuel 17",g:"My Krag",tr:"God maak my dapper",sc:"day hills ; 🧒110,168,42 🪨160,172,22 🛡️305,160,44",
+s:["God se mense was in ’n oorlog, en die vyand het ’n reus met die naam Goliat gehad. Hy was amper drie meter lank, langer as ’n basketbalring! Elke dag het hy uitgestamp en gebrul: ‘Wie sal teen my veg?’ En al die soldate het bewend weggehardloop.","Die jong Dawid het kos vir sy broers kom bring. Hy het Goliat hoor skree en gesê: ‘Wie dink hy is hy om so oor God se mense te praat? Ek sal teen hom veg!’","Die koning het vir Dawid sy wapenrusting aangebied, maar dit was heeltemal te groot en te raserig. Toe neem Dawid net sy skaapwagter-slinger en kies vyf gladde klippe uit ’n stroompie.","Goliat het vir hom gelag. Maar Dawid het uitgeroep: ‘Jy kom met ’n swaard, maar ek kom in die Naam van die Here!’ Dawid het sy slinger geswaai, woer, woer, woer, en laat los. Die klip het Goliat reg op die voorkop getref. DOEF! Die reus het plat op sy gesig geval. God het die geveg gewen!"],
+v:["Wees sterk en dapper. Die Here jou God is by jou oral waar jy gaan.","Josua 1:9"],
+l:["God maak ons dapper, nie omdat ons groot is nie, maar omdat Hy by ons is.","Ons ‘reuse’ (groot vrese of probleme) is klein vir God.","Ons kan moeilike dinge in God se Naam aanpak."],
+q:["Wat is ’n ‘reus’ wat jy dalk moet aanpak? (’n Vrees, of iets wat moeilik is om te doen.)","Wat sou Dawid vir jou daaroor sê?"],
+p:"Liewe God, / U is groter as enige reus. / As ek bang is, maak my dapper, / want U is by my. Amen.",
+m:["R","Kies een dapper ding om môre te doen (proe ’n nuwe kos, groet iemand nuut) en doen dit saam met God."]},
+
+{t:"Die Goeie Herder se Lied",r:"Psalm 23",g:"Sorg vir My",tr:"God is my herder wat vir my sorg",sc:"sunset hills ; 🐑100,162,34 🐑150,170,28 🐑200,166,26 🎵300,90,28",
+s:["Onthou jy Dawid die skaapwagterseun? Buite in die veld by sy skape het Dawid op sy harp gespeel en liedjies vir God geskryf. Een van sy liedjies is een van die bekendste liedjies in die hele wêreld. Dit heet Psalm 23.","Dawid het alles van skape geweet. Skape kan nie self kos kry nie. Hulle dwaal weg. Hulle word bang vir wolwe. Hulle het ’n herder nodig om hulle na groen gras en koel water te lei, en om wilde diere met sy stok en staf weg te jaag.","Toe dink Dawid: ‘God is soos my herder! En ek is soos sy skaap!’ God lei ons. God voed ons. God beskerm ons. As ons deur donker, bang plekke gaan, loop God reg langs ons, en Hy lei ons huis toe.","Aan die einde van sy lied sê Dawid: ‘Ek sal vir altyd in die huis van die Here woon.’"],
+v:["Die Here is my herder. Ek het alles wat ek nodig het.","Psalm 23:1"],
+l:["God is soos ’n goeie herder wat vir sy skape sorg.","Selfs op donker plekke is God langs ons.","Ons kan God volg soos skape hulle herder volg."],
+q:["Hoe sorg ’n herder vir skape? Hoe sorg God vir jou?","Kom ons sê dit op vyf vingers: Die – Here – is – my – herder."],
+p:"Liewe Here, / U is my herder. / Lei my, voed my en hou my veilig. / Ek sal U volg. Amen.",
+m:["L","Oefen om ‘Die Here is my herder’ op jou vyf vingers te sê."]},
+
+{t:"Vuur uit die Hemel",r:"1 Konings 18",g:"Die Enigste God",tr:"Daar is net een ware God, en Hy hoor my",sc:"day mountain ; 🔥200,122,46 🪨200,154,34",
+s:["In Elia se tyd het die mense begin bid tot ’n kamma-god met die naam Baal. Toe hou God se profeet Elia ’n kompetisie bo-op die berg Karmel. ‘Kom ons bou elkeen ’n altaar,’ het hy gesê. ‘Die god wat met vuur antwoord, is die regte God!’","Die 450 profete van Baal het eerste gegaan. Hulle het van die oggend tot middagete geskree en gedans: ‘Baal, antwoord ons!’ Niks. Nie eens ’n rokie nie. Elia het hulle geterg: ‘Skree harder! Dalk slaap hy!’","Toe was dit Elia se beurt. Hy het selfs water oor sy altaar gegooi, twaalf groot kanne, totdat alles papnat was! Toe bid Elia ’n eenvoudige gebed: ‘Here, wys vir almal dat U God is.’","WOESJ! Vuur het uit die hemel geval en alles verbrand, selfs die water! Al die mense het neergeval en uitgeroep: ‘Die Here, Hy is God!’"],
+v:["Die Here, Hy is God!","1 Konings 18:39"],
+l:["Daar is net een ware God, en Hy leef.","God hoor en antwoord gebed.","Elia hoef nie te skree nie. God het sy eenvoudige gebed gehoor."],
+q:["Hoekom kon Baal nie antwoord nie? (Hy was nie regtig nie.)","Hoor God ons as ons stil bid?"],
+p:"Liewe God, / U is die een ware God. / U leef, en U hoor my / as ek bid. Amen.",
+m:["T","Bid môre ’n kort gebed vir iemand, en kyk wat God doen."]},
+
+{t:"Daniël en die Leeus",r:"Daniël 6",g:"Altyd Naby",tr:"God is altyd by my",sc:"night cave ; 🦁90,172,42 🧎205,172,38 🦁320,170,42 ✨205,112,24",
+s:["Daniël was lief vir God en het elke dag drie keer by sy venster tot Hom gebid. ’n Paar jaloerse mans het die koning laat ’n nuwe wet maak: ‘Vir dertig dae mag niemand tot iemand anders as die koning bid nie. Enigiemand wat dit doen, word vir die leeus gegooi!’","Het Daniël opgehou bid? Nee! Hy het na sy venster gegaan, gekniel en tot God gebid, net soos altyd. Die jaloerse mans het gehardloop om vir die koning te gaan vertel. Die koning was baie hartseer, want hy was lief vir Daniël, maar die wet kon nie verander word nie. Daniël is in ’n kuil vol honger leeus gegooi, en ’n groot klip is oor die opening gerol.","Die koning kon die hele nag nie slaap nie. Vroeg die volgende oggend het hy na die kuil gehardloop. ‘Daniël! Het jou God jou gered?’","‘Ja, o koning!’ roep Daniël. ‘My God het sy engel gestuur en die leeus se bekke toegemaak!’ Daar was nie een krapmerk op hom nie. Toe het die koning vir almal gesê om Daniël se God te eer."],
+v:["My God het sy engel gestuur, en sy engel het die bekke van die leeus toegemaak.","Daniël 6:23"],
+l:["God is oral by ons, selfs in ’n leeukuil.","Om elke dag met God te praat was vir Daniël baie belangrik.","Ons kan aanhou om God lief te hê, selfs as ander mense dit nie doen nie."],
+q:["Hoekom het Daniël aangehou bid?","Wanneer in jou dag is goeie tye om met God te praat?"],
+p:"Liewe God, / U is altyd by my, / by die huis, by die skool, oral. / Help my om elke dag met U te praat soos Daniël. Amen.",
+m:["T","Kies môre drie tye om te bid, soos Daniël: oggend, middag en slaaptyd."]},
+
+{c:1,t:"Kampvuuraand: Dapperhart-berg",sc:"night campfire ; 🔥200,165,54 🏔️320,150,50",
+intro:"Jy het Dapperhart-berg geklim! ’n Seun wat geluister het, ’n skaapwagter wat gekies is om koning te wees, ’n reus wat geval het en leeus wat nie kon byt nie. Kom ons warm ons hande by die vuur en onthou.",
+game:"Kussingberg: bou ’n berg van kussings. Elke keer as jy tot bo klim, skree een ding wat waar is oor God.",
+q:["Wie was die dapperste persoon hierdie week?","Wat het hulle dapper gemaak?"],
+p:"Liewe God, / U praat met my, U sien my hart, / en U maak my dapper. / U is altyd by my. Amen.",
+m:["L","Sê Josua 1:9 met sterk arms."]},
+
+{t:"Jona en die Reusevis",r:"Jona 1 – 3",g:"Genadig",tr:"God gee tweede kanse",sc:"storm sea ; ⛵120,108,42 🐋280,168,60",
+s:["God het vir Jona gesê: ‘Gaan na die stad Nineve en sê vir die mense om op te hou om slegte dinge te doen.’ Maar Jona wou nie gaan nie. Toe spring hy op ’n boot wat die teenoorgestelde kant toe gaan!","Op die see het God ’n groot storm gestuur. Die golwe het gebreek en die boot het gekraak. Jona het geweet dit is omdat hy van God weggehardloop het. ‘Gooi my in die see,’ het hy vir die matrose gesê, ‘en die storm sal ophou.’ PLONS! In gaan Jona… en SLUK! ’n Reusevis het hom heel ingesluk!","Drie dae en drie nagte lank het Jona in die vis se maag gesit. Sies! Daar het hy gebid: ‘Ek is jammer, God. Help my asseblief!’ God het hom gehoor. Die vis het Jona uitgespoeg, BLÊÊ, op die strand.","God het vir Jona ’n tweede kans gegee, en hierdie keer het Jona na Nineve gegaan. Die mense van Nineve het ook jammer gesê vir God, en God het hulle vergewe. God gee graag tweede kanse."],
+v:["Die Here se liefde raak nooit op nie. Sy goedheid is elke oggend nuut.","Klaagliedere 3:22–23"],
+l:["God gee tweede kanse.","Jy kan nooit so ver weghardloop dat God jou nie kan vind nie.","God het alle mense lief, selfs mense van wie ons moeilik hou."],
+q:["Hoekom het Jona weggehardloop?","Het jy ’n tweede kans by iemand nodig? Gee God vir jou een?"],
+p:"Liewe God, / dankie vir tweede kanse. / As ek wegloop van wat reg is, / bring my terug na U toe. Amen.",
+m:["V","Gee môre vir iemand ’n tweede kans as hulle ’n fout maak."]},
+
+{t:"Drie Vriende in die Vuur",r:"Daniël 3",g:"Koning van Konings",tr:"God is die Koning oor alles",sc:"sunset desert statue ; 👑80,165,30 🔥290,168,42 🔥325,168,34",
+s:["Koning Nebukadnesar (probeer dit vinnig sê!) het ’n reuse goue beeld gebou, so hoog soos ’n groot boom. ‘As die musiek speel, moet almal voor my beeld buig,’ het hy beveel. ‘Wie dit nie doen nie, word in ’n brandende oond gegooi!’","Die musiek het gespeel. Almal het gebuig… behalwe drie jong mans: Sadrag, Mesag en Abednego. ‘Ons aanbid net die ware God,’ het hulle gesê. ‘Ons God kan ons red. En selfs as Hy dit nie doen nie, sal ons steeds nie buig nie.’","Die koning was woedend. ‘Maak die vuur sewe keer warmer!’ Die drie vriende is vasgebind en ingegooi. Maar toe spring die koning op. ‘Wag! Ek sien VIER mans wat in die vuur rondloop, en hulle is nie vasgebind nie!’","God was saam met hulle in die vuur! Hulle het uitgekom sonder om eens na rook te ruik. Die koning het gesê: ‘Geen ander god kan so red nie!’"],
+v:["Die Here is die groot Koning oor die hele aarde.","Psalm 47:3"],
+l:["God is die ware Koning, groter as enige koning.","Net God verdien ons aanbidding. Hy is die belangrikste.","God is by ons in die warmste, moeilikste oomblikke."],
+q:["Watter dinge kan vir ons belangriker as God word? (Speelgoed? Skerms?)","Wat het die drie vriende so dapper gemaak?"],
+p:"Liewe God, / U is die Koning van alles. / U is die belangrikste / in my lewe. Amen.",
+m:["V","Sê môre voor jy speel: ‘God, U is nommer een!’"]},
+
+{t:"Die Dapper Koningin",r:"Ester 2 – 8",g:"Het ’n Plan",tr:"God het ’n goeie plan, selfs as ek dit nie kan sien nie",sc:"day town ; 👸200,168,46 👑200,118,26",
+s:["Ester was ’n Joodse meisie wat koningin van Persië geword het. Maar ’n slegte man met die naam Haman het die koning gekul om ’n wet te maak om al God se mense, die Jode, uit te wis. Ester se mense was in groot gevaar!","Haar neef Mordegai het gesê: ‘Ester, dalk het God jou koningin gemaak juis vir ’n tyd soos hierdie!’ Maar daar was ’n probleem. Niemand mag die koning sien sonder ’n uitnodiging nie, selfs nie die koningin nie. As hy nie sy goue septer uithou nie, kon sy doodgemaak word.","Ester het al God se mense gevra om drie dae lank te bid. Toe, baie dapper, het sy die troonsaal binnegestap. Die koning het opgekyk… en sy goue septer uitgehou! Ester het hom van Haman se slegte plan vertel. Die koning was kwaad vir Haman, en God se mense is gered.","God se naam word nie eens in die boek Ester geskryf nie, maar God was die hele tyd agter die skerms aan die werk."],
+v:["‘Ek weet watter planne Ek vir jou het,’ sê die Here. ‘Planne om jou hoop te gee.’","Jeremia 29:11"],
+l:["God het ’n goeie plan, selfs as ons Hom nie sien werk nie.","God sit ons met ’n rede waar ons is.","Om te bid voordat ons dapper dinge doen, help."],
+q:["Hoekom het Ester mense gevra om eers te bid?","Waar het God jou gesit? (Jou familie, jou skool.) Hoe kan jy daar help?"],
+p:"Liewe God, / dankie vir u goeie planne vir my. / Help my om dapper te wees soos Ester, / oral waar U my sit. Amen.",
+m:["R","Vra Mamma om môre saam met jou te bid voor iets moeiliks."]},
+
+{t:"Rut se Gawe Hart",r:"Rut 1 – 4",g:"Vriendelik",tr:"God is vriendelik en gee om vir hartseer en eensame mense",sc:"sunset hills ; 🌾70,166,38 🌾112,172,30 👩205,168,42 👵255,168,40",
+s:["Naomi was baie hartseer. Sy het ver weg getrek, en haar man en haar seuns was dood. ‘Ek gaan terug huis toe na Betlehem,’ het sy vir haar skoondogter, Rut, gesê. ‘Gaan terug na jou eie familie.’","Maar Rut het haar styf vasgedruk. ‘Waar jy gaan, sal ek gaan. Jou God sal my God wees.’ Toe het Rut saam met Naomi die hele pad na Betlehem gegaan.","Hulle het geen kos gehad nie, toe gaan Rut na die lande om die oorskietkoring agter die oesters op te tel. Die land het behoort aan ’n vriendelike man met die naam Boas. ‘Laat haar soveel optel as wat sy wil,’ het Boas vir sy werkers gesê, ‘en laat ekstra val, met opset, vir haar!’","Later het Boas met Rut getrou, en hulle het ’n babaseuntjie gekry. Naomi was weer gelukkig! En raai wat? Rut het die oumagrootjie van koning Dawid geword. Baie jare later is Jesus in haar familie gebore!"],
+v:["Die Here is goed vir almal. Hy is vriendelik met alles wat Hy gemaak het.","Psalm 145:9"],
+l:["God gee om vir eensame en hartseer mense.","God wys dikwels sy goedheid deur gawe mense.","God kan blydskap ná hartseer bring."],
+q:["Hoe het Boas God se goedheid gewys?","Wie is dalk eensaam met wie ons gaaf kan wees?"],
+p:"Liewe God, / dankie dat U so goed is vir my. / Help my om gaaf te wees soos Rut en Boas / met mense wat hartseer is. Amen.",
+m:["V","Maak ’n tekening of kaartjie vir iemand wat dalk eensaam is."]},
+
+{t:"Die Dogtertjie wat Gehelp Het",r:"2 Konings 5",g:"Geneser",tr:"God genees, en Hy gebruik kinders ook",sc:"day river ; 🐎80,168,42 🧒305,168,36",
+s:["Naäman was ’n groot leërkaptein, sterk en dapper. Maar hy het ’n verskriklike velsiekte gehad wat melaatsheid genoem word, en geen dokter kon dit gesond maak nie.","In Naäman se huis het ’n jong diensmeisie van Israel gewoon. Sy was ver van die huis af, maar sy het God steeds vertrou. Sy het vir Naäman se vrou gesê: ‘Ek wens my baas wil na God se profeet Elisa gaan. Hy sou hom gesond maak!’","Toe gaan Naäman. Elisa het ’n boodskap gestuur: ‘Gaan was jou sewe keer in die Jordaanrivier.’ Naäman was kwaad. ‘Daardie modderige rivier? Ek het gedink hy sou sy hand swaai en my gesond maak!’ Maar sy diensknegte het gesê: ‘Hoekom probeer u nie?’","Toe duik Naäman af, een keer… twee keer… drie, vier, vyf, ses… SEWE keer. Toe hy opkom, was sy vel so sag en skoon soos ’n seuntjie s’n! ‘Nou weet ek,’ sê Naäman, ‘daar is geen God in die hele wêreld behalwe die God van Israel nie.’"],
+v:["Moenie dat iemand op jou neersien omdat jy jonk is nie. Wees ’n voorbeeld.","1 Timoteus 4:12"],
+l:["God genees, en Hy gee om vir ons liggame.","God kan kinders gebruik om ander van Hom te vertel.","Om dinge op God se manier te doen werk die beste, selfs as dit snaaks lyk."],
+q:["Hoe het die dogtertjie vir Naäman gehelp?","Vir wie kan jy van God vertel?"],
+p:"Liewe God, / dankie dat U my kan gebruik, al is ek klein. / Help asseblief mense wat siek is, / soos… (noem iemand). Amen.",
+m:["V","Vertel môre vir ’n maatjie of familielid een ding wat jy oor God geleer het."]},
+
+{t:"Die Belofte van ’n Redder",r:"Jesaja 7 & 9, Miga 5",g:"Redder",tr:"God het beplan om ’n Redder vir die hele wêreld te stuur",sc:"night hills star ; 📜110,170,32 🕯️300,170,30",
+s:["Onthou jy die belofte wat God in die tuin gemaak het, heel terug op Dag 3? Hy het ’n Redder belowe wat sou regmaak wat sonde gebreek het.","Baie jare later het God vir sy profeet Jesaja ’n boodskap oor daardie Redder gegee. Jesaja het dit neergeskryf soos leidrade op ’n skatkaart: ‘’n Jong vrou sal ’n seuntjie kry. Hy sal Immanuel genoem word, wat beteken God met ons.’ En: ‘’n Kind is vir ons gebore. Hy sal genoem word Wonderbare Raadsman, Magtige God, Ewige Vader, Vredevors.’ ’n Ander profeet, Miga, het selfs gesê in watter klein dorpie Hy gebore sou word: Betlehem!","God se mense het gewag. En gewag. Honderde jare het verbygegaan. Party mense het vergeet. Maar God vergeet nooit ’n belofte nie.","Kan jy raai wie die baba sou wees? Reg: Jesus! Binnekort lei ons pad na die wonderlikste verjaarsdag ooit."],
+v:["’n Kind is vir ons gebore… Hy sal genoem word Wonderbare Raadsman, Magtige God, Ewige Vader, Vredevors.","Jesaja 9:5"],
+l:["God het lank voor Jesus se geboorte beplan om Hom te stuur.","God hou altyd sy beloftes, selfs as dit lank vat.","Jesus is ‘God met ons’."],
+q:["Van watter een van Jesus se name hou jy die meeste?","Is dit moeilik om vir iets te wag? Wat help?"],
+p:"Liewe God, / dankie vir u belofte om Jesus te stuur. / Dankie dat U nooit vergeet nie. / Help my om met ’n blye hart te wag. Amen.",
+m:["L","Leer een van Jesus se name uit Jesaja 9 en vertel vir iemand wat dit beteken."]},
+
+{c:1,t:"Kampvuuraand: Die Rivier van Tweede Kanse",sc:"night campfire ; 🔥200,165,54 🌊320,165,40",
+intro:"Ons het met die Rivier van Tweede Kanse afgevaar! ’n Vis wat Jona ingesluk het, ’n vuur wat nie kon brand nie, ’n dapper koningin, ’n gawe vriendin en ’n belofte van ’n Redder. Kom ons onthou by die vuur.",
+game:"Rivierspring: lê ’n kombers as ’n rivier op die vloer. Elke keer as jy ’n skat oor God noem, spring oor!",
+q:["Watter skat oor God het jou verras?","Hoekom dink jy gee God tweede kanse?"],
+p:"Liewe God, / U is genadig en goed. / U is die Koning, en U het ’n plan. / Dankie dat U ’n Redder gestuur het. Amen.",
+m:["L","Sê Klaagliedere 3:22–23 as jy môre wakker word, want God se goedheid is elke oggend nuut!"]},
+
+{t:"God se Stem by die Rivier",r:"Matteus 3",g:"Vader",tr:"God is my liefdevolle Vader",sc:"day river ; 🕊️200,62,32 🧔205,150,34",
+s:["Toe Jesus groot was, het Hy na die Jordaanrivier gegaan, waar sy neef Johannes mense gedoop het: hulle onder die water gedompel om te wys hulle wil ’n vars, skoon begin met God maak.","‘Doop My ook,’ sê Jesus. Johannes was verbaas. ‘U moet eerder vir my doop!’ Maar Jesus het die water ingegaan. Toe Hy opkom, het iets wonderliks gebeur. Die hemel het oopgegaan, en God se Gees het soos ’n duif neergedaal en op Jesus kom sit. Toe praat ’n stem uit die hemel: ‘Dit is my Seun, vir wie Ek liefhet. Ek is baie bly oor Hom.’","By die rivier sien ons God op drie maniere gelyk: die Vader wat praat, Jesus die Seun in die water, en die Heilige Gees soos ’n duif. Een God: Vader, Seun en Heilige Gees.","En hier is die beste deel: as ons Jesus volg, word God ook ons Vader, en ons word sy kinders. Hy het ons net so lief."],
+v:["Kyk hoe lief het die Vader ons! Hy noem ons sy kinders.","1 Johannes 3:1"],
+l:["God is een God: Vader, Seun en Heilige Gees.","God die Vader het Jesus lief, en Hy het jou ook lief.","Jesus het gekom om ons te wys hoe God is."],
+q:["Hoe voel dit as Mamma sê sy is trots op jou? God voel so oor sy kinders.","Hoe dink jy het die duif gelyk?"],
+p:"Liewe Vader in die hemel, / dankie dat U my liefhet. / Dankie vir Jesus, u Seun. / Ek wil u kind wees. Amen.",
+m:["L","Vra Mamma om jou te vertel van ’n doop wat sy onthou."]},
+
+{t:"Kom, Volg My!",r:"Lukas 5, Matteus 4",g:"Leier",tr:"Jesus nooi my om Hom te volg",sc:"dawn beach ; ⛵140,104,46 🐟232,140,20 🐟258,148,18 🐟284,138,20",
+s:["Petrus en sy broer Andreas was vissermanne. Een oggend was hulle baie moeg en knorrig. Hulle het die HELE nag gevis en niks gevang nie. Nie een klein vissie nie!","Jesus het in Petrus se boot geklim en gesê: ‘Vaar na die diep water en gooi julle nette uit.’ Petrus sê: ‘Meester, ons het die hele nag gewerk en niks gevang nie… maar omdat U dit sê, sal ek.’ Plons het die nette gegaan, en skielik was hulle so vol wriemelende, springende visse dat die nette begin skeur het! Hulle het nog ’n boot nodig gehad om te help, en albei bote het amper gesink!","Petrus het verbaas op sy knieë geval. Jesus het geglimlag en gesê: ‘Kom, volg My! Van nou af sal jy mense vang!’ Hy het bedoel hulle sal help om mense na God te bring. Petrus, Andreas, Jakobus en Johannes het hulle bote gelos en Jesus gevolg.","Jesus nooi vandag nog mense: ‘Kom, volg My.’ En dit sluit jou in!"],
+v:["‘Kom, volg My,’ het Jesus gesê.","Matteus 4:19"],
+l:["Jesus nooi ons om sy vriende en volgelinge te wees.","Om Jesus te volg beteken om na Hom te luister en te doen wat Hy sê.","Jesus het ’n werk vir ons: om ander te help om Hom te leer ken."],
+q:["Wat beteken dit om iemand te volg? Kom ons speel een minuut lank ‘volg die leier’!","Wat sou jy vir iemand oor Jesus vertel?"],
+p:"Liewe Jesus, / dankie dat U my nooi om U te volg. / Ek wil in u span wees. / Wys my hoe om U te volg. Amen.",
+m:["R","Speel môre ‘volg die leier’ en onthou: Jesus lei, ons volg."]},
+
+{t:"Swyg! Bedaar!",r:"Markus 4:35–41",g:"Vrede",tr:"Jesus is sterker as my vrese",sc:"storm sea ; ⛵200,118,52 ⚡305,52,32",
+s:["Een aand het Jesus en sy vriende in ’n boot geklim om oor die meer te vaar. Jesus was so moeg dat Hy agter in die boot op ’n kussing gaan lê en vas aan die slaap geraak het.","Skielik kom daar ’n groot storm. Die wind het gehuil, WOEEE! Golwe het oor die kante gebreek, en die boot het vol water begin loop. Selfs die vissermanne was doodbang! Hulle het Jesus wakker gemaak: ‘Meester, gee U nie om dat ons gaan verdrink nie?’","Jesus het opgestaan. Hy het na die wind en die golwe gekyk en gesê: ‘Swyg! Bedaar!’ En dadelik het die wind gaan lê. Die golwe het plat geword. Alles was heeltemal stil.","Sy vriende het vir mekaar gefluister: ‘Wie is Hy? Selfs die wind en die golwe luister na Hom!’ Hulle het geleer dat Jesus God is. Die Een wat die see gemaak het, is in beheer van die see."],
+v:["Wanneer ek bang is, vertrou ek op U.","Psalm 56:4"],
+l:["Jesus is magtiger as enige storm.","Jesus gee om as ons bang is.","Ons kan na Jesus roep as ons bang is, net soos sy vriende gedoen het."],
+q:["Watter storms maak jou bang? (Donderweer, die donker, nare drome?)","Wat kan jy vir Jesus sê as jy bang voel?"],
+p:"Liewe Jesus, / U kan enige storm laat bedaar. / As ek bang voel, / help my om te onthou U is by my. Amen.",
+m:["R","Leer Psalm 56:4 uit jou kop en sê dit as jy snags bang voel."]},
+
+{t:"Een Seun se Kos",r:"Johannes 6:1–14",g:"Vrygewig",tr:"Jesus doen groot dinge met klein gawes",sc:"day hills ; 👦110,168,42 🍞172,170,30 🐟212,170,28 🧺262,172,34",
+s:["’n Groot skare het Jesus teen ’n heuwel op gevolg om na sy onderrig te luister: vyfduisend mans, plus al die vroue en kinders! Teen die aand was almal baie honger. ‘Waar kan ons kos koop vir al hierdie mense?’ het Jesus sy vriend Filippus gevra. Filippus het gesê: ‘Al werk ons maande lank, sal ons nie genoeg kan koop nie!’","Toe kry Andreas ’n seun met ’n bietjie padkos: vyf klein broodjies en twee vissies. Die seun het alles vir Jesus gegee. ‘Maar wat is dit vir so baie mense?’ sê Andreas.","Jesus het die brood geneem, opgekyk na die hemel en God gedank. Toe breek Hy dit en hou aan uitdeel… en uitdeel… en UITDEEL! Almal het geëet totdat hulle versadig was. Daar was selfs twaalf mandjies oorskiet!","Dit het alles begin met een seun wat bereid was om te deel wat hy gehad het."],
+v:["Hier is ’n seun met vyf klein broodjies en twee vissies.","Johannes 6:9"],
+l:["Jesus gee om oor ons alledaagse behoeftes, selfs grommende mae!","Jesus kan iets groots doen met wat ons ook al vir Hom gee.","Om te deel wat ons het, maak Jesus bly."],
+q:["Hoe dink jy het die seun gevoel toe hy sien hoe sy kos almal voed?","Wat kan jy vir Jesus gee? (Jou tyd, jou speelgoed, jou gaafheid.)"],
+p:"Liewe Jesus, / hier is wat ek het: / my hande, my hart en my tyd. / Gebruik dit asseblief vir U. Amen.",
+m:["V","Deel môre iets van jou, soos ’n peuselhappie of ’n speelding."]},
+
+{t:"Laat die Kinders Kom",r:"Markus 10:13–16",g:"Kindervriend",tr:"Jesus het kinders lief en het altyd tyd vir my",sc:"day hills ; 🧒150,170,38 ❤️177,112,24 👧205,170,38 🌳322,152,58",
+s:["Ouers was lief vir Jesus, en hulle het hulle kinders na Hom gebring sodat Hy hulle kon seën. Maar Jesus se dissipels het gesê: ‘Sjuut! Gaan weg! Jesus is te besig en te belangrik vir kinders!’","Toe Jesus dit sien, was Hy glad nie bly met sy dissipels nie. ‘Laat die kindertjies na My toe kom!’ het Hy gesê. ‘Moenie hulle keer nie! God se koninkryk behoort aan mense soos hulle.’","Toe het Jesus die kinders in sy arms geneem. Hy het sy hande op hulle koppe gesit en hulle geseën. Dalk het Hy saam met hulle gelag, na hulle stories geluister en hulle styf vasgedruk.","Jesus is nooit te besig vir jou nie. Jy hoef nie eers groot, slim of goed genoeg te wees nie. Jy kan enige tyd na Hom toe kom, net soos jy is."],
+v:["Laat die kindertjies na My toe kom.","Markus 10:14"],
+l:["Jesus het kinders lief en is nooit te besig vir hulle nie.","Jy kan enige tyd en enige plek met Jesus praat.","Grootmense kan leer uit hoe kinders Jesus vertrou."],
+q:["As jy op Jesus se skoot kon sit, wat sou jy vir Hom vertel?","Kom ons vertel Hom dit nou!"],
+p:"Liewe Jesus, / dankie dat U nooit te besig is vir my nie. / Ek kom na U toe net soos ek is. / Ek is lief vir U. Amen.",
+m:["T","Vertel môre vir Jesus van jou dag, soos jy vir ’n vriend sou vertel."]},
+
+{t:"Oë op Jesus",r:"Matteus 14:22–33",g:"Hou My Vas",tr:"Jesus hou my vas as ek Hom vertrou",sc:"night sea ; 🚣90,118,42 ✋262,140,32",
+s:["Laat een nag was Jesus se vriende in ’n boot op ’n winderige meer. Jesus het agtergebly om te bid. Net voor sonop sien hulle iets oor die water na hulle toe aankom. ‘’n SPOOK!’ het hulle gegil.","‘Moenie bang wees nie,’ sê ’n stem. ‘Dit is Ek.’ Dit was Jesus, wat op die water loop!","Dapper Petrus het gesê: ‘Here, as dit U is, sê vir my om na U toe te kom.’ ‘Kom,’ sê Jesus. Toe klim Petrus uit die boot… en loop ook op die water! Tree, tree, tree! Maar toe kyk hy na die groot golwe en die huilende wind, word bang en begin sink. ‘Here, red my!’ het hy geskree.","Dadelik het Jesus sy hand uitgesteek en hom gegryp. ‘Hoekom het jy getwyfel?’ vra Hy saggies. Hulle het in die boot geklim, die wind het gaan lê, en almal het Jesus aanbid."],
+v:["Kom ons hou ons oë op Jesus.","Hebreërs 12:2"],
+l:["As ons ons oë op Jesus hou, kan ons wonderlike dinge doen.","As ons begin sink, gryp Jesus ons dadelik.","Ons kan altyd roep: ‘Jesus, help my!’"],
+q:["Wat het gemaak dat Petrus begin sink het?","Wat is die ‘golwe’ wat maak dat jy van Jesus vergeet?"],
+p:"Liewe Jesus, / help my om my oë op U te hou. / As ek begin sink, / dankie dat U my vang. Amen.",
+m:["R","Fluister môre elke keer as jy bekommerd voel: ‘Jesus, help my!’"]},
+
+{c:1,t:"Kampvuuraand: Saam met Jesus op Pad",sc:"night campfire ; 🔥200,165,54 ⛵320,160,40",
+intro:"Ons het saam met Jesus gestap! Ons het God hoor sê ‘Dit is my Seun’, ons het nette sien volraak met vis, ’n storm sien bedaar en een seun se kos sien duisende voed. Jesus wys ons presies hoe God is.",
+game:"Wonderwerk-aksies: Mamma noem ’n storie, jy speel dit na. Laat die storm bedaar (arms uit: ‘Bedaar!’), loop op water (op jou tone op ’n lyn), deel kos uit (deel kamma-brood uit).",
+q:["Watter ding wat Jesus gedoen het, was die wonderlikste?","Wat wys dit vir ons oor God?"],
+p:"Liewe Jesus, / U is God se Seun. / U laat my storms bedaar, U het kinders lief, / en U hou my vas. Ek sal U volg. Amen.",
+m:["L","Sê Johannes 14:9 en vertel vir Mamma wat dit beteken."]},
+
+{t:"Die Man wat Geskree Het",r:"Markus 10:46–52",g:"Hoor My",tr:"Jesus hoor my as ek roep",sc:"day town ; 🌴55,160,54 🧥250,174,30 🚶305,170,38",
+s:["Bartimeus was blind. Hy kon nie die blou lug of die gesigte van sy vriende sien nie. Elke dag het hy langs die pad gesit en bedel.","Eendag het hy ’n groot skare gehoor. ‘Wat gebeur?’ vra hy. ‘Jesus kom!’ Bartimeus het al van Jesus gehoor. Toe skree hy so hard as hy kan: ‘JESUS! HET ONTFERMING OOR MY!’ Mense het vir hom gesê: ‘Sjuut! Bly stil!’ Maar hy het nog harder geskree: ‘JESUS!’","Jesus het gaan staan. In daardie groot, raserige skare het Jesus een man gehoor. ‘Roep hom,’ sê Hy. Bartimeus het sy mantel afgegooi en opgespring. ‘Wat wil jy hê moet Ek vir jou doen?’ vra Jesus. ‘Meester, ek wil sien!’","‘Gaan,’ sê Jesus. ‘Jou geloof het jou gesond gemaak.’ Dadelik kon Bartimeus sien! En die eerste gesig wat hy gesien het, was Jesus s’n. Toe het hy Jesus met die pad langs gevolg en God geprys."],
+v:["Wat wil jy hê moet Ek vir jou doen?","Markus 10:51"],
+l:["Jesus hoor ons, selfs in ’n raserige skare.","Ons kan Jesus vra vir wat ons nodig het.","Moenie moed opgee as jy bid nie."],
+q:["As Jesus vir jou vra: ‘Wat wil jy hê moet Ek vir jou doen?’, wat sou jy sê?","Hoe dink jy het Bartimeus gevoel toe hy kon sien?"],
+p:"Liewe Jesus, / dankie dat U my hoor / elke keer as ek roep. / Vanaand wil ek U vra vir… Amen.",
+m:["T","Vertel môre vir Jesus van een ding wat jy regtig nodig het."]},
+
+{t:"Saggeus in ’n Boom",r:"Lukas 19:1–10",g:"Vriend",tr:"Jesus wil vriende wees met almal",sc:"day town tree ; 💰130,174,24 🧔302,84,28",
+s:["Saggeus was ’n belastinggaarder. Hy het te veel geld van mense gevat en dit vir homself gehou. Niemand het van hom gehou nie. En hy was baie kort!","Toe Jesus na sy dorp gekom het, wou Saggeus Hom sien, maar die skare was te lank. Toe hardloop hy vooruit en klim in ’n wildevyeboom. Op, op, op het hy geklim!","Jesus het reg onder daardie boom gestap, gaan staan en opgekyk. ‘Saggeus, kom gou af! Ek kom vandag na jou huis toe!’ Almal het gemor. ‘Jesus gaan na die huis van ’n bedrieër!’","Maar om saam met Jesus te wees, het Saggeus se hart verander. ‘Here,’ het hy gesê, ‘ek gee die helfte van alles wat ek het vir die armes. En as ek iemand bedrieg het, betaal ek hulle vier keer soveel terug!’ Jesus het geglimlag. ‘Vandag het redding na hierdie huis gekom.’"],
+v:["Die Seun van die mens het gekom om te soek en te red wat verlore is.","Lukas 19:10"],
+l:["Jesus ken jou naam.","Jesus wil vriende wees met almal, selfs mense van wie ander nie hou nie.","Om ’n vriend van Jesus te wees, verander ons hart."],
+q:["Hoe dink jy het Saggeus gevoel toe Jesus sy naam roep?","Vir wie kan jy ’n vriend wees?"],
+p:"Liewe Jesus, / dankie dat U my vriend is. / Verander my hart / om meer soos U s’n te wees. Amen.",
+m:["V","Wees môre ’n vriend vir iemand nuut."]},
+
+{t:"Die Verlore Skapie",r:"Lukas 15:1–7",g:"Soeker",tr:"Jesus hou nooit op om na my te soek nie",sc:"sunset hills ; 🪨262,154,34 🐑232,124,30",
+s:["Jesus het ’n storie vertel. ’n Herder het 100 skape gehad. Elke aand het hy hulle getel: ‘97, 98, 99…’ Een was weg! Een klein skapie het weggedwaal en was verlore.","Het die herder gesê: ‘Ag, ek het nog 99’? Glad nie! Hy het die 99 veilig in die veld gelos en gaan soek. Oor die rotse, deur die doringbosse, teen die steil heuwels op, en hy het geroep en geroep. En eindelik het hy ’n klein ‘mêêê!’ gehoor.","Die herder het sy verlore skapie opgetel, op sy skouers gesit en hom die hele pad huis toe gedra. Toe roep hy sy vriende: ‘Partytjie! Ek het my verlore skapie gekry!’","Jesus het gesê: ‘So is God. Daar is ’n groot partytjie in die hemel as selfs een verlore mens na God terugkom.’ So kosbaar is jy vir Hom."],
+v:["Wees saam met my bly! Ek het my verlore skaap gekry.","Lukas 15:6"],
+l:["Elke enkele mens is vir God belangrik.","God hou nooit op om na ons te soek nie.","Die hemel vier fees as iemand na God terugkom."],
+q:["Was jy al ooit verlore? Hoe het dit gevoel om gevind te word?","Hoe voel dit om te weet God sou na jou soek?"],
+p:"Liewe Jesus, / dankie dat U na my kom soek het. / Ek is so bly ek behoort aan U. / Help my om nooit weg te dwaal nie. Amen.",
+m:["V","Speel môre wegkruipertjie en onthou: Jesus vind ons altyd."]},
+
+{t:"Die Pa wat Gehardloop Het",r:"Lukas 15:11–32",g:"Vergewend",tr:"God hardloop na my toe en vergewe my",sc:"sunset hills ; 🏠70,150,42 🧔150,168,36 🏃300,170,36",
+s:["Jesus het nog ’n storie vertel. ’n Man het twee seuns gehad. Die jongste seun het gesê: ‘Pa, gee my nou my deel van die geld!’ Toe gaan hy van die huis af weg, ver weg. Hy het al sy geld op lawwe dinge gemors totdat hy niks oor gehad het nie.","Toe kry hy werk om varke kos te gee. Hy was so honger dat selfs die varke se kos lekker gelyk het! Toe onthou hy: ‘Selfs my pa se werkers het genoeg om te eet! Ek gaan huis toe en sê: “Pa, ek is jammer. Ek is nie goed genoeg om u seun te wees nie. Laat my ’n werker wees.”’","Toe begin hy die lang pad huis toe stap. Maar terwyl hy nog ver was, het sy pa hom gesien. En sy pa het GEHARDLOOP! Hy het sy arms om sy seun gegooi en hom gesoen. ‘Bring die beste mantel! Sit ’n ring aan sy vinger! Kom ons hou partytjie! My seun was verlore, en nou is hy gevind!’","Jesus het hierdie storie vertel sodat ons sal weet: God is soos daardie pa. As ons na Hom terugkom, hardloop Hy na ons toe, want ons is sy kinders."],
+v:["Terwyl hy nog ver was, het sy pa hom gesien… Hy het na sy seun gehardloop en hom omhels.","Lukas 15:20"],
+l:["God die Vader het ons lief, selfs as ons dinge opneuk.","As ons jammer sê, vergewe God ons heeltemal.","Ons hoef nie God se liefde te verdien nie. Hy hardloop na ons toe."],
+q:["Wat het die seun gedink sou sy pa sê?","Wat leer hierdie storie ons oor God?"],
+p:"Liewe Vader, / dankie dat as ek jammer sê, / U na my toe hardloop en my vergewe. / Dankie dat U my so baie liefhet. Amen.",
+m:["T","As jy môre iets verkeerd doen, sê jammer vir God en onthou die pa wat gehardloop het."]},
+
+{t:"Net Een het Dankie Gesê",r:"Lukas 17:11–19",g:"Omgee",tr:"Jesus gee om, en Hy is lief vir ’n dankbare hart",sc:"day hills ; 🏘️70,150,44 🚶180,170,32 🙌255,170,36",
+s:["Tien mans het melaatsheid gehad, ’n siekte wat sere op hulle vel gemaak het. Omdat dit kon versprei, moes hulle buite die dorp woon, heeltemal alleen. Geen drukkies nie. Geen kuier nie.","Toe hulle Jesus sien, het hulle ver weg gaan staan en geroep: ‘Jesus, Meester, het jammer vir ons!’ Jesus het jammer vir hulle gevoel. ‘Gaan wys julle aan die priesters,’ het Hy gesê. (Die priesters het gekyk of mense weer gesond was.)","Terwyl hulle loop, het hulle sere verdwyn! Hulle vel was gesond! Nege van hulle het weggehardloop, so opgewonde. Maar een man het gaan staan. Hy het omgedraai en na Jesus teruggehardloop en geskree: ‘Prys God!’ Hy het by Jesus se voete gekniel en gesê: ‘Dankie!’","Jesus het gevra: ‘Was daar nie tien nie? Waar is die ander nege?’ Toe sê Hy vir die man: ‘Staan op en gaan. Jou geloof het jou gesond gemaak.’"],
+v:["Loof die Here, want Hy is goed.","Psalm 107:1"],
+l:["Jesus gee om vir mense wat siek en eensaam is.","God is lief daarvoor as ons terugkom om dankie te sê.","’n Dankbare hart is ’n gelukkige hart."],
+q:["Hoekom dink jy het die nege nie teruggekom nie?","Kom ons noem tien dinge om God voor te dank, een op elke vinger!"],
+p:"Liewe Jesus, / dankie, dankie, dankie / vir… (noem jou tien dinge). / Ek wil nie vergeet om dankie te sê nie. Amen.",
+m:["T","Sê môre dankie vir God en vir drie mense."]},
+
+{t:"Die Huis op die Rots",r:"Matteus 7:24–27",g:"My Rots",tr:"Jesus is my rots",sc:"storm beach rock ; 🏠88,112,42 🏚️310,166,38",
+s:["Jesus het ’n storie van twee bouers vertel. Die slim man het sy huis op harde, soliede rots gebou. Grawe, grawe, grawe. Dit het lank gevat, maar hy het aangehou totdat sy huis stewig op die rots gestaan het.","Die dwase man het gesê: ‘Te veel werk!’ Hy het sy huis op sagte sand by die strand gebou. Vinnig en maklik!","Toe kom die storm. Die reën het neergestort, die strome het opgestoot, en die wind het teen die huise gewaai en geslaan. Wat het met die huis op die rots gebeur? Dit het vas gestaan! Dit het nie omgeval nie, want dit was op die rots gebou. En die huis op die sand? PLAT! Dit het met ’n groot slag inmekaargetuimel!","Jesus het gesê: ‘Elkeen wat my woorde hoor en dit doen, is soos die slim man.’ As ons na Jesus luister EN doen wat Hy sê, is ons lewe sterk, selfs in moeilike tye."],
+v:["Elkeen wat my woorde hoor en dit doen, is soos ’n slim man wat sy huis op die rots gebou het.","Matteus 7:24"],
+l:["Jesus is soos ’n sterk rots waarop ons ons lewe kan bou.","Om Jesus te hoor is nie genoeg nie. Ons doen ook wat Hy sê.","Moeilike tye sal kom, maar Jesus hou ons staande."],
+q:["Hoe kan ons ‘op die rots bou’?","As ons ’n bloktoring op die vloer bou en een op ’n kussing, watter een sal bly staan?"],
+p:"Liewe Jesus, / U is my rots. / Help my om na U te luister / en te doen wat U sê. Amen.",
+m:["L","Doen die bloktoring-toets saam met Mamma: een toring op die vloer, een op ’n kussing."]},
+
+{c:1,t:"Kampvuuraand: Die Vriend wat my Vind",sc:"night campfire ; 🔥200,165,54 🐑320,168,36",
+intro:"Hierdie week het ons uitgevind dat Jesus die Vriend is wat ons vind. Hy het ’n man hoor skree, ’n man uit ’n boom geroep, ’n verlore skapie gesoek en ons ’n Vader gewys wat hardloop.",
+game:"Wegkruipertjie: as Mamma jou kry, skree: ‘Jesus vind my!’ Ruil dan om, en jy soek vir Mamma.",
+q:["Hoe voel dit om te weet Jesus hou nooit op om na jou te soek nie?","Vir wie wil jy van Jesus die Vriend vertel?"],
+p:"Liewe Jesus, / U hoor my, U vind my / en U vergewe my. / U is my Vriend en my Rots. Amen.",
+m:["L","Sê Lukas 19:10 met ’n ‘soek’-aksie: hand bo jou oë."]},
+
+{t:"’n Engel Besoek Maria",r:"Lukas 1:26–38",g:"Kies My",tr:"God kies gewone mense vir sy groot planne",sc:"day town ; 👼260,112,46 ✨312,70,22",
+s:["Nou gaan ons pad terug in die tyd, om te sien hoe Jesus se avontuur op aarde begin het.","In ’n klein dorpie met die naam Nasaret het ’n jong vrou met die naam Maria gewoon. Sy sou trou met ’n timmerman met die naam Josef. Sy was nie ryk of beroemd nie. Maar eendag het ’n engel met die naam Gabriël aan haar verskyn! ‘Groete! Die Here is met jou,’ het hy gesê.","Maria was bang. ‘Moenie bang wees nie, Maria,’ sê Gabriël. ‘God is bly oor jou. Jy gaan ’n seuntjie kry, en jy moet Hom Jesus noem. Hy sal die Seun van God wees, en sy koninkryk sal nooit eindig nie!’","‘Hoe kan dit gebeur?’ vra Maria. ‘Die Heilige Gees sal dit laat gebeur,’ sê die engel. ‘Niks is vir God onmoontlik nie.’ En Maria het gesê: ‘Ek is die dienares van die Here. Laat dit met my gebeur soos u gesê het.’ Maria het JA gesê vir God."],
+v:["Ek is die dienares van die Here. Laat dit met my gebeur soos u gesê het.","Lukas 1:38"],
+l:["God kies gewone mense vir sy groot planne.","Maria het ja gesê vir God, al het sy nie alles verstaan nie.","Niks is vir God onmoontlik nie."],
+q:["Hoe dink jy het Maria gevoel toe sy die engel sien?","Hoe kan jy ‘ja’ sê vir God?"],
+p:"Liewe God, / dankie dat U gewone mense soos ek kies. / Soos Maria, / sê ek ja vir U. Amen.",
+m:["R","Sê môre die eerste keer bly ‘Ja, Mamma!’ Dit is oefening om ja te sê vir God."]},
+
+{t:"Josef se Droom",r:"Matteus 1:18–25",g:"God by Ons",tr:"God het gekom om by ons te wees",sc:"night town star ; 💤130,150,26 👼265,104,42",
+s:["Toe Josef hoor dat Maria ’n baba gaan kry, was hy deurmekaar en bekommerd. Wat moes hy doen?","Een nag, terwyl Josef slaap, het ’n engel in ’n droom aan hom verskyn. ‘Josef, moenie bang wees om Maria as jou vrou te neem nie. Die baba in haar is van die Heilige Gees. Sy sal ’n seun hê, en jy moet Hom Jesus noem, want Hy sal sy mense van hulle sondes red.’","Onthou jy Jesaja se leidraad van Dag 27? Die engel het gesê dit is presies wat God belowe het: ‘Hulle sal Hom Immanuel noem,’ wat beteken ‘God met ons’.","Toe Josef wakker word, het hy presies gedoen wat die engel gesê het. Hy het met Maria getrou en gereed gemaak om na God se Seun te kyk. God het gekom om by sy mense te wees: nie ver weg bo in die lug nie, maar reg hier, as een van ons!"],
+v:["Hulle sal Hom Immanuel noem, wat beteken ‘God met ons’.","Matteus 1:23"],
+l:["Jesus is God wat gekom het om by ons te wees.","Die naam Jesus beteken ‘God red’.","Josef het God dadelik gehoorsaam."],
+q:["Wat beteken ‘God met ons’ vir jou vanaand?","Hoe het Josef God gehoorsaam?"],
+p:"Liewe God, / dankie dat U in Jesus gekom het om by ons te wees. / U is nou by my, / hier in my kamer. Amen.",
+m:["L","Tel môre hoeveel keer jy die naam ‘Jesus’ in Kersliedjies hoor."]},
+
+{t:"Die Lang Reis na Betlehem",r:"Lukas 2:1–5, Miga 5:1",g:"Getrou",tr:"God sorg vir elke klein detail",sc:"sunset desert star ; 🐴170,168,46 🚶222,168,38",
+s:["Die Romeinse keiser, Augustus, het ’n wet gemaak: ‘Almal moet na hulle familie se tuisdorp gaan om getel te word!’ Josef se familie het van Betlehem gekom, die dorp van koning Dawid.","Toe pak Josef en Maria op en vertrek. Dit was ’n lang, lang reis, omtrent so ver soos twee uur se ry met ’n motor, maar hulle moes loop! Oor heuwels en stowwerige paaie. Maria was amper gereed om haar baba te kry. Dit het baie dae gevat.","Hoekom is dit belangrik? Onthou die leidraad van die profeet Miga, honderde jare tevore? Hy het gesê die Redder sal in Betlehem gebore word! Maria het in Nasaret gewoon, ver weg. Maar God het ’n keiser se wet gebruik om Maria op presies die regte tyd na presies die regte dorp te bring.","God sorg vir elke klein detail. Hy is nooit laat nie, en sy beloftes word altyd waar."],
+v:["Maar jy, Betlehem… uit jou sal ’n heerser kom.","Miga 5:1"],
+l:["God is getrou. Sy beloftes word waar, tot in die kleinste detail.","God is in beheer, selfs oor konings en keisers.","Lang, moeilike reise is makliker as God by ons is."],
+q:["Wat is die langste reis wat jy al gemaak het?","Watter klein detailjies in jou lewe gee God om oor?"],
+p:"Liewe God, / U sorg vir elke klein detail. / Dankie dat u beloftes / altyd waar word. Amen.",
+m:["R","Pak ’n Kerskrip uit (of teken een). Sit Maria en Josef ver van die stal af en skuif hulle elke aand ’n bietjie nader."]},
+
+{t:"Geen Plek Nie!",r:"Lukas 2:6–7",g:"Nederige Koning",tr:"Die Koning van alles het klein gekom, vir almal",sc:"night hills stable,star ; 🐄130,172,32 👶200,160,28 🐑272,172,28",
+s:["Toe Maria en Josef eindelik in Betlehem aankom, was die dorp stampvol mense. Klop, klop. ‘Jammer, geen plek nie!’ Klop, klop. ‘Ons is vol!’ Daar was nêrens om te bly nie, en Maria se baba sou nou-nou kom.","Uiteindelik het hulle ’n plek gekry waar diere gehou is. Dit was nie ’n paleis nie. Dit het seker gestink, met strooi op die vloer, ’n donkie en dalk ’n paar koeie en skape. En daar, daardie selfde nag, is baba Jesus gebore!","Maria het Hom styf in doeke toegedraai en Hom in ’n krip neergelê, ’n voerbak vir diere.","Dink hieraan: Jesus is die Koning van die hele heelal. Hy het die sterre en die oseane gemaak! Maar Hy het nie met ’n kroon en ’n kasteel gekom nie. Hy het as ’n klein babatjie in ’n stal gekom. Dit noem ons nederig. Jesus het klein gekom sodat almal, ryk of arm, naby aan Hom kon kom."],
+v:["Sy het Hom in doeke toegedraai en in ’n krip neergelê, omdat daar vir hulle geen plek was nie.","Lukas 2:7"],
+l:["Jesus, die Koning van alles, het as ’n klein baba gekom.","Jesus is nederig, en Hy het vir almal gekom.","Ons kan plek maak in ons harte vir Jesus."],
+q:["As Jesus na ons huis toe kom, waar sou jy wou hê moet Hy slaap?","Hoe kan ons plek maak vir Jesus in ons harte?"],
+p:"Liewe Jesus, / U het as ’n klein babatjie gekom / omdat U ons liefhet. / Daar is altyd plek vir U in my hart. Amen.",
+m:["V","Doen môre een hulpvaardige werkie sonder dat iemand vra, soos die tafel afdek of wegpak."]},
+
+{t:"Engele in die Naghemel",r:"Lukas 2:8–20",g:"Vreugde",tr:"God se goeie nuus is vreugde vir almal",sc:"night hills ; 👼150,72,36 👼252,60,30 🐑100,170,30 🔥305,170,28",
+s:["In die veld naby Betlehem het ’n paar skaapwagters in die donker na hulle skape gekyk. Dit was ’n stil, gewone nag. Toe skielik, FLITS! ’n Engel het verskyn, en God se heerlikheid het rondom hulle geskyn! Die skaapwagters was doodbang.","‘Moenie bang wees nie!’ het die engel gesê. ‘Ek bring vir julle goeie nuus wat groot vreugde vir almal sal wees! Vandag is in Betlehem vir julle ’n Verlosser gebore. Hy is Christus die Here! Julle sal die baba in doeke toegedraai in ’n krip vind.’","Toe was die hele hemel skielik vol engele, meer as wat jy kan tel, en hulle het gesing: ‘Eer aan God in die hoogste hemel, en vrede op aarde!’","Die skaapwagters het na Betlehem gehardloop en baba Jesus gevind, net soos die engel gesê het. Toe vertel hulle almal wat hulle teëkom! God het die goeie nuus eerste aan gewone skaapwagters vertel, want Jesus het vir almal gekom."],
+v:["Ek bring vir julle goeie nuus wat groot vreugde sal wees vir al die mense.","Lukas 2:10"],
+l:["Die goeie nuus van Jesus is vir almal.","God se nuus bring groot vreugde.","As ons Jesus ontmoet, wil ons ander vertel."],
+q:["Wat sou jy doen as jy ’n hemel vol engele sien?","Vir wie kan ons die goeie nuus vertel?"],
+p:"Liewe God, / dankie vir die goeie nuus van Jesus! / Vul my hart met vreugde / en help my om ander te vertel. Amen.",
+m:["V","Sing môre ’n Kersliedjie vir iemand."]},
+
+{t:"Volg die Ster!",r:"Matteus 2:1–12",g:"Gids",tr:"God lei mense wat na Hom soek",sc:"night desert star ; 🐫110,168,46 🐫172,170,40 🎁252,172,28",
+s:["Ver in die ooste het ’n paar wyse manne die sterre bestudeer. Een nag sien hulle ’n splinternuwe, ekstra helder ster. ‘’n Nuwe koning is gebore!’ het hulle gesê. ‘Kom ons gaan aanbid Hom!’","Toe laai hulle hul kamele vol skatte en vertrek op ’n lang avontuur, en volg die ster oor woestyne en berge. Eers het hulle na koning Herodes se paleis in Jerusalem gegaan en gevra: ‘Waar is die baba wat gebore is om koning te wees?’ (Herodes was glad nie bly oor nog ’n koning nie!) Die leermeesters het in God se Woord gekyk en gesê: ‘Betlehem!’","Die ster het voor hulle uit gegaan en reg bo die huis waar Jesus was, gaan staan. Die wyse manne was vol vreugde! Hulle het gebuig en Jesus aanbid, en Hom geskenke van goud, wierook en mirre gegee.","Hulle het na Jesus gesoek, en God het hulle die hele pad na Hom toe gelei."],
+v:["Julle sal My soek en vind as julle My met julle hele hart soek.","Jeremia 29:13"],
+l:["God lei mense wat na Hom soek.","Jesus is ’n lang reis werd om te vind.","Ons kan Jesus ons beste geskenk gee: ons harte."],
+q:["Watter geskenk sou jy vir baba Jesus gee?","Hoe lei God ons vandag na Hom toe? (Die Bybel, die kerk, Mamma en Pappa.)"],
+p:"Liewe God, / dankie dat U my na Jesus lei. / Ek gee Hom my beste geskenk: / my hele hart. Amen.",
+m:["V","Maak of draai ’n klein geskenkie toe vir iemand in jou familie."]},
+
+{t:"Die Beste Geskenk Ooit",r:"Johannes 3:16, 1 Johannes 4:8",g:"Liefde",tr:"God is liefde",sc:"night town star ; 🎁240,172,28 🎄305,162,46",
+s:["Môre is dit Kersfees! Kan jy die opwinding voel? Geskenke onder die boom, lekker kos, familie bymekaar.","Maar hoekom gee ons geskenke met Kersfees? Omdat God die heel eerste en heel beste Kersgeskenk gegee het: Jesus!","Onthou jy hoe Adam en Eva in die tuin weggekruip het? Sonde (die verkeerde dinge wat ons doen) sit ’n muur tussen ons en God. Ons kan nie self oor daardie muur klim nie. Toe het God, wat ons so liefhet, Jesus gestuur om die muur af te breek en ons terug te bring na Hom toe, sodat ons weer sy kinders kan wees. Dit is hoekom die engel gesê het: ‘’n Verlosser is gebore!’ ’n Verlosser is ’n Redder.","God het Jesus nie gestuur omdat ons goed genoeg was nie. Hy het Hom gestuur omdat Hy ons liefhet. Nie net ’n bietjie nie, maar SO baie. Die Bybel sê: ‘God is liefde.’ Liefde is hoe God is, heeltemal deur en deur."],
+v:["God het die wêreld so liefgehad dat Hy sy enigste Seun gegee het.","Johannes 3:16"],
+l:["Jesus is God se geskenk aan ons.","God het Jesus gestuur omdat Hy ons so baie liefhet.","Jesus het gekom om ons te red en terug te bring na God toe."],
+q:["Wat is die beste geskenk wat jy nog ooit gekry het?","Hoe is Jesus ’n selfs beter geskenk?"],
+p:"Liewe God, / dankie vir die beste geskenk ooit: Jesus! / Dankie dat U my so baie liefhet. / Ek is ook lief vir U. Amen.",
+m:["V","Sing môre, voor jy geskenke oopmaak, ‘Veels geluk’ vir Jesus."]},
+
+{c:1,xmas:1,t:"Kerskampvuur: Veels Geluk, Jesus!",sc:"night hills stable,star ; 👶200,160,28 🎉80,90,30 🎂320,170,34",
+intro:"Geseënde Kersfees, ontdekker! Vandag vier ons Jesus se verjaarsdag. Onthou jy die belofte wat God in die tuin gemaak het, die leidrade wat Hy vir Jesaja en Miga gegee het, die engel se besoek aan Maria, die lang reis na Betlehem en die baba in die krip? Elke belofte het waar geword. God het vir ons sy heel beste geskenk gegee.",
+game:"Speel die Kersverhaal na met speelgoed of die Kerskrip. Steek dan ’n kers aan (saam met Mamma!) en sing ‘Veels geluk’ vir Jesus.",
+q:["Wat was jou gunstelingdeel van die Kersverhaal?","Watter geskenk kan jy vandag vir Jesus gee?"],
+p:"Veels geluk, Jesus! / Dankie dat U gekom het om by ons te wees. / U is God se beste geskenk, / en ek is so bly U het gekom. Amen.",
+m:["V","Druk vandag iemand styf vas en sê vir hulle: ‘Jesus het gekom omdat God jou liefhet!’"]},
+
+{t:"Jesus se Grootste Redding",r:"Lukas 23",g:"Verlosser",tr:"Jesus het my so lief dat Hy sy lewe vir my gegee het",sc:"sunset hills cross ; ❤️312,80,26",
+s:["Baba Jesus het grootgeword en wonderlike dinge gedoen. Hy het mense gesond gemaak, storms laat bedaar en almal liefgehad. Maar ’n paar leiers was jaloers en kwaad vir Jesus. Hulle het nie geglo Hy is God se Seun nie.","Op ’n hartseer dag het hulle Jesus gevang en Hom aan ’n houtkruis gesit om te sterf. Jesus het nog nooit iets verkeerd gedoen nie, nie eens een keer nie! Hoekom het Hy dit dan laat gebeur? Jesus kon ’n miljoen engele geroep het om Hom te help. Maar Hy het gekies om aan die kruis te bly, uit liefde.","Onthou jy die muur wat sonde tussen ons en God sit? Aan die kruis het Jesus al die verkeerde dinge wat ons nog ooit gedoen het, op Hom geneem, sodat ons vergewe kan word. Dit was soos ’n vriend wat instap en die skuld vir ons vat. Aan die kruis het Jesus selfs gebid vir die mense wat Hom seergemaak het: ‘Vader, vergewe hulle.’","Toe het Jesus gesterf, en sy vriende het sy liggaam in ’n graf gesit, ’n grot wat in die rots uitgekap is. Hulle was so hartseer. Maar wag… dit is nie die einde van die storie nie!"],
+v:["God het sy groot liefde vir ons bewys deurdat Christus vir ons gesterf het toe ons nog sondaars was.","Romeine 5:8"],
+l:["Jesus het die kruis gekies omdat Hy ons liefhet.","Jesus het die straf vir ons verkeerde dinge gevat sodat ons vergewe kan word.","Jesus het selfs die mense vergewe wat Hom seergemaak het."],
+q:["Hoe laat dit jou voel dat Jesus jou so baie liefhet?","Die kruis is nou ’n teken van God se liefde. Waar het jy al kruise gesien?"],
+p:"Liewe Jesus, / dankie dat U my so liefhet / dat U aan die kruis vir my gesterf het. / Dankie dat U my sonde wegneem. Amen.",
+m:["T","Maak ’n kruis met twee stokkies of twee kryte om jou aan Jesus se liefde te herinner."]},
+
+{t:"Hy Leef!",r:"Matteus 28:1–10",g:"Lewend!",tr:"Jesus leef en is sterker as die dood",sc:"dawn hills tomb ; ✨140,90,22 🌸300,172,24 🌸325,170,20",
+s:["Vroeg op Sondagoggend, drie dae nadat Jesus gesterf het, het ’n paar vroue na die graf gegaan. Hulle was hartseer, en hulle het gewonder: ‘Wie sal die groot klip van die deur af wegrol?’","Maar toe hulle daar kom, RUMMEL! Die aarde het geskud, en die klip was al weggerol! ’n Engel het daarop gesit, so helder soos weerlig. ‘Moenie bang wees nie,’ het die engel gesê. ‘Ek weet julle soek na Jesus. Hy is nie hier nie. Hy het opgestaan, net soos Hy gesê het!’","Die graf was LEEG! Die vroue het gehardloop om die dissipels te vertel, bang en baie bly gelyk. En op pad, raai wie het hulle ontmoet? JESUS! Lewend! Hulle het by sy voete neergeval en Hom aanbid.","Jesus het die dood oorwin! Hy is sterker as enigiets. En omdat Hy leef, sal almal wat Hom vertrou, ook vir altyd by God lewe."],
+v:["Hy is nie hier nie; Hy het opgestaan, net soos Hy gesê het!","Matteus 28:6"],
+l:["Jesus leef! Hy het weer lewendig geword.","Jesus is sterker as die dood, sonde en enigiets wat bang maak.","Omdat Jesus leef, kan ons vir altyd by God wees."],
+q:["Hoe dink jy het die vroue gevoel toe hulle Jesus sien?","Kom ons skree dit saam: ‘Jesus LEEF!’"],
+p:"Liewe Jesus, / U leef! / U het sonde en die dood oorwin. / Dankie dat ek vir altyd by U kan lewe. Amen.",
+m:["V","Sê môre vir iemand: ‘Jesus leef!’"]},
+
+{t:"Ontbyt op die Strand",r:"Johannes 21",g:"Maak My Nuut",tr:"Jesus vergewe my en gee my ’n nuwe begin",sc:"dawn beach ; ⛵120,100,38 🔥230,170,32 🐟272,172,22",
+s:["Voordat Jesus gesterf het, het sy vriend Petrus iets gedoen wat hom baie hartseer gemaak het. Drie keer het mense hom gevra: ‘Ken jy Jesus?’ En drie keer was Petrus bang en het gesê: ‘Nee! Ek ken Hom nie!’ Daarna het Petrus gehuil en gehuil.","Nadat Jesus weer lewendig geword het, het Petrus saam met sy vriende gaan visvang. Hulle het die hele nag gevis en niks gevang nie (klink bekend?). In die oggend het ’n man op die strand geroep: ‘Gooi julle net aan die regterkant uit!’ Hulle het, en die net was vol met 153 visse! ‘Dit is die Here!’ sê Johannes. Petrus was so opgewonde dat hy in die water gespring en strand toe geswem het!","Jesus het ’n vuur gemaak en ontbyt gekook. Nadat hulle geëet het, vra Jesus vir Petrus: ‘Petrus, het jy My lief?’ ‘Ja, Here, U weet ek het U lief.’ Jesus het hom drie keer gevra, een keer vir elke keer wat Petrus nee gesê het. Toe sê Jesus: ‘Sorg vir my skape.’","Jesus het Petrus nie net vergewe nie. Hy het hom weer ’n belangrike werk gegee."],
+v:["As ons ons sondes bely, sal Hy ons vergewe.","1 Johannes 1:9"],
+l:["Jesus vergewe ons as ons jammer sê.","Jesus gee ons nie op as ons misluk nie.","Jesus gee ons ’n nuwe begin en ’n werk om te doen."],
+q:["Hoe dink jy het Petrus gevoel toe Jesus vra: ‘Het jy My lief?’","Wat sou jy sê as Jesus jou vra?"],
+p:"Liewe Jesus, / dankie dat U my vergewe / en my nooit opgee nie. / Ja, Jesus, ek is lief vir U! Amen.",
+m:["V","Eet ’n spesiale ontbyt saam met Mamma en gesels oor Jesus se ontbyt op die strand."]},
+
+{t:"Die Helper Kom",r:"Handelinge 1 – 2",g:"Helper",tr:"God woon in my deur sy Heilige Gees",sc:"day town ; 🌬️90,60,34 🔥200,100,22 🔥230,95,22 🔥260,100,22",
+s:["Ná veertig dae het Jesus sy vriende teen ’n heuwel op geneem. ‘Ek gaan terug na my Vader in die hemel,’ het Hy gesê. ‘Maar Ek sal julle nie alleen los nie. Ek sal vir julle die Heilige Gees stuur, die Helper.’ Toe gaan Jesus op in die lug totdat ’n wolk Hom weggesteek het.","Sy vriende het gewag en saam gebid in ’n kamer in Jerusalem. Tien dae later was daar ’n geluid soos ’n sterk wind, WOEESJ, wat die hele huis gevul het. Klein vlammetjies, soos vuur, het op elkeen van hulle gerus, en hulle is met die Heilige Gees vervul! Skielik kon hulle in tale praat wat hulle nooit geleer het nie, en hulle het almal dapper van Jesus vertel. Daardie dag het omtrent 3 000 mense besluit om Jesus te volg!","Die Heilige Gees is God wat woon in almal wat Jesus volg. Hy help ons as ons hartseer is, maak ons dapper, herinner ons aan wat Jesus gesê het en help ons om reg te doen.","Jy hoef nooit sonder God enige plek heen te gaan nie."],
+v:["Ek sal die Vader vra, en Hy sal julle ’n ander Helper gee om vir altyd by julle te wees.","Johannes 14:16"],
+l:["Die Heilige Gees is God wat woon in die wat Jesus volg.","Die Heilige Gees help ons, troos ons en maak ons dapper.","Ons hoef nooit alleen te wees nie."],
+q:["Waarmee wil jy hê moet die Heilige Gees jou help?","Jy kan nie die wind sien nie, maar jy kan sien wat dit doen. Hoe is die Heilige Gees so?"],
+p:"Liewe God, / dankie vir die Heilige Gees, my Helper. / Vul my asseblief en help my / om gaaf, dapper en goed te wees. Amen.",
+m:["R","Blaas borrels of kyk hoe die wind in die bome waai, en onthou die Heilige Gees."]},
+
+{t:"Gaan Vertel die Wêreld!",r:"Matteus 28:16–20",g:"Altyd by My",tr:"Jesus is altyd by my, en Hy stuur my op sy avontuur",sc:"day mountain ; 🌍322,62,32 👣200,172,28",
+s:["Voordat Jesus teruggegaan het hemel toe, het Hy sy vriende op ’n berg bymekaargemaak en vir hulle die grootste avontuuropdrag ooit gegee!","‘Gaan na al die mense in die wêreld,’ het Hy gesê, ‘en maak hulle my volgelinge. Doop hulle, en leer hulle om alles te doen wat Ek julle geleer het.’ Dit is ’n reuse werk! Die hele wêreld? Hoe kon ’n paar vriende dit doen?","Toe gee Jesus hulle die beste belofte van almal: ‘En onthou, Ek is by julle al die dae, tot aan die einde.’","En hulle het dit gedoen! Hulle het mense vertel, wat meer mense vertel het, wat nog meer mense vertel het… 2 000 jaar lank! Die goeie nuus het oor see en berge en woestyne gereis, totdat iemand eendag jou familie vertel het, en nou vertel Mamma vir jou! Jy is deel van Jesus se groot avontuur. En die beste deel? Jesus is by jou op elke tree van die pad."],
+v:["En onthou, Ek is by julle al die dae tot aan die einde.","Matteus 28:20"],
+l:["Jesus het sy volgelinge ’n opdrag gegee: vertel die wêreld van Hom.","Die goeie nuus is 2 000 jaar lank aangegee, tot by jou!","Jesus is altyd by ons op sy opdrag."],
+q:["Wie het vir Mamma van Jesus vertel? (Mamma, vertel jou storie!)","Vir wie kan jy vertel?"],
+p:"Liewe Jesus, / dankie dat U altyd by my is. / Stuur my op u avontuur. / Help my om ander van U te vertel. Amen.",
+m:["V","Nooi ’n maatjie kerk toe, of vertel hulle ’n Bybelstorie wat jy geleer het."]},
+
+{c:1,fin:1,t:"Groot Kampvuur: Die Avontuur Begin Eers",sc:"night campfire star ; 🔥200,165,54 ⛺80,165,44 🧭320,166,36",
+intro:"Jy het dit gedoen, ontdekker! Ses-en-vyftig aande op die Lanternpad. Jy het skat ná skat versamel oor wie God is: Skepper, Heilig, Magtig, Goed, Vriendelik, Koning, Vriend, Verlosser. Maar dit is nie die einde nie. Om ’n kind van God en ’n vriend van Jesus te wees, is ’n avontuur wat vir altyd hou.",
+game:"Skatkaart-hersiening: blaai saam deur die Roetekaart. Laat hom sy drie gunstelingskatte kies en vir jou vertel hoekom.",
+q:["Wat is die heel beste ding wat jy oor God geleer het?","Wat wil jy vanaand vir God sê?"],
+p:"Liewe God, / dankie vir die Lanternpad. / Dankie dat U my gewys het wie U is. / Ek wil U elke dag van my lewe / beter en beter leer ken. Amen.",
+m:["T","Gebruik elke dag die Vriendskapskompas: Praat, Luister, Vertrou, Liefhê."]}
+];
+D.forEach((d,i)=>{d.n=i+1;d.ex=EX.find(e=>d.n>=e.from&&d.n<=e.to)});
+
+/* ---------- SCENES ---------- */
+const SKY={day:["#78C3F0","#D5EFFB"],dawn:["#F4A07A","#FDE5C1"],sunset:["#E3667B","#F8C778"],night:["#07122C","#253A70"],storm:["#3C4658","#8A95A6"]};
+let uid=0;
+function starPts(cx,cy,r1,r2){let p=[];for(let i=0;i<10;i++){const a=Math.PI/5*i-Math.PI/2,r=i%2?r2:r1;p.push((cx+r*Math.cos(a)).toFixed(1)+","+(cy+r*Math.sin(a)).toFixed(1))}return p.join(" ")}
+function rnd(seed){let s=seed;return()=>{s=(s*9301+49297)%233280;return s/233280}}
+function scene(code,seed){
+  const [head,pr=""]=code.split(";");const w=head.trim().split(/\s+/);const sky=w[0],land=w[1],ex=(w[2]||"").split(",");
+  const id="g"+(uid++);const r=rnd(seed||7);const [c1,c2]=SKY[sky];
+  let s=`<svg viewBox="0 0 400 180" role="img" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></linearGradient></defs><rect width="400" height="180" fill="url(#${id})"/>`;
+  if(sky==="night"){for(let i=0;i<40;i++){s+=`<circle cx="${(r()*400).toFixed(0)}" cy="${(r()*100).toFixed(0)}" r="${(r()*1.4+.4).toFixed(1)}" fill="#FFF6D8" opacity="${(r()*.6+.4).toFixed(2)}"/>`}
+    if(!ex.includes("star"))s+=`<circle cx="340" cy="38" r="15" fill="#FFF3C4"/><circle cx="347" cy="33" r="13" fill="${c1}"/>`}
+  if(sky==="day")s+=`<circle cx="345" cy="38" r="22" fill="#FFD24A"/><circle cx="345" cy="38" r="32" fill="#FFD24A" opacity=".25"/>`;
+  if(sky==="dawn")s+=`<circle cx="70" cy="118" r="30" fill="#FFCD6A"/>`;
+  if(sky==="sunset")s+=`<circle cx="330" cy="112" r="32" fill="#FFB24C"/>`;
+  if(sky==="storm")s+=`<ellipse cx="90" cy="34" rx="90" ry="26" fill="#566174"/><ellipse cx="260" cy="26" rx="120" ry="28" fill="#4C576A"/><g stroke="#C9D3E0" stroke-width="1.5" opacity=".7">${Array.from({length:22},()=>{const x=r()*400,y=r()*120+30;return `<line x1="${x.toFixed(0)}" y1="${y.toFixed(0)}" x2="${(x-6).toFixed(0)}" y2="${(y+14).toFixed(0)}"/>`}).join("")}</g>`;
+  if(ex.includes("star"))s+=`<circle cx="300" cy="40" r="30" fill="#FFF3C4" opacity=".18"/><polygon points="${starPts(300,40,16,6.5)}" fill="#FFE27A"/>`;
+  if(ex.includes("rainbow"))["#E85D5D","#F2A33A","#F5D547","#5DBB63","#4A90D9","#8E6CCF"].forEach((c,i)=>{const R=150-i*8;s+=`<path d="M${200-R} 150 A${R} ${R} 0 0 1 ${200+R} 150" fill="none" stroke="${c}" stroke-width="8" opacity=".85"/>`});
+  const L={
+    hills:`<ellipse cx="90" cy="182" rx="210" ry="62" fill="#86C98A"/><ellipse cx="330" cy="190" rx="230" ry="70" fill="#5AA866"/>`,
+    sea:`<rect y="100" width="400" height="80" fill="${sky==="storm"?"#2A4F74":sky==="night"?"#1D3C6B":"#2F7FC1"}"/>`+[112,128,146,164].map((y,i)=>`<path d="M0 ${y} q25 -8 50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0" fill="none" stroke="#FFFFFF" stroke-opacity=".35" stroke-width="2" transform="translate(${i%2?-25:0} 0)"/>`).join(""),
+    beach:`<rect y="96" width="400" height="84" fill="${sky==="storm"?"#2A4F74":"#3A8CCB"}"/><path d="M0 108 q25 -6 50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0" fill="none" stroke="#FFFFFF" stroke-opacity=".4" stroke-width="2"/><path d="M0 150 Q200 124 400 146 L400 180 L0 180Z" fill="#EBD08E"/>`,
+    desert:`<ellipse cx="80" cy="188" rx="230" ry="62" fill="#E8C372"/><ellipse cx="340" cy="194" rx="230" ry="66" fill="#D7A754"/>`,
+    mountain:`<polygon points="50,160 200,30 350,160" fill="#7B8699"/><polygon points="168,60 200,30 232,60 216,66 200,56 184,66" fill="#F1F4F8"/><rect y="150" width="400" height="30" fill="#6AA86F"/>`,
+    river:`<ellipse cx="90" cy="182" rx="210" ry="62" fill="#86C98A"/><ellipse cx="330" cy="190" rx="230" ry="70" fill="#5AA866"/><path d="M0 150 Q100 136 200 146 T400 140 L400 162 Q300 168 200 166 T0 172Z" fill="#4A9BE0"/>`,
+    town:`<rect y="148" width="400" height="32" fill="#D8B878"/>`+[[20,108],[88,118],[262,112],[330,104]].map(([x,y])=>`<rect x="${x}" y="${y}" width="56" height="${150-y}" fill="#EEDFBE"/><rect x="${x+21}" y="${130}" width="14" height="20" fill="#9A6B3F"/><rect x="${x+6}" y="${y+8}" width="10" height="9" fill="#9A6B3F"/>`).join("")+`<circle cx="116" cy="118" r="14" fill="#EEDFBE"/>`,
+    cave:`<rect y="140" width="400" height="40" fill="#6B5A45"/><path d="M0 0 L130 0 Q95 80 70 180 L0 180Z" fill="#4A3C2F"/><path d="M400 0 L270 0 Q305 80 330 180 L400 180Z" fill="#4A3C2F"/>`,
+    redsea:`<rect y="118" width="400" height="62" fill="#E5C88A"/><path d="M0 40 Q90 30 150 60 L160 180 L0 180Z" fill="#2F7FC1"/><path d="M150 60 L160 180" stroke="#BFE2FF" stroke-width="5"/><path d="M400 40 Q310 30 250 60 L240 180 L400 180Z" fill="#2F7FC1"/><path d="M250 60 L240 180" stroke="#BFE2FF" stroke-width="5"/>`,
+    garden:`<ellipse cx="90" cy="182" rx="210" ry="62" fill="#8ACF84"/><ellipse cx="330" cy="190" rx="230" ry="70" fill="#5DAF62"/>`+Array.from({length:18},()=>`<circle cx="${(r()*400).toFixed(0)}" cy="${(r()*30+148).toFixed(0)}" r="3" fill="${r()>.5?"#FF8FB1":"#FFE066"}"/>`).join(""),
+    campfire:`<path d="M0 120 L30 70 L60 120Z M40 125 L80 55 L120 125Z M300 120 L335 60 L370 120Z M350 125 L380 75 L410 125Z" fill="#183326"/><ellipse cx="200" cy="190" rx="300" ry="62" fill="#2E4C39"/><circle cx="200" cy="150" r="60" fill="#FFB347" opacity=".18"/><rect x="165" y="160" width="70" height="9" rx="4" fill="#7A4B2A" transform="rotate(12 200 165)"/><rect x="165" y="160" width="70" height="9" rx="4" fill="#8B5A33" transform="rotate(-12 200 165)"/>`
+  };
+  s+=L[land]||"";
+  if(ex.includes("pyramids"))s+=`<polygon points="250,140 300,80 350,140" fill="#C99A4B"/><polygon points="320,142 352,104 384,142" fill="#B98A3E"/>`;
+  if(ex.includes("walls"))s+=`<rect x="80" y="92" width="240" height="58" fill="#C8A56A"/>`+Array.from({length:12},(_,i)=>`<rect x="${80+i*20}" y="84" width="11" height="10" fill="#C8A56A"/>`).join("")+`<rect x="185" y="112" width="30" height="38" rx="15" fill="#7A5631"/>`;
+  if(ex.includes("statue"))s+=`<rect x="185" y="62" width="30" height="90" fill="#E5B93C"/><circle cx="200" cy="52" r="14" fill="#E5B93C"/><rect x="175" y="148" width="50" height="10" fill="#B98A2A"/>`;
+  if(ex.includes("ark"))s+=`<polygon points="100,112 300,112 278,140 122,140" fill="#8B5A33"/><rect x="150" y="90" width="100" height="24" fill="#A06A3D"/><polygon points="145,92 200,74 255,92" fill="#7A4B2A"/>`;
+  if(ex.includes("stable"))s+=`<rect x="140" y="112" width="120" height="58" fill="#8B5A33"/><polygon points="128,114 200,78 272,114" fill="#6E4325"/><rect x="178" y="134" width="44" height="36" fill="#3A2416"/><rect x="180" y="158" width="40" height="8" fill="#E9C46A"/>`;
+  if(ex.includes("cross"))s+=`<rect x="196" y="50" width="9" height="100" fill="#5B3A29"/><rect x="174" y="72" width="53" height="9" fill="#5B3A29"/>`;
+  if(ex.includes("tomb"))s+=`<ellipse cx="200" cy="150" rx="100" ry="58" fill="#8D8A84"/><ellipse cx="190" cy="140" rx="22" ry="26" fill="#2B2622"/><circle cx="262" cy="148" r="24" fill="#A9A59E"/>`;
+  if(ex.includes("tree"))s+=`<rect x="292" y="80" width="18" height="80" fill="#7A4B2A"/><circle cx="300" cy="72" r="46" fill="#3E8E4F"/><circle cx="270" cy="88" r="26" fill="#4A9C5A"/><circle cx="330" cy="88" r="26" fill="#4A9C5A"/>`;
+  if(ex.includes("rock"))s+=`<polygon points="30,180 50,132 90,122 130,134 150,180" fill="#7C7A74"/>`;
+  if(ex.includes("flakes"))s+=Array.from({length:40},()=>`<circle cx="${(r()*400).toFixed(0)}" cy="${(r()*44+134).toFixed(0)}" r="2" fill="#FFFFFF"/>`).join("");
+  if(sky==="night"&&land!=="campfire")s+=`<rect y="90" width="400" height="90" fill="#081430" opacity=".3"/>`;
+  pr.trim().split(/\s+/).filter(Boolean).forEach(t=>{const m=t.match(/^(.+?)(\d+),(\d+),(\d+)$/u);if(m)s+=`<text x="${m[2]}" y="${m[3]}" font-size="${m[4]}" text-anchor="middle" font-family="'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif">${m[1]}</text>`});
+  return s+"</svg>";
+}
+function gem(c,size=26){return `<svg class="gem" width="${size}" height="${size}" viewBox="0 0 26 26" aria-hidden="true"><polygon points="7,3 19,3 24,10 13,24 2,10" fill="${c}"/><polygon points="7,3 19,3 16,10 10,10" fill="#FFFFFF" opacity=".35"/><polygon points="2,10 10,10 13,24" fill="#000000" opacity=".12"/></svg>`}
+const exc=e=>`var(--ex${e.n})`;
+
+/* ---------- STATE ---------- */
+let done=new Set();
+try{done=new Set(JSON.parse(localStorage.getItem("lt-af-done")||"[]"))}catch(e){}
+function save(){try{localStorage.setItem("lt-af-done",JSON.stringify([...done]))}catch(e){}}
+function nextDay(){for(let i=1;i<=56;i++)if(!done.has(i))return i;return 56}
+const app=document.getElementById("app");
+
+/* ---------- VIEWS ---------- */
+function heroArt(){
+  let st="";const r=rnd(11);for(let i=0;i<50;i++)st+=`<circle cx="${(r()*800).toFixed(0)}" cy="${(r()*110).toFixed(0)}" r="${(r()*1.5+.4).toFixed(1)}" fill="#FFF6D8" opacity="${(r()*.6+.3).toFixed(2)}"/>`;
+  const pts=[[40,170],[130,150],[220,162],[310,140],[400,152],[490,132],[580,146],[670,124],[760,134]];
+  const lan=pts.map(([x,y],i)=>`<circle cx="${x}" cy="${y-2}" r="${i===8?16:7}" fill="#FFBC52" opacity="${i===8?.35:.9}"/>`).join("");
+  return `<svg class="hero-art" viewBox="0 0 800 200" aria-hidden="true" preserveAspectRatio="xMidYMax meet">${st}<circle cx="700" cy="40" r="16" fill="#FFF3C4"/><circle cx="707" cy="35" r="14" fill="#0F1D38"/><path d="M0 200 Q150 120 320 168 T640 140 T800 150 L800 200Z" fill="#1E3A3A"/><path d="M0 200 Q200 150 420 182 T800 170 L800 200Z" fill="#16302C"/><path d="M40 170 Q130 140 220 162 T400 152 T580 146 T760 134" fill="none" stroke="#FFBC52" stroke-width="3" stroke-dasharray="2 10" stroke-linecap="round" opacity=".8"/>${lan}<text x="760" y="142" font-size="26" text-anchor="middle" font-family="'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif">🏮</text><text x="60" y="168" font-size="30" text-anchor="middle" font-family="'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif">🧒</text></svg>`;
+}
+function showMap(){
+  const n=nextDay(),cnt=done.size;
+  let h=`<section class="hero gutter"><div class="inner">
+    <h1>Die <span>Lantern</span>pad</h1>
+    <p class="lede">’n Slaaptyd-avontuur vir jou en jou klein ontdekker: 56 aande om te ontdek wie God is, hoe Hy is, en wat dit beteken om ’n kind van God en ’n vriend van Jesus te wees.</p>
+    <p class="theme-verse">“U woord is ’n lamp vir my voet en ’n lig op my pad.”<small>Psalm 119:105</small></p>
+    <div class="hero-row"><a class="btn" href="#day-${n}">${cnt?"Gaan voort":"Begin die avontuur"}: Dag ${n}</a><a class="btn ghost" href="#guide">Hoe dit werk</a>
+    <div class="progress"><div class="track"><div class="fill" style="width:${cnt/56*100}%"></div></div>${cnt} van 56 skatte</div></div>
+    ${heroArt()}</div></section><section class="map gutter"><div class="inner">`;
+  EX.forEach(e=>{
+    h+=`<div style="--exc:${exc(e)}"><div class="ex-head"><span class="ex-tag">Ekspedisie ${e.n} · Dae ${e.from}–${e.to}</span><h2>${e.name}</h2><p>${e.blurb}</p></div><div class="stones">`;
+    for(let i=e.from;i<=e.to;i++){const d=D[i-1];
+      h+=`<a class="stone${done.has(i)?" done":""}${d.c?" camp":""}${i===n&&!done.has(i)?" next":""}" href="#day-${i}"><span class="num">${done.has(i)?"✓":i}</span><span class="st">${d.c?(d.xmas?"Kerskampvuur":d.fin?"Groot Kampvuur":"Kampvuuraand"):d.t}</span><span class="sg">${d.c?"Hersieningsaand":(done.has(i)?"Gevind: ":"")+d.g}</span></a>`}
+    h+=`</div></div>`});
+  app.innerHTML=h+`</div></section>`;
+}
+function sign(n,label){return `<h2 class="sign"><b>${n}</b>${label}</h2>`}
+function bubble(v){return `<blockquote class="bubble"><q>${v[0]}</q><cite>${v[1]}</cite></blockquote>`}
+function prayer(p,own=true){return `<div class="prayer">${p.split(" / ").map(l=>`<span class="line">${l}</span>`).join("")}${own?`<p class="own">Laat hom nou sy eie woorde vir God sê, of ’n eenvoudige ‘dankie vir…’.</p>`:""}</div>`}
+function mission(m){const c=CP[m[0]];return `<div class="mission" style="--pc:var(--${c[2]})"><div class="cbadge">${compassMini(c[2])}<span>${c[0]}</span></div><p>${m[1]}</p></div>`}
+function compassMini(k){const a={talk:0,listen:90,trust:180,love:270}[k];return `<svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="18" fill="none" stroke="currentColor" stroke-width="2.5"/><g transform="rotate(${a} 20 20)"><polygon points="20,5 25,20 15,20" fill="currentColor"/><polygon points="20,35 25,20 15,20" fill="currentColor" opacity=".3"/></g></svg>`}
+function showDay(n){
+  if(n<1||n>56){location.hash="";return}
+  const d=D[n-1],e=d.ex;let h=`<section class="page gutter" style="--exc:${exc(e)}"><div class="inner">
+  <div class="crumbs"><a href="#map">← Roetekaart</a><span class="pn">${n>1?`<a href="#day-${n-1}">‹ Dag ${n-1}</a>`:""}${n<56?`<a href="#day-${n+1}">Dag ${n+1} ›</a>`:""}</span></div>
+  <header class="day-head"><span class="eyebrow">Dag ${n} · Ekspedisie ${e.n}: ${e.name}</span><h1>${d.t}</h1>${d.r?`<span class="ref">Bybelverhaal: ${d.r}</span>`:""}</header>
+  <figure class="scene">${scene(d.sc,n*13)}</figure>`;
+  if(!d.c){
+    h+=`<div class="trait">${gem(exc(e),40)}<div><small>Vanaand se skat oor God</small><strong>${d.tr}</strong></div></div>
+    <section class="step">${sign(1,"Steek die lantern aan")}<p class="tip">Maak die ligte dof, skakel ’n flitslig of bedlampie aan, en sê saam: “U woord is ’n lamp vir my voet.”</p></section>
+    <section class="step story">${sign(2,"Storiepad")}${d.s.map(p=>`<p>${p}</p>`).join("")}</section>
+    <section class="step">${sign(3,"God se Woord sê")}${bubble(d.v)}<p class="tip">Sê dit drie keer: fluisterend, met ’n gewone stem, en dan met ’n groot ontdekkerstem!</p></section>
+    <section class="step">${sign(4,"Skat gevind")}<ul class="treasure">${d.l.map(x=>`<li>${gem(exc(e),18)}<span>${x}</span></li>`).join("")}</ul></section>
+    <section class="step">${sign(5,"Avontuurgesels")}<ol class="talk">${d.q.map(x=>`<li>${x}</li>`).join("")}</ol></section>
+    <section class="step">${sign(6,"Praat met God")}<p class="tip">Mamma sê ’n reël, hy sê dit agterna.</p>${prayer(d.p)}</section>
+    <section class="step">${sign(7,"Ontdekkersending vir môre")}${mission(d.m)}</section>`;
+  }else{
+    const ds=D.slice(e.from-1,e.to).filter(x=>!x.c);
+    h+=`<section class="step">${sign(1,"Om die kampvuur")}<p class="story" style="font-size:1.12rem;max-width:64ch">${d.intro}</p></section>
+    <section class="step">${sign(2,"Skatte van hierdie ekspedisie")}<p class="tip">Wys na elkeen. Kan hy die storie onthou wat daarby hoort?</p><div class="gems">${ds.map(x=>`<a href="#day-${x.n}">${gem(exc(e),28)}<span><b>${x.tr}</b><small>Dag ${x.n} · ${x.t}</small></span></a>`).join("")}</div></section>
+    <section class="step">${sign(3,"Skatvers")}${bubble(e.v)}<p class="tip">Hierdie ekspedisie se vers om uit die kop te leer. Maak aksies op vir elke deel.</p></section>
+    <section class="step">${sign(4,"Kampvuurspeletjie")}<div class="card"><p>${d.game}</p></div></section>
+    <section class="step">${sign(5,"Avontuurgesels")}<ol class="talk">${d.q.map(x=>`<li>${x}</li>`).join("")}</ol></section>
+    <section class="step">${sign(6,"Praat met God")}${prayer(d.p)}</section>
+    <section class="step">${sign(7,"Ontdekkersending")}${mission(d.m)}</section>`;
+    if(d.fin){h+=`<section class="step">${sign("★","Wil jy Jesus volg?")}<div class="card invite"><p><b>Vir Mamma:</b> Oor hierdie aande het hy gehoor dat God hom gemaak het, hom liefhet, na hom kom soek het, en Jesus gestuur het om hom te red. As hy sê hy wil ’n kind van God en ’n vriend en volgeling van Jesus wees, kan julle hierdie gebed saam bid. Net as hy wil: moet nooit druk nie. As hy nog nie gereed is nie, is dit reg so. Die pad gaan aan, en julle kan enige aand hierheen terugkom.</p>${prayer("Liewe Jesus, / ek glo U is God se Seun. / Dankie dat U aan die kruis vir my gesterf het / en weer lewendig geword het. / Ek is jammer vir die verkeerde dinge wat ek doen. / Vergewe my asseblief. / Ek wil U volg en vir altyd u vriend wees. / Dankie dat ek ’n kind van God is. / Vul my asseblief met u Heilige Gees. Amen.",false)}<p>As hy dit bid, vier fees! Skryf die datum in sy Bybel en vertel iemand wat lief is vir hom. Die hemel hou partytjie (onthou die verlore skapie?).</p></div></section>
+    <section class="step">${sign("★","Ontdekkersertifikaat")}<div class="cert"><span class="eyebrow">Die Lanternpad</span><h3>Amptelike Padontdekker</h3><span class="eyebrow">Kind van God · Vriend van Jesus</span><span class="nm" id="certName">${esc(getName())||"&nbsp;"}</span><p>het al 56 aande van die Lanternpad gestap en ontdek dat God Skepper, Heilig, Magtig, Goed, Vriendelik, Koning, Vriend en Verlosser is, en dat Hy altyd by my is.</p><div class="row"><label for="explorer">Ontdekker se naam</label><input id="explorer" type="text" maxlength="30" value="${esc(getName())}" placeholder="Tik sy naam"></div><p class="tip">Neem ’n skermskoot van hierdie sertifikaat om te hou, of skryf dit saam op papier oor.</p></div></section>`}
+  }
+  h+=`<div class="goodnight"><span>Goeienag-woorde</span><p>Voor die ligte afgaan, sê saam: “Ek is ’n kind van God en ’n vriend van Jesus!”</p></div>`;
+  const isd=done.has(n);
+  h+=`<div class="collect"><button class="btn${isd?" isdone":""}" id="collect" type="button">${gem(isd?"var(--on-forest)":"var(--on-amber)",22)}<span>${isd?"Skat versamel!":"Ons het dit gedoen! Versamel die skat"}</span></button><span class="pn">${n>1?`<a href="#day-${n-1}">‹ Dag ${n-1}</a>`:""}${n<56?`<a href="#day-${n+1}">Dag ${n+1} ›</a>`:`<a href="#map">Roetekaart</a>`}</span></div></div></section>`;
+  app.innerHTML=h;
+  document.getElementById("collect").onclick=ev=>{
+    if(done.has(n))done.delete(n);else{done.add(n);toast(d.c?"Kampvuurkenteken verdien!":"Skat gevind: "+d.tr+"!")}
+    save();const b=ev.currentTarget,on=done.has(n);b.classList.toggle("isdone",on);b.querySelector("span").textContent=on?"Skat versamel!":"Ons het dit gedoen! Versamel die skat";b.querySelector("svg").outerHTML=gem(on?"var(--on-forest)":"var(--on-amber)",22);if(on)b.querySelector("svg").classList.add("pop");
+  };
+  const inp=document.getElementById("explorer");
+  if(inp)inp.oninput=()=>{try{localStorage.setItem("lt-af-name",inp.value)}catch(e){}document.getElementById("certName").innerHTML=esc(inp.value)||"&nbsp;"};
+}
+function getName(){try{return localStorage.getItem("lt-af-name")||""}catch(e){return ""}}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+let tt;function toast(m){let t=document.querySelector(".toast");if(!t){t=document.createElement("div");t.className="toast";t.setAttribute("role","status");document.body.appendChild(t)}t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,2600)}
+
+function showGuide(){
+  app.innerHTML=`<section class="page gutter"><div class="inner prose">
+  <header class="day-head"><span class="eyebrow" style="--exc:var(--forest)">Vir Mamma</span><h1>Hoe die Lanternpad werk</h1></header>
+  <p>Elke aand is een stop op die pad. Elke Bybelverhaal ontbloot ’n <b>skat</b>: een deel van God se karakter, soos <i>God is heilig</i>, <i>God voorsien</i> of <i>Jesus hou nooit op om na my te soek nie</i>. Oor 56 aande versamel jou seun hulle almal, en leer hy langs die pad wat dit beteken om ’n kind van God en ’n vriend van Jesus te wees.</p>
+  <p>Daar is 8 ekspedisies. Elkeen eindig met ’n <b>Kampvuuraand</b>: ’n hersieningsaand met ’n speletjie, die week se Skatvers en geen nuwe storie nie, sodat die waarhede kan insink.</p>
+  <h2>Vanaand se ritme (10 tot 15 minute)</h2>
+  <ol class="rhythm">
+   <li><span><b>Steek die lantern aan.</b> Maak die ligte dof en skakel ’n flitslig of bedlampie aan. Dit word sy teken dat dit tyd is vir die pad.</span></li>
+   <li><span><b>Storiepad.</b> Lees die storie hardop. Laat hom die klankeffekte maak (WOESJ, KRAAK, BRUL) en na die prent wys.</span></li>
+   <li><span><b>God se Woord sê.</b> Lees die vers in die praatborrel. Sê dit drie keer: fluisterend, gewoon, en met ’n groot ontdekkerstem.</span></li>
+   <li><span><b>Skat gevind.</b> Lees die drie kort lesse. Die eerste een is gewoonlik die hoofgedagte.</span></li>
+   <li><span><b>Avontuurgesels.</b> Vra een of twee vrae. Kort antwoorde is goed. Jy hoef nie almal te gebruik nie.</span></li>
+   <li><span><b>Praat met God.</b> Jy sê ’n reël, hy sê dit agterna. Gee hom dan ’n oomblik om sy eie woorde by te voeg.</span></li>
+   <li><span><b>Ontdekkersending.</b> ’n Klein dingetjie om môre te probeer. Tik op “Ons het dit gedoen! Versamel die skat” om daardie klip op die kaart te laat oplig.</span></li>
+   <li><span><b>Goeienag-woorde.</b> Voor die ligte afgaan, sê saam: “Ek is ’n kind van God en ’n vriend van Jesus!” As julle dit elke aand sê, word dit wie hy weet hy is.</span></li>
+  </ol>
+  <h2>Waar die pad uitkom</h2>
+  <p>As Dag 1 op <b>6 November</b> is, volg die pad die kalender so:</p>
+  <div class="dates"><div><b>Dag 1</b><span>6 November</span></div><div><b>Dag 26</b><span>1 Desember</span></div><div><b>Dag 43</b><span>18 Desember: die Kerspad begin</span></div><div><b>Dag 49</b><span>24 Desember</span></div><div><b>Dag 50</b><span>25 Desember: Kerskampvuur</span></div><div><b>Dag 56</b><span>31 Desember: Groot Kampvuur</span></div></div>
+  <p>As jy later begin of ’n paar aande mis, moenie bekommerd wees nie. Spring net op <b>18 Desember na Dag 43</b> sodat Dag 50 op Kersdag val, en lees enige oorgeslaande stories in die nuwe jaar of op ’n kampvuuraand.</p>
+  <h2>Wenke vir ’n 5-jarige</h2>
+  <ul class="tips">
+   <li>Wriemel is normaal. Laat hom die flitslig, ’n speelding of ’n klein kruisie vashou terwyl jy lees.</li>
+   <li>Speel dit uit: marsjeer om die bed vir Jerigo, skud die bed vir Jona se storm.</li>
+   <li>Kinders leer die meeste deur jou eie wandel met God te sien. Vertel nou en dan ’n kort “God het my vandag gehelp toe…”-storie.</li>
+   <li>Hou dit liewer warm en kort as volledig. ’n Deel oorslaan is beter as ’n moeë, knorrige einde van die dag.</li>
+   <li>Hou ’n kinderbybel naby. As hy meer wil hê, lees dieselfde storie daaruit.</li>
+   <li>Die verse word in eenvoudige woorde vir jong kinders gegee. Met die verwysings kan jy hulle in jou eie Bybel opsoek.</li>
+  </ul>
+  <p class="tip">Jou vordering en sy naam op die sertifikaat word net in hierdie blaaier op hierdie toestel gestoor.</p>
+  <p><a class="btn" href="#day-${nextDay()}">Gaan na Dag ${nextDay()}</a></p>
+  </div></section>`;
+}
+function showCompass(){
+  const pts=[["T","talk","Praat","Ons praat met God in gebed. Ons kan Hom enigiets vertel: dankie, jammer, asseblief, en wat vandag gebeur het. Hy hoor altyd."],["L","listen","Luister","God praat met ons meestal deur die Bybel. As ons sy stories en verse lees, leer ons ken hoe Hy is."],["R","trust","Vertrou","’n Kind vertrou sy pa, en vriende vertrou mekaar. Ons glo God is goed en doen wat Hy sê, selfs as dit moeilik is of vreemd lyk."],["V","love","Liefhê","Ons het God die liefste van almal, en ons wys dit deur die mense rondom ons lief te hê: deur te deel, te vergewe en gaaf te wees."]];
+  app.innerHTML=`<section class="page gutter"><div class="inner prose">
+  <header class="day-head"><span class="eyebrow" style="--exc:var(--forest)">Vriendskapskompas</span><h1>Kind van God, vriend van Jesus</h1></header>
+  <p>God wil sy liefdevolle Vader wees, en Jesus wil sy beste vriend wees. ’n Kind bly naby ’n goeie pa, en vriende spandeer tyd saam: hulle praat, hulle luister, hulle vertrou mekaar en hulle wys liefde. Elke Ontdekkersending op die pad wys na een van hierdie vier rigtings, sodat hy ’n regte verhouding met God oefen, nie net feite oor Hom nie.</p>
+  <div class="compass-wrap"><svg viewBox="0 0 200 200" aria-label="Kompas met vier punte: Praat, Luister, Vertrou, Liefhê"><circle cx="100" cy="100" r="92" fill="var(--surface)" stroke="var(--line)" stroke-width="4"/><circle cx="100" cy="100" r="70" fill="none" stroke="var(--line)" stroke-width="2" stroke-dasharray="3 6"/><polygon points="100,22 112,100 88,100" fill="var(--talk)"/><polygon points="178,100 100,112 100,88" fill="var(--listen)"/><polygon points="100,178 88,100 112,100" fill="var(--trust)"/><polygon points="22,100 100,88 100,112" fill="var(--love)"/><circle cx="100" cy="100" r="9" fill="var(--amber)"/><text x="100" y="16" text-anchor="middle" font-family="Fredoka,sans-serif" font-weight="600" font-size="13" fill="var(--talk)">PRAAT</text><text x="100" y="196" text-anchor="middle" font-family="Fredoka,sans-serif" font-weight="600" font-size="13" fill="var(--trust)">VERTROU</text><text x="190" y="80" text-anchor="end" font-family="Fredoka,sans-serif" font-weight="600" font-size="13" fill="var(--listen)">LUISTER</text><text x="10" y="80" font-family="Fredoka,sans-serif" font-weight="600" font-size="13" fill="var(--love)">LIEFHÊ</text></svg>
+  <div class="points">${pts.map(p=>`<div class="point" style="--pc:var(--${p[1]})"><h3>${p[2]}</h3><p>${p[3]}</p></div>`).join("")}</div></div>
+  <h2>Hoe word ek ’n kind van God en ’n vriend van Jesus?</h2>
+  <p>Verduidelik dit vir hom in drie eenvoudige stappe, op dieselfde manier as wat die pad dit vertel:</p>
+  <ol class="tips"><li><b>God het my gemaak en het my lief</b> (Dae 1–3). Hy wil naby my wees.</li><li><b>Sonde sit ’n muur tussen ons</b> (Dae 3 en 49). Die verkeerde dinge wat ons doen, hou ons ver van God af.</li><li><b>Jesus het die muur afgebreek</b> (Dae 49–52). Hy het vir my sonde gesterf en weer lewendig geword. As ek jammer sê en Jesus vra om my Here en my vriend te wees, vergewe God my, word ek sy kind, en woon sy Heilige Gees in my.</li></ol>
+  <p>Die Groot Kampvuur op Dag 56 sluit ’n eenvoudige gebed in wat hy kan bid as hy Jesus wil volg.</p>
+  </div></section>`;
+}
+function route(){
+  const h=location.hash.slice(1);let tab="map";
+  if(/^day-\d+$/.test(h)){showDay(parseInt(h.slice(4),10));tab="day"}
+  else if(h==="guide"){showGuide();tab="guide"}
+  else if(h==="compass"){showCompass();tab="compass"}
+  else showMap();
+  document.querySelectorAll(".tabs a").forEach(a=>{if(a.dataset.tab===tab)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current")});
+  window.scrollTo(0,0);
+}
+window.addEventListener("hashchange",route);
+route();
+</script>
