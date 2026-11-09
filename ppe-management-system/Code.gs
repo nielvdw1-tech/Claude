@@ -353,6 +353,17 @@ function logPPEAction(
   ]);
 }
 
+/**
+ * Makes data safe to send to a sidebar or web form.
+ * Apps Script silently sends null when the data contains
+ * something the browser can't receive (such as a date),
+ * which leaves the form stuck on "Loading…". This turns
+ * every value into plain text / numbers first.
+ */
+function toPPEClientData_(data) {
+  return JSON.parse(JSON.stringify(data));
+}
+
 function escapePPEApprovalHtml(value) {
   return cleanPPEText_(value)
     .replace(/&/g, "&amp;")
@@ -611,7 +622,7 @@ function getActivePPEBranches(branchSheet) {
  * ============================================================ */
 
 function getIssuePPESidebarData() {
-  return {
+  return toPPEClientData_({
     employees:
       getActivePPEEmployees(getPPESheet_("Employees")),
 
@@ -620,7 +631,7 @@ function getIssuePPESidebarData() {
 
     approvedRequests:
       getApprovedPPERequestsForIssue()
-  };
+  });
 }
 
 /**
@@ -968,10 +979,10 @@ function getApprovedPPERequestsForIssue() {
  * ============================================================ */
 
 function getReceiveStockSidebarData() {
-  return {
+  return toPPEClientData_({
     ppeItems: getActivePPEItemsWithStock(),
     branches: getActivePPEBranches(getPPESheet_("Branches"))
-  };
+  });
 }
 
 /**
@@ -1112,7 +1123,7 @@ function submitStockReceiptFromSidebar(details) {
 
 function getReturnPPESidebarData() {
   try {
-    return {
+    return toPPEClientData_({
       employees:
         getActivePPEEmployees(getPPESheet_("Employees")),
 
@@ -1120,7 +1131,7 @@ function getReturnPPESidebarData() {
         getOutstandingPPEIssuesForReturn_(
           getPPESheet_("PPE Issue Register")
         )
-    };
+    });
 
   } catch (error) {
     console.error(error);
@@ -1455,10 +1466,10 @@ function submitPPEReturnFromSidebar(details) {
  * ============================================================ */
 
 function getStockAdjustmentSidebarData() {
-  return {
+  return toPPEClientData_({
     ppeItems: getActivePPEItemsWithStock(),
     branches: getActivePPEBranches(getPPESheet_("Branches"))
-  };
+  });
 }
 
 /**
@@ -1760,9 +1771,7 @@ function getPPERequestSidebarData() {
       )
   };
 
-  // Converts anything the browser can't receive (e.g. dates)
-  // into plain text, so the form never gets empty data.
-  return JSON.parse(JSON.stringify(data));
+  return toPPEClientData_(data);
 }
 
 function getPPEIssueHistoryForRequests(issueSheet) {
@@ -2115,7 +2124,7 @@ function getPendingPPERequests() {
     });
   }
 
-  return requests;
+  return toPPEClientData_(requests);
 }
 
 /**
