@@ -226,16 +226,23 @@ function docForm(d) {
 }
 ACT.newDoc = () => {
   RE.steps = defaultRoute('Procedure', S.ui.user);
-  openModal({ title: 'Upload document', sub: 'Creates Rev 1. Select the file from your computer (demo reference only) and the approvers who must sign it off, in order.', size: 'wide',
-    body: docForm(null) + `<div class="form-grid mt">${fld({ name: 'file', label: 'Document file', type: 'file', required: true, full: true })}${fld({ name: 'notes', label: 'Purpose / change summary', type: 'textarea', full: true, value: 'First issue.' })}
+  openModal({ title: 'Upload document', sub: 'Creates the first revision in the system. Select the file from your computer (demo reference only) and the approvers who must sign it off, in order.', size: 'wide',
+    body: docForm(null) + `<div class="form-grid mt">${fld({ name: 'file', label: 'Document file', type: 'file', required: true, full: true, hint: 'For a PDF, the number, title and revision are read from its header and filled in.' })}${fld({ name: 'startRev', label: 'Revision number of this file', type: 'number', min: 1, value: 1, required: true, hint: 'Usually 1. If the document already has a revision history (e.g. Rev 4), enter it to keep its numbering.' })}${fld({ name: 'notes', label: 'Purpose / change summary', type: 'textarea', full: true, value: 'First issue.' })}
       ${routeEditorHtml()}${fld({ name: 'submitNow', label: 'Submit for approval now (otherwise save as draft)', type: 'checkbox', value: true, full: true })}</div>`,
-    onOpen: m => { wireRouteEd(m, S.ui.user); m.querySelector('[name=category]').addEventListener('change', e => { m.querySelector('[name=number]').value = suggestDocNumber(e.target.value); RE.steps = defaultRoute(e.target.value, S.ui.user); drawRouteEd(m, S.ui.user); }); },
+    onOpen: m => { wireRouteEd(m, S.ui.user);
+      const q = n => m.querySelector(`[name=${n}]`);
+      ['number', 'title', 'startRev'].forEach(n => q(n).addEventListener('input', () => { q(n).dataset.touched = '1'; }));
+      m._hc = wireHeaderCheck(m, { expect: () => ({ number: q('number').value.trim(), title: q('title').value.trim(), rev: Math.max(1, Math.round(+q('startRev').value || 1)) }),
+        autofill: h => { if (h.number && !q('number').dataset.touched) { q('number').value = h.number; q('number').dataset.fromFile = '1'; } if (h.title && !q('title').value.trim()) q('title').value = h.title; if (h.rev != null && !q('startRev').dataset.touched) q('startRev').value = h.rev; } });
+      m.querySelector('[name=category]').addEventListener('change', e => { if (!q('number').dataset.touched && !q('number').dataset.fromFile) m.querySelector('[name=number]').value = suggestDocNumber(e.target.value); RE.steps = defaultRoute(e.target.value, S.ui.user); drawRouteEd(m, S.ui.user); }); },
     buttons: [{ label: 'Save document', cls: 'primary', onClick: m => {
       const submit = m.querySelector('[name=submitNow]').checked;
-      if (!validateForm(m, fail => { const n = m.querySelector('[name=number]'); if (S.documents.some(x => x.number.toLowerCase() === n.value.trim().toLowerCase())) fail(n, 'This document number already exists.'); })) return false;
+      if (!validateForm(m, fail => { const n = m.querySelector('[name=number]'); if (S.documents.some(x => x.number.toLowerCase() === n.value.trim().toLowerCase())) fail(n, 'This document number already exists.'); const sr = m.querySelector('[name=startRev]'); if (!(+sr.value >= 1)) fail(sr, 'Use 1 or higher.'); })) return false;
+      if (!headerCheckOk(m._hc)) return false;
       const err = submit && routeErrors(S.ui.user); if (err) { toast(err, 'error'); return false; }
       const v = readForm(m); const id = nextId('DOC-', 'documents');
-      const rev = { rev: 1, draft: 1, status: 'Draft', date: TODAY, effective: null, file: v.file, notes: v.notes, author: S.ui.user, route: [], history: [{ ts: nowTs(), by: S.ui.user, action: 'Document uploaded (draft)', comment: '' }] };
+      const rev = { rev: Math.max(1, Math.round(+v.startRev || 1)), draft: 1, status: 'Draft', date: TODAY, effective: null, file: v.file, notes: v.notes, author: S.ui.user, route: [], history: [{ ts: nowTs(), by: S.ui.user, action: 'Document uploaded (draft)', comment: '' }] };
+      headerHistory(m._hc, rev);
       const d = { id, number: v.number, title: v.title, category: v.category, type: v.type, org: siteOrgOf(v.site), site: v.site, dept: v.dept, owner: v.owner, reviewMonths: Number(v.reviewMonths || 0), nextReview: null, access: v.access, revisions: [rev], related: [] };
       S.documents.push(d);
       if (submit) { startRoute(rev); rev.history.push({ ts: nowTs(), by: S.ui.user, action: `Submitted for approval (${rev.route.length}-step route: ${rev.route.map(s => pname(s.person)).join(' → ')})`, comment: '' }); notifyCurrent(d); }
@@ -303,13 +310,13 @@ ACT.docResubmit = (el) => {
   const d = byId('documents', el.dataset.id), r = docLatest(d);
   RE.steps = r.route.map(s => ({ label: s.label, person: s.person }));
   openModal({ title: 'Revise & resubmit', sub: `${d.number} — creates draft ${r.draft + 1}. The returned draft is retained; the approval route restarts at step 1.`, size: 'wide', body: `<div class="form-grid">${fld({ name: 'file', label: 'Corrected file', type: 'file', required: true, full: true })}${fld({ name: 'notes', label: 'Corrections made', type: 'textarea', required: true, full: true })}${routeEditorHtml()}</div>`,
-    onOpen: m => wireRouteEd(m, r.author),
+    onOpen: m => { wireRouteEd(m, r.author); m._hc = wireHeaderCheck(m, { expect: () => ({ number: d.number, title: d.title, rev: r.rev }) }); },
     buttons: [{ label: 'Resubmit for approval', cls: 'primary', onClick: m => {
-      if (!validateForm(m)) return false; const err = routeErrors(r.author); if (err) { toast(err, 'error'); return false; }
+      if (!validateForm(m)) return false; if (!headerCheckOk(m._hc)) return false; const err = routeErrors(r.author); if (err) { toast(err, 'error'); return false; }
       const v = readForm(m);
       r.status = 'Superseded draft'; r.history.push({ ts: nowTs(), by: S.ui.user, action: 'Superseded by corrected draft', comment: '' });
       const nr = { rev: r.rev, draft: r.draft + 1, status: 'Draft', date: TODAY, effective: null, file: v.file, notes: v.notes, author: r.author, route: [], history: [{ ts: nowTs(), by: S.ui.user, action: `Revised (draft ${r.draft + 1})`, comment: v.notes }] };
-      startRoute(nr); nr.history.push({ ts: nowTs(), by: S.ui.user, action: `Resubmitted for approval (${nr.route.length}-step route: ${nr.route.map(s => pname(s.person)).join(' → ')})`, comment: '' });
+      headerHistory(m._hc, nr); startRoute(nr); nr.history.push({ ts: nowTs(), by: S.ui.user, action: `Resubmitted for approval (${nr.route.length}-step route: ${nr.route.map(s => pname(s.person)).join(' → ')})`, comment: '' });
       d.revisions.push(nr); notifyCurrent(d); log(`Resubmitted ${d.number} ${revLabel(nr)}`, '#/documents/' + d.id); save(); toast(`${revLabel(nr)} resubmitted — back to step 1 (${esc(pname(nr.route[0].person))}).`); rerender();
     } }] });
 };
@@ -328,10 +335,11 @@ ACT.docNewRevision = (el) => {
   const d = byId('documents', el.dataset.id); const issued = docIssued(d); const prev = docLatest(d);
   const n = prev.status === 'Rejected' ? prev.rev : Math.max(...d.revisions.map(r => r.rev)) + 1;
   openModal({ title: 'Start new revision', sub: `${d.number}: Rev ${n} will be created as a draft. ${issued ? `Rev ${issued.rev} remains in use until the new revision is approved and issued.` : ''}`, body: `<div class="form-grid">${fld({ name: 'file', label: 'Draft file', type: 'file', required: true, full: true })}${fld({ name: 'notes', label: 'Reason for revision / change summary', type: 'textarea', required: true, full: true })}</div>`,
+    onOpen: m => { m._hc = wireHeaderCheck(m, { expect: () => ({ number: d.number, title: d.title, rev: n }) }); },
     buttons: [{ label: 'Create draft revision', cls: 'primary', onClick: m => {
-      if (!validateForm(m)) return false; const v = readForm(m);
+      if (!validateForm(m)) return false; if (!headerCheckOk(m._hc)) return false; const v = readForm(m);
       const nr = { rev: n, draft: prev.status === 'Rejected' && prev.rev === n ? prev.draft + 1 : 1, status: 'Draft', date: TODAY, effective: null, file: v.file, notes: v.notes, author: S.ui.user, route: [], history: [{ ts: nowTs(), by: S.ui.user, action: `Created draft revision ${n}`, comment: v.notes }] };
-      d.revisions.push(nr); log(`Started ${d.number} ${revLabel(nr)}`, '#/documents/' + d.id); save(); toast(`${revLabel(nr)} created — submit it for approval when ready.`); rerender();
+      headerHistory(m._hc, nr); d.revisions.push(nr); log(`Started ${d.number} ${revLabel(nr)}`, '#/documents/' + d.id); save(); toast(`${revLabel(nr)} created — submit it for approval when ready.`); rerender();
     } }] });
 };
 ACT.docReviewed = (el) => {

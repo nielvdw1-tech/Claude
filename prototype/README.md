@@ -83,8 +83,15 @@ To start again, open the user menu (top right) and choose **Reset demo data**.
 - **Demo documents** have no real file content, so they open as a sample sheet built from the record: controlled header, change summary and approval route.
 - **Storage:** uploaded files are kept in your browser only (up to 20 MB each). Production uses secure document storage.
 
+**Documents with their own header:** most documents already carry a header with the logo, number, title and revision.
+- **Reading the header:** when you choose a PDF (new document, new revision or corrected draft), the system reads the top of the first page and fills in the number, title and revision.
+- **Mismatches:** anything that doesn't match the record is shown, for example a different number, a different title, or a file still saying Rev 3 while the system records Rev 4. Saving then needs **"The header does not match — save anyway"**, and that confirmation is recorded in the document history.
+- **Revision numbering:** **Revision number of this file** keeps an existing document's numbering, for example Rev 4, instead of starting at Rev 1.
+- **What can't be read:** scanned PDFs without text, Word and Excel files. Nothing is filled in or checked for those.
+- **The file itself** is never changed; it opens exactly as uploaded.
+
 **Printing documents:** use **Print** on a document page, or in the file viewer.
-- Every page of the document prints, with a control stamp at the top of each page:
+- Every page of the document prints, with a control stamp in a strip above each page (the document's own header is never covered; the same applies to downloads):
   - **"UNCONTROLLED WHEN PRINTED"** for issued documents;
   - **"DRAFT — NOT FOR USE"** for drafts and revisions still in approval.
 - The stamp also shows the document number, revision, who printed it and when, and each print is recorded in the document's approval trail.
@@ -301,6 +308,7 @@ prototype/
 ├── mod-hours.js                  Hours worked per branch and the LTI frequency rate
 ├── mod-history.js                Monthly control score snapshots and trend
 ├── mod-stamp.js                  Stamped (controlled) downloads of documents
+├── mod-docread.js                Reads number, title and revision from a PDF's own header on upload
 ├── mod-clients.js                Several clients: separation, overview, new-client wizard
 ├── mod-privacy.js                Privacy (POPIA): medical-detail access log, retention, removal
 ├── mod-documents.js              Document control & sequential approval routes
@@ -318,6 +326,6 @@ prototype/
 └── README.md                     This file
 ```
 
-**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 211 workflow outcomes.
+**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 215 workflow outcomes.
 
 The earlier full HSEQ prototype, with legal, risk, people, PPE, chemicals, emergency and audits, is preserved in git history at commit `26b59bc`.

@@ -8,7 +8,7 @@ Status key:
 - **Not implemented**
 
 "Tested" means one of the following:
-- the automated browser test (`tests/workflows.test.js`, **211/211 passing**, no JavaScript errors);
+- the automated browser test (`tests/workflows.test.js`, **215/215 passing**, no JavaScript errors);
 - the route smoke test (77 routes plus a second organisation, no errors);
 - the mobile layout check (31 routes at 390 px, no horizontal overflow).
 
@@ -23,6 +23,7 @@ Status key:
 | Author cannot approve their own document; each approver once per route | Implemented | A12 |
 | Return for correction (comment required) → revise & resubmit → route restarts at step 1 | Implemented | A6–A7; returned draft retained |
 | Reject | Implemented | |
+| Documents with their own header: number, title and revision read from the PDF on upload, mismatches shown and confirmed (recorded); existing revision numbering kept; stamp never covers the header on print or download | Implemented | HD1–HD4; scanned PDFs, Word and Excel cannot be read |
 | Print documents | Implemented | Every page printed, stamped UNCONTROLLED WHEN PRINTED / DRAFT — NOT FOR USE with number, revision, printer and time; logged in the trail (G1–G5). The online preview link blocks printing; it works when opened from the folder (G6) |
 | Issue for use; previous revision superseded; current issued revision stays in use while a new one is approved | Implemented | A9, A11 |
 | Approval trail: every decision, comment, timestamp | Implemented | A10 |

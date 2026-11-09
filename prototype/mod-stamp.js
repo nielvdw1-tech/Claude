@@ -22,8 +22,8 @@ function downloadStamp(d, r) {
 }
 // Draw the stamp band across the top of a page
 function drawStamp(page, st, font, rgb) {
-  const { width, height } = page.getSize(), size = 7.5, col = st.draft ? rgb(0.69, 0, 0.13) : rgb(0.54, 0.23, 0);
-  const pad = 16, tw = Math.min(width - pad * 2, font.widthOfTextAtSize(st.text, size) + 14), bx = (width - tw) / 2, by = height - 22;
+  const box = page.getCropBox(), width = box.width, size = 7.5, col = st.draft ? rgb(0.69, 0, 0.13) : rgb(0.54, 0.23, 0);
+  const pad = 16, tw = Math.min(width - pad * 2, font.widthOfTextAtSize(st.text, size) + 14), bx = box.x + (width - tw) / 2, by = box.y + box.height - 22;
   page.drawRectangle({ x: bx, y: by, width: tw, height: 15, color: rgb(1, 1, 1), opacity: 0.92, borderColor: col, borderWidth: 0.8 });
   let t = st.text; while (font.widthOfTextAtSize(t, size) > tw - 10 && t.length > 10) t = t.slice(0, -2);
   page.drawText(t, { x: bx + (tw - font.widthOfTextAtSize(t, size)) / 2, y: by + 4.6, size, font, color: col });
@@ -85,6 +85,13 @@ async function stampedDocPdf(d, r, f) {
   let pdf;
   if (blob && kind === 'pdf') {
     pdf = await PDFDocument.load(new Uint8Array(await blob.arrayBuffer()), { ignoreEncryption: true });
+    // Add a strip above each page for the stamp, so the document's own header is never covered
+    pdf.getPages().forEach(pg => {
+      if ((pg.getRotation().angle || 0) % 360 !== 0) return;   // rotated pages keep the stamp on the page edge
+      const mb = pg.getMediaBox(), cb = pg.getCropBox(), STRIP = 26;
+      pg.setMediaBox(mb.x, mb.y, mb.width, mb.height + STRIP);
+      pg.setCropBox(cb.x, cb.y, cb.width, (mb.y + mb.height + STRIP) - cb.y);
+    });
   } else if (blob && kind === 'image') {
     pdf = await PDFDocument.create(); const page = pdf.addPage([595.28, 841.89]);
     const bytes = new Uint8Array(await blob.arrayBuffer()), img = /png/i.test(blob.type || f.name) ? await pdf.embedPng(bytes) : await pdf.embedJpg(bytes);

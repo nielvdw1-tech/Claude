@@ -233,7 +233,7 @@ function fld(o) {
   switch (o.type) {
     case 'select': input = `<select id="${id}" name="${o.name}" ${o.required ? 'data-req="1"' : ''}>${o.options}</select>`; break;
     case 'textarea': input = `<textarea id="${id}" name="${o.name}" ${o.required ? 'data-req="1"' : ''} placeholder="${esc(o.placeholder || '')}" rows="${o.rows || 3}">${esc(v)}</textarea>`; break;
-    case 'file': input = `<input id="${id}" name="${o.name}" type="file" ${o.required ? 'data-req="1"' : ''} ${o.accept ? `accept="${o.accept}"` : ''} ${o.capture ? 'capture="environment"' : ''}><div class="file-note">${icon('info', 'sm')} Prototype: only the file name and size are kept in this browser as a demo reference. Production stores the file in secure, permanent document storage.</div>`; break;
+    case 'file': input = `<input id="${id}" name="${o.name}" type="file" ${o.required ? 'data-req="1"' : ''} ${o.accept ? `accept="${o.accept}"` : ''} ${o.capture ? 'capture="environment"' : ''}><div class="file-note">${icon('info', 'sm')} Prototype: the file is kept in this browser only (up to 20 MB). Production stores it in secure, permanent document storage.</div>`; break;
     case 'checkbox': return `<div class="field ${o.full ? 'full' : ''}"><label class="check"><input type="checkbox" id="${id}" name="${o.name}" ${o.value ? 'checked' : ''}> <span>${o.label}</span></label>${o.hint ? `<div class="hint">${o.hint}</div>` : ''}</div>`;
     default: input = `<input id="${id}" name="${o.name}" type="${o.type || 'text'}" value="${esc(v)}" ${o.required ? 'data-req="1"' : ''} placeholder="${esc(o.placeholder || '')}" ${o.min != null ? `min="${o.min}"` : ''} ${o.max != null ? `max="${o.max}"` : ''} ${o.readonly ? 'readonly' : ''}>`;
   }

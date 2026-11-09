@@ -226,6 +226,8 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await go('#/print/INS-1087'); await p.emulateMedia({ media: 'print' }); const pdfBuf = await p.pdf({ format: 'A4' }); await p.emulateMedia({ media: 'screen' });
     await asUser('P-003'); await go('#/documents'); await btn('Upload document');
     await mfill('title', 'Viewer test procedure'); await p.setInputFiles('.modal [name=file]', { name: 'viewer_test.pdf', mimeType: 'application/pdf', buffer: pdfBuf });
+    await p.waitForSelector('.modal .hdr-check .alert', { timeout: 15000 }).catch(() => {});   // the file's own header is read
+    if (await has('.modal .hdr-ack')) await p.check('.modal .hdr-ack');                       // it is an inspection report, not this procedure: confirm
     await mbtn('Save document'); await p.waitForTimeout(300);
     const did = await S(`S.documents[S.documents.length-1].id`);
     ok('F1 uploaded file content kept in browser storage', !!(await S(`docLatest(byId('documents','${did}')).file.blobId`)));
@@ -258,6 +260,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await go('#/reports/documents'); await p.emulateMedia({ media: 'print' }); const pdf2 = await p.pdf({ format: 'A4' }); await p.emulateMedia({ media: 'screen' });
     await asUser('P-003'); await go('#/documents'); await btn('Upload document');
     await mfill('title', 'Print test procedure'); await p.setInputFiles('.modal [name=file]', { name: 'print_test.pdf', mimeType: 'application/pdf', buffer: pdf2 });
+    await p.waitForSelector('.modal .hdr-check .alert', { timeout: 15000 }).catch(() => {}); if (await has('.modal .hdr-ack')) await p.check('.modal .hdr-ack');
     await mbtn('Save document'); await p.waitForTimeout(300);
     const did = await S(`S.documents[S.documents.length-1].id`);
     await btn('Print'); await p.waitForFunction(() => window.__printed > 0, null, { timeout: 15000 }).catch(() => {});
@@ -900,6 +903,49 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     ok('RL5 a role still in use cannot be deleted; once nobody has it, it can', blocked && !(await S("S.roles.some(r => r.name === 'Contractor supervisor')")));
     await S("(() => { const e = S.roles.find(r => r.name === 'Employee'); e.perms = e.perms.filter(k => k !== 'area.documents'); save(); })()");
     await asUser('P-002');
+  }
+
+  /* ---------------- HD. Documents that already have their own header ---------------- */
+  {
+    const fs = require('fs');
+    // A document with its own header right at the top of the page: company, number, title, revision
+    const makePdf = (num, title, rev) => S(`(async () => {
+      const { PDFDocument, StandardFonts, rgb } = await ensurePdfLib(); const pdf = await PDFDocument.create(); const fb = await pdf.embedFont(StandardFonts.HelveticaBold), fr = await pdf.embedFont(StandardFonts.Helvetica);
+      for (let k = 1; k <= 2; k++) { const pg = pdf.addPage([595, 842]);
+        pg.drawRectangle({ x: 30, y: 790, width: 40, height: 45, color: rgb(0.05, 0.43, 0.31) });
+        pg.drawText('Kestrel Industrial Equipment', { x: 80, y: 830, size: 9, font: fb });
+        pg.drawText(${JSON.stringify(title)}, { x: 80, y: 805, size: 16, font: fb });
+        pg.drawText('Document No: ${num}', { x: 420, y: 818, size: 9, font: fr }); pg.drawText('Revision: ${rev}', { x: 420, y: 805, size: 9, font: fr });
+        pg.drawText('1. Purpose and scope of this procedure (page ' + k + ')', { x: 40, y: 700, size: 11, font: fr }); }
+      return btoa(String.fromCharCode(...new Uint8Array(await pdf.save()))); })()`).then(b => Buffer.from(b, 'base64'));
+    await asUser('P-003'); await go('#/documents'); await btn('Upload document');
+    await p.setInputFiles('.modal [name=file]', { name: 'hot_work.pdf', mimeType: 'application/pdf', buffer: await makePdf('KIE-SWP-045', 'Hot Work Safe Work Procedure', 3) });
+    await p.waitForSelector('.modal .hdr-check .alert', { timeout: 15000 }).catch(() => {});
+    const filled = await p.evaluate(() => ['number', 'title', 'startRev'].map(n => document.querySelector(`.modal [name=${n}]`).value));
+    const okMsg = (await p.innerText('.modal .hdr-check')).includes('matches the record');
+    await mbtn('Save document'); await p.waitForTimeout(300);
+    const d1 = await S("S.documents.find(d => d.number === 'KIE-SWP-045')");
+    ok('HD1 the number, title and revision are read from the file\'s own header and fill the form', filled.join('|') === 'KIE-SWP-045|Hot Work Safe Work Procedure|3' && okMsg && !!d1 && d1.revisions[0].rev === 3 && d1.revisions[0].history.some(h => h.action.includes('matches the record')), filled.join(' | '));
+    await go('#/documents'); await btn('Upload document'); await mfill('number', 'KIE-SWP-047'); await mfill('title', 'Confined Space Entry Procedure');
+    await p.setInputFiles('.modal [name=file]', { name: 'other.pdf', mimeType: 'application/pdf', buffer: await makePdf('KIE-SWP-046', 'Working at Heights Safe Work Procedure', 1) });
+    await p.waitForSelector('.modal .hdr-ack', { timeout: 15000 }).catch(() => {});
+    const warn = await p.innerText('.modal .hdr-check');
+    await mbtn('Save document'); const blocked = await modalOpen() && (await S("!S.documents.some(d => d.number === 'KIE-SWP-047')"));
+    await p.check('.modal .hdr-ack'); await mbtn('Save document'); await p.waitForTimeout(300);
+    ok('HD2 a header that does not match the record is shown and must be confirmed; the confirmation is recorded', warn.includes('KIE-SWP-046') && warn.includes('Working at Heights') && blocked && (await S("S.documents.find(d => d.number === 'KIE-SWP-047').revisions[0].history.some(h => h.action.startsWith('Saved although'))")));
+    await asUser('P-002'); await go('#/documents/DOC-001'); await btn('Start new revision');
+    await p.setInputFiles('.modal [name=file]', { name: 'policy_rev.pdf', mimeType: 'application/pdf', buffer: await makePdf('KIE-POL-001', 'HSEQ Policy', 3) });
+    await p.waitForSelector('.modal .hdr-check .alert', { timeout: 15000 }).catch(() => {});
+    const revWarn = await p.innerText('.modal .hdr-check'); await mfill('notes', 'Annual update.'); await mbtn('Create draft revision');
+    ok('HD3 a new revision whose file still shows the old revision number is flagged before saving', revWarn.includes('Rev 3') && revWarn.includes('Rev 4') && await modalOpen());
+    await p.keyboard.press('Escape');
+    // Download: the stamp sits in a strip above the page, so the header is not covered
+    await asUser('P-003'); await go('#/documents/' + d1.id);
+    const [dl] = await Promise.all([p.waitForEvent('download'), p.click('.sh-actions [data-act=downloadDocFile]:not([data-ri])')]);
+    const f = path.join(os.tmpdir(), 'vdw_hd.pdf'); await dl.saveAs(f); await p.waitForTimeout(150);
+    const geo = await p.evaluate(async (b64) => { const lib = await ensurePdfJs(); const pdf = await lib.getDocument({ data: Uint8Array.from(atob(b64), c => c.charCodeAt(0)), isEvalSupported: false }).promise; const pg = await pdf.getPage(1), vp = pg.getViewport({ scale: 1 }), tc = await pg.getTextContent();
+      const at = s => (tc.items.find(i => i.str.includes(s)) || { transform: [0, 0, 0, 0, 0, -1] }).transform[5]; return { h: vp.height, pages: pdf.numPages, stamp: at('DRAFT'), company: at('Kestrel Industrial Equipment') }; }, fs.readFileSync(f).toString('base64'));
+    ok('HD4 on download the stamp goes in a strip above each page; the document\'s own header is not covered', geo.pages === 2 && Math.round(geo.h) === 868 && geo.stamp > 842 && geo.company > 0 && geo.company < 842, JSON.stringify(geo));
   }
 
   /* ---------------- L. Company logo ---------------- */
