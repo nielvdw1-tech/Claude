@@ -953,8 +953,8 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await asUser('P-002'); await S("(S.ui.site = 'ALL', S.ui.incTrendsHidden = false, save())"); await go('#/incidents'); await p.waitForTimeout(200);
     const want = await S("(() => { const ms = last12Months(); return scoped('incidents').filter(i => i.date.slice(0, 7) >= ms[0]).length; })()");
     const cols = await p.$$eval('.inc-trends .vc-col', e => e.length), sum = await p.$$eval('.inc-trends .vc-col', e => e.reduce((a, x) => a + Number((x.getAttribute('aria-label') || '').match(/: (\d+)/)[1]), 0));
-    const order = await p.evaluate(() => { const t = document.querySelector('.trend-head'), l = document.querySelector('.lv, .toolbar, table.tbl'); return !!t && !!l && (t.compareDocumentPosition(l) & Node.DOCUMENT_POSITION_FOLLOWING) > 0; });
-    ok('IT1 Incident Management opens with a mini dashboard of incident trends above the list', cols === 12 && sum === want && order && (await p.$$eval('.inc-trends .card', e => e.length)) === 3, `${want} incidents in 12 months`);
+    const order = await p.evaluate(() => { const t = document.querySelector('.trend-head'), l = document.querySelector('.lv, .toolbar, table.tbl:not(.compact)'); return !!t && !!l && (t.compareDocumentPosition(l) & Node.DOCUMENT_POSITION_FOLLOWING) > 0; });
+    ok('IT1 Incident Management opens with a mini dashboard of incident trends above the list', cols === 12 && sum === want && order && (await p.$$eval('.inc-trends .tr-cell', e => e.length)) === 4, `${want} incidents in 12 months`);
     await asUser('P-003'); await go('#/incidents');
     const dbn = await S("(() => { const ms = last12Months(); return S.incidents.filter(i => i.site === 'S-DBN' && i.date.slice(0, 7) >= ms[0]).length; })()");
     const sum2 = await p.$$eval('.inc-trends .vc-col', e => e.reduce((a, x) => a + Number((x.getAttribute('aria-label') || '').match(/: (\d+)/)[1]), 0));
@@ -964,9 +964,9 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     ok('IT3 the trends can be hidden and shown again', hidden && await has('.inc-trends'));
     {
       const f = await S("(() => { const r = [prevMonth(TODAY.slice(0, 7))].concat(monthsBack(12, prevMonth(prevMonth(TODAY.slice(0, 7)))).reverse()).map(m => ltifr(S.ui.site, m)).find(x => x.value != null); return r ? r.value.toFixed(2) : '—'; })()");
-      const tile = await p.$$eval('.kpis.mini .kpi', e => e.map(x => x.textContent).find(t => /LTIFR/.test(t)) || '');
+      const tile = await p.$$eval('.tr-stat', e => e.map(x => x.textContent).find(t => /LTIFR/.test(t)) || '');
       const line = await p.$$eval('#lcIncLtifr svg path', e => e.length);
-      await act('[data-act=ltifrCompare]'); const two = await p.$$eval('#lcIncLtifr .viz-legend span, .inc-ltifr .viz-legend span', e => e.length); await act('[data-act=ltifrCompare]');
+      await act('[data-act=ltifrCompare]'); const two = await p.$$eval('.tr-cell .viz-legend span', e => e.length); await act('[data-act=ltifrCompare]');
       ok('IT4 the incident trends show the LTI frequency rate (tile and rolling 12-month line, with the previous year)', tile.includes(f) && line > 0 && two === 2, `LTIFR ${f}`);
     }
     await asUser('P-002');
