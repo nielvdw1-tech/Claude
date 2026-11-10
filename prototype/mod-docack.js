@@ -43,8 +43,8 @@ myTasks = function () {
 // Opening the revision in use is what makes "I have read and understood" available
 const _viewDocFileBeforeAck = ACT.viewDocFile;
 ACT.viewDocFile = (el) => {
-  const d = byId('documents', el.dataset.id), issued = d && docIssued(d);
-  if (issued) { const ri = el.dataset.ri != null ? +el.dataset.ri : d.revisions.length - 1; if (d.revisions[ri] === issued) { S.ui.docOpened = S.ui.docOpened || {}; S.ui.docOpened[d.id + ':' + issued.rev] = true; save(); setTimeout(() => document.querySelectorAll(`[data-act=docAck][data-id="${d.id}"]`).forEach(b => { b.disabled = false; b.removeAttribute('title'); }), 0); } }
+  const d = byId('documents', el.dataset.id), issued = d && docIssued(d), openedBefore = d && openedIssued(d);
+  if (issued) { const ri = el.dataset.ri != null ? +el.dataset.ri : d.revisions.length - 1; if (d.revisions[ri] === issued) { S.ui.docOpened = S.ui.docOpened || {}; S.ui.docOpened[d.id + ':' + issued.rev] = true; save(); setTimeout(() => { const box = document.querySelector(`.ack-banner[data-doc="${d.id}"]`); if (box && !openedBefore) { box.outerHTML = ackBannerHtml(d); initAckPad(); } }, 0); } }
   _viewDocFileBeforeAck(el);
 };
 function openedIssued(d) { const r = docIssued(d); return !!(r && S.ui.docOpened && S.ui.docOpened[d.id + ':' + r.rev]); }
@@ -52,18 +52,33 @@ function openedIssued(d) { const r = docIssued(d); return !!(r && S.ui.docOpened
 // The banner on the document for the person who still has to read it
 function ackBannerHtml(d) {
   if (!mustAck(d)) return '';
-  const a = ackState(d), r = a.rev, ri = d.revisions.indexOf(r), opened = openedIssued(d);
-  return `<div class="alert ${daysTo(a.due) < 0 ? 'danger' : 'warn'} ack-banner">${icon('docs')}<div><b>Please read ${esc(d.number)} ${revLabel(r)} and confirm.</b> You are on the list of people who must read this document${daysTo(a.due) < 0 ? `; it was due ${fmt(a.due)}` : ` by ${fmt(a.due)}`}. Open it first, then confirm.
-    <div class="btn-row mt-s"><button class="btn" data-act="viewDocFile" data-id="${d.id}" data-ri="${ri}">${icon('eye', 'sm')} Open ${revLabel(r)}</button>
-    <button class="btn success" data-act="docAck" data-id="${d.id}" ${opened ? '' : 'disabled title="Open the document first"'}>${icon('check', 'sm')} I have read and understood it</button></div></div></div>`;
+  const a = ackState(d), r = a.rev, ri = d.revisions.indexOf(r), opened = openedIssued(d), late = daysTo(a.due) < 0;
+  return `<div class="alert ${late ? 'danger' : 'warn'} ack-banner" data-doc="${d.id}">${icon('docs')}<div class="ack-body"><b>Please read ${esc(d.number)} ${revLabel(r)}, then tick and sign.</b> You are on the list of people who must read this document${late ? `; it was due ${fmt(a.due)}` : ` by ${fmt(a.due)}`}.
+    <div class="btn-row mt-s"><button class="btn" data-act="viewDocFile" data-id="${d.id}" data-ri="${ri}">${icon('eye', 'sm')} ${opened ? 'Open it again' : 'Step 1: open ' + revLabel(r)}</button></div>
+    ${opened ? `<div class="ack-sign">
+      <label class="check"><input type="checkbox" id="ackTick" data-doc="${d.id}"> <span><b>I have read and understood ${esc(d.number)} ${esc(d.title)} (${revLabel(r)})</b> and will follow it.</span></label>
+      <div class="field" id="ackSigField"><label for="ackPad">Your signature<span class="req">*</span></label><div class="sig-wrap"><canvas id="ackPad" class="sig-pad" aria-label="Signature pad: sign with your finger or mouse"></canvas><div class="sig-foot"><span>${esc(pname(S.ui.user))} · sign with your finger or mouse</span><button type="button" class="btn sm" data-act="ackSigClear">Clear</button></div></div></div>
+      <button class="btn success" data-act="docAck" data-id="${d.id}">${icon('check', 'sm')} Confirm and sign</button>
+    </div>` : `<p class="t-sub mt-s" style="margin-bottom:0">Step 2 appears once you have opened it: tick that you have read and understood it, and sign.</p>`}
+  </div></div>`;
 }
+const ACKSIG = { sig: null };
+function initAckPad() { ACKSIG.sig = null; if (document.getElementById('ackPad')) initSigPad('ackPad', ACKSIG, 'sig', 'ackSigField'); }
+ACT.ackSigClear = () => { ACKSIG.sig = null; const c = document.getElementById('ackPad'); if (c) c.getContext('2d').clearRect(0, 0, c.width, c.height); };
 ACT.docAck = (el) => {
   const d = byId('documents', el.dataset.id), r = docIssued(d);
   if (!r || !mustAck(d)) { rerender(); return; }
   if (!openedIssued(d)) { toast('Open the document first.', 'error'); return; }
-  r.acks = r.acks || []; r.acks.push({ by: S.ui.user, ts: nowTs() });
-  log(`Read and acknowledged ${d.number} ${revLabel(r)}`, '#/documents/' + d.id); save(); toast(`Thank you — your acknowledgement of ${esc(d.number)} is recorded.`); rerender();
+  const tick = document.getElementById('ackTick');
+  if (!tick || !tick.checked) { toast('Tick that you have read and understood the document.', 'error'); if (tick) tick.closest('label').classList.add('invalid'); return; }
+  if (!ACKSIG.sig) { toast('Please sign to confirm.', 'error'); const f = document.getElementById('ackSigField'); if (f) f.classList.add('invalid'); return; }
+  r.acks = r.acks || []; r.acks.push({ by: S.ui.user, ts: nowTs(), sig: ACKSIG.sig, statement: `I have read and understood ${d.number} ${d.title} (${revLabel(r)}) and will follow it.` });
+  ACKSIG.sig = null;
+  log(`Read, understood and signed ${d.number} ${revLabel(r)}`, '#/documents/' + d.id); save(); toast(`Thank you — your signed confirmation for ${esc(d.number)} is recorded.`); rerender();
 };
+// The signature pad is drawn after each page render
+const _rerenderBeforeAck = rerender;
+rerender = function (keepScroll) { _rerenderBeforeAck(keepScroll); if (document.getElementById('ackPad')) initAckPad(); };
 
 // The card on the document page: progress, who is outstanding, reminders and the distribution
 function ackCardHtml(d) {
@@ -79,7 +94,7 @@ function ackCardHtml(d) {
     <p class="t-sub mt-s">Must be read by: ${esc(who)} · ${d.site === 'ALL' ? 'all branches' : esc(sname(d.site))}</p>
     ${a.outstanding.length ? `<h4 class="mt">Still to read (${a.outstanding.length})</h4><ul class="ack-list">${a.outstanding.map(u => `<li><span class="avatar sm">${initials(pname(u))}</span><span>${esc(pname(u))}<small>${esc((person(u) || {}).jobTitle || '')}</small></span>${late ? badge('Overdue', 'red') : ''}</li>`).join('')}</ul>
       ${can('doc.create') || d.owner === S.ui.user ? `<button class="btn sm mt-s" data-act="docAckRemind" data-id="${d.id}">${icon('bell', 'sm')} Send a reminder to ${a.outstanding.length}</button>` : ''}` : `<div class="alert success mt-s" style="margin-bottom:0">${icon('checkCircle')}<div>Everyone on the list has confirmed they read ${revLabel(a.rev)}.</div></div>`}
-    ${a.done.length ? `<details class="mt-s"><summary class="t-sub">Confirmed (${a.done.length})</summary><ul class="ack-list">${(a.rev.acks || []).filter(x => a.done.includes(x.by)).map(x => `<li><span class="avatar sm">${initials(pname(x.by))}</span><span>${esc(pname(x.by))}<small>${fmtTs(x.ts)}</small></span></li>`).join('')}</ul></details>` : ''}
+    ${a.done.length ? `<details class="mt-s"><summary class="t-sub">Confirmed (${a.done.length})</summary><ul class="ack-list">${(a.rev.acks || []).filter(x => a.done.includes(x.by)).map(x => `<li><span class="avatar sm">${initials(pname(x.by))}</span><span>${esc(pname(x.by))}<small>${x.sig ? 'Ticked and signed' : 'Confirmed'} · ${fmtTs(x.ts)}</small></span>${x.sig ? `<img class="ack-sig" src="${x.sig}" alt="Signature of ${esc(pname(x.by))}">` : ''}</li>`).join('')}</ul></details>` : ''}
   </div></div>`;
 }
 ACT.docReaders = (el) => {
@@ -123,7 +138,7 @@ ROUTES.read = (p) => {
   const r = docIssued(d), mine = mustAck(d), done = (r.acks || []).find(a => a.by === S.ui.user);
   const html = `<div class="mobile-card">
     ${pageHead(esc(d.title), `${esc(d.number)} · ${revLabel(r)} · in use from ${fmt(r.effective)}`)}
-    ${mine ? ackBannerHtml(d) : done ? `<div class="alert success">${icon('checkCircle')}<div>You confirmed you read ${revLabel(r)} on ${fmtTs(done.ts)}.</div></div>` : ''}
+    ${mine ? ackBannerHtml(d) : done ? `<div class="alert success">${icon('checkCircle')}<div>You ticked that you read and understood ${revLabel(r)} and signed on ${fmtTs(done.ts)}.${done.sig ? `<div><img class="ack-sig mt-s" src="${done.sig}" alt="Your signature"></div>` : ''}</div></div>` : ''}
     ${!mine ? `<button class="btn" data-act="viewDocFile" data-id="${d.id}" data-ri="${d.revisions.indexOf(r)}">${icon('eye', 'sm')} Open ${revLabel(r)}</button>` : ''}
     <div class="card mt"><div class="card-body"><p class="muted" style="margin:0">Something in this document is wrong or out of date?</p><button class="btn sm mt-s" data-act="crNew" data-id="${d.id}">${icon('plus', 'sm')} Request a change</button></div></div>
   </div>`;

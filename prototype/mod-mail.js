@@ -9,7 +9,7 @@
 'use strict';
 
 const MAIL_CATS = { documents: 'Document approvals and reviews', actions: 'Corrective actions', incidents: 'Incidents and investigations', assets: 'Assets, defects and out-of-service', notices: 'Company notices and safety alerts', account: 'My account (sign-in, password)' };
-function mailPrefs(p) { return Object.assign({ documents: true, actions: true, incidents: true, assets: true, notices: true, account: true }, p.emailPrefs || {}); }
+function mailPrefs(p) { return Object.assign({ documents: true, actions: true, incidents: true, assets: true, notices: true, account: true, summary: true }, p.emailPrefs || {}); }
 
 /* Queue one e-mail per recipient. The person who caused the event is not e-mailed about their own action. */
 function queueEmail(to, cat, subject, text, link) {
@@ -18,10 +18,10 @@ function queueEmail(to, cat, subject, text, link) {
   const org = orgOf(S.ui.org) || S.orgs[0];
   ids.forEach(id => {
     const p = person(id);
-    if (!p || !p.email || p.status === 'Deactivated' || (id === S.ui.user && cat !== 'account')) return;
+    if (!p || !p.email || p.status === 'Deactivated' || (id === S.ui.user && cat !== 'account' && cat !== 'summary')) return;
     if (!mailPrefs(p)[cat]) return;   // the person turned this kind of e-mail off
     S.outbox.unshift({
-      id: 'EM-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6), ts: nowTs(), to: id, toEmail: p.email, cat, subject,
+      id: 'EM-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6), ts: nowTs(), org: org.id, to: id, toEmail: p.email, cat, subject,
       body: `Hello ${p.name.split(' ')[0]},\n\n${text}\n\n${link ? `Open it in the system: ${link}\n\n` : ''}Regards\n${org.short} HSEQ Management System\nPowered by VDW HSEQ\n\nYou receive this e-mail because of your role in the system. You can choose which e-mails you receive under Notification settings.`,
       link: link || '', status: 'Not sent (prototype)'
     });

@@ -8,7 +8,7 @@ Status key:
 - **Not implemented**
 
 "Tested" means one of the following:
-- the automated browser test (`tests/workflows.test.js`, **236/236 passing**, no JavaScript errors);
+- the automated browser test (`tests/workflows.test.js`, **243/243 passing**, no JavaScript errors);
 - the route smoke test (77 routes plus a second organisation, no errors);
 - the mobile layout check (31 routes at 390 px, no horizontal overflow).
 
@@ -29,7 +29,7 @@ Status key:
 | Approval trail: every decision, comment, timestamp | Implemented | A10 |
 | Tasks / notifications to the approver whose turn it is | Partial | In-app task list and notifications (A3); email simulated |
 | Periodic review reminders, record review, obsolete, archive | Implemented | |
-| Read and acknowledge: roles / people who must read a document within N days of issue; tasks, e-mails, phone page for operators, must open before confirming; progress, outstanding list, reminders; restarts on a new revision | Implemented | RA1–RA4 |
+| Read and acknowledge: roles / people who must read a document within N days of issue; tasks, e-mails, phone page for operators; must open it, tick "read and understood" and sign; progress, outstanding list, reminders; restarts on a new revision | Implemented | RA1–RA4 |
 | Change requests on issued documents: owner accepts (starts a new draft revision with the request as reason) or declines with reason; requester told | Implemented | CR1–CR2 |
 
 ## Assets, inspections and corrective actions
@@ -104,3 +104,6 @@ Status key:
 | Roles and permissions | Partial | Client-side demonstration only; production must enforce them on the server |
 | Persistence and reset | Implemented | E8, E11 |
 | Out-of-scope modules removed (legal, risk, people, PPE, chemicals, emergency, audits) | Implemented | E4–E5; preserved in git history (commit `26b59bc`) |
+| Monthly management report: score and change, key figures, LTIFR, 12-month trend, needs attention, overdue actions, branches; any of the last 12 months; PDF download; e-mailed to management automatically once a month | Implemented | MR1–MR4 |
+| Weekly e-mail summary for each manager (own overdue and waiting tasks, branch figures); send on demand; can be switched off | Partial | WK1–WK2; e-mails are written, not sent |
+| Hours worked reminder on the 1st to the HSEQ Manager and System Administrator when last month is missing | Partial | HR1; e-mails are written, not sent |

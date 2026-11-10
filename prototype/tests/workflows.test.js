@@ -997,10 +997,15 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await asUser('P-009'); await go('#/field'); await p.waitForTimeout(150);
     const listed = await has('a[href="#/read/DOC-004"]'), task = await S("myTasks().some(t => /Read and acknowledge KIE-SWP-021/.test(t.title))");
     await go('#/read/DOC-004'); await p.waitForTimeout(150);
-    const before = await p.$eval('[data-act=docAck]', e => e.disabled);
+    const before = !(await has('[data-act=docAck]')) && !(await has('#ackTick'));
     await act('.ack-banner [data-act=viewDocFile]'); await p.waitForTimeout(500); await p.keyboard.press('Escape'); await p.waitForTimeout(150);
+    const acked = () => S("(docIssued(byId('documents', 'DOC-004')).acks || []).some(a => a.by === 'P-009')");
+    await act('[data-act=docAck]'); const noTick = !(await acked());
+    await p.check('#ackTick'); await act('[data-act=docAck]'); const noSig = !(await acked());
+    { const bx = await (await p.$('#ackPad')).boundingBox(); await p.mouse.move(bx.x + 20, bx.y + 50); await p.mouse.down(); for (let k = 1; k < 12; k++) await p.mouse.move(bx.x + 20 + k * 15, bx.y + 50 + (k % 2) * 18); await p.mouse.up(); }
     await act('[data-act=docAck]');
-    ok('RA3 an operator sees the document on their phone and in their tasks, must open it, then confirms', listed && task && before && await S("docIssued(byId('documents', 'DOC-004')).acks.some(a => a.by === 'P-009')") && !(await S("mustAck(byId('documents', 'DOC-004'), 'P-009')")));
+    const ack = await S("docIssued(byId('documents', 'DOC-004')).acks.find(a => a.by === 'P-009')");
+    ok('RA3 an operator sees the document on their phone and in their tasks, must open it, tick that they read and understood it, and sign', listed && task && before && noTick && noSig && ack && /^data:image\/png/.test(ack.sig) && /read and understood/.test(ack.statement) && !(await S("mustAck(byId('documents', 'DOC-004'), 'P-009')")) && await has('.alert.success .ack-sig'));
     await act('[data-act=crNew]'); await mfill('text', 'The emergency number on page 2 is the old switchboard number.'); await mbtn('Send request');
     const cr = await S("byId('documents', 'DOC-004').changeRequests.slice(-1)[0]");
     ok('CR1 anyone who reads a document can request a change; the owner is told', cr.by === 'P-009' && cr.status === 'Open' && await S(`S.outbox.some(m => m.subject.includes('${cr.id}') && m.to === 'P-005')`), cr.id);
@@ -1094,6 +1099,37 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await act('#repCard [data-act=repLog]'); await mfill('ref', 'DEL-2026-0042'); await mbtn('Save'); await p.waitForTimeout(150);
     const r = await S("byId('incidents', 'INC-2026-007').reporting");
     ok('ER1 a competent person records whether it must be reported and by when; each report made is logged and the task clears', !t0 && needDue && task && r.required === 'Yes' && r.submissions.length === 1 && r.submissions[0].ref === 'DEL-2026-0042' && (await p.innerText('#repCard')).includes('Reported') && !(await S("myTasks().some(t => t.title === 'Report INC-2026-007 externally')")));
+  }
+
+  /* ---------------- MR. Monthly management report; WK. weekly summaries; HR. hours reminder ---------------- */
+  {
+    await asUser('P-001'); await go('#/dashboard');
+    const auto = await S("(() => { const lm = prevMonth(TODAY.slice(0, 7)); const sub = S.outbox.filter(m => m.org === 'ORG-1' && m.subject === 'HSEQ management report — ' + new Date(lm + '-01T00:00:00').toLocaleDateString('en-ZA', { month: 'long', year: 'numeric' })); return { n: sub.length, to: sub.map(m => m.to).sort().join(), want: mgmtRecipients().sort().join(), once: S.autoSent.monthly[S.ui.org] === lm }; })()");
+    await go('#/dashboard'); const again = await S("S.outbox.filter(m => m.org === 'ORG-1' && /^HSEQ management report/.test(m.subject)).length");
+    ok('MR1 after each month ends the management report is e-mailed once to the MD, HSEQ Manager and consultant', auto.n > 0 && auto.to === auto.want && auto.once && again === auto.n, auto.to);
+    await go('#/reports/monthly'); await p.waitForTimeout(200);
+    const D = await S("(() => { const D = mgmtData('ALL', prevMonth(TODAY.slice(0, 7))); return { score: D.score, inc: D.inc.n, over: D.act.overdue, att: D.attention.length }; })()");
+    const txt = await p.innerText('#content');
+    ok('MR2 the monthly report shows the score, key figures, trend and what needs attention', txt.includes(`${D.score}%`) && /needs attention/i.test(txt) && (await p.$$eval('.mr-att li', e => e.length)) === D.att && (await p.$$eval('.mr .vc-col', e => e.length)) === 12, `${D.score}%, ${D.inc} incident(s), ${D.over} overdue`);
+    const [dl] = await Promise.all([p.waitForEvent('download'), p.click('[data-act=mrPdf]')]);
+    const pdfPath = require('path').join(require('os').tmpdir(), 'vdw_monthly.pdf'); await dl.saveAs(pdfPath);
+    const head = require('fs').readFileSync(pdfPath).slice(0, 5).toString();
+    ok('MR3 the report downloads as a PDF', head === '%PDF-' && /^HSEQ_report_.*\.pdf$/.test(dl.suggestedFilename()), dl.suggestedFilename());
+    await p.selectOption('#mrMonth', await S("prevMonth(prevMonth(TODAY.slice(0, 7)))")); await p.waitForTimeout(200);
+    const other = await p.innerText('.mr-score h3');
+    ok('MR4 any of the last 12 months can be chosen', other.includes(await S("new Date(prevMonth(prevMonth(TODAY.slice(0, 7))) + '-01T00:00:00').toLocaleDateString('en-ZA', { month: 'long', year: 'numeric' })")), other);
+    const wk = await S("(() => { const w = S.outbox.filter(m => m.org === 'ORG-1' && /^Your weekly HSEQ summary/.test(m.subject)); return { to: [...new Set(w.map(m => m.to))].sort().join(), want: weeklyRecipients().sort().join(), field: w.some(m => person(m.to).sysRole === 'Employee') }; })()");
+    const johan = await S("(() => { const W = weeklyFor('P-002'); const m = S.outbox.find(x => x.to === 'P-002' && /^Your weekly HSEQ summary/.test(x.subject)); return { ok: !!m && m.body.includes(W.red.length ? W.red[0].title : 'Nothing overdue'), red: W.red.length }; })()");
+    ok('WK1 every manager gets their own weekly summary of what is overdue and waiting for them; field staff do not', wk.to === wk.want && !wk.field && johan.ok, `${wk.to.split(',').length} managers`);
+    await S("(me().emailPrefs = Object.assign({}, me().emailPrefs, { summary: false }), save())");
+    const before = await S("S.outbox.filter(m => m.to === 'P-001' && /^Your weekly/.test(m.subject)).length");
+    await go('#/reports/weekly'); await act('[data-act=wkSend]');
+    const after = await S("S.outbox.filter(m => m.to === 'P-001' && /^Your weekly/.test(m.subject)).length"), others = await S("S.outbox.filter(m => m.to === 'P-002' && /^Your weekly/.test(m.subject)).length");
+    ok('WK2 the summaries can be sent on demand, and someone who switched them off does not get one', after === before && others >= 2);
+    await S("(me().emailPrefs.summary = true, save())");
+    const hr = await S("(() => { const lm = prevMonth(TODAY.slice(0, 7)), miss = orgSites().filter(s => hoursOf(s.id, lm) == null).length; const m = S.outbox.filter(x => x.org === 'ORG-1' && x.subject === 'Please enter the hours worked for ' + monthLabel(lm, true)); return { miss, n: m.length, to: m.map(x => person(x.to).sysRole).sort().join() }; })()");
+    ok('HR1 on the 1st the HSEQ Manager and administrator are reminded when last month\'s hours worked are missing', hr.n === 2 && hr.to === 'HSEQ Manager,System Administrator', JSON.stringify(hr));
+    await asUser('P-002');
   }
 
   /* ---------------- L. Company logo ---------------- */

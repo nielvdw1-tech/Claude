@@ -109,7 +109,7 @@ Seeded examples:
 Default routes per category are set in **Administration → Approval routes**.
 
 **Read and acknowledge.** On a document, **Read and acknowledge → Set who must read it** chooses the roles (for example Employee and Supervisor) and/or named people who must read it, and within how many days of issue.
-- When a revision is issued, each person on the list gets a task and an e-mail. They open the document and click **I have read and understood it**. The button only works after they have opened the revision in use.
+- When a revision is issued, each person on the list gets a task and an e-mail. They open the revision in use first; then they **tick "I have read and understood it and will follow it" and sign** with a finger or mouse. The document keeps each person's tick, signature and time.
 - Operators do this on their phone: the home screen lists **Documents to read**.
 - The document shows how many have confirmed (e.g. *4 of 9*), who is still to read it (overdue in red), and **Send a reminder**. A new revision starts the list again.
 - **Example:** KIE-SWP-021 (Forklift Operation) must be read by employees and supervisors; sign in as Nomvula Sithole to confirm it.
@@ -207,6 +207,16 @@ Other pages are closed to employees. An inspection can only be started from the 
 - Approvers get a task. The incident page shows the alert's status, and every decision is recorded in the incident history.
 - For incidents without an alert, **Prepare alert** on the incident page creates one.
 - **Example:** *NT-004* (from INC-2026-007) was approved by Johan and is waiting for Ayesha. Open it from **Company Notices** and use **Act as current approver**.
+
+### Reporting for management (Reports)
+- **Monthly management report:** one page for the MD or client, for any of the last 12 months and for all branches or one branch. It shows:
+  - the control score and its change on the month before, with the four areas;
+  - the month's key figures: incidents, LTIs, LTIFR, high-potential incidents, corrective actions raised and completed, inspections, assets out of service and documents;
+  - the 12-month incident trend, what needs attention (most serious first), the overdue corrective actions and the branches side by side.
+  - **Download PDF** gives an A4 report with the company logo. **E-mail to management** sends it to the MD, HSEQ Manager and Safety Consultant. After each month ends it is e-mailed to them automatically, once.
+- **Weekly summaries:** every Monday each manager (every role that can see reports) gets their own e-mail listing what is overdue and what is waiting for them, with their branch's figures. Reports → Weekly summaries shows your own as a preview, and **Send this week's summaries now** sends them on demand. Anyone can switch them off under **Notification settings → Monthly management report and weekly summary**.
+- **Hours worked reminder:** on the 1st, if last month's hours worked are missing for a branch, the HSEQ Manager and the System Administrator get an e-mail (the LTI frequency rate needs them).
+- In the prototype, e-mails are written to the outbox (Administration → E-mail outbox); they are not sent.
 
 ### D. Branches and tasks
 - Use the **Branch / site** selector (click your name and company in the top banner) to scope everything to one branch. **Reports → Branch comparison** shows them side by side.
@@ -356,6 +366,6 @@ prototype/
 └── README.md                     This file
 ```
 
-**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 236 workflow outcomes.
+**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 243 workflow outcomes.
 
 The earlier full HSEQ prototype, with legal, risk, people, PPE, chemicals, emergency and audits, is preserved in git history at commit `26b59bc`.
