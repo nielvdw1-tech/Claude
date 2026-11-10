@@ -1089,3 +1089,10 @@ body.auth-mode .main { padding-top: 0; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .vdw-logo-img { background: #fff; border-radius: 6px; padding: 2px 4px; } }
 :root[data-theme="dark"] .vdw-logo-img { background: #fff; border-radius: 6px; padding: 2px 4px; }
 @media (max-width: 420px) { .vdw-logo-img { height: 38px; } }
+
+/* Grouped columns (two series per month) */
+.vc-grouped .vc-grp { display: flex; align-items: flex-end; justify-content: center; gap: 2px; width: 100%; height: 100%; }
+.vc-grouped .vc-bar { max-width: 11px; flex: 1; border-radius: 3px 3px 0 0; min-height: 0; }
+.lg-sq { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.sub-h { margin: 0 0 4px; font-size: 13px; font-weight: 600; color: var(--fg-2); }
+@media print { .vc-grouped .vc-bar, .lg-sq { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }

@@ -463,7 +463,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await p.click('.pad [data-act=focusSite][data-site="ALL"]'); await p.waitForTimeout(250);
     const openActs = await S("S.actions.filter(a => a.org === S.ui.org && actionOpen(a)).length");
     const segTotal = await p.$$eval('.seg em', e => e.reduce((a, x) => a + Number(x.textContent), 0));
-    ok('DB4 the 12-month charts render with data tables', (await p.$$eval('.vc-col', e => e.length)) === 36 && (await p.$$eval('#lcLtifr .lc-line', e => e.length)) === 1 && (await p.$$eval('#lcActions .lc-line', e => e.length)) === 2 && segTotal === openActs && (await p.$$eval('.viz-table', e => e.length)) === 6, `${segTotal} of ${openActs} open`);
+    ok('DB4 the 12-month charts render with data tables', (await p.$$eval('.vc-col', e => e.length)) === 48 && (await p.$$eval('#lcLtifr .lc-line', e => e.length)) === 1 && (await p.$$eval('#actBars .vc-col', e => e.length)) === 12 && (await p.$$eval('#actBars .vc-bar', e => e.length)) === 24 && segTotal === openActs && (await p.$$eval('.viz-table', e => e.length)) === 6, `${segTotal} of ${openActs} open`);
     const cols = await p.$$('.vc-col'); await cols[cols.length - 1].scrollIntoViewIfNeeded(); await p.waitForTimeout(150); await cols[cols.length - 1].hover(); await p.waitForTimeout(120);
     ok('DB5 hovering a column shows a tooltip with the month and value', await p.$eval('#vizTip', e => e.style.display === 'block' && /[0-9]/.test(e.textContent)).catch(() => false));
     const lti = await S("(() => { const all = S.incidents.filter(i => i.org === S.ui.org && injClass(i) === 'Lost Time Injury').sort((a, b) => a.date.localeCompare(b.date)); const last = all[all.length - 1]; return { n12: all.filter(i => i.date.slice(0, 7) >= last12Months()[0]).length, since: last ? -daysTo(last.date) : null, id: last && last.id }; })()");
@@ -868,6 +868,15 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     ok('PY1 a button next to the LTIFR chart adds the previous year\'s line for the same months', before === 1 && after === 2 && prev.shown === prev.want && prev.want > 0 && (await p.innerText('#ltiCard')).includes('Same month, previous year'), `previous year ${prev.want}`);
     await act('[data-act=ltifrCompare]'); await p.waitForTimeout(250);
     ok('PY2 clicking it again hides the previous year', (await p.$$eval('#lcLtifr .lc-line', e => e.length)) === 1 && (await p.$eval('[data-act=ltifrCompare]', e => e.getAttribute('aria-pressed'))) === 'false');
+    {
+      const want = await S("(() => { const ms = last12Months(), yb = m => (+m.slice(0, 4) - 1) + m.slice(4); return ms.reduce((a, m) => a + S.incidents.filter(i => injClass(i) === 'Lost Time Injury' && i.date.startsWith(yb(m))).length, 0); })()");
+      const b0 = await p.$$eval('#ltiCard .lti-bars .vc-grouped', e => e.length);
+      await act('[data-act=ltiBarsCompare]'); await p.waitForTimeout(200);
+      const grouped = await p.$$eval('#ltiCard .lti-bars .vc-grouped', e => e.length);
+      const shown = await p.$$eval('#ltiCard .lti-bars .vc-grouped', e => e[0].querySelectorAll('.vc-col').length ? [...e[0].querySelectorAll('.vc-col')].reduce((a, c) => a + Number((c.getAttribute('aria-label').match(/previous year (\d+)/) || [0, 0])[1]), 0) : -1);
+      await act('[data-act=ltiBarsCompare]'); await p.waitForTimeout(200);
+      ok('PY3 LTIs and shifts lost per month have a Previous year button that puts last year\'s month next to each month', b0 === 0 && grouped === 2 && shown === want && !(await has('#ltiCard .lti-bars .vc-grouped')), `${want} LTI(s) in the previous year's months`);
+    }
     await asUser('P-002');
   }
 

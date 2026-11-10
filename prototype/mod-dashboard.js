@@ -104,6 +104,20 @@ function columnChart(months, vals, opts) {
     <div class="vc-x">${months.map((m, k) => `<span>${k % 2 === last % 2 ? monthLabel(m, m.endsWith('-01') || k === 0) : ''}</span>`).join('')}</div>
   </div>`;
 }
+// Grouped column chart: two or more series side by side per month (e.g. raised vs completed, this year vs the previous year).
+// series: [{ name, v: '--css-var', vals, ids?: k => [[id, note], ...] }]. Values via tooltip, keyboard focus and the data table.
+function groupChart(months, series, opts) {
+  const all = series.flatMap(x => x.vals), max = niceMax(Math.max(1, ...all)), last = months.length - 1;
+  const ticks = [0, max / 2, max];
+  return `<div class="vc vc-grouped" role="img" aria-label="${esc(opts.aria)}">
+    <div class="vc-plot">${ticks.map(t => `<div class="vc-grid" style="bottom:${(t / max) * 100}%"><span>${t}</span></div>`).join('')}
+      <div class="vc-cols">${months.map((m, k) => `<div class="vc-col" tabindex="0" ${tip([[(opts.label ? opts.label(k) : monthLabel(m, true)), ''], ...series.map(x => [String(x.vals[k]), x.name, x.v]), ...(opts.detail ? opts.detail(k) : [])])} aria-label="${esc(monthLabel(m, true))}: ${series.map(x => `${x.name} ${x.vals[k]}`).join(', ')}"${opts.href ? ` data-act="go" data-href="${opts.href}"` : ''}>
+        <span class="vc-grp">${series.map(x => `<span class="vc-bar" style="height:${(x.vals[k] / max) * 100}%;background:var(${x.v})"></span>`).join('')}</span></div>`).join('')}</div>
+    </div>
+    <div class="vc-x">${months.map((m, k) => `<span>${k % 2 === last % 2 ? monthLabel(m, m.endsWith('-01') || k === 0) : ''}</span>`).join('')}</div>
+  </div>`;
+}
+const barLegend = (series) => `<div class="viz-legend">${series.map(x => `<span><i class="lg-sq" style="background:var(${x.v})"></i>${esc(x.name)}</span>`).join('')}</div>`;
 // Ranked horizontal bars, one hue, value at the tip.
 function rankBars(rows, opts) {
   const max = Math.max(1, ...rows.map(r => r[1]));
@@ -207,6 +221,7 @@ function quickLinks() {
   }).join('')}</nav>`;
 }
 
+ACT.ltiBarsCompare = () => { S.ui.ltiBarsCompare = !S.ui.ltiBarsCompare; save(); rerender(); };   // previous year's LTIs and shifts lost next to each month
 ACT.ltifrCompare = () => { S.ui.ltifrCompare = !S.ui.ltifrCompare; save(); rerender(); };   // show / hide the previous year's LTIFR line
 
 /* ---------------- Incident trends (top of Incident Management) ----------------
@@ -312,9 +327,14 @@ ROUTES.dashboard = () => {
   const shiftsPerMonth = months.map(m => lti12.filter(i => i.date.startsWith(m)).reduce((a, i) => a + (+i.injury.daysLost || 0), 0));
   const lastLti = ltiAll.length ? ltiAll[ltiAll.length - 1] : null, ltiYtd = ltiAll.filter(i => i.date.startsWith(TODAY.slice(0, 4))).length;
   const ltiIds = k => lti12.filter(i => i.date.startsWith(months[k])).map(i => [i.id, `${i.injury.daysLost} shift(s) lost`]);
+  // Previous year: the same calendar months one year earlier
+  const ltiCmp = !!S.ui.ltiBarsCompare, yearBefore = m => (+m.slice(0, 4) - 1) + m.slice(4);
+  const ltiPrev = months.map(m => ltiAll.filter(i => i.date.startsWith(yearBefore(m))).length);
+  const shiftsPrev = months.map(m => ltiAll.filter(i => i.date.startsWith(yearBefore(m))).reduce((a, i) => a + (+i.injury.daysLost || 0), 0));
+  const prevIds = k => ltiAll.filter(i => i.date.startsWith(yearBefore(months[k]))).map(i => [i.id, `${monthLabel(yearBefore(months[k]), true)} · ${i.injury.daysLost} shift(s) lost`]);
   const raised = months.map(m => acts.filter(a => (a.created || '').startsWith(m)).length);
   const done = months.map(m => acts.filter(a => (actionDoneDate(a) || '').startsWith(m)).length);
-  LINES.lcActions = { months, aria: 'Corrective actions raised and completed per month, last 12 months', series: [{ name: 'Raised', short: 'raised', v: '--viz-1', vals: raised }, { name: 'Completed (verified)', short: 'completed', v: '--viz-2', vals: done }] };
+  const actSeries = [{ name: 'Raised', v: '--viz-1', vals: raised }, { name: 'Completed (verified)', v: '--viz-2', vals: done }];
   const dueParts = [
     { label: 'On time', cls: 'good', icon: 'checkCircle', n: open.filter(a => daysTo(a.due) > 7).length, href: '#/actions?status=open' },
     { label: 'Due within 7 days', cls: 'warn', icon: 'clock', n: open.filter(a => daysTo(a.due) >= 0 && daysTo(a.due) <= 7).length, href: '#/actions?status=open' },
@@ -377,17 +397,23 @@ ROUTES.dashboard = () => {
       ${kpi('Injuries not yet classified', unclassified, 'Could still become LTIs', unclassified ? 'amber' : 'green', '#/incidents?type=Injury', 'search')}
       ${ltifrKpi(sid)}
     </div>
-    <div class="grid g2 mt">
-      <div><h4>LTIs per month</h4>${columnChart(months, ltiPerMonth, { unit: 'LTIs', aria: `Lost time injuries per month: ${months.map((m, k) => `${monthLabel(m, true)} ${ltiPerMonth[k]}`).join(', ')}`, href: '#/incidents?type=Injury', detail: ltiIds })}</div>
-      <div><h4>Shifts lost per month</h4>${columnChart(months, shiftsPerMonth, { unit: 'shifts lost', aria: `Shifts lost to lost time injuries per month: ${months.map((m, k) => `${monthLabel(m, true)} ${shiftsPerMonth[k]}`).join(', ')}`, href: '#/incidents?type=Injury', detail: ltiIds })}</div>
+    <div class="chart-head mt"><h4>LTIs and shifts lost per month</h4><button type="button" class="btn sm ${ltiCmp ? 'primary' : ''}" data-act="ltiBarsCompare" aria-pressed="${ltiCmp}" title="Show the same months of the previous year next to each month">${icon('chart', 'sm')} Previous year</button></div>
+    ${ltiCmp ? barLegend([{ name: 'Last 12 months', v: '--viz-1' }, { name: 'Same month, previous year', v: '--viz-2' }]) : ''}
+    <div class="grid g2 mt-s lti-bars">
+      <div><h4 class="sub-h">LTIs per month</h4>${ltiCmp
+        ? groupChart(months, [{ name: 'LTIs', v: '--viz-1', vals: ltiPerMonth }, { name: 'LTIs, previous year', v: '--viz-2', vals: ltiPrev }], { aria: `Lost time injuries per month, with the previous year: ${months.map((m, k) => `${monthLabel(m, true)} ${ltiPerMonth[k]} (previous year ${ltiPrev[k]})`).join(', ')}`, href: '#/incidents?type=Injury', detail: k => ltiIds(k).concat(prevIds(k)) })
+        : columnChart(months, ltiPerMonth, { unit: 'LTIs', aria: `Lost time injuries per month: ${months.map((m, k) => `${monthLabel(m, true)} ${ltiPerMonth[k]}`).join(', ')}`, href: '#/incidents?type=Injury', detail: ltiIds })}</div>
+      <div><h4 class="sub-h">Shifts lost per month</h4>${ltiCmp
+        ? groupChart(months, [{ name: 'Shifts lost', v: '--viz-1', vals: shiftsPerMonth }, { name: 'Shifts lost, previous year', v: '--viz-2', vals: shiftsPrev }], { aria: `Shifts lost per month, with the previous year: ${months.map((m, k) => `${monthLabel(m, true)} ${shiftsPerMonth[k]} (previous year ${shiftsPrev[k]})`).join(', ')}`, href: '#/incidents?type=Injury', detail: k => ltiIds(k).concat(prevIds(k)) })
+        : columnChart(months, shiftsPerMonth, { unit: 'shifts lost', aria: `Shifts lost to lost time injuries per month: ${months.map((m, k) => `${monthLabel(m, true)} ${shiftsPerMonth[k]}`).join(', ')}`, href: '#/incidents?type=Injury', detail: ltiIds })}</div>
     </div>
     ${ltifrChartHtml(sid, 'lcLtifr')}
-    ${dataTable(['Month', 'LTIs', 'Shifts lost', 'Incidents', 'Rolling 12-month LTIFR'], months.map((m, k) => { const f = ltifr(sid, m); return [monthLabel(m, true), ltiPerMonth[k], shiftsPerMonth[k], lti12.filter(i => i.date.startsWith(m)).map(i => i.id).join(', ') || '—', f.value == null ? 'hours missing' : f.value.toFixed(2)]; }))}
+    ${dataTable(['Month', 'LTIs', 'Shifts lost'].concat(ltiCmp ? ['LTIs, previous year', 'Shifts lost, previous year'] : []).concat(['Incidents', 'Rolling 12-month LTIFR']), months.map((m, k) => { const f = ltifr(sid, m); return [monthLabel(m, true), ltiPerMonth[k], shiftsPerMonth[k]].concat(ltiCmp ? [ltiPrev[k], shiftsPrev[k]] : []).concat([ lti12.filter(i => i.date.startsWith(m)).map(i => i.id).join(', ') || '—', f.value == null ? 'hours missing' : f.value.toFixed(2)]); }))}
   </div></div>
   <div class="grid g2 mb">
     <div class="card"><div class="card-head"><h2>Corrective actions raised and completed</h2><span class="ch-sub">Per month · completed = verified</span></div><div class="card-body">
-      <div class="viz-legend">${LINES.lcActions.series.map(s => `<span><i class="lg-line" style="background:var(${s.v})"></i>${esc(s.name)}</span>`).join('')}</div>
-      <div id="lcActions" class="lc"></div>
+      ${barLegend(actSeries)}
+      <div id="actBars">${groupChart(months, actSeries, { aria: `Corrective actions raised and completed per month: ${months.map((m, k) => `${monthLabel(m, true)} raised ${raised[k]}, completed ${done[k]}`).join('; ')}`, href: '#/actions' })}</div>
       ${dataTable(['Month', 'Raised', 'Completed'], months.map((m, k) => [monthLabel(m, true), raised[k], done[k]]))}
     </div></div>
     <div class="card"><div class="card-head"><h2>Open corrective actions against due date</h2><span class="ch-sub">${open.length} open</span></div><div class="card-body">
