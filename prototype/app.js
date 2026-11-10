@@ -702,6 +702,7 @@ ACT.userMenu = (el) => {
     <hr><div class="dd-head">Demo: sign in as someone else</div>
     ${users.map(u => `<button class="dd-item ${u.id === S.ui.user ? 'current' : ''}" data-act="switchUser" data-id="${u.id}"><span class="avatar sm">${initials(u.name)}</span><span><b>${esc(u.name)}</b><br><small>${esc(u.sysRole)} · ${esc(orgOf(u.org).short)} · ${esc(sname(u.site))}</small></span></button>`).join('')}
     <hr><button class="dd-item" data-act="go" data-href="#/admin/roles">${icon('lock', 'sm')} Roles & permissions</button>
+    <button class="dd-item" data-act="toggleOffline">${icon('alert', 'sm')} ${S.ui.simOffline ? 'Restore signal (demo)' : 'Simulate no signal (demo)'}</button>
     <button class="dd-item" data-act="resetDemo">${icon('refresh', 'sm')} Reset demo data</button>
     <div class="dd-head" style="text-transform:none;letter-spacing:0">Prototype: sign-in and permissions are checked in this browser only. The live system checks them on a secure server.</div>`;
   dd.style.maxHeight = '75vh'; dd.style.overflowY = 'auto';

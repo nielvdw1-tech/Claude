@@ -268,6 +268,7 @@ ROUTES.field = (p, q) => {
       <button class="btn primary" data-act="qrScan">${icon('qr', 'lg')} Scan asset QR code</button>
       <button class="btn accent" data-act="go" data-href="#/report">${icon('siren', 'lg')} Report incident</button>
     </div>
+    ${typeof fieldQueueHtml === 'function' ? fieldQueueHtml() : ''}
     ${typeof fieldReadHtml === 'function' ? fieldReadHtml() : ''}
     <div class="card"><div class="card-head"><h2>My inspections</h2><span class="ch-sub">Scan the asset's QR code to start</span></div><div class="card-body">${mine.length ? `<ul class="link-list">${mine.map(s => { const a = byId('assets', s.asset); return `<li><div class="ll-main"><b>${esc(a.tag)} — ${esc(a.name)}</b><div>${esc(byId('templates', s.template).title)} · ${esc(a.location)}</div></div>${dueText(s.nextDue)}</li>`; }).join('')}</ul>` : '<p class="muted">No inspections are assigned to you.</p>'}</div></div>
     <div class="card"><div class="card-head"><h2>Incidents I reported</h2></div><div class="card-body">${reported.length ? `<ul class="link-list">${reported.map(i => `<li><div class="ll-main"><b>${esc(i.title)}</b><div>${esc(i.id)} · ${fmt(i.date)} · ${esc(i.type)}</div></div>${sbadge(i.status)}</li>`).join('')}</ul>` : '<p class="muted">You have not reported any incidents.</p>'}</div></div>

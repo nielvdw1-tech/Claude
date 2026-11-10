@@ -1016,6 +1016,28 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     ok('RA4 the revision in use stays acknowledged while the new revision is in draft', stillOk);
   }
 
+  /* ---------------- OF. Inspections without signal ---------------- */
+  {
+    await asUser('P-007'); const sid = await S("S.schedules.find(s => s.assignee === 'P-007' && s.asset).id");
+    await S("(S.ui.simOffline = true, save(), rerender())"); await go('#/inspect/' + sid); await p.waitForTimeout(200);
+    const n = (await p.$$('.q-card')).length;
+    for (let k = 0; k < 2; k++) await act(`.q-card >> nth=${k} >> [data-act=qAns][data-v=Pass]`);
+    await p.waitForTimeout(400);
+    await go('#/dashboard'); await go('#/inspect/' + sid); await p.waitForTimeout(200);
+    const restored = await S('Object.keys(INSP.answers).length'), banner = await has('#netBanner.off');
+    ok('OF1 an inspection is saved on the phone as it is filled in, and restored when reopened', restored === 2 && banner && (await p.innerText('.draft-bar')).includes('Draft restored'));
+    for (let k = 2; k < n; k++) await p.click(`.q-card >> nth=${k} >> [data-act=qAns][data-v=Pass]`);
+    await p.check('#content [name=declare]'); await sign();
+    const before = await S('S.inspections.length'); await act('[data-act=inspSubmit]'); await p.waitForTimeout(300);
+    const queued = await S('(S.syncQueue || []).length'), same = (await S('S.inspections.length')) === before;
+    ok('OF2 submitted without signal, the signed inspection waits on the phone', queued === 1 && same && (await p.innerText('#netBanner')).includes('1 waiting to send') && !(await S(`!!inspDraft('${sid}')`)));
+    await act('[data-act=userMenu]'); await act('.dropdown [data-act=toggleOffline]'); await p.waitForTimeout(300);
+    const last = await S('S.inspections.slice(-1)[0]');
+    ok('OF3 when the signal returns it is sent automatically, keeping when it was signed and when it was sent', (await S('(S.syncQueue || []).length')) === 0 && last.inspector === 'P-007' && last.recordedOffline && last.recordedOffline.signedAt <= last.recordedOffline.sentAt && !(await has('#netBanner')), last.id);
+    await go('#/inspections/' + last.id); ok('OF4 the inspection record says it was recorded without signal', (await p.innerText('#content')).includes('Recorded without signal'));
+    await asUser('P-002');
+  }
+
   /* ---------------- L. Company logo ---------------- */
   {
     await asUser('P-002'); await go('#/dashboard');

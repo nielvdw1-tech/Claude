@@ -182,10 +182,11 @@ function resPhotos(r) { return r.photos || (r.photo ? [r.photo] : []); }
 ROUTES.inspect = (p) => {
   const s = byId('schedules', p[0]); if (!s) return ROUTES.notfound();
   const t = byId('templates', s.template), r = tplCurrent(t), a = s.asset && byId('assets', s.asset);
-  if (INSP.sched !== s.id) { INSP.sched = s.id; INSP.answers = {}; INSP.sig = null; }
+  if (INSP.sched !== s.id) { INSP.sched = s.id; INSP.answers = {}; INSP.sig = null; if (typeof restoreInspDraft === 'function') restoreInspDraft(s.id); }
   if (isFieldUser() && (!can('inspect.qr') || !s.asset || QR_ACCESS.asset !== s.asset)) return { title: 'Inspection', nav: 'field', crumbs: [['Home', '#/field'], ['Inspection', '#']], html: `<div class="mobile-card"><div class="alert info">${icon('qr')}<div><b>Scan the asset's QR code to start this inspection.</b> Field users start inspections from the asset's QR page.</div></div><button class="btn primary" data-act="qrScan">${icon('qr', 'sm')} Scan asset QR code</button></div>` };
   if (!can('inspect') && !isFieldUser()) return { title: 'Inspection', nav: 'inspections', crumbs: [['Inspections', '#/inspections'], ['Inspection', '#']], html: `<div class="alert danger">${icon('lock')}<div>${esc(noPerm('inspect'))}</div></div>` };
   const html = `<div class="mobile-card" style="max-width:860px">
+    ${typeof inspOfflineBanner === 'function' ? inspOfflineBanner(s.id) : ''}
     ${a && a.status === 'Out of Service' ? `<div class="alert danger">${icon('alert')}<div><b>${esc(a.tag)} is out of service.</b> You may still record an inspection (e.g. post-repair check).</div></div>` : ''}
     <div class="controlled-header"><div class="chh"><div class="print-logo">${orgMark(orgOf(S.ui.org), 'doc')}<div><b style="font-size:12px">${esc(orgOf(S.ui.org).short)}</b><small>HSEQ Management System</small></div></div><div class="ch-title">${esc(t.title)}</div><div class="ch-meta">Doc no: <b class="mono">${esc(t.docNumber)}</b><br>Revision: <b>${r.rev}</b> · Rev. date: <b>${fmt(r.revDate)}</b><br>Status: Approved (${esc(pname(r.approvedBy))})</div></div>
       <div class="ch-lock">${icon('lock', 'sm')} Controlled header from the approved template — not editable during inspections.</div></div>
@@ -197,7 +198,7 @@ ROUTES.inspect = (p) => {
       <div class="field full" id="sigField"><label for="sigPad">Inspector signature<span class="req">*</span></label><div class="sig-wrap"><canvas id="sigPad" class="sig-pad" aria-label="Signature pad: sign with your finger or mouse"></canvas><div class="sig-foot"><span>${esc(pname(S.ui.user))} · sign with your finger or mouse</span><button type="button" class="btn sm" data-act="sigClear">Clear</button></div></div></div></div></div>
       <div class="modal-foot" style="border-radius:0 0 12px 12px"><a class="btn" href="${isFieldUser() && a ? '#/qr/' + a.id : a ? '#/assets/' + a.id : '#/inspections/schedule'}">Cancel</a><button class="btn primary" data-act="inspSubmit">${icon('check', 'sm')} Submit inspection</button></div></div>
   </div>`;
-  return { title: 'Inspection — ' + s.target, nav: 'inspections', crumbs: [['Inspections', '#/inspections'], ['Inspection: ' + s.target, '#']], html, after: () => { updAnswered(); initSigPad(); } };
+  return { title: 'Inspection — ' + s.target, nav: 'inspections', crumbs: [['Inspections', '#/inspections'], ['Inspection: ' + s.target, '#']], html, after: () => { updAnswered(); initSigPad(); if (typeof fillInspDraftFields === 'function') fillInspDraftFields(s.id); } };
 };
 function qCard(q, k, a) {
   const ans = INSP.answers[q.id] || {};
@@ -230,12 +231,21 @@ ACT.inspSubmit = () => {
   if (!root.querySelector('[name=declare]').checked) { toast('Please confirm the inspector declaration.', 'error'); return; }
   if (!INSP.sig) { toast('Please sign the inspection before submitting it.', 'error'); const f = document.getElementById('sigField'); f.classList.add('invalid'); f.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
   const v = readForm(root);
+  const payload = { sched: s.id, by: S.ui.user, signedAt: nowTs(), answers: JSON.parse(JSON.stringify(INSP.answers)), sig: INSP.sig, v: { idate: v.idate, summary: v.summary, reviewer: v.reviewer } };
+  // No signal: keep it on this phone and send it when the connection is back
+  if (typeof isOffline === 'function' && isOffline()) { queueInspection(payload); INSP.sched = null; INSP.answers = {}; INSP.sig = null; return; }
+  finishInspection(payload);
+};
+/* Records a completed inspection: from the form straight away, or later from the phone's send queue */
+function finishInspection(P, viaQueue) {
+  const s = byId('schedules', P.sched), t = byId('templates', s.template), r = tplCurrent(t), a = s.asset && byId('assets', s.asset);
+  const ans = P.answers, v = P.v;
   const id = nextId('INS-', 'inspections', 4, 1000);
   const snap = { templateId: t.id, docNumber: t.docNumber, title: t.title, rev: r.rev, revDate: r.revDate, questions: JSON.parse(JSON.stringify(r.questions)) };
-  const ins = { id, signature: { by: S.ui.user, name: pname(S.ui.user), ts: nowTs(), image: INSP.sig }, template: snap, schedule: s.id, asset: s.asset, site: s.site, target: s.target, date: v.idate || TODAY, inspector: S.ui.user, reviewer: v.reviewer || null, results: r.questions.map(q => ({ qid: q.id, result: INSP.answers[q.id].result, comment: INSP.answers[q.id].comment || '', photos: INSP.answers[q.id].photos || [] })), summary: v.summary, actions: [], status: 'Completed', defects: [] };
+  const ins = { id, signature: { by: P.by, name: pname(P.by), ts: P.signedAt, image: P.sig }, template: snap, schedule: s.id, asset: s.asset, site: s.site, target: s.target, date: v.idate || TODAY, inspector: P.by, reviewer: v.reviewer || null, results: r.questions.map(q => ({ qid: q.id, result: ans[q.id].result, comment: ans[q.id].comment || '', photos: ans[q.id].photos || [] })), summary: v.summary, actions: [], status: 'Completed', defects: [] };
   S.inspections.push(ins);
   let oos = false, reviews = 0;
-  r.questions.forEach(q => { const an = INSP.answers[q.id]; if (an.result !== 'Fail') return;
+  r.questions.forEach(q => { const an = ans[q.id]; if (an.result !== 'Fail') return;
     let d = null; if (a) { d = createDefect(a, `${q.text}: ${an.comment}`, an.oos ? 'Critical' : q.critical ? 'Major' : 'Minor', an.oos, id); ins.defects.push(d.id); d.photos = an.photos || []; if (an.oos) oos = true; }
     if (d && !can('action.create')) { d.status = 'Awaiting Review'; d.reviewDue = addDays(TODAY, rules().defectReviewDays); reviews++; return; }   // operators report; a supervisor or manager decides on the action
     if (an.raise !== false) { const act = createAction({ source: 'Inspection', sourceId: id, title: `${s.target}: ${q.text} — failed`, action: an.comment, owner: an.owner || (a ? a.responsible : s.assignee), priority: an.priority || (q.critical ? 'Critical' : 'High'), site: s.site }); ins.actions.push(act.id); if (d) { d.action = act.id; d.status = 'Action Raised'; } }
@@ -245,6 +255,9 @@ ACT.inspSubmit = () => {
   if (a) assetHistory(a, `Inspection ${id} completed on ${t.docNumber} Rev ${r.rev} — ${ins.results.filter(x => x.result === 'Fail').length} failed item(s); next inspection ${fmt(s.nextDue)}`);
   if (reviews) addEvent(oos ? 'red' : 'amber', 'assets', `${reviews} defect(s) to review: ${a.tag}`, `Reported by ${pname(S.ui.user)} during ${id}. ${defectReviewers(a).map(pname).join(' / ')} to decide on corrective action.`, '#/assets/' + a.id + '?tab=defects', a.site, defectReviewers(a));
   log(`Completed inspection ${id} (${s.target}) — ${ins.actions.length} action(s) raised${reviews ? `, ${reviews} defect(s) sent for review` : ''}`, '#/inspections/' + id);
+  if (viaQueue) { ins.recordedOffline = { signedAt: P.signedAt, sentAt: nowTs() }; log(`Inspection ${id} was recorded without signal and sent when the connection returned`, '#/inspections/' + id); }
+  if (typeof clearInspDraft === 'function') clearInspDraft(s.id, P.by);
+  if (viaQueue) { save(); return ins; }
   INSP.sched = null; INSP.answers = {}; INSP.sig = null; save();
   toast(`${id} submitted. ${ins.actions.length ? ins.actions.length + ' corrective action(s) raised. ' : ''}${reviews ? `${reviews} defect(s) sent to ${esc(defectReviewers(a).map(pname).join(' / '))} for review. ` : ''}${oos ? `<b>${esc(a.tag)} placed OUT OF SERVICE.</b> ` : ''}Next inspection scheduled ${fmt(s.nextDue)} (was ${fmt(prev)}).`);
   navigate(isFieldUser() ? (s.asset ? '#/qr/' + s.asset : '#/field') : '#/inspections/' + id);
@@ -256,6 +269,7 @@ ROUTES.inspections = function (p) {
   const fails = i.results.filter(r => r.result === 'Fail');
   const html = `<div class="status-hero"><div><div class="sh-id">${i.id} · ${esc(sname(i.site))}</div><h1 style="margin:2px 0 6px">${esc(i.template.title)} — ${esc(i.target)}</h1><div class="btn-row">${sbadge(i.status)} <span class="tag">${esc(i.template.docNumber)} Rev ${i.template.rev}</span> ${fails.length ? badge(fails.length + ' failed item(s)', 'red') : badge('All items passed', 'green')} ${lockBadge('inspections', i)}</div></div><div class="sh-actions">${amendBtn('inspections', i)}${i.status === 'Completed' ? permBtn('action.verify', `<button class="btn" data-act="inspReview" data-id="${i.id}">${icon('check', 'sm')} Review & sign off</button>`) : ''}<a class="btn primary" href="#/print/${i.id}">${icon('print', 'sm')} Controlled report / print</a></div></div>${lockNotices('inspections', i)}
   ${(() => { const t = byId('templates', i.template.templateId); const cur = t && tplCurrent(t); return cur && cur.rev !== i.template.rev ? `<div class="alert info">${icon('info')}<div>This inspection was performed on <b>Rev ${i.template.rev}</b> of ${esc(i.template.docNumber)}. The current approved revision is Rev ${cur.rev}; the historical record retains the revision used at the time.</div></div>` : ''; })()}
+  ${i.recordedOffline ? `<div class="alert info">${icon('info')}<div><b>Recorded without signal.</b> Signed on the phone ${fmtTs(i.recordedOffline.signedAt)}; sent when the signal returned, ${fmtTs(i.recordedOffline.sentAt)}.</div></div>` : ''}
   <div class="detail"><div class="stack"><div class="card"><div class="card-head"><h2>Checklist results</h2></div><div class="card-body flush"><table class="tbl stackable"><thead><tr><th>#</th><th>Item</th><th>Result</th><th>Comment / evidence</th></tr></thead><tbody>${i.template.questions.map((q, k) => { const r = i.results.find(x => x.qid === q.id) || {}; return `<tr class="${r.result === 'Fail' ? 'row-red' : ''}"><td data-label="#">${k + 1}</td><td data-label="Item">${esc(q.text)} ${q.critical ? badge('Critical', 'red', true) : ''}</td><td data-label="Result"><span class="${r.result === 'Pass' ? 'res-pass' : r.result === 'Fail' ? 'res-fail' : 'res-na'}">${esc(r.result || '—')}</span></td><td data-label="Comment">${esc(r.comment || '')}${photoStrip(resPhotos(r))}</td></tr>`; }).join('')}</tbody></table></div></div>
     ${i.summary ? `<div class="card"><div class="card-head"><h2>Findings / comments</h2></div><div class="card-body">${esc(i.summary)}</div></div>` : ''}</div>
   <div class="stack"><div class="card"><div class="card-head"><h2>Inspection details</h2></div><div class="card-body"><div class="kv"><div>Date</div><div>${fmt(i.date)}</div><div>Asset / area</div><div>${i.asset ? `<a href="#/assets/${i.asset}">${esc(i.target)}</a>` : esc(i.target)}</div><div>Inspector</div><div>${esc(pname(i.inspector))}</div><div>Inspector signature</div><div>${sigHtml(i)}</div><div>Reviewer</div><div>${esc(pname(i.reviewer))}${i.reviewedOn ? ' · ' + fmt(i.reviewedOn) : ''}</div>${i.reviewSignature ? `<div>Reviewer signature</div><div>${revSigHtml(i)}</div>` : ''}<div>Template</div><div>${esc(i.template.docNumber)} Rev ${i.template.rev} (${fmt(i.template.revDate)})</div></div></div></div>
