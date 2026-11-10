@@ -1038,6 +1038,28 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await asUser('P-002');
   }
 
+  /* ---------------- CA. Inspection calendar; TD. inspection defaults per equipment type ---------------- */
+  {
+    await asUser('P-002'); await go('#/inspections/calendar'); await p.waitForTimeout(200);
+    const want = await S("(() => { const m = TODAY.slice(0, 7); return calendarItems(m, '').length; })()");
+    const chips = await p.$$eval('.cal-chip', e => e.length), late = await p.$$eval('.cal-chip.late', e => e.length);
+    const wantLate = await S("scoped('schedules').filter(s => daysTo(s.nextDue) < 0 && s.nextDue.slice(0, 7) === TODAY.slice(0, 7)).length");
+    ok('CA1 the calendar shows every inspection due, overdue and done in the month', chips === want && want > 0 && late === wantLate, `${chips} in the month, ${late} overdue`);
+    await p.selectOption('#calWho', 'P-007'); await p.waitForTimeout(200);
+    const mine = await p.$$eval('.cal-chip', e => e.map(x => x.getAttribute('href')));
+    const okMine = await S(`${JSON.stringify(mine)}.every(h => { const id = h.split('/').pop(); const s = byId('schedules', id), i = byId('inspections', id); return (s && s.assignee === 'P-007') || (i && i.inspector === 'P-007'); })`);
+    await act('.cal-nav a[aria-label="Next month"]');
+    ok('CA2 it filters per inspector and moves month by month', mine.length > 0 && okMine && (await p.evaluate(() => location.hash)).includes('who=P-007') && !(await p.evaluate(() => location.hash)).includes(`m=${new Date().toISOString().slice(0, 7)}`));
+    await go('#/admin/assettypes'); await p.waitForTimeout(150);
+    const noBasis = (await p.innerText('#content')).includes('Basis not recorded');
+    await S("(S.assets.push({ id: 'AS-T01', tag: 'LDV-T1', name: 'Test bakkie', type: 'AT-LDV', site: 'S-JHB', org: 'ORG-1', responsible: 'P-007', status: 'In Service', certs: [], history: [] }), save(), rerender())"); await p.waitForTimeout(150);
+    await act('[data-act=typeDefaultEdit][data-id="AT-LDV"]');
+    await mfill('inspDays', '14'); await mfill('basis', 'Fleet policy FP-02 and manufacturer service schedule.');
+    await p.check('.modal [name=update]'); await mbtn('Save'); await p.waitForTimeout(150);
+    const r = await S("(() => { const t = S.assetTypes.find(x => x.id === 'AT-LDV'); const sc = S.schedules.filter(s => S.assets.some(a => a.id === s.asset && a.type === 'AT-LDV')); return { days: t.inspDays, basis: !!t.basis, by: t.basis.by, all14: sc.every(s => s.freqDays === 14), newOne: sc.some(s => s.asset === 'AS-T01') }; })()");
+    ok('TD1 a competent person sets the checklist and interval per equipment type, with the basis; assets without a schedule get one', noBasis && r.days === 14 && r.basis && r.by === 'P-002' && r.all14 && r.newOne, JSON.stringify(r));
+  }
+
   /* ---------------- L. Company logo ---------------- */
   {
     await asUser('P-002'); await go('#/dashboard');

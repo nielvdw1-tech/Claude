@@ -596,7 +596,7 @@ function needsBack(parts) {
   if (!TOP_ROUTES.includes(k)) return true;
   if (parts.length < 2) return false;
   if (['admin', 'notifications', 'maintenance'].includes(k)) return false;                                  // tabs, not deeper pages
-  if (k === 'inspections' && ['schedule', 'records', 'templates'].includes(parts[1])) return false;
+  if (k === 'inspections' && ['schedule', 'calendar', 'records', 'templates'].includes(parts[1])) return false;
   return true;
 }
 let BACK_PARENT = '#/dashboard';
