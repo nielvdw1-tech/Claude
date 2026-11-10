@@ -127,6 +127,7 @@ function docDetail(id) {
       <div class="btn-row">${sbadge(st)} <span class="tag">${revLabel(latest)}</span> ${issued && issued !== latest ? `<span class="badge b-green plain">Current issued: ${revLabel(issued)}</span>` : ''} ${badge(d.access, d.access === 'Confidential' || d.access === 'Restricted' ? 'orange' : 'grey', true)} ${docReviewOverdue(d) ? badge('Review overdue', 'red') : ''}</div></div>
     <div class="sh-actions">${B.join('')}</div>
   </div>
+  ${typeof ackBannerHtml === 'function' ? ackBannerHtml(d) : ''}
   ${st === 'In Approval' ? `<div class="alert ${isApprover ? 'warn' : 'info'}">${icon(isApprover ? 'user' : 'clock')}<div>${isApprover ? `<b>It is your turn to approve</b> — ${esc(routeText(latest))}. Open the document to read it, then approve, return for correction or reject.` : `Waiting for <b>${esc(pname(cur.person))}</b> — ${esc(routeText(latest))}. Approvers sign off one after another in the order shown.`}</div></div>` : ''}
   ${issued && issued !== latest && docActive(d) ? `<div class="alert info">${icon('info')}<div><b>${revLabel(issued)} remains the controlled version in use</b> until ${revLabel(latest)} completes approval and is issued. Previous revisions are retained below and never overwritten.</div></div>` : ''}
   ${(st === 'Returned for Correction' || st === 'Rejected') && lastDecision ? `<div class="alert ${st === 'Rejected' ? 'danger' : 'warn'}">${icon('alert')}<div><b>${st} by ${esc(pname(lastDecision.person))} (step ${lastDecision.step}: ${esc(lastDecision.label)}):</b> ${esc(lastDecision.comment)}${st === 'Returned for Correction' && isAuthor ? '<br>Revise the document and resubmit — the approval route restarts at step 1.' : ''}</div></div>` : ''}
@@ -158,6 +159,7 @@ function docDetail(id) {
       </ul></div></div>
     </div>
     <div class="stack">
+      ${typeof ackCardHtml === 'function' ? ackCardHtml(d) + crCardHtml(d) : ''}
       <div class="card"><div class="card-head"><h2>Related records</h2></div><div class="card-body">${rel.length ? `<ul class="link-list">${rel.map(r => `<li><div class="ll-main"><a href="${r[3]}">${esc(r[1])}</a><div>${esc(r[0])} · ${esc(r[2])}</div></div>${r[4] ? sbadge(r[4]) : ''}</li>`).join('')}</ul>` : '<p class="muted">No linked records.</p>'}</div></div>
       <div class="card"><div class="card-head"><h2>Review reminders</h2></div><div class="card-body">
         ${d.reviewMonths && issued && docActive(d) ? `<p>A reminder appears ${S.config.notify.docReviewLead} days before the review date for the document owner (${esc(pname(d.owner))}).</p><p>${dueText(d.nextReview)}</p>` : '<p class="muted">No periodic review scheduled.</p>'}
@@ -328,18 +330,21 @@ ACT.docIssue = (el) => {
       d.revisions.forEach(x => { if (x.status === 'Issued for Use') { x.status = 'Superseded'; x.history.push({ ts: nowTs(), by: S.ui.user, action: `Superseded by Rev ${r.rev}`, comment: '' }); } });
       r.status = 'Issued for Use'; r.effective = v.effective; r.date = TODAY; r.draft = 0; r.history.push({ ts: nowTs(), by: S.ui.user, action: 'Issued for use', comment: v.comment });
       d.nextReview = d.reviewMonths ? addMonths(v.effective, d.reviewMonths) : null;
+      if (typeof ackOnIssue === 'function') ackOnIssue(d, r);
       log(`Issued ${d.number} Rev ${r.rev} for use`, '#/documents/' + d.id); save(); toast(`${esc(d.number)} Rev ${r.rev} issued.${d.nextReview ? ' Next review ' + fmt(d.nextReview) + '.' : ''}`); rerender();
     } }] });
 };
 ACT.docNewRevision = (el) => {
   const d = byId('documents', el.dataset.id); const issued = docIssued(d); const prev = docLatest(d);
   const n = prev.status === 'Rejected' ? prev.rev : Math.max(...d.revisions.map(r => r.rev)) + 1;
-  openModal({ title: 'Start new revision', sub: `${d.number}: Rev ${n} will be created as a draft. ${issued ? `Rev ${issued.rev} remains in use until the new revision is approved and issued.` : ''}`, body: `<div class="form-grid">${fld({ name: 'file', label: 'Draft file', type: 'file', required: true, full: true })}${fld({ name: 'notes', label: 'Reason for revision / change summary', type: 'textarea', required: true, full: true })}</div>`,
+  openModal({ title: 'Start new revision', sub: `${d.number}: Rev ${n} will be created as a draft. ${issued ? `Rev ${issued.rev} remains in use until the new revision is approved and issued.` : ''}`, body: `<div class="form-grid">${fld({ name: 'file', label: 'Draft file', type: 'file', required: true, full: true })}${fld({ name: 'notes', label: 'Reason for revision / change summary', type: 'textarea', required: true, full: true, value: typeof CR_PREFILL !== 'undefined' ? CR_PREFILL : '' })}</div>`,
     onOpen: m => { m._hc = wireHeaderCheck(m, { expect: () => ({ number: d.number, title: d.title, rev: n }) }); },
     buttons: [{ label: 'Create draft revision', cls: 'primary', onClick: m => {
       if (!validateForm(m)) return false; if (!headerCheckOk(m._hc)) return false; const v = readForm(m);
       const nr = { rev: n, draft: prev.status === 'Rejected' && prev.rev === n ? prev.draft + 1 : 1, status: 'Draft', date: TODAY, effective: null, file: v.file, notes: v.notes, author: S.ui.user, route: [], history: [{ ts: nowTs(), by: S.ui.user, action: `Created draft revision ${n}`, comment: v.notes }] };
-      headerHistory(m._hc, nr); d.revisions.push(nr); log(`Started ${d.number} ${revLabel(nr)}`, '#/documents/' + d.id); save(); toast(`${revLabel(nr)} created — submit it for approval when ready.`); rerender();
+      headerHistory(m._hc, nr); d.revisions.push(nr);
+      (d.changeRequests || []).filter(c => c.status === 'Accepted' && !c.inRev).forEach(c => { c.inRev = nr.rev; });
+      if (typeof CR_PREFILL !== 'undefined') CR_PREFILL = ''; log(`Started ${d.number} ${revLabel(nr)}`, '#/documents/' + d.id); save(); toast(`${revLabel(nr)} created — submit it for approval when ready.`); rerender();
     } }] });
 };
 ACT.docReviewed = (el) => {

@@ -1096,3 +1096,18 @@ body.auth-mode .main { padding-top: 0; }
 .lg-sq { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
 .sub-h { margin: 0 0 4px; font-size: 13px; font-weight: 600; color: var(--fg-2); }
 @media print { .vc-grouped .vc-bar, .lg-sq { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+/* Read and acknowledge, change requests */
+.ack-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.ack-n { font-family: var(--font-display); font-size: 22px; }
+.ack-meter { margin-top: 6px; }
+.ack-list { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 6px; }
+.ack-list li { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.ack-list li > span:nth-child(2) { flex: 1; min-width: 0; }
+.ack-list small { display: block; color: var(--muted); font-size: 11.5px; }
+.t-bad { color: var(--bad); font-weight: 600; }
+.check-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 4px 12px; }
+.cr-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.cr-list li { border-left: 3px solid var(--line-strong); padding-left: 10px; font-size: 13px; }
+.cr-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 2px; }
+.ack-banner .btn-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.ack-meter { background: var(--surface-3); } .ack-meter > span { background: var(--st-good); }

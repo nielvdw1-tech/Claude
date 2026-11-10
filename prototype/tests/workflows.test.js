@@ -986,6 +986,36 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await asUser('P-002');
   }
 
+  /* ---------------- RA. Read and acknowledge; CR. change requests ---------------- */
+  {
+    await asUser('P-002'); await go('#/documents/DOC-004'); await p.waitForTimeout(150);
+    const st = await S("(() => { const a = ackState(byId('documents', 'DOC-004')); return { req: a.req.length, done: a.done.length, out: a.outstanding.length }; })()");
+    const card = await p.innerText('#ackCard');
+    ok('RA1 a document lists who must read it, who has confirmed and who is still to read it', st.req > 0 && card.includes(`${st.done} of ${st.req}`) && card.includes('Nomvula Sithole'), `${st.done} of ${st.req}`);
+    await act('[data-act=docAckRemind]');
+    ok('RA2 the owner can send a reminder to everyone still to read it', (await S(`S.outbox.filter(m => /Reminder: please read KIE-SWP-021/.test(m.subject)).length`)) === st.out);
+    await asUser('P-009'); await go('#/field'); await p.waitForTimeout(150);
+    const listed = await has('a[href="#/read/DOC-004"]'), task = await S("myTasks().some(t => /Read and acknowledge KIE-SWP-021/.test(t.title))");
+    await go('#/read/DOC-004'); await p.waitForTimeout(150);
+    const before = await p.$eval('[data-act=docAck]', e => e.disabled);
+    await act('.ack-banner [data-act=viewDocFile]'); await p.waitForTimeout(500); await p.keyboard.press('Escape'); await p.waitForTimeout(150);
+    await act('[data-act=docAck]');
+    ok('RA3 an operator sees the document on their phone and in their tasks, must open it, then confirms', listed && task && before && await S("docIssued(byId('documents', 'DOC-004')).acks.some(a => a.by === 'P-009')") && !(await S("mustAck(byId('documents', 'DOC-004'), 'P-009')")));
+    await act('[data-act=crNew]'); await mfill('text', 'The emergency number on page 2 is the old switchboard number.'); await mbtn('Send request');
+    const cr = await S("byId('documents', 'DOC-004').changeRequests.slice(-1)[0]");
+    ok('CR1 anyone who reads a document can request a change; the owner is told', cr.by === 'P-009' && cr.status === 'Open' && await S(`S.outbox.some(m => m.subject.includes('${cr.id}') && m.to === 'P-005')`), cr.id);
+    await asUser('P-002'); await go('#/documents/DOC-004'); await p.waitForTimeout(150);
+    await act(`[data-act=crDecide][data-cr="${cr.id}"][data-ok="0"]`); await mbtn('Decline'); const blocked = await modalOpen();
+    await mfill('reason', 'The number on page 2 is still correct.'); await mbtn('Decline');
+    await act('[data-act=crDecide][data-cr="CR-001"][data-ok="1"]'); await mbtn('Accept'); await p.waitForTimeout(250);
+    const notes = await p.$eval('.modal [name=notes]', e => e.value).catch(() => '');
+    await mfile('.modal input[type=file]', 'KIE-SWP-021_Rev5.pdf'); await mbtn('Create draft revision'); await p.waitForTimeout(200);
+    const d = await S("(() => { const d = byId('documents', 'DOC-004'); return { st: d.changeRequests.map(c => c.status).join(), inRev: d.changeRequests[0].inRev, latest: docLatest(d).rev, issued: docIssued(d).rev }; })()");
+    ok('CR2 the owner declines with a reason, or accepts and a new draft revision starts with the request as its reason', blocked && notes.startsWith('CR-001') && d.st === 'Accepted,Declined' && d.inRev === d.latest && d.latest === d.issued + 1, `draft Rev ${d.latest}`);
+    await asUser('P-009'); const stillOk = !(await S("mustAck(byId('documents', 'DOC-004'), 'P-009')")); await asUser('P-002');
+    ok('RA4 the revision in use stays acknowledged while the new revision is in draft', stillOk);
+  }
+
   /* ---------------- L. Company logo ---------------- */
   {
     await asUser('P-002'); await go('#/dashboard');
