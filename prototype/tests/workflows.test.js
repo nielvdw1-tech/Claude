@@ -164,7 +164,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await go('#/incidents/' + iid);
     ok('IP4 the incident page shows photo thumbnails and the PDF attachment', (await p.$$eval('#content .photo-strip img', e => e.length)) === 2 && (await p.innerText('#content')).includes('statement.pdf'));
     await btn('Assign investigator'); await msel('inv', 'P-002'); await mbtn('Assign & start investigation');
-    await btn('Record investigation'); await mfill('findings', 'Jack left on slope.'); await mfill('immediate', 'Jack rolled'); await mfill('underlying', 'No parking brake used'); await mfill('root', 'Pallet jacks not included in pre-use checks'); await p.check('.modal [name="cat_Procedure"]'); await p.check('.modal [name=complete]'); await mbtn('Save investigation');
+    await btn('Record investigation'); await mfill('findings', 'Jack left on slope.'); await mfill('why0', 'Jack rolled'); await mfill('why1', 'No parking brake used'); await mfill('root', 'Pallet jacks not included in pre-use checks'); await p.check('.modal [name="cat_Procedure"]'); await p.check('.modal [name=complete]'); await mbtn('Save investigation');
     await p.waitForTimeout(200);
     ok('D3 investigation and root cause recorded; corrective action prompted', (await S(`!!byId('incidents','${iid}').investigation.completed`)) && await modalOpen());
     await mfill('action', 'Add pallet jacks to pre-use checklist and brief staff.'); await msel('owner', 'P-007'); await mbtn('Raise action');
@@ -1058,6 +1058,42 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await p.check('.modal [name=update]'); await mbtn('Save'); await p.waitForTimeout(150);
     const r = await S("(() => { const t = S.assetTypes.find(x => x.id === 'AT-LDV'); const sc = S.schedules.filter(s => S.assets.some(a => a.id === s.asset && a.type === 'AT-LDV')); return { days: t.inspDays, basis: !!t.basis, by: t.basis.by, all14: sc.every(s => s.freqDays === 14), newOne: sc.some(s => s.asset === 'AS-T01') }; })()");
     ok('TD1 a competent person sets the checklist and interval per equipment type, with the basis; assets without a schedule get one', noBasis && r.days === 14 && r.basis && r.by === 'P-002' && r.all14 && r.newOne, JSON.stringify(r));
+  }
+
+  /* ---------------- WY. 5 Whys; WS. witness statements; ER. external reporting ---------------- */
+  {
+    await asUser('P-002'); await go('#/incidents/INC-2026-007'); await p.waitForTimeout(150);
+    const st = await S("byId('incidents', 'INC-2026-007').status");
+    if (st === 'Reported') { await btn('Assign investigator'); await mbtn('Assign'); await p.waitForTimeout(150); }
+    await btn('Record investigation');
+    await mfill('findings', 'Safety valve seized; last test date unknown.');
+    await mfill('why0', 'The safety valve did not lift at its set pressure');
+    await mfill('why1', 'The valve had seized from corrosion');
+    await mfill('why2', 'The valve was never tested or replaced');
+    const auto = await p.$eval('.modal [name=root]', e => e.value);
+    await mfill('why3', 'Pressure equipment was not in the inspection schedule');
+    await mfill('root', 'The operator was careless');
+    await mbtn('Save investigation'); const warned = await p.$eval('#blameWarn', e => !e.classList.contains('hidden'));
+    await mfill('root', 'Pressure equipment was not included in the inspection and maintenance schedule');
+    await mbtn('Save investigation'); await p.waitForTimeout(150);
+    const inv = await S("byId('incidents', 'INC-2026-007').investigation");
+    const chain = await p.$$eval('.why-chain li', e => e.length);
+    ok('WY1 the investigation uses 5 Whys: each answer leads to the next, the last fills the root cause, and a root cause that only blames a person is queried', auto === 'The valve was never tested or replaced' && warned && inv.whys.length === 4 && inv.immediate === inv.whys[0] && chain === 6, `${inv.whys.length} whys`);
+    await act('[data-act=wsNew]');
+    await msel('who', 'P-010'); await mfill('statement', 'I heard a loud hiss and saw the gauge in the red. I switched off the compressor.');
+    await p.check('.modal [name=confirm]');
+    await mbtn('Save signed statement'); const needSig = await modalOpen();
+    const bx = await (await p.$('#wsPad')).boundingBox(); await p.mouse.move(bx.x + 20, bx.y + 50); await p.mouse.down(); for (let k = 1; k < 12; k++) await p.mouse.move(bx.x + 20 + k * 15, bx.y + 50 + (k % 2) * 18); await p.mouse.up();
+    await mbtn('Save signed statement'); await p.waitForTimeout(150);
+    const w = await S("byId('incidents', 'INC-2026-007').statements.slice(-1)[0]");
+    ok('WS1 a witness statement is taken on the phone and must be signed by the witness', needSig && w.name === 'Kyle Naidoo' && /^data:image\/png/.test(w.sig) && w.takenBy === 'P-002' && (await p.innerText('#wsCard')).includes('I heard a loud hiss'));
+    const t0 = await S("myTasks().some(t => /Decide on external reporting: INC-2026-005/.test(t.title))");
+    await act('#repCard [data-act=repDecide]'); await msel('required', 'Yes'); await mfill('reason', 'Pressure vessel failure: competent person to report (demo).'); await mbtn('Save decision'); const needDue = await modalOpen();
+    await mfill('due', await S('addDays(TODAY, 5)')); await mbtn('Save decision'); await p.waitForTimeout(150);
+    const task = await S("myTasks().some(t => t.title === 'Report INC-2026-007 externally')");
+    await act('#repCard [data-act=repLog]'); await mfill('ref', 'DEL-2026-0042'); await mbtn('Save'); await p.waitForTimeout(150);
+    const r = await S("byId('incidents', 'INC-2026-007').reporting");
+    ok('ER1 a competent person records whether it must be reported and by when; each report made is logged and the task clears', !t0 && needDue && task && r.required === 'Yes' && r.submissions.length === 1 && r.submissions[0].ref === 'DEL-2026-0042' && (await p.innerText('#repCard')).includes('Reported') && !(await S("myTasks().some(t => t.title === 'Report INC-2026-007 externally')")));
   }
 
   /* ---------------- L. Company logo ---------------- */

@@ -108,6 +108,14 @@ Seeded examples:
 
 Default routes per category are set in **Administration → Approval routes**.
 
+**Read and acknowledge.** On a document, **Read and acknowledge → Set who must read it** chooses the roles (for example Employee and Supervisor) and/or named people who must read it, and within how many days of issue.
+- When a revision is issued, each person on the list gets a task and an e-mail. They open the document and click **I have read and understood it**. The button only works after they have opened the revision in use.
+- Operators do this on their phone: the home screen lists **Documents to read**.
+- The document shows how many have confirmed (e.g. *4 of 9*), who is still to read it (overdue in red), and **Send a reminder**. A new revision starts the list again.
+- **Example:** KIE-SWP-021 (Forklift Operation) must be read by employees and supervisors; sign in as Nomvula Sithole to confirm it.
+
+**Change requests.** Anyone who can see an issued document can click **Request a change** and say what is wrong. The document owner gets a task and accepts it (a new draft revision starts, with the request as its reason) or declines it with a reason. The person who asked is told either way. **Example:** CR-001 on KIE-SWP-021.
+
 ### B. Inspect an asset → failure → corrective action → verification
 1. **Assets & Equipment → FL-02**. The *Required documents* tab shows forklift-specific certificates.
 2. **Start inspection**. The controlled header comes from the approved template and cannot be edited. **Fail** item 1 (a critical item) with a comment and an optional photo. "Remove FL-02 from service" is ticked automatically.
@@ -128,6 +136,15 @@ Defects can also be reported directly from the asset page or its **QR page** (e.
 - A review that is not done in time turns red, goes to the HSEQ Manager and lowers the asset score.
 - Supervisors and managers who inspect still raise the action directly from the checklist.
 - **Example:** defect **DF-303** on LDV-03 is waiting for review by Pieter Botha.
+
+**Inspections without signal.** Warehouses, yards and vehicles often have no signal.
+- An inspection is **saved on the phone as it is filled in**. Leave and come back, and the answers, photos and signature are restored (*Draft restored*). **Discard draft** removes it.
+- Submitted **without signal**, the signed inspection waits on the phone (*1 waiting to send*) and is **sent automatically when the signal returns**. The record shows when it was signed and when it was sent.
+- To try it: user menu → **Simulate no signal (demo)**, fill in and submit an inspection, then **Restore signal**.
+
+**Inspection calendar.** **Inspections → Calendar** shows the month: overdue (red), due (blue; later repeats in grey) and done (green), per branch, with a filter per inspector. Click an item to open it. On a phone it becomes a list by day.
+
+**Inspection defaults per equipment type.** **Administration → Asset types → Inspection default → Change** sets the checklist and how often each type of equipment is inspected, with the **basis** for the interval (who set it and why). It can create schedules for assets of that type that have none, and change the interval on existing ones. The system does not supply legal intervals: a competent person sets them. Types without a recorded basis say so.
 
 ### C. Incident management
 1. As **Nomvula Sithole**, go to **Incident Management → Report incident**. This form is designed for a phone. Under **Photographs / attachments**, **Take photo** opens the phone camera and **Upload** adds photos or PDFs (for example a witness statement) from the phone or computer. Up to 10 files can be attached, and each can be removed before submitting. Photos show as thumbnails on the incident and open full size.
@@ -156,6 +173,12 @@ Defects can also be reported directly from the asset page or its **QR page** (e.
 - The **definitions** of each class are set by the company in **Administration → Injury classification**. The default wording is the system's suggestion, not a legal definition.
 - Reports and incident totals count injuries by the final classification.
 - **Example:** INC-2026-005 was first classified as a Medical Treatment Case and later reclassified as a Lost Time Injury.
+
+**5 Whys.** **Record investigation** starts from what happened and asks *Why?* up to five times. Each answer is a fact, and the last one fills in the root cause (which can be changed). A root cause that only blames a person (e.g. "careless") is queried once: ask why the system allowed it. The incident shows the chain from what happened to the root cause. **Example:** INC-2026-001.
+
+**Witness statements.** **Take statement** records a witness's account in their own words on the phone. It is read back to them, and they sign it with a finger. A signed statement cannot be changed. **Example:** INC-2026-004.
+
+**External reporting.** A competent person records **whether the incident must be reported, by when, and why** (*Record decision*). Each report made is logged: to whom, date, how, the reference number and a copy of the form. A lost time injury or fatality without a decision, and reports not yet made, appear in the investigator's and HSEQ Manager's tasks. The system records; it does not decide what is reportable. **Example:** INC-2026-005.
 
 ### Employees (field access)
 Switch to **Tebogo Molefe** (Employee). The menu shows only **Scan & inspect** and **Report incident**.
@@ -333,6 +356,6 @@ prototype/
 └── README.md                     This file
 ```
 
-**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 220 workflow outcomes.
+**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 236 workflow outcomes.
 
 The earlier full HSEQ prototype, with legal, risk, people, PPE, chemicals, emergency and audits, is preserved in git history at commit `26b59bc`.

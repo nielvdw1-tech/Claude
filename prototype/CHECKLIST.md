@@ -8,7 +8,7 @@ Status key:
 - **Not implemented**
 
 "Tested" means one of the following:
-- the automated browser test (`tests/workflows.test.js`, **220/220 passing**, no JavaScript errors);
+- the automated browser test (`tests/workflows.test.js`, **236/236 passing**, no JavaScript errors);
 - the route smoke test (77 routes plus a second organisation, no errors);
 - the mobile layout check (31 routes at 390 px, no horizontal overflow).
 
@@ -29,6 +29,8 @@ Status key:
 | Approval trail: every decision, comment, timestamp | Implemented | A10 |
 | Tasks / notifications to the approver whose turn it is | Partial | In-app task list and notifications (A3); email simulated |
 | Periodic review reminders, record review, obsolete, archive | Implemented | |
+| Read and acknowledge: roles / people who must read a document within N days of issue; tasks, e-mails, phone page for operators, must open before confirming; progress, outstanding list, reminders; restarts on a new revision | Implemented | RA1–RA4 |
+| Change requests on issued documents: owner accepts (starts a new draft revision with the request as reason) or declines with reason; requester told | Implemented | CR1–CR2 |
 
 ## Assets, inspections and corrective actions
 | Requirement | Status | Notes |
@@ -51,6 +53,9 @@ Status key:
 | Overdue tracking and escalation | Partial | Overdue flags plus manual escalation; automatic escalation needs a server |
 | Printable controlled inspection report with Page X of Y | Implemented | Page numbers need Chrome or Edge |
 | Maintenance scheduling and completion | Implemented | |
+| Inspections without signal: draft saved on the phone as you go and restored; signed inspection queued without signal and sent automatically when it returns; signed and sent times kept | Partial | OF1–OF4; signal loss simulated in the prototype (or real browser offline); live system needs a service worker and server sync |
+| Inspection calendar: month view of overdue, due, repeating and done inspections, per branch and inspector; list view on a phone | Implemented | CA1–CA2 |
+| Inspection default per equipment type: checklist and interval set by a competent person with the recorded basis; create schedules for assets without one; change existing intervals | Implemented | TD1; no legal intervals supplied by the system |
 
 ## Incident management
 | Requirement | Status | Notes |
@@ -66,6 +71,9 @@ Status key:
 | Investigator corrects type and severity with a reason | Implemented | R7 |
 | Effectiveness review after closure; "not effective" reopens the incident | Implemented | R8–R9 |
 | Injury classification (first aid, medical treatment, restricted work, lost time, fatality) set by the HSEQ team from recorded facts; system suggestion, override with reason, reclassification history; required before closure; company-defined definitions | Implemented | J1–J8 |
+| Guided root cause (5 Whys): chain from what happened to the root cause; last answer fills the root cause; blame-only root causes queried | Implemented | WY1 |
+| Witness statements taken on the phone, read back and signed by the witness; cannot be changed once signed | Implemented | WS1 |
+| External reporting: competent person records whether reportable, by when and why; each report logged (to whom, date, method, reference, copy of form); tasks for decisions and reports due | Implemented | ER1; the system does not decide what is reportable |
 
 ## Supporting features
 | Requirement | Status | Notes |
