@@ -948,6 +948,23 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     ok('HD4 on download the stamp goes in a strip above each page; the document\'s own header is not covered', geo.pages === 2 && Math.round(geo.h) === 868 && geo.stamp > 842 && geo.company > 0 && geo.company < 842, JSON.stringify(geo));
   }
 
+  /* ---------------- IT. Incident trends at the top of Incident Management ---------------- */
+  {
+    await asUser('P-002'); await S("(S.ui.site = 'ALL', S.ui.incTrendsHidden = false, save())"); await go('#/incidents'); await p.waitForTimeout(200);
+    const want = await S("(() => { const ms = last12Months(); return scoped('incidents').filter(i => i.date.slice(0, 7) >= ms[0]).length; })()");
+    const cols = await p.$$eval('.inc-trends .vc-col', e => e.length), sum = await p.$$eval('.inc-trends .vc-col', e => e.reduce((a, x) => a + Number((x.getAttribute('aria-label') || '').match(/: (\d+)/)[1]), 0));
+    const order = await p.evaluate(() => { const t = document.querySelector('.trend-head'), l = document.querySelector('.lv, .toolbar, table.tbl'); return !!t && !!l && (t.compareDocumentPosition(l) & Node.DOCUMENT_POSITION_FOLLOWING) > 0; });
+    ok('IT1 Incident Management opens with a mini dashboard of incident trends above the list', cols === 12 && sum === want && order && (await p.$$eval('.inc-trends .card', e => e.length)) === 3, `${want} incidents in 12 months`);
+    await asUser('P-003'); await go('#/incidents');
+    const dbn = await S("(() => { const ms = last12Months(); return S.incidents.filter(i => i.site === 'S-DBN' && i.date.slice(0, 7) >= ms[0]).length; })()");
+    const sum2 = await p.$$eval('.inc-trends .vc-col', e => e.reduce((a, x) => a + Number((x.getAttribute('aria-label') || '').match(/: (\d+)/)[1]), 0));
+    ok('IT2 a branch manager sees the trends of their own branch only', sum2 === dbn, `${dbn} at Pinetown`);
+    await act('[data-act=incTrendsToggle]'); const hidden = !(await has('.inc-trends'));
+    await act('[data-act=incTrendsToggle]');
+    ok('IT3 the trends can be hidden and shown again', hidden && await has('.inc-trends'));
+    await asUser('P-002');
+  }
+
   /* ---------------- L. Company logo ---------------- */
   {
     await asUser('P-002'); await go('#/dashboard');

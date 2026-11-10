@@ -993,3 +993,9 @@ body.auth-mode .main { margin-left: 0; }
 .hdr-check .alert { font-size: 13px; }
 .hdr-diffs { margin: 6px 0 8px; padding-left: 18px; }
 .hdr-check .field-err { margin-top: 6px; }
+
+.trend-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.inc-trends .vc-plot { height: 140px; }
+.inc-trends .card { margin: 0; }
+@media (max-width: 1100px) { .grid.g3.inc-trends { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+@media (max-width: 720px) { .grid.g3.inc-trends { grid-template-columns: minmax(0, 1fr); } }

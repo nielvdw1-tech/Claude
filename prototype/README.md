@@ -133,6 +133,10 @@ Defects can also be reported directly from the asset page or its **QR page** (e.
 3. Work and verify the action as above. The incident moves to **Awaiting closure**.
 4. **Review & close**. The incident can't be closed while any action is still open. Check **Reports → Incident trends**.
 
+**Incident trends at the top.** Incident Management opens with a mini dashboard covering the last 12 months. It is limited to your branch if you are a branch manager or supervisor, and **Hide trends** folds it away.
+- Three figures: incidents in the last 12 months (with the last 6 months compared to the 6 before), days since the last lost time injury, and high-potential incidents.
+- Three charts: incidents per month; incidents by type and injuries by classification; open incidents by stage. Click a type or a stage to filter the list below.
+
 **Controls after an incident is logged.**
 - **Escalation:** an incident with no investigator after the set number of days (default 3), or an investigation past its due date, is **escalated automatically** to the branch manager and the HSEQ Manager. An overdue investigation is escalated above the investigator. The escalation is recorded in the incident history, shown on the incident and added to their tasks.
 - **Corrections:** investigators can **correct the type and severity** set by the reporter, with a reason. The original values stay in the history.
@@ -326,6 +330,6 @@ prototype/
 └── README.md                     This file
 ```
 
-**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 215 workflow outcomes.
+**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 218 workflow outcomes.
 
 The earlier full HSEQ prototype, with legal, risk, people, PPE, chemicals, emergency and audits, is preserved in git history at commit `26b59bc`.

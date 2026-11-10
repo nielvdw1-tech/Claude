@@ -205,6 +205,47 @@ function quickLinks() {
 
 ACT.ltifrCompare = () => { S.ui.ltifrCompare = !S.ui.ltifrCompare; save(); rerender(); };   // show / hide the previous year's LTIFR line
 
+/* ---------------- Incident trends (top of Incident Management) ----------------
+   A mini dashboard for the incidents in view (company or branch): incidents per month, by type and injury
+   class, LTIs, and where the open incidents stand. It can be folded away; that choice is remembered. */
+function incidentTrendsHtml(rows) {
+  const hidden = !!S.ui.incTrendsHidden;
+  const head = `<div class="trend-head"><h3 class="dash-sec" style="margin:0">${icon('chart', 'sm')} Incident trends — last 12 months</h3><button type="button" class="btn sm ghost" data-act="incTrendsToggle" aria-expanded="${!hidden}">${hidden ? 'Show trends' : 'Hide trends'}</button></div>`;
+  if (hidden) return `<div class="mb">${head}</div>`;
+  const months = last12Months(), r12 = rows.filter(i => i.date.slice(0, 7) >= months[0]);
+  const perMonth = months.map(m => r12.filter(i => i.date.startsWith(m)).length);
+  const byType = INC_TYPES.map(t => [t, r12.filter(i => i.type === t).length, `#/incidents?type=${encodeURIComponent(t)}`]).sort((a, b) => b[1] - a[1]);
+  const inj = injClasses().map(c => [c.name, r12.filter(i => injClass(i) === c.name).length]).filter(x => x[1]).sort((a, b) => b[1] - a[1]);
+  const stages = ['Reported', 'Under Investigation', 'Actions in Progress', 'Awaiting Closure'].map(st => [st, rows.filter(i => i.status === st).length, `#/incidents?status=${encodeURIComponent(st)}`]);
+  const ltis = rows.filter(i => injClass(i) === 'Lost Time Injury').sort((a, b) => b.date.localeCompare(a.date)), lastLti = ltis[0];
+  const hiPot = r12.filter(i => i.potentialSev >= 4).length;
+  const prev = months.slice(0, 6).reduce((a, m) => a + r12.filter(i => i.date.startsWith(m)).length, 0), recent = months.slice(6).reduce((a, m) => a + r12.filter(i => i.date.startsWith(m)).length, 0);
+  const trend = recent === prev ? 'Same as the 6 months before' : `${recent > prev ? '▲' : '▼'} ${Math.abs(recent - prev)} vs the 6 months before`;
+  return `<div class="mb">${head}
+    <div class="kpis mini mt-s">
+      ${kpi('Incidents, last 12 months', r12.length, `${recent} in the last 6 months · ${trend}`, recent > prev ? 'amber' : 'green', '#/reports/incidents', 'alert')}
+      ${kpi('Days since last LTI', lastLti ? -daysTo(lastLti.date) : '—', lastLti ? `${lastLti.id} on ${fmt(lastLti.date)}` : 'No LTI recorded', lastLti && -daysTo(lastLti.date) < 30 ? 'red' : 'green', lastLti ? '#/incidents/' + lastLti.id : '#/incidents?type=Injury', 'clock')}
+      ${kpi('High-potential, 12 months', hiPot, 'Could have been major or worse', hiPot ? 'amber' : 'green', '#/incidents', 'risk')}
+    </div>
+    <div class="grid g3 mt-s inc-trends">
+      <div class="card"><div class="card-head"><h2>Incidents per month</h2><span class="ch-sub">${r12.length} in 12 months</span></div><div class="card-body">
+        ${columnChart(months, perMonth, { unit: 'incidents', aria: `Incidents per month: ${months.map((m, k) => `${monthLabel(m, true)} ${perMonth[k]}`).join(', ')}`, detail: k => INC_TYPES.map(t => [String(r12.filter(i => i.date.startsWith(months[k]) && i.type === t).length), t]).filter(x => x[0] !== '0') })}
+        ${dataTable(['Month', 'Incidents', ...INC_TYPES], months.map((m, k) => [monthLabel(m, true), perMonth[k], ...INC_TYPES.map(t => r12.filter(i => i.date.startsWith(m) && i.type === t).length)]))}
+      </div></div>
+      <div class="card"><div class="card-head"><h2>By type</h2><span class="ch-sub">and injuries by classification</span></div><div class="card-body">
+        ${rankBars(byType, { unit: 'incidents' })}
+        <h4 class="mt">Injuries by classification</h4>${inj.length ? rankBars(inj, { unit: 'injuries' }) : '<p class="muted">No classified injuries.</p>'}
+        ${dataTable(['Category', 'Count'], byType.map(x => [x[0], x[1]]).concat(inj.map(x => ['Injury: ' + x[0], x[1]])))}
+      </div></div>
+      <div class="card"><div class="card-head"><h2>Open incidents by stage</h2><span class="ch-sub">${rows.filter(i => i.status !== 'Closed').length} open</span></div><div class="card-body">
+        ${rankBars(stages, { unit: 'incidents' })}
+        <p class="muted mt-s" style="font-size:12px">Click a stage to list those incidents. Investigations past their due date are escalated automatically.</p>
+        ${dataTable(['Stage', 'Open incidents'], stages.map(x => [x[0], x[1]]))}
+      </div></div>
+    </div></div>`;
+}
+ACT.incTrendsToggle = () => { S.ui.incTrendsHidden = !S.ui.incTrendsHidden; save(); rerender(); };
+
 /* ---------------- The page ---------------- */
 ROUTES.dashboard = () => {
   recordScoreHistory();   // month-to-date snapshot for the trend
