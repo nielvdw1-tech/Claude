@@ -323,7 +323,7 @@ ROUTES.dashboard = () => {
   ];
 
   const b = band(comp.overall);
-  const html = `${pageHead('Dashboard', `Compliance control status for ${esc(scopeLabel())}, then the 12-month trends and the detail behind them. Every figure opens the records behind it.`, '', scopePill())}
+  const html = `${pageHead('Dashboard', '', '', scopePill())}
 
   ${quickLinks()}
   <h3 class="dash-sec">${icon('shield', 'sm')} Compliance status</h3>
