@@ -69,7 +69,7 @@ function renderSignIn(msg) {
       ${fld({ name: 'password', label: 'Password', type: 'password', required: true, full: true })}
       <button class="btn primary auth-go" type="submit">Sign in</button>
       <p class="muted auth-help">Forgot your password? Ask your administrator to reset it.</p>
-      <div class="auth-powered"><span class="logo-mark xs">VDW</span>Powered by VDW HSEQ</div>
+      <div class="auth-powered"><img class="vdw-logo-img sm" src="vdw-logo.png" alt="VDW Health and Safety Solutions"><span>Powered by VDW</span></div>
     </form>
     <div class="card auth-demo"><div class="card-head"><h2>Demo accounts</h2><span class="ch-sub">Prototype only</span></div><div class="card-body">
       <p class="muted" style="margin-top:0">Every demo account uses the password <b class="mono">${DEMO_PASSWORD}</b>. Click a person to sign in as them.</p>

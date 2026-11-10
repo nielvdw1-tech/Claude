@@ -21,7 +21,7 @@ To start again, open the user menu (top right) and choose **Reset demo data**.
 
 ## 2. Finding your way around
 
-- **Top banner**, left to right: the **menu button** (hides or shows the side menu; on a phone it slides the menu in), the **VDW logo**, **search**, **My tasks**, **Notifications**, and the **signed-in person and their company** (with the company logo and the branch in view). Click the person and company to switch **company** or **branch / site**, change your password, or sign out.
+- **Top banner**, left to right: the **menu button** (hides or shows the side menu; on a phone it slides the menu in), the **VDW logo** (`vdw-logo.png`, also on the sign-in page), **search**, **My tasks**, **Notifications**, and the **signed-in person and their company** (with the company logo and the branch in view). Click the person and company to switch **company** or **branch / site**, change your password, or sign out.
 - **Back** and the breadcrumb trail sit just above the page on deeper pages.
 - **Side menu:** the pages only: Dashboard, Notifications & Tasks, Document Manager, Assets & Equipment, Inspections, Maintenance & Defects, Incident Management, Corrective Actions, Reports and Administration.
 - **Top bar:** global search (press `/`), **My tasks** (✓ icon), notifications and the user menu.

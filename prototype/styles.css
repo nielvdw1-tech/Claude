@@ -1082,3 +1082,10 @@ body.auth-mode .main { margin-left: 0; }
 @media (max-width: 420px) { .top-brand .logo-mark { width: 30px; height: 30px; font-size: 10px; } }
 @media print { .main { padding-top: 0; } .page-nav { display: none !important; } }
 body.auth-mode .main { padding-top: 0; }
+/* VDW logo (supplied artwork, transparent background) */
+.vdw-logo-img { height: 46px; max-width: 110px; }
+.vdw-logo-img.sm { height: 30px; max-width: 72px; }
+.top-brand { padding: 2px 4px; border-radius: 8px; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .vdw-logo-img { background: #fff; border-radius: 6px; padding: 2px 4px; } }
+:root[data-theme="dark"] .vdw-logo-img { background: #fff; border-radius: 6px; padding: 2px 4px; }
+@media (max-width: 420px) { .vdw-logo-img { height: 38px; } }

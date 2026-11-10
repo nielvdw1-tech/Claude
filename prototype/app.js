@@ -44,7 +44,7 @@ function orgOf(id) { return S.orgs.find(o => o.id === id); }
 // The client company's logo (uploaded in Administration → Organisations), or its initials until one is uploaded.
 function orgInitials(o) { return (o.short || o.name).split(/\s+/).filter(w => /^[A-Za-z0-9]/.test(w)).slice(0, 2).map(w => w[0].toUpperCase()).join(''); }
 /* The VDW logo in the top banner: set to an image path (e.g. 'vdw-logo.png') once the logo file is added */
-const VDW_LOGO = '';
+const VDW_LOGO = 'vdw-logo.png';
 function orgMark(o, cls = '') { return o.logo ? `<span class="org-logo ${cls}"><img src="${o.logo}" alt="${esc(o.short)} logo"></span>` : `<span class="org-initials ${cls}" aria-hidden="true">${esc(orgInitials(o))}</span>`; }
 function initials(name) { return String(name || '?').split(' ').map(x => x[0]).slice(0, 2).join('').toUpperCase(); }
 function me() { return person(S.ui.user); }
