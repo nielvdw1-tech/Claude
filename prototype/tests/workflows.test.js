@@ -472,14 +472,14 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     const links = async () => p.$$eval('.ql-item', e => e.map(x => x.innerText.replace(/\s+/g, ' ').trim()));
     await asUser('P-002'); await go('#/dashboard'); await p.waitForTimeout(200);
     const hseq = await links(), tasks = await S('myTasks().length');
-    ok('QL1 the HSEQ Manager gets links for their role, with counts of waiting work first', hseq[0] === `My tasks ${tasks}` && hseq.some(x => x.startsWith('Administration')) && hseq.some(x => x.startsWith('Upload document')) && hseq.some(x => x.startsWith('Actions to verify')) && !hseq.some(x => x.startsWith('My inspections due')), hseq.join(' | '));
+    ok('QL1 at most four quick links: My tasks first, then the work waiting most, then the main shortcut', hseq.length <= 4 && hseq[0] === `My tasks ${tasks}` && hseq.some(x => x.startsWith('Report incident')) && !hseq.some(x => x.startsWith('My inspections due')), hseq.join(' | '));
     await asUser('P-007'); await go('#/dashboard'); await p.waitForTimeout(200);
     const sup = await links();
-    ok('QL2 a supervisor only gets the links their role allows', !sup.some(x => /Administration|Upload document|Actions to verify|Publish notice/.test(x)) && sup.some(x => x.startsWith('My inspections due')) && sup.some(x => x.startsWith('Raise corrective action')), sup.join(' | '));
-    await p.click('.ql-item[data-act=actionNew]'); await p.waitForTimeout(150);
-    const modal = await modalOpen(); await p.keyboard.press('Escape');
+    ok('QL2 a supervisor only gets the links their role allows', sup.length <= 4 && !sup.some(x => /Administration|Upload document|Actions to verify|Publish notice/.test(x)) && sup.some(x => x.startsWith('My inspections due')), sup.join(' | '));
+    await p.click('.ql-item[href="#/incidents/new"]'); await p.waitForTimeout(150);
+    const form = await has('#incForm'); await go('#/dashboard'); await p.waitForTimeout(150);
     await p.click('.ql-item[href="#/inspections/schedule"]'); await p.waitForTimeout(150);
-    ok('QL3 quick links open the action form or the page directly', modal && (await p.evaluate(() => location.hash)) === '#/inspections/schedule');
+    ok('QL3 quick links open the form or the page directly', form && (await p.evaluate(() => location.hash)) === '#/inspections/schedule');
   }
 
   {

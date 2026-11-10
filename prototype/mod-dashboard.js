@@ -162,8 +162,8 @@ let LINE_RESIZE = null;
 window.addEventListener('resize', () => { clearTimeout(LINE_RESIZE); LINE_RESIZE = setTimeout(drawLineChart, 120); });
 
 /* ---------------- Quick links for the signed-in user ----------------
-   Built from the user's role (permissions) and what is waiting for them right now.
-   Links with something waiting show a count and come first. */
+   Built from the user's role (permissions) and what is waiting for them right now. Only the
+   four most useful are shown: My tasks, the work waiting most, and the role's main shortcut. */
 function quickLinks() {
   const uid = S.ui.user, sid = S.ui.site, mine = (x) => inSite(x, sid);
   const n = {
@@ -195,8 +195,12 @@ function quickLinks() {
     { label: 'Reports', icon: 'chart', href: '#/reports', show: can('report.view') },
     { label: 'Administration', icon: 'settings', href: '#/admin', show: can('admin') }
   ].filter(x => x.show !== false);
-  // Waiting work first (largest count first), then the shortcuts in their set order
-  const sorted = L.filter(x => x.count).sort((a, b) => b.count - a.count).concat(L.filter(x => !x.count));
+  // Unread notices already carry a badge on Company Notices in the menu, so they don't take a slot here.
+  // At most four: My tasks, then up to two kinds of waiting work (largest count first), then the role's main shortcut(s)
+  const MAX = 4, PRIORITY = ['Report incident', 'My inspections due', 'Raise corrective action', 'Upload document', 'Reports', 'Administration', 'Publish notice'];
+  const tasks = L[0], waiting = L.slice(1).filter(x => x.count && x.label !== 'Unread notices').sort((a, b) => b.count - a.count).slice(0, 2);
+  const shortcuts = PRIORITY.map(l => L.find(x => x.label === l && !x.count)).filter(Boolean);
+  const sorted = [tasks, ...waiting, ...shortcuts].slice(0, MAX);
   return `<nav class="ql" aria-label="Quick links for ${esc(pname(uid))}">${sorted.map(x => {
     const inner = `${icon(x.icon, 'sm')}<span>${esc(x.label)}</span>${x.count ? `<b class="ql-n">${x.count}</b>` : ''}`;
     return x.act ? `<button type="button" class="ql-item" data-act="${x.act}">${inner}</button>` : `<a class="ql-item${x.count ? ' has-n' : ''}" href="${x.href}">${inner}</a>`;

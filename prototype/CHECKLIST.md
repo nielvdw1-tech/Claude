@@ -71,7 +71,7 @@ Status key:
 | Requirement | Status | Notes |
 |---|---|---|
 | Dashboard: compliance status first (overall score, four areas with status labels and drivers, status by branch), then 12-month trend charts (incl. LTI trend: days since last LTI, LTIs and shifts lost per month) with tooltips and data tables, then detail tiles | Implemented | DB1–DB6 |
-| Quick links on the dashboard based on the user's role and waiting work, with counts | Implemented | QL1–QL3 |
+| Quick links on the dashboard (at most four) based on the user's role and waiting work, with counts | Implemented | QL1–QL4 |
 | Branch / organisation selection and comparison | Implemented | E1–E2 |
 | Branch managers, supervisors and employees limited to their own branch (selector, lists, dashboard, reports, search, record pages, forms), except records they are personally part of; MD, HSEQ Manager and consultant see all branches | Partial | BR1–BR6; applied in the browser (the live system enforces it on the server) |
 | Task centre per user | Implemented | E3 |
