@@ -80,7 +80,7 @@ Status key:
 | Safety Consultant has full access; Employee limited to QR inspections and incident reporting | Implemented | H1–H9 (client-side demonstration of the intended permissions) |
 | Company notices (memos) to all staff or a branch, with optional attachment and read-and-understood acknowledgement; read/acknowledgement tracking | Implemented | N1–N7; reminders are in-app only (email/SMS simulated) |
 | Incident safety alerts: draft notice created on each incident, published only after sequential approval by the HSEQ Manager and the Safety Consultant; approvers can edit or decline | Implemented | S1–S8 |
-| Company branding: client company name and logo in the menu ("Powered by VDW HSEQ"); logo in the company block of document, checklist and report headers | Implemented | L1–L5; logo kept in browser storage in the prototype |
+| Company branding: top banner with menu button, VDW logo, search, tasks, notifications, and the person with their company name and logo; company and branch switching in the person's menu; logo in the company block of document, checklist and report headers | Implemented | L1–L5; logo kept in browser storage in the prototype |
 | Sign-in with accounts: add user with temporary password, forced password change, reset, deactivate/reactivate, lock after 5 failed attempts, sign out | Partial | AU1–AU9; checked in the browser only (the live system signs in on a server) |
 | Locked records (closed incidents, verified/closed actions, submitted inspections) with amendments | Implemented | AT1–AT3 |
 | Tamper-evident audit trail (hash chain + record fingerprints) with integrity check | Partial | AT4–AT6; kept in the browser, so it can be rebuilt by someone determined; the live system keeps it on the server |

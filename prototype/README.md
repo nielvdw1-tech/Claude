@@ -21,7 +21,9 @@ To start again, open the user menu (top right) and choose **Reset demo data**.
 
 ## 2. Finding your way around
 
-- **Sidebar:** organisation and branch selectors, plus the pages: Dashboard, Notifications & Tasks, Document Manager, Assets & Equipment, Inspections, Maintenance & Defects, Incident Management, Corrective Actions, Reports and Administration.
+- **Top banner**, left to right: the **menu button** (hides or shows the side menu; on a phone it slides the menu in), the **VDW logo**, **search**, **My tasks**, **Notifications**, and the **signed-in person and their company** (with the company logo and the branch in view). Click the person and company to switch **company** or **branch / site**, change your password, or sign out.
+- **Back** and the breadcrumb trail sit just above the page on deeper pages.
+- **Side menu:** the pages only: Dashboard, Notifications & Tasks, Document Manager, Assets & Equipment, Inspections, Maintenance & Defects, Incident Management, Corrective Actions, Reports and Administration.
 - **Top bar:** global search (press `/`), **My tasks** (✓ icon), notifications and the user menu.
 - **Own branch only:** branch managers, supervisors and employees work in their own branch.
   - Their branch selector is fixed, and lists, the dashboard, reports and search show that branch only, plus company-wide documents such as policies.
@@ -42,7 +44,7 @@ To start again, open the user menu (top right) and choose **Reset demo data**.
 | Bongani Zulu / Fatima Patel | Supervisors | Inspections; action owners |
 | Nomvula Sithole, Tebogo Molefe | Employee | **Field access only:** scans an asset's QR code to inspect it, and reports incidents |
 
-**Company logo.** The company using the system appears at the top of the menu, with a small *Powered by VDW HSEQ* line underneath. To add the logo, go to **Administration → Organisations & sites → Upload logo**. PNG, JPG, SVG or WebP files are accepted.
+**Company logo.** The company using the system appears in the top banner next to the signed-in person, with its logo. To add the logo, go to **Administration → Organisations & sites → Upload logo**. PNG, JPG, SVG or WebP files are accepted.
 - The logo then appears in the company block of document headers, inspection checklists, printed inspection reports and printed management reports.
 - Each organisation has its own logo. Until one is uploaded, the company's initials are shown.
 
@@ -184,7 +186,7 @@ Other pages are closed to employees. An inspection can only be started from the 
 - **Example:** *NT-004* (from INC-2026-007) was approved by Johan and is waiting for Ayesha. Open it from **Company Notices** and use **Act as current approver**.
 
 ### D. Branches and tasks
-- Use the **Branch / site** selector to scope everything to one branch. **Reports → Branch comparison** shows them side by side.
+- Use the **Branch / site** selector (click your name and company in the top banner) to scope everything to one branch. **Reports → Branch comparison** shows them side by side.
 - **Notifications & Tasks → My tasks** shows each person their own work: documents awaiting their approval, actions to complete or verify, inspections due and investigations.
 
 ### E. Built-in controls (towards going live)

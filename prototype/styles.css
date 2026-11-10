@@ -1044,3 +1044,41 @@ body.auth-mode .main { margin-left: 0; }
   .tr-stat + .tr-stat { border-left: 0; border-top: 1px solid var(--line); }
   .tr-stat { padding: 11px 14px; } .tr-cell { padding: 12px 14px 14px; } .tr-tables { padding: 8px 14px; }
 }
+
+/* ---------- Top banner across the full width (menu · VDW logo · search · tasks · notifications · person and company) ---------- */
+.topbar { position: fixed; top: 0; left: 0; right: 0; z-index: 45; padding: 0 16px; gap: 10px; background: var(--surface); backdrop-filter: none; }
+.sidebar { top: var(--topbar-h); }
+.main { padding-top: var(--topbar-h); }
+.icon-btn.menu-btn { display: grid; border-color: transparent; }
+.top-brand { display: flex; align-items: center; flex: none; margin-right: 6px; text-decoration: none; }
+.top-brand:hover { text-decoration: none; }
+.top-brand .logo-mark::after { box-shadow: 0 0 0 2px var(--surface); }
+.vdw-logo-img { display: block; height: 36px; width: auto; max-width: 160px; object-fit: contain; }
+.top-search { margin-left: 16px; margin-right: auto; width: 420px; max-width: 42vw; }
+.user-menu-btn { margin-left: 4px; }
+.user-menu-btn .um-sep { width: 1px; align-self: stretch; margin: 2px 2px; background: var(--line); }
+.org-logo.top, .org-initials.top { width: 26px; height: 26px; font-size: 10px; border-radius: 6px; }
+.org-logo.top:has(img) { width: auto; min-width: 26px; max-width: 64px; padding: 2px; }
+.dd-scope { display: grid; gap: 2px; padding: 4px 10px 8px; }
+.dd-scope label { font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; margin: 6px 0 3px; }
+.dd-scope select { width: 100%; border: 1px solid var(--line); border-radius: 7px; padding: 7px 9px; font: inherit; font-size: 13px; background: var(--surface); color: var(--fg); }
+.sb-nav { padding-top: 10px; }
+.page-nav { display: flex; align-items: center; gap: 12px; margin: -6px 0 14px; min-width: 0; }
+.page-nav .crumbs { flex: 1; }
+@media (min-width: 1025px) {
+  body.nav-hidden .sidebar { transform: translateX(-100%); }
+  body.nav-hidden .main { margin-left: 0; }
+  .sidebar, .main { transition: transform .2s, margin-left .2s; }
+}
+@media (max-width: 1024px) { .top-search { width: 300px; } }
+@media (max-width: 900px) { .user-menu-btn .um-text { display: none; } .user-menu-btn .um-sep { display: none; } }
+@media (max-width: 720px) {
+  .topbar { padding: 0 10px; gap: 6px; }
+  .top-search { margin-left: 4px; margin-right: 0; }
+  .top-brand { margin-right: 0; }
+  .page-nav .crumbs { display: none; }
+  .user-menu-btn .org-logo.top, .user-menu-btn .org-initials.top { display: none; }
+}
+@media (max-width: 420px) { .top-brand .logo-mark { width: 30px; height: 30px; font-size: 10px; } }
+@media print { .main { padding-top: 0; } .page-nav { display: none !important; } }
+body.auth-mode .main { padding-top: 0; }

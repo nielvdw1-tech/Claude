@@ -35,6 +35,11 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
   const sign = async () => { const b = await (await p.$('#sigPad')).boundingBox(); await p.mouse.move(b.x + 20, b.y + 100); await p.mouse.down(); for (let k = 1; k <= 12; k++) await p.mouse.move(b.x + 20 + k * 15, b.y + 100 - (k % 2) * 40); await p.mouse.up(); await p.waitForTimeout(50); };
   const modalOpen = async () => (await p.$('.modal')) !== null;
   const has = async (sel) => (await p.$(sel)) !== null;
+  // The company and branch selectors sit in the person's menu in the top banner
+  const closeMenu = () => p.evaluate(() => document.querySelectorAll('.dropdown').forEach(d => d.remove()));
+  const openMenu = async () => { await closeMenu(); await p.click('.user-menu-btn'); await p.waitForTimeout(80); };
+  const pickScope = async (sel, v) => { await openMenu(); await p.selectOption(sel, v); await p.waitForTimeout(200); await closeMenu(); };
+  const menuEval = async (sel, fn) => { await openMenu(); const r = await p.$eval(sel, fn); await closeMenu(); return r; };
   const ownerCompletes = async (aid) => {
     await go('#/actions/' + aid);
     const owner = await S(`S.actions.find(a=>a.id==='${aid}').owner`);
@@ -194,16 +199,16 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
 
   /* ---------------- E. Branches, tasks, platform checks ---------------- */
   {
-    await go('#/dashboard'); await p.selectOption('#siteSel', 'S-DBN'); await p.waitForTimeout(200);
+    await go('#/dashboard'); await pickScope('#siteSel', 'S-DBN');
     const t1 = await p.innerText('#content'); await go('#/actions');
     const ids = () => p.$$eval('#lvb-acts .mono', e => e.map(x => x.textContent));
     const aD = await ids();
-    await p.selectOption('#siteSel', 'S-CPT'); await p.waitForTimeout(200); const aC = await ids();
+    await pickScope('#siteSel', 'S-CPT'); const aC = await ids();
     const okD = await S(`${JSON.stringify(aD)}.every(id => byId('actions', id).site === 'S-DBN')`), okC = await S(`${JSON.stringify(aC)}.every(id => byId('actions', id).site === 'S-CPT')`);
     ok('E1 branch selection scopes dashboard and lists', t1.includes('Kestrel Industrial — Pinetown') && aD.length > 0 && aC.length > 0 && okD && okC && aD.join() !== aC.join(), `DBN ${aD.join(', ')} | CPT ${aC.join(', ')}`);
     await go('#/reports/branches'); const rb = await p.innerText('#content');
     ok('E2 branch comparison report lists every branch', ['Germiston', 'Pinetown', 'Montague Gardens'].every(x => rb.includes(x)));
-    await p.selectOption('#siteSel', 'ALL'); await p.waitForTimeout(150);
+    await pickScope('#siteSel', 'ALL');
     await asUser('P-007'); await go('#/notifications/tasks');
     ok('E3 overdue inspection appears in the assignee task centre', (await p.innerText('#content')).includes('Inspect: Germiston warehouse & workshop'));
     await go('#/legal'); ok('E4 removed modules are no longer reachable', (await p.innerText('#content')).includes('Page not found'));
@@ -741,7 +746,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
 
   /* ---------------- CL. Several clients: separation, overview, new client ---------------- */
   {
-    const orgOpts = () => p.$$eval('#orgSel option', e => e.map(x => x.value));
+    const orgOpts = () => menuEval('#orgSel', e => [...e.options].map(x => x.value));
     await asUser('P-002'); await go('#/dashboard');
     const johan = await orgOpts(), johanNav = await has('.nav-item[href="#/clients"]');
     await S("(S.ui.org = 'ORG-2', save(), rerender())"); await p.waitForTimeout(150);
@@ -761,7 +766,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     const nid = await S("S.orgs.find(o => o.short === 'Highveld Steel').id");
     ok('CL4 the new-client wizard creates the company, its branches and its first administrator', !!nid && (await S('S.ui.org')) === nid && (await S(`S.sites.filter(s => s.org === '${nid}').length`)) === 2 && (await S("S.people.some(p => p.email === 'grace.m@highveld.demo' && p.auth.mustChange)")) && /^[A-Z0-9]{8}$/.test(temp) && (await S(`person('P-006').clients.includes('${nid}')`)));
     const empty = await S(`[S.documents, S.assets, S.incidents, S.actions].every(c => !c.some(x => (x.org || siteOrgOf(x.site)) === '${nid}'))`);
-    ok('CL5 a new client starts empty, and other companies\' staff cannot see it', empty && (await p.innerText('.sb-brand')).includes('Highveld Steel') && (await S("(() => { const k = S.ui.user; S.ui.user = 'P-002'; const r = canSeeOrg('" + nid + "'); S.ui.user = k; return r; })()")) === false);
+    ok('CL5 a new client starts empty, and other companies\' staff cannot see it', empty && (await p.innerText('.user-menu-btn')).includes('Highveld Steel') && (await S("(() => { const k = S.ui.user; S.ui.user = 'P-002'; const r = canSeeOrg('" + nid + "'); S.ui.user = k; return r; })()")) === false);
     await S("(S.ui.org = 'ORG-1', S.ui.site = 'ALL', save())");
   }
 
@@ -787,18 +792,18 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
   {
     const hash = () => p.evaluate(() => location.hash);
     await asUser('P-002'); await go('#/documents');
-    const noBackTop = !(await has('#topbar [data-act=goBack]'));
-    await go('#/admin/users'); const noBackTab = !(await has('#topbar [data-act=goBack]'));
+    const noBackTop = !(await has('.page-nav [data-act=goBack]'));
+    await go('#/admin/users'); const noBackTab = !(await has('.page-nav [data-act=goBack]'));
     ok('BB1 main pages and tabs have no Back button', noBackTop && noBackTab);
     await go('#/documents'); await go('#/documents/DOC-001'); await go('#/actions/ACT-1001');
-    await act('#topbar [data-act=goBack]'); const h1 = await hash();
-    await act('#topbar [data-act=goBack]'); const h2 = await hash();
+    await act('.page-nav [data-act=goBack]'); const h1 = await hash();
+    await act('.page-nav [data-act=goBack]'); const h2 = await hash();
     ok('BB2 Back returns to the pages you came from, in order', h1 === '#/documents/DOC-001' && h2 === '#/documents', `${h1} → ${h2}`);
     await S("NAV_STACK.length = 0"); await go('#/incidents/INC-2026-005');
-    await S("NAV_STACK.length = 0"); await act('#topbar [data-act=goBack]');
+    await S("NAV_STACK.length = 0"); await act('.page-nav [data-act=goBack]');
     ok('BB3 opened directly (no history), Back goes to the page above it', (await hash()) === '#/incidents');
     await asUser('P-014'); await S("NAV_STACK.length = 0"); await go('#/qr/AS-004');
-    await S("NAV_STACK.length = 0"); const qrHasBack = await has('#topbar [data-act=goBack]'); await act('#topbar [data-act=goBack]');
+    await S("NAV_STACK.length = 0"); const qrHasBack = await has('.page-nav [data-act=goBack]'); await act('.page-nav [data-act=goBack]');
     ok('BB4 an employee on an asset QR page can go back to their home screen', qrHasBack && (await hash()) === '#/field');
     await asUser('P-002');
   }
@@ -828,9 +833,9 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
 
   /* ---------------- BR. Branch managers and supervisors work in their own branch ---------------- */
   {
-    const siteOpts = () => p.$$eval('#siteSel option', e => e.map(x => x.value));
+    const siteOpts = () => menuEval('#siteSel', e => [...e.options].map(x => x.value));
     await asUser('P-003'); await go('#/incidents');   // Sipho Ndlovu, Branch Manager, Pinetown
-    const opts1 = await siteOpts(), disabled = await p.$eval('#siteSel', e => e.disabled), list = await p.innerText('#content');
+    const opts1 = await siteOpts(), disabled = await menuEval('#siteSel', e => e.disabled), list = await p.innerText('#content');
     await go('#/documents'); const docs = await p.innerText('#content');
     ok('BR1 a branch manager sees only their branch: no "all branches", only Pinetown incidents, plus company-wide documents', opts1.join() === 'S-DBN' && disabled && list.includes('INC-2026-005') && !list.includes('INC-2026-001') && docs.includes('KIE-POL-001'), opts1.join());
     await go('#/incidents/INC-2026-001');
@@ -975,19 +980,20 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
   /* ---------------- L. Company logo ---------------- */
   {
     await asUser('P-002'); await go('#/dashboard');
-    const brand = await p.innerText('.sidebar');
-    ok('L1 menu shows the client company with "Powered by VDW HSEQ"', brand.includes('Kestrel Industrial') && brand.includes('Powered by'));
+    const order = await p.$$eval('.topbar > *', e => e.map(x => x.className.split(' ').find(c => ['menu-btn', 'top-brand', 'top-search', 'user-menu-btn'].includes(c)) || x.getAttribute('data-act') || '').filter(Boolean));
+    const side = await p.innerText('.sidebar');
+    ok('L1 the top banner reads menu · VDW logo · search · tasks · notifications · person and company; the side menu only holds the menu', order.join() === 'menu-btn,top-brand,top-search,openTasks,openNotifs,user-menu-btn' && (await p.innerText('.user-menu-btn')).includes('Kestrel Industrial') && !(await has('.sidebar select')) && !side.includes('Powered by'), order.join(' · '));
     await go('#/admin/orgs');
     const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
     const [fc] = await Promise.all([p.waitForEvent('filechooser'), p.click('[data-act=orgLogo][data-id="ORG-1"]')]);
     await fc.setFiles({ name: 'kestrel-logo.png', mimeType: 'image/png', buffer: png }); await p.waitForTimeout(400);
-    ok('L2 administrator uploads the company logo', (await S("(S.orgs.find(o=>o.id==='ORG-1').logo||'').startsWith('data:image/png')")) && await has('.sidebar .sb-brand .org-logo img'));
+    ok('L2 administrator uploads the company logo', (await S("(S.orgs.find(o=>o.id==='ORG-1').logo||'').startsWith('data:image/png')")) && await has('.topbar .user-menu-btn .org-logo img'));
     await go('#/documents/DOC-001'); await btn('Open document'); await p.waitForTimeout(300);
     ok('L3 the logo appears in the company block of document headers', await has('.modal .print-logo .org-logo img')); await p.keyboard.press('Escape');
     await go('#/print/INS-1087');
     ok('L4 the logo appears on inspection reports', await has('.print-logo .org-logo img'));
     await go('#/admin/orgs'); await act('[data-act=orgLogoRemove][data-id="ORG-1"]'); await p.click('.modal-foot button:has-text("Remove")'); await p.waitForTimeout(150);
-    ok('L5 removing the logo falls back to the company initials', !(await S("S.orgs.find(o=>o.id==='ORG-1').logo")) && (await p.innerText('.sb-brand .org-initials')) === 'KI');
+    ok('L5 removing the logo falls back to the company initials', !(await S("S.orgs.find(o=>o.id==='ORG-1').logo")) && (await p.innerText('.topbar .user-menu-btn .org-initials')) === 'KI');
   }
 
   /* ---------------- Print output ---------------- */

@@ -43,6 +43,8 @@ function sname(id) { if (!id || id === 'ALL') return 'All sites'; const s = site
 function orgOf(id) { return S.orgs.find(o => o.id === id); }
 // The client company's logo (uploaded in Administration → Organisations), or its initials until one is uploaded.
 function orgInitials(o) { return (o.short || o.name).split(/\s+/).filter(w => /^[A-Za-z0-9]/.test(w)).slice(0, 2).map(w => w[0].toUpperCase()).join(''); }
+/* The VDW logo in the top banner: set to an image path (e.g. 'vdw-logo.png') once the logo file is added */
+const VDW_LOGO = '';
 function orgMark(o, cls = '') { return o.logo ? `<span class="org-logo ${cls}"><img src="${o.logo}" alt="${esc(o.short)} logo"></span>` : `<span class="org-initials ${cls}" aria-hidden="true">${esc(orgInitials(o))}</span>`; }
 function initials(name) { return String(name || '?').split(' ').map(x => x[0]).slice(0, 2).join('').toUpperCase(); }
 function me() { return person(S.ui.user); }
@@ -549,32 +551,30 @@ function navCounts() {
 }
 function renderSidebar(active) {
   const cnt = navCounts(), u = me();
-  const sites = orgSites();
-  const org = orgOf(S.ui.org);
-  return `<div class="sb-brand">${orgMark(org, 'sb')}<div class="logo-text"><b>${esc(org.short)}</b><span>HSEQ Management System</span></div></div>
-  <div class="sb-powered"><span class="logo-mark xs">VDW</span><span>Powered by <b>VDW HSEQ</b> · Prototype</span></div>
-  <div class="sb-scope">
-    <label for="orgSel">Organisation</label>
-    <select id="orgSel" ${myOrgs().length < 2 ? 'disabled' : ''}>${myOrgs().map(o => `<option value="${o.id}" ${o.id === S.ui.org ? 'selected' : ''}>${esc(o.short)}</option>`).join('')}</select>
-    <label for="siteSel">Branch / site</label>
-    <select id="siteSel" ${branchLimited() ? 'disabled title="You work in your own branch"' : ''}>${branchLimited() ? '' : '<option value="ALL">All branches (organisation view)</option>'}${sites.map(s => `<option value="${s.id}" ${s.id === S.ui.site ? 'selected' : ''}>${esc(s.short)}</option>`).join('')}</select>
-  </div>
-  <nav class="sb-nav" aria-label="Main navigation">
+  return `<nav class="sb-nav" aria-label="Main navigation">
     ${(isFieldUser() ? fieldNav() : NAV.map(g => Object.assign({}, g, { items: g.items.filter(([k]) => canArea(k)) })).filter(g => g.items.length)).map((g, gi) => `<div class="nav-group ${S.ui.navCollapsed && S.ui.navCollapsed[gi] ? 'collapsed' : ''}"><button class="nav-group-title" data-act="toggleNavGroup" data-g="${gi}" aria-expanded="${!(S.ui.navCollapsed && S.ui.navCollapsed[gi])}">${esc(g.group)} ${icon('chevron')}</button><div class="nav-items">
       ${g.items.filter(([k]) => k !== 'clients' || myOrgs().length > 1 || can('clients.manage')).map(([k, label, ic]) => `<a class="nav-item ${active === k ? 'active' : ''}" href="#/${k}">${icon(ic)}<span>${esc(label)}</span>${cnt[k] ? `<span class="count" title="${k === 'actions' ? 'Overdue actions' : k === 'notifications' ? 'Unread' : k === 'documents' ? 'Awaiting your approval' : k === 'inspections' ? 'Overdue inspections' : k === 'notices' ? 'Unread or awaiting your acknowledgement' : 'Requires attention'}">${cnt[k]}</span>` : ''}</a>`).join('')}
     </div></div>`).join('')}
   </nav>
   <div class="sb-user"><div class="avatar">${initials(u.name)}</div><div class="who"><b>${esc(u.name)}</b><span>${esc(u.sysRole)}</span></div></div>`;
 }
-function renderTopbar(crumbs, back) {
-  const notifs = buildNotifs(); const unread = notifs.filter(n => !S.readNotifs[n.key]).length; const tasks = myTasks().length; const u = me();
-  return `<button class="icon-btn menu-btn" data-act="toggleNav" aria-label="Open menu">${icon('menu')}</button>
-  ${back ? `<button class="btn sm back-btn" data-act="goBack" aria-label="Back to the previous page">${icon('arrowL', 'sm')}<span>Back</span></button>` : ''}
-  <div class="crumbs">${crumbs.map((c, i) => i < crumbs.length - 1 ? `<a href="${c[1]}">${esc(c[0])}</a>${icon('chevronR', 'sm')}` : `<b>${esc(c[0])}</b>`).join('')}</div>
+/* Top banner, left to right: menu button, VDW logo, search, my tasks and notifications, then the signed-in
+   person and their company. The company, branch and user switching sit in the person's menu. */
+function vdwLogo() { return VDW_LOGO ? `<img class="vdw-logo-img" src="${VDW_LOGO}" alt="VDW">` : `<span class="logo-mark">VDW</span>`; }
+function renderTopbar() {
+  const notifs = buildNotifs(); const unread = notifs.filter(n => !S.readNotifs[n.key]).length; const tasks = myTasks().length; const u = me(), org = orgOf(S.ui.org);
+  const scope = S.ui.site === 'ALL' ? 'All branches' : sname(S.ui.site);
+  return `<button class="icon-btn menu-btn" data-act="toggleNav" aria-label="Show or hide the menu" title="Menu">${icon('menu')}</button>
+  <a class="top-brand" href="#/dashboard" aria-label="VDW — go to the dashboard">${vdwLogo()}</a>
   ${isFieldUser() ? '<span style="margin-left:auto"></span>' : `<div class="top-search">${icon('search', 'sm')}<input id="globalSearch" type="search" placeholder="Search records, IDs, people, assets…" autocomplete="off" aria-label="Global search"><div class="search-results hidden" id="searchResults"></div></div>
   <button class="icon-btn" data-act="openTasks" title="My tasks requiring attention" aria-label="My tasks">${icon('tasks')}${tasks ? `<span class="dot orange">${tasks}</span>` : ''}</button>
   <button class="icon-btn" data-act="openNotifs" title="Notifications" aria-label="Notifications">${icon('bell')}${unread ? `<span class="dot">${unread > 99 ? '99+' : unread}</span>` : ''}</button>`}
-  <button class="user-menu-btn" data-act="userMenu" aria-label="User menu"><span class="avatar sm">${initials(u.name)}</span><span class="um-text">${esc(u.name)}<span>${esc(u.sysRole)}</span></span>${icon('chevron', 'sm')}</button>`;
+  <button class="user-menu-btn" data-act="userMenu" aria-label="${esc(u.name)}, ${esc(org.short)}: user and company menu"><span class="avatar sm">${initials(u.name)}</span><span class="um-text">${esc(u.name)}<span>${esc(u.sysRole)}</span></span><span class="um-sep" aria-hidden="true"></span>${orgMark(org, 'top')}<span class="um-text um-org">${esc(org.short)}<span>${esc(scope)}</span></span>${icon('chevron', 'sm')}</button>`;
+}
+/* Back button and breadcrumbs above deeper pages */
+function pageNav(crumbs, back) {
+  if (!back) return '';
+  return `<div class="page-nav"><button class="btn sm back-btn" data-act="goBack" aria-label="Back to the previous page">${icon('arrowL', 'sm')}<span>Back</span></button><div class="crumbs">${crumbs.map((c, i) => i < crumbs.length - 1 ? `<a href="${c[1]}">${esc(c[0])}</a>${icon('chevronR', 'sm')}` : `<b>${esc(c[0])}</b>`).join('')}</div></div>`;
 }
 function parseHash() {
   const h = location.hash.replace(/^#\/?/, '') || 'dashboard';
@@ -629,8 +629,9 @@ function rerender(keepScroll = true) {
   BACK_PARENT = isFieldUser() ? '#/field' : (up ? up[1] : '#/' + (TOP_ROUTES.includes(key) ? key : 'dashboard'));
   const y = window.scrollY;
   document.getElementById('sidebar').innerHTML = renderSidebar(page.nav || key);
-  document.getElementById('topbar').innerHTML = renderTopbar(crumbsArr, needsBack(parts));
-  document.getElementById('content').innerHTML = page.html;
+  document.getElementById('topbar').innerHTML = renderTopbar();
+  document.getElementById('content').innerHTML = pageNav(crumbsArr, needsBack(parts)) + page.html;
+  document.body.classList.toggle('nav-hidden', !!S.ui.navHidden);
   document.title = (page.title ? page.title + ' · ' : '') + 'VDW HSEQ';
   if (page.after) page.after();
   if (routeId !== lastRoute) { window.scrollTo(0, 0); lastRoute = routeId; } else if (keepScroll) window.scrollTo(0, y);
@@ -673,7 +674,8 @@ document.addEventListener('keydown', (e) => {
 });
 window.addEventListener('hashchange', () => rerender(false));
 
-ACT.toggleNav = () => document.body.classList.toggle('nav-open');
+// On a wide screen the menu button hides or shows the side menu (remembered); on a phone or tablet it slides the menu in
+ACT.toggleNav = () => { if (window.innerWidth > 1024) { S.ui.navHidden = !S.ui.navHidden; save(); document.body.classList.toggle('nav-hidden', S.ui.navHidden); } else document.body.classList.toggle('nav-open'); };
 ACT.toggleNavGroup = (el) => { const g = el.dataset.g; S.ui.navCollapsed = S.ui.navCollapsed || {}; S.ui.navCollapsed[g] = !S.ui.navCollapsed[g]; save(); el.closest('.nav-group').classList.toggle('collapsed'); };
 ACT.openNotifs = () => navigate('#/notifications');
 ACT.openTasks = () => navigate('#/notifications/tasks');
@@ -685,6 +687,12 @@ ACT.userMenu = (el) => {
   dd.style.top = (r.bottom + 6) + 'px'; dd.style.right = Math.max(8, window.innerWidth - r.right) + 'px'; dd.style.position = 'fixed';
   const users = S.people.filter(p => p.sysRole && p.status !== 'Deactivated' && p.id !== S.ui.user), u = me();
   dd.innerHTML = `<div class="dd-me"><span class="avatar">${initials(u.name)}</span><div><b>${esc(u.name)}</b><small>${esc(u.email)}</small><small>${esc(u.sysRole)} · ${esc(orgOf(u.org).short)}</small></div></div>
+    <div class="dd-scope">
+      <label for="orgSel">Company</label>
+      <select id="orgSel" ${myOrgs().length < 2 ? 'disabled' : ''}>${myOrgs().map(o => `<option value="${o.id}" ${o.id === S.ui.org ? 'selected' : ''}>${esc(o.short)}</option>`).join('')}</select>
+      <label for="siteSel">Branch / site</label>
+      <select id="siteSel" ${branchLimited() ? 'disabled title="You work in your own branch"' : ''}>${branchLimited() ? '' : '<option value="ALL">All branches (organisation view)</option>'}${orgSites().map(x => `<option value="${x.id}" ${x.id === S.ui.site ? 'selected' : ''}>${esc(x.short)}</option>`).join('')}</select>
+    </div><hr>
     <button class="dd-item" data-act="go" data-href="#/password">${icon('lock', 'sm')} Change password</button>
     <button class="dd-item" data-act="go" data-href="#/settings">${icon('bell', 'sm')} Notification settings</button>
     <button class="dd-item" data-act="signOut">${icon('power', 'sm')} Sign out</button>
