@@ -962,6 +962,13 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await act('[data-act=incTrendsToggle]'); const hidden = !(await has('.inc-trends'));
     await act('[data-act=incTrendsToggle]');
     ok('IT3 the trends can be hidden and shown again', hidden && await has('.inc-trends'));
+    {
+      const f = await S("(() => { const r = [prevMonth(TODAY.slice(0, 7))].concat(monthsBack(12, prevMonth(prevMonth(TODAY.slice(0, 7)))).reverse()).map(m => ltifr(S.ui.site, m)).find(x => x.value != null); return r ? r.value.toFixed(2) : '—'; })()");
+      const tile = await p.$$eval('.kpis.mini .kpi', e => e.map(x => x.textContent).find(t => /LTIFR/.test(t)) || '');
+      const line = await p.$$eval('#lcIncLtifr svg path', e => e.length);
+      await act('[data-act=ltifrCompare]'); const two = await p.$$eval('#lcIncLtifr .viz-legend span, .inc-ltifr .viz-legend span', e => e.length); await act('[data-act=ltifrCompare]');
+      ok('IT4 the incident trends show the LTI frequency rate (tile and rolling 12-month line, with the previous year)', tile.includes(f) && line > 0 && two === 2, `LTIFR ${f}`);
+    }
     await asUser('P-002');
   }
 

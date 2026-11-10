@@ -134,8 +134,9 @@ Defects can also be reported directly from the asset page or its **QR page** (e.
 4. **Review & close**. The incident can't be closed while any action is still open. Check **Reports → Incident trends**.
 
 **Incident trends at the top.** Incident Management opens with a mini dashboard covering the last 12 months. It is limited to your branch if you are a branch manager or supervisor, and **Hide trends** folds it away.
-- Three figures: incidents in the last 12 months (with the last 6 months compared to the 6 before), days since the last lost time injury, and high-potential incidents.
+- Four figures: incidents in the last 12 months (with the last 6 months compared to the 6 before), days since the last lost time injury, high-potential incidents, and the **LTI frequency rate** (rolling 12 months). If last month's hours worked are not in yet, the LTIFR tile shows the latest month that can be calculated and says what is missing.
 - Three charts: incidents per month; incidents by type and injuries by classification; open incidents by stage. Click a type or a stage to filter the list below.
+- The **LTI frequency rate line** (rolling 12 months, per the base set under Administration → Hours worked), with the **Previous year** button, the same chart as on the dashboard. A month with hours missing is a gap in the line, not a zero.
 
 **Controls after an incident is logged.**
 - **Escalation:** an incident with no investigator after the set number of days (default 3), or an investigation past its due date, is **escalated automatically** to the branch manager and the HSEQ Manager. An overdue investigation is escalated above the investigator. The escalation is recorded in the incident history, shown on the incident and added to their tasks.
@@ -330,6 +331,6 @@ prototype/
 └── README.md                     This file
 ```
 
-**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 218 workflow outcomes.
+**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 219 workflow outcomes.
 
 The earlier full HSEQ prototype, with legal, risk, people, PPE, chemicals, emergency and audits, is preserved in git history at commit `26b59bc`.

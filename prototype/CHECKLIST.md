@@ -8,7 +8,7 @@ Status key:
 - **Not implemented**
 
 "Tested" means one of the following:
-- the automated browser test (`tests/workflows.test.js`, **218/218 passing**, no JavaScript errors);
+- the automated browser test (`tests/workflows.test.js`, **219/219 passing**, no JavaScript errors);
 - the route smoke test (77 routes plus a second organisation, no errors);
 - the mobile layout check (31 routes at 390 px, no horizontal overflow).
 
@@ -61,7 +61,7 @@ Status key:
 | Closure only when all actions are verified | Implemented | D5, D7 |
 | External reporting status | Implemented | Reportability is decided by a competent person |
 | Incident trends in reporting | Implemented | D8 |
-| Mini dashboard of incident trends at the top of Incident Management (per month, by type, injury class, open by stage; branch-limited; can be hidden) | Implemented | IT1–IT3 |
+| Mini dashboard of incident trends at the top of Incident Management (per month, by type, injury class, open by stage, LTIFR tile and rolling 12-month LTIFR line with previous year; branch-limited; can be hidden) | Implemented | IT1–IT4 |
 | Automatic escalation of incidents without an investigator or with an overdue investigation | Partial | R5–R6; checked when the system is opened (a server job in production) |
 | Investigator corrects type and severity with a reason | Implemented | R7 |
 | Effectiveness review after closure; "not effective" reopens the incident | Implemented | R8–R9 |
