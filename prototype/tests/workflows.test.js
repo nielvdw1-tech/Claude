@@ -26,7 +26,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
   const go = async (h) => { await p.evaluate(x => { location.hash = x; }, h); await p.waitForTimeout(120); };
   const S = (fn) => p.evaluate(fn);
   const act = async (sel) => { await p.click(sel); await p.waitForTimeout(120); };
-  const btn = async (text) => { await p.click(`.sh-actions button:has-text("${text}"), .page-head button:has-text("${text}"), .alert button:has-text("${text}")`); await p.waitForTimeout(150); };
+  const btn = async (text) => { await p.click(`.sh-actions button:has-text("${text}"), .page-head button:has-text("${text}"), .alert button:has-text("${text}"), .fab-stack .fab:has-text("${text}")`); await p.waitForTimeout(150); };
   const mbtn = async (text) => { await p.click(`.modal-foot button:has-text("${text}")`); await p.waitForTimeout(150); };
   const mfill = async (name, val) => { await p.fill(`.modal [name="${name}"]`, val); };
   const msel = async (name, val) => { await p.selectOption(`.modal [name="${name}"]`, val); };
@@ -434,7 +434,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
   /* ---------------- V. Managing Director raises actions; no self-verification ---------------- */
   {
     await asUser('P-001'); await go('#/actions');
-    const canRaise = await has('.page-head button:has-text("New action")');
+    const canRaise = await has('.fab-stack .fab:has-text("New action")');
     await btn('New action'); await mbtn('Continue'); await p.waitForTimeout(100);
     await mfill('title', 'Repaint faded walkway at dispatch'); await mfill('action', 'Repaint the pedestrian walkway lines at the dispatch bay.'); await msel('owner', 'P-002'); await mbtn('Raise action');
     const vid = await S('S.actions[S.actions.length-1].id');
@@ -613,11 +613,11 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await go('#/labels'); const allN = await p.$$eval('.lbl', e => e.length);
     await go('#/labels?size=small&ids=AS-002,AS-004'); const two = await p.$$eval('.lbl-sheet.lbl-s .lbl', e => e.length);
     ok('QR2 a label sheet prints for all or chosen assets, small or large', allN === (await S("scoped('assets').filter(a => a.status !== 'Decommissioned').length")) && two === 2 && (await p.innerText('.lbl-sheet')).includes('FL-02'));
-    await go('#/assets'); await btn('Scan asset QR');
+    await go('#/assets'); await S('ACT.qrScan()'); await p.waitForTimeout(150);
     await p.setInputFiles('#scanPhoto', { name: 'label.png', mimeType: 'image/png', buffer: png }); await p.waitForTimeout(1200);
     ok('QR3 scanning a photo of the label opens the asset', (await p.evaluate(() => location.hash)) === '#/qr/AS-002' && !(await modalOpen()));
     const other = Buffer.from(await p.evaluate(async () => { const svg = qrSvg('https://example.com/not-an-asset'); const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' })); const img = await new Promise(r => { const i = new Image(); i.onload = () => r(i); i.src = url; }); const c = document.createElement('canvas'); c.width = 600; c.height = 600; const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, 600, 600); g.drawImage(img, 100, 100, 400, 400); return c.toDataURL('image/png').split(',')[1]; }), 'base64');
-    await go('#/assets'); await btn('Scan asset QR');
+    await go('#/assets'); await S('ACT.qrScan()'); await p.waitForTimeout(150);
     await p.setInputFiles('#scanPhoto', { name: 'other.png', mimeType: 'image/png', buffer: other }); await p.waitForTimeout(1000);
     ok('QR4 a QR code that is not one of our labels is refused', (await p.evaluate(() => location.hash)) === '#/assets' && await modalOpen());
     await p.keyboard.press('Escape');
@@ -1138,7 +1138,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     for (const [tab, act] of [['orgs', 'addSite'], ['users', 'userNew'], ['roles', 'roleNew'], ['doccats', 'addCat'], ['assettypes', 'atNew'], ['templates', 'tplNew']]) {
       await go('#/admin/' + tab); await p.waitForTimeout(120);
       await p.evaluate(() => window.scrollTo(0, document.body.scrollHeight)); await p.waitForTimeout(80);
-      const f = await p.$(`.fab[data-act="${act}"]`); const pos = f && await f.evaluate(e => getComputedStyle(e).position); const vis = f && await f.isVisible();
+      const f = await p.$(`.fab[data-act="${act}"]`); const pos = f && await f.evaluate(e => getComputedStyle(e.closest('.fab-stack')).position); const vis = f && await f.isVisible();
       if (f && pos === 'fixed' && vis) { await f.click(); await p.waitForTimeout(150); if (await modalOpen()) seen.push(tab); await p.keyboard.press('Escape'); await p.waitForTimeout(80); }
     }
     ok('FB1 each Administration tab has its add button floating in view, and it opens the form', seen.length === 6, seen.join(', '));
@@ -1150,6 +1150,19 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     const usable = await S("!!tplCurrent(S.templates.find(t => t.docNumber === 'KIE-FRM-099'))");
     await act(`[data-act=tplApprove][data-id="${t.id}"]`); await mbtn('Approve'); await p.waitForTimeout(120);
     ok('FB2 a new inspection template starts as a Rev 1 draft and can only be used once approved', t.revisions[0].status === 'Draft' && t.revisions[0].questions.length === 3 && t.revisions[0].questions[0].critical && !usable && await S(`!!tplCurrent(byId('templates', '${t.id}'))`), t.id);
+  }
+
+  /* ---------------- FB3. Floating buttons on the main pages ---------------- */
+  {
+    await asUser('P-002'); const seen = [];
+    for (const [page, label] of [['#/assets', 'Add asset'], ['#/inspections/schedule', 'New inspection schedule'], ['#/maintenance', 'Report defect'], ['#/maintenance', 'Schedule maintenance'], ['#/incidents', 'Report incident'], ['#/actions', 'New action']]) {
+      await go(page); await p.waitForTimeout(120); await p.evaluate(() => window.scrollTo(0, document.body.scrollHeight)); await p.waitForTimeout(60);
+      const f = await p.$(`.fab-stack .fab:has-text("${label}")`);
+      if (f && await f.isVisible() && await f.evaluate(e => getComputedStyle(e.closest('.fab-stack')).position === 'fixed')) seen.push(label);
+    }
+    await go('#/assets'); const noQr = !(await has('.page-head [data-act=qrScan]')) && !(await has('.page-head a[href="#/labels"]'));
+    await go('#/assets/AS-001'); const onAsset = await has('a[href^="#/labels?ids=AS-001"]') && await has('a[href="#/qr/AS-001"]');
+    ok('FB3 Add asset, New inspection schedule, Report defect, Schedule maintenance, Report incident and New action float in view; QR scan and label printing are on the asset itself', seen.length === 6 && noQr && onAsset, seen.join(', '));
   }
 
   /* ---------------- L. Company logo ---------------- */

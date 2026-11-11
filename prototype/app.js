@@ -646,7 +646,12 @@ function pageHead(title, lead, actions = '', extra = '') {
 function tabsHtml(base, tabs, active) { return `<div class="tabs" role="tablist">${tabs.map(t => `<a role="tab" href="${base.endsWith('=') ? base + t[0] : base + '/' + t[0]}" class="${t[0] === active ? 'active' : ''}">${esc(t[1])}${t[2] ? `<span class="tc ${t[3] || ''}">${t[2]}</span>` : ''}</a>`).join('')}</div>`; }
 function noPerm(perm) { const d = S.permissionDefs.find(p => p[0] === perm); return `Your demo role (${myRole().name}) does not have the "${d ? d[1] : perm}" permission. Switch user from the user menu to try another role.`; }
 /* A floating "add" button that stays in view while the page scrolls (bottom-right) */
-function fabBtn(act, label, attrs = '') { return `<div class="fab-space" aria-hidden="true"></div><button type="button" class="btn primary fab" data-act="${act}" ${attrs} title="${esc(label)}">${icon('plus', 'sm')}<span>${esc(label)}</span></button>`; }
+function fabStack(items) {
+  items = items.filter(Boolean); if (!items.length) return '';
+  return `<div class="fab-stack">${items.map(i => { const inner = `${icon(i.icon || 'plus', 'sm')}<span>${esc(i.label)}</span>`, cls = `btn ${i.cls || 'primary'} fab`;
+    return i.href ? `<a class="${cls}" href="${i.href}" title="${esc(i.label)}">${inner}</a>` : `<button type="button" class="${cls}" data-act="${i.act}" ${i.attrs || ''} title="${esc(i.label)}">${inner}</button>`; }).join('')}</div>`;
+}
+function fabBtn(act, label, attrs = '') { return fabStack([{ act, label, attrs }]); }
 function permBtn(perm, html) { return can(perm) ? html : html.replace('<button', `<button disabled title="${esc(noPerm(perm))}"`); }
 
 /* ---------------- Global event delegation ---------------- */

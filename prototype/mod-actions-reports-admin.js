@@ -30,7 +30,7 @@ ROUTES.actions = (p, q) => {
       { label: 'Status', render: a => sbadge(a.status) }
     ] });
   const bySrc = countBy(open, 'source');
-  const html = `${pageHead('Corrective actions', 'One register for every corrective action raised from inspections, asset defects, maintenance, incidents and document reviews. Completing an action does not close it — a verifier must accept the evidence.', permBtn('action.create', `<button class="btn primary" data-act="actionNew">${icon('plus', 'sm')} New action</button>`), scopePill())}
+  const html = `${pageHead('Corrective actions', 'One register for every corrective action raised from inspections, asset defects, maintenance, incidents and document reviews. Completing an action does not close it — a verifier must accept the evidence.', '', scopePill())}${can('action.create') ? fabBtn('actionNew', 'New action') : ''}
     <div class="kpis">
       ${kpi('Open actions', open.length, `${open.filter(a => a.priority === 'Critical').length} critical · ${open.filter(a => a.priority === 'High').length} high`, 'blue', '#/actions?status=open', 'target')}
       ${kpi('Overdue', open.filter(actionOverdue).length, `${open.filter(a => a.escalated).length} escalated`, open.some(actionOverdue) ? 'red' : 'green', '#/actions?status=overdue', 'alert')}
