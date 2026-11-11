@@ -23,12 +23,12 @@ function addMonthYm(ym, n) { const d = new Date(ym + '-01T00:00:00'); d.setMonth
 // Everything that falls in the month: inspections done, and due dates (the next due date, then every interval after it)
 function calendarItems(ym, who, q = {}) {
   const from = ym + '-01', to = addMonthYm(ym, 1) + '-01', items = [];
-  siteAssetFilter(scoped('schedules'), q, s => s.site, s => s.asset).filter(s => !who || s.assignee === who).forEach(s => {
+  recFilter(scoped('schedules'), q, RF.cal, true).filter(s => !who || s.assignee === who).forEach(s => {
     let d = s.nextDue, k = 0;
     while (d < to && k < 60) { if (d >= from) items.push({ date: d, kind: k === 0 && daysTo(d) < 0 ? 'overdue' : 'due', s, projected: k > 0 }); d = addDays(d, s.freqDays || 30); k++; }
   });
-  siteAssetFilter(scoped('inspections'), q, i => i.site, i => i.asset).filter(i => i.date >= from && i.date < to && (!who || i.inspector === who)).forEach(i => items.push({ date: i.date, kind: 'done', i }));
-  return items;
+  recFilter(scoped('inspections'), q, RF.cal, true).filter(i => i.date >= from && i.date < to && (!who || i.inspector === who)).forEach(i => items.push({ date: i.date, kind: 'done', i }));
+  return q.fstatus ? items.filter(x => x.kind === q.fstatus) : items;
 }
 function calChip(x) {
   if (x.kind === 'done') return `<a class="cal-chip done" href="#/inspections/${x.i.id}" title="${esc(x.i.target)} — done by ${esc(pname(x.i.inspector))}${x.i.results.some(r => r.result === 'Fail') ? ', failed items' : ''}">${icon('check', 'sm')}<span>${esc(x.i.target)}</span></a>`;
@@ -40,9 +40,9 @@ function inspCalendarHtml(q) {
   const items = calendarItems(ym, who, q), days = monthGrid(ym), byDay = d => items.filter(x => x.date === d);
   const people = [...new Set(scoped('schedules').map(s => s.assignee))].filter(Boolean);
   const label = new Date(ym + '-01T00:00:00').toLocaleDateString('en-ZA', { month: 'long', year: 'numeric' });
-  const keep = `${q.fsite ? '&fsite=' + encodeURIComponent(q.fsite) : ''}${q.fasset ? '&fasset=' + encodeURIComponent(q.fasset) : ''}`;
+  const keep = ['ftype', 'fstatus', 'fsite', 'fcomp'].filter(k => q[k]).map(k => `&${k}=${encodeURIComponent(q[k])}`).join('');
   const link = (m, w) => `#/inspections/calendar?m=${m}${w ? '&who=' + encodeURIComponent(w) : ''}${keep}`;
-  const allSch = scoped('schedules'), fltBar = siteAssetFilterBar('#/inspections/calendar', q, allSch, s => s.site, s => s.asset, siteAssetFilter(allSch, q, s => s.site, s => s.asset).length, 'Search asset, area or inspection…');
+  const allSch = scoped('schedules'), fltBar = recFilterBar('#/inspections/calendar', q, allSch, RF.cal, recFilter(allSch, q, RF.cal, true).length, 'Search asset, area or inspection…');
   const n = { late: items.filter(x => x.kind === 'overdue').length, due: items.filter(x => x.kind === 'due').length, done: items.filter(x => x.kind === 'done').length };
   return `<div class="card cal-card">${fltBar}<div class="cal-bar">
       <div class="cal-nav"><a class="btn sm" href="${link(addMonthYm(ym, -1), q.who)}" aria-label="Previous month">${icon('arrowL', 'sm')}</a><h2>${esc(label)}</h2><a class="btn sm" href="${link(addMonthYm(ym, 1), q.who)}" aria-label="Next month">${icon('chevronR', 'sm')}</a>${ym !== TODAY.slice(0, 7) ? `<a class="btn sm ghost" href="${link(TODAY.slice(0, 7), q.who)}">Today</a>` : ''}</div>
@@ -55,7 +55,7 @@ function inspCalendarHtml(q) {
     </div>
   </div>`;
 }
-document.addEventListener('change', e => { if (e.target.id === 'calWho') { const m = (parseHash().q.m) || TODAY.slice(0, 7); const q = parseHash().q; navigate(`#/inspections/calendar?m=${m}${e.target.value ? '&who=' + encodeURIComponent(e.target.value) : ''}${q.fsite ? '&fsite=' + encodeURIComponent(q.fsite) : ''}${q.fasset ? '&fasset=' + encodeURIComponent(q.fasset) : ''}`); } });
+document.addEventListener('change', e => { if (e.target.id === 'calWho') { const m = (parseHash().q.m) || TODAY.slice(0, 7); const q = parseHash().q; navigate(`#/inspections/calendar?m=${m}${e.target.value ? '&who=' + encodeURIComponent(e.target.value) : ''}${['ftype', 'fstatus', 'fsite', 'fcomp'].filter(k => q[k]).map(k => `&${k}=${encodeURIComponent(q[k])}`).join('')}`); } });
 
 /* ---------------- Default intervals per equipment type (Administration → Asset types) ---------------- */
 function typeDefaultHtml(t, ro) {
@@ -102,35 +102,53 @@ MIGRATIONS.push(() => {
   if (fl && !fl.basis) fl.basis = { text: 'Demo: manufacturer\'s manual and the forklift risk assessment; legal requirement to be confirmed by the competent person.', by: 'P-006', on: addDays(TODAY, -40) };
 });
 
-/* ---------------- Filter by site and asset (inspection schedule, planned maintenance) ---------------- */
-// items: the rows; siteOf / assetOf: how to get each row's site and asset id. The choice is kept in the page address.
-function siteAssetFilter(items, q, siteOf, assetOf) {
-  return items.filter(x => (!q.fsite || siteOf(x) === q.fsite) && (!q.fasset || (q.fasset === 'none' ? !assetOf(x) : assetOf(x) === q.fasset)));
+/* ---------------- Filters on the Inspections and Maintenance & defects lists ----------------
+   The same set as the asset register: search, asset type, status, site and compliance state. Asset type and
+   compliance state are those of the record's asset; each list has its own statuses. Kept in the page address. */
+const assetOfRec = id => (id && byId('assets', id)) || null;
+const RF = {
+  sched: { siteOf: s => s.site, assetOf: s => s.asset, status: [{ value: 'overdue', label: 'Overdue', test: s => daysTo(s.nextDue) < 0 }, { value: 'due7', label: 'Due in 7 days', test: s => { const d = daysTo(s.nextDue); return d >= 0 && d <= 7; } }, { value: 'later', label: 'Due later', test: s => daysTo(s.nextDue) > 7 }] },
+  cal: { siteOf: x => x.site, assetOf: x => x.asset, status: [{ value: 'overdue', label: 'Overdue' }, { value: 'due', label: 'Due' }, { value: 'done', label: 'Done' }] },
+  ins: { siteOf: i => i.site, assetOf: i => i.asset, status: [{ value: 'pass', label: 'All items passed', test: i => !i.results.some(r => r.result === 'Fail') }, { value: 'fail', label: 'Failed items', test: i => i.results.some(r => r.result === 'Fail') }] },
+  mt: { siteOf: m => (assetOfRec(m.asset) || {}).site, assetOf: m => m.asset, status: [{ value: 'overdue', label: 'Overdue', test: m => daysTo(m.due) < 0 }, { value: 'due14', label: 'Due in 14 days', test: m => { const d = daysTo(m.due); return d >= 0 && d <= 14; } }, { value: 'later', label: 'Due later', test: m => daysTo(m.due) > 14 }] },
+  mtDone: { siteOf: m => (assetOfRec(m.asset) || {}).site, assetOf: m => m.asset, status: [{ value: 'ontime', label: 'Completed on time', test: m => !m.due || String(m.completed).slice(0, 10) <= m.due }, { value: 'late', label: 'Completed late', test: m => m.due && String(m.completed).slice(0, 10) > m.due }] },
+  def: { siteOf: d => (assetOfRec(d.asset) || {}).site, assetOf: d => d.asset, status: [{ value: 'open', label: 'Open (not closed)', test: d => d.status !== 'Closed' }].concat(['Awaiting Review', 'Action Raised', 'Repaired – awaiting verification', 'Closed'].map(v => ({ value: v, label: v, test: d => d.status === v }))) }
+};
+const COMP = [{ value: 'docs', label: 'Certificate expired / missing', test: a => assetDocStatus(a).some(d => d.status === 'Expired' || d.status === 'Missing') }, { value: 'insp', label: 'Inspection overdue', test: a => scheduleFor(a.id).some(s => daysTo(s.nextDue) < 0) }];
+function recFilter(items, q, c, skipStatus) {
+  const st = !skipStatus && q.fstatus && (c.status || []).find(x => x.value === q.fstatus), cp = q.fcomp && COMP.find(x => x.value === q.fcomp);
+  return items.filter(x => { const a = assetOfRec(c.assetOf(x));
+    if (q.fsite && c.siteOf(x) !== q.fsite) return false;
+    if (q.ftype && (!a || a.type !== q.ftype)) return false;
+    if (cp && (!a || !cp.test(a))) return false;
+    if (st && st.test && !st.test(x)) return false;
+    return true; });
 }
-// The same toolbar as the asset register: search, then the filters, then "N of M records" — inside the list's card
-const FLT_Q = {};
-function siteAssetFilterBar(base, q, items, siteOf, assetOf, shown, placeholder) {
-  const sites = [...new Set(items.map(siteOf))].filter(Boolean).map(id => site(id)).filter(Boolean).sort((a, b) => a.name.localeCompare(b.name));
-  const inSiteItems = items.filter(x => !q.fsite || siteOf(x) === q.fsite);
-  const assets = [...new Set(inSiteItems.map(assetOf))].filter(Boolean).map(id => byId('assets', id)).filter(Boolean).sort((a, b) => a.tag.localeCompare(b.tag));
-  const areas = inSiteItems.some(x => !assetOf(x));
+function recFilterBar(base, q, items, c, shown, placeholder) {
+  const sites = [...new Set(items.map(c.siteOf))].filter(Boolean).map(id => site(id)).filter(Boolean).sort((a, b) => a.name.localeCompare(b.name));
+  const sel = (key, all, list) => `<select data-flt="${key}" aria-label="${esc(all)}"><option value="">${esc(all)}</option>${list.map(o => `<option value="${esc(o.value)}" ${q[key] === o.value ? 'selected' : ''}>${esc(o.label)}</option>`).join('')}</select>`;
   setTimeout(() => fltSearch(base), 0);
   return `<div class="toolbar flt-bar" data-base="${base}" data-total="${items.length}" data-shown="${shown}">
     <div class="search">${icon('search', 'sm')}<input type="search" data-fq="${base}" placeholder="${esc(placeholder || 'Search…')}" value="${esc(FLT_Q[base] || '')}" aria-label="Search list"></div>
-    ${sites.length > 1 ? `<select data-flt="fsite" aria-label="Site"><option value="">All sites</option>${sites.map(x => `<option value="${x.id}" ${q.fsite === x.id ? 'selected' : ''}>${esc(x.short || x.name)}</option>`).join('')}</select>` : ''}
-    <select data-flt="fasset" aria-label="Asset"><option value="">All assets${areas ? ' and areas' : ''}</option>${assets.map(a => `<option value="${a.id}" ${q.fasset === a.id ? 'selected' : ''}>${esc(a.tag)} — ${esc(a.name)}</option>`).join('')}${areas ? `<option value="none" ${q.fasset === 'none' ? 'selected' : ''}>Areas (no asset)</option>` : ''}</select>
-    ${q.fsite || q.fasset ? `<button type="button" class="link-btn" data-act="fltClear">Clear filters</button>` : ''}
+    ${sel('ftype', 'All asset types', S.assetTypes.map(t => ({ value: t.id, label: t.name })))}
+    ${sel('fstatus', 'All statuses', c.status || [])}
+    ${sites.length > 1 || q.fsite ? sel('fsite', 'All sites', sites.map(x => ({ value: x.id, label: x.short || x.name }))) : ''}
+    ${sel('fcomp', 'Any compliance state', COMP)}
+    ${q.ftype || q.fstatus || q.fsite || q.fcomp ? `<button type="button" class="link-btn" data-act="fltClear">Clear filters</button>` : ''}
     <span class="tb-count">${shown} of ${items.length} records</span>
   </div>`;
 }
+// Older name kept for any caller that filters by site only
+function siteAssetFilter(items, q, siteOf, assetOf) { return recFilter(items, q, { siteOf, assetOf, status: [] }); }
+const FLT_Q = {};
 // Typing in the search box narrows the rows (or calendar entries) shown, straight away
 function fltSearch(base) {
   const bar = document.querySelector(`.flt-bar[data-base="${base}"]`); if (!bar) return;
   const term = (FLT_Q[base] || '').trim().toLowerCase(), card = bar.closest('.card');
   const rows = card ? [...card.querySelectorAll('tbody tr, .cal-chip')] : [];
   let n = 0; rows.forEach(r => { const hit = !term || r.textContent.toLowerCase().includes(term); r.style.display = hit ? '' : 'none'; if (hit) n++; });
-  const c = bar.querySelector('.tb-count'), tot = bar.dataset.total;
-  if (c) c.textContent = term ? `${n} matching · ${bar.dataset.shown} of ${tot} records` : `${bar.dataset.shown} of ${tot} records`;
+  const ct = bar.querySelector('.tb-count'), tot = bar.dataset.total;
+  if (ct) ct.textContent = term ? `${n} matching · ${bar.dataset.shown} of ${tot} records` : `${bar.dataset.shown} of ${tot} records`;
 }
 document.addEventListener('input', e => { const t = e.target; if (t.dataset && t.dataset.fq) { FLT_Q[t.dataset.fq] = t.value; fltSearch(t.dataset.fq); } });
 function fltGo(bar, changes) {
@@ -142,7 +160,6 @@ function fltGo(bar, changes) {
 document.addEventListener('change', e => {
   const sel = e.target.closest && e.target.closest('[data-flt]'); if (!sel) return;
   const bar = sel.closest('.flt-bar'), ch = { [sel.dataset.flt]: sel.value };
-  if (sel.dataset.flt === 'fsite') ch.fasset = '';   // a different site has different assets
   fltGo(bar, ch);
 });
-ACT.fltClear = (el) => fltGo(el.closest('.flt-bar'), { fsite: '', fasset: '' });
+ACT.fltClear = (el) => fltGo(el.closest('.flt-bar'), { ftype: '', fstatus: '', fsite: '', fcomp: '', fasset: '' });

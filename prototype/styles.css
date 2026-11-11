@@ -1241,3 +1241,4 @@ body.auth-mode .main { padding-top: 0; }
 /* Site / asset filters: same toolbar as the asset register */
 .cal-card > .toolbar { border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
 
+.flt-bar .search { max-width: 280px; } .flt-bar select { max-width: 190px; }

@@ -1186,19 +1186,19 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await p.selectOption('.flt-bar [data-flt=fsite]', 'S-JHB'); await p.waitForTimeout(150);
     const jhb = await p.$$eval('#content table.tbl tbody tr td[data-label=Site]', e => e.map(x => x.textContent.trim()));
     const wantJ = await S("scoped('schedules').filter(s => s.site === 'S-JHB').length");
-    await p.selectOption('.flt-bar [data-flt=fasset]', 'AS-001'); await p.waitForTimeout(150);
+    await p.selectOption('.flt-bar [data-flt=ftype]', 'AT-FL'); await p.waitForTimeout(150);
     const one = await p.$$eval('#content table.tbl tbody tr td[data-label=Target]', e => e.map(x => x.textContent.trim()));
+    const labels = await p.$$eval('.flt-bar select', e => e.map(x => x.options[0].textContent));
     const hash = await p.evaluate(() => location.hash);
     await act('[data-act=fltClear]'); const back = await p.$$eval('#content table.tbl tbody tr', e => e.length);
-    ok('FL1 the inspection schedule can be filtered by site and by asset, and cleared', jhb.length === wantJ && jhb.every(t => t === 'Germiston') && one.length >= 1 && one.every(t => t === 'FL-01') && hash.includes('fsite=S-JHB') && hash.includes('fasset=AS-001') && back === all, `${all} → ${jhb.length} → ${one.length}`);
+    ok('FL1 the inspection schedule has the same filters as the asset register (search, asset type, status, site, compliance state) and they can be cleared', jhb.length === wantJ && jhb.every(t => t === 'Germiston') && one.length >= 1 && one.every(t => /^FL-/.test(t)) && hash.includes('fsite=S-JHB') && hash.includes('ftype=AT-FL') && back === all && labels.join('|') === 'All asset types|All statuses|All sites|Any compliance state' && await has('.flt-bar .search input'), `${all} → ${jhb.length} → ${one.length}`);
     await go('#/maintenance/planned'); await p.waitForTimeout(150);
     const mAll = await p.$$eval('#content table.tbl tbody tr', e => e.length);
     await p.selectOption('.flt-bar [data-flt=fsite]', 'S-CPT'); await p.waitForTimeout(150);
     const cpt = await p.$$eval('#content table.tbl tbody tr', e => e.length), wantC = await S("S.maintenance.filter(m => !m.completed && (byId('assets', m.asset) || {}).site === 'S-CPT').length");
-    const aid = await S("(S.maintenance.find(m => !m.completed && (byId('assets', m.asset) || {}).site === 'S-CPT') || {}).asset");
-    await p.selectOption('.flt-bar [data-flt=fasset]', aid); await p.waitForTimeout(150);
-    const mOne = await p.$$eval('#content table.tbl tbody tr', e => e.length), wantA = await S(`S.maintenance.filter(m => !m.completed && m.asset === '${aid}').length`);
-    ok('FL2 planned maintenance can be filtered by site and by asset', cpt === wantC && cpt < mAll && mOne === wantA, `${mAll} → ${cpt} → ${mOne}`);
+    await act('[data-act=fltClear]'); await p.selectOption('.flt-bar [data-flt=fstatus]', 'overdue'); await p.waitForTimeout(150);
+    const mOne = await p.$$eval('#content table.tbl tbody tr', e => e.length), wantA = await S("S.maintenance.filter(m => !m.completed && scoped('assets').some(a => a.id === m.asset) && daysTo(m.due) < 0).length");
+    ok('FL2 planned maintenance can be filtered by site and by status', cpt === wantC && cpt < mAll && mOne === wantA, `${mAll} → ${cpt} → ${mOne}`);
   }
 
   /* ---------------- MF. most failed checks; FL3. more filters ---------------- */
@@ -1211,12 +1211,12 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     ok('MF1 the most failed checks report lists checklist items by how often they fail, filtered by period and asset type', want > 0 && rows === want && fl.length > 0 && fl.every(x => x === 'KIE-FRM-031'), `${want} item(s)`);
     await p.selectOption('#mfType', ''); await go('#/maintenance/defects'); await p.waitForTimeout(150);
     const dAll = await p.$$eval('#content table.tbl tbody tr', e => e.length);
-    await p.selectOption('.flt-bar [data-flt=fasset]', 'AS-009'); await p.waitForTimeout(150);
-    const dOne = await p.$$eval('#content table.tbl tbody tr', e => e.length), dWant = await S("S.defects.filter(d => d.asset === 'AS-009').length");
+    await p.selectOption('.flt-bar [data-flt=fcomp]', 'docs'); await p.waitForTimeout(150);
+    const dOne = await p.$$eval('#content table.tbl tbody tr', e => e.length), dWant = await S("S.defects.filter(d => { const a = byId('assets', d.asset); return a && scoped('assets').includes(a) && assetDocStatus(a).some(x => x.status === 'Expired' || x.status === 'Missing'); }).length");
     await go('#/actions'); await p.waitForTimeout(150);
     await p.selectOption('[data-lvf=asset]', 'AS-009'); await p.waitForTimeout(150);
     const ids = await p.$$eval('#lvb-acts .mono', e => e.map(x => x.textContent)), okA = await S(`${JSON.stringify(ids)}.every(id => actionAssetId(byId('actions', id)) === 'AS-009')`);
-    ok('FL3 defects and maintenance records filter by site and asset; corrective actions filter by asset', dOne === dWant && dOne < dAll && ids.length > 0 && okA, `${dAll} → ${dOne} defects, ${ids.length} action(s)`);
+    ok('FL3 defects filter by compliance state of their asset; corrective actions filter by asset', dOne === dWant && dOne <= dAll && ids.length > 0 && okA, `${dAll} → ${dOne} defects, ${ids.length} action(s)`);
     await go('#/inspections/records'); await p.waitForTimeout(120); const rAll = await p.$$eval('#content table.tbl tbody tr', e => e.length);
     await p.selectOption('.flt-bar [data-flt=fsite]', 'S-DBN'); await p.waitForTimeout(150);
     const rD = await p.$$eval('#content table.tbl tbody tr', e => e.length), rWant = await S("scoped('inspections').filter(i => i.site === 'S-DBN').length");

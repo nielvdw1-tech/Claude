@@ -54,7 +54,7 @@ Status key:
 | Printable controlled inspection report with Page X of Y | Implemented | Page numbers need Chrome or Edge |
 | Maintenance scheduling and completion | Implemented | |
 | Inspections without signal: draft saved on the phone as you go and restored; signed inspection queued without signal and sent automatically when it returns; signed and sent times kept | Partial | OF1–OF4; signal loss simulated in the prototype (or real browser offline); live system needs a service worker and server sync |
-| Filter every Inspections tab (schedule, calendar, records) and every Maintenance & defects tab (planned, records, defects) by site and asset; corrective actions by asset | Implemented | FL1–FL4 |
+| Every Inspections tab (schedule, calendar, records) and every Maintenance & defects tab (planned, records, defects) has the asset register's filters: search, asset type, status, site, compliance state; corrective actions filter by asset | Implemented | FL1–FL4 |
 | Most failed checks report: fail rate per checklist item by period, asset type and branch | Implemented | MF1 |
 | Inspection calendar: month view of overdue, due, repeating and done inspections, per branch and inspector; list view on a phone | Implemented | CA1–CA2 |
 | Inspection default per equipment type: checklist and interval set by a competent person with the recorded basis; create schedules for assets without one; change existing intervals | Implemented | TD1; no legal intervals supplied by the system |
