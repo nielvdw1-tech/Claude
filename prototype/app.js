@@ -645,13 +645,44 @@ function pageHead(title, lead, actions = '', extra = '') {
 }
 function tabsHtml(base, tabs, active) { return `<div class="tabs" role="tablist">${tabs.map(t => `<a role="tab" href="${base.endsWith('=') ? base + t[0] : base + '/' + t[0]}" class="${t[0] === active ? 'active' : ''}">${esc(t[1])}${t[2] ? `<span class="tc ${t[3] || ''}">${t[2]}</span>` : ''}</a>`).join('')}</div>`; }
 function noPerm(perm) { const d = S.permissionDefs.find(p => p[0] === perm); return `Your demo role (${myRole().name}) does not have the "${d ? d[1] : perm}" permission. Switch user from the user menu to try another role.`; }
-/* A floating "add" button that stays in view while the page scrolls (bottom-right) */
+/* Floating "add" buttons that stay in view while the page scrolls (top right, below the banner) */
 function fabStack(items) {
   items = items.filter(Boolean); if (!items.length) return '';
-  return `<div class="fab-stack">${items.map(i => { const inner = `${icon(i.icon || 'plus', 'sm')}<span>${esc(i.label)}</span>`, cls = `btn ${i.cls || 'primary'} fab`;
+  const pos = S.ui.fabPos && S.ui.fabPos.t != null ? S.ui.fabPos : null, at = pos ? ` style="right:${pos.r}px;top:${pos.t}px"` : '';
+  return `<div class="fab-stack${pos ? ' moved' : ''}"${at}><button type="button" class="fab-grip" aria-label="Move these buttons: drag, or use the arrow keys. Double-click to put them back." title="Drag to move · double-click to put back">${icon('menu', 'sm')}</button>${items.map(i => { const inner = `${icon(i.icon || 'plus', 'sm')}<span>${esc(i.label)}</span>`, cls = `btn ${i.cls || 'primary'} fab`;
     return i.href ? `<a class="${cls}" href="${i.href}" title="${esc(i.label)}">${inner}</a>` : `<button type="button" class="${cls}" data-act="${i.act}" ${i.attrs || ''} title="${esc(i.label)}">${inner}</button>`; }).join('')}</div>`;
 }
 function fabBtn(act, label, attrs = '') { return fabStack([{ act, label, attrs }]); }
+/* Moving the floating buttons: drag the grip or any of the buttons (a click is still a click), or use the
+   arrow keys on the grip. The place is remembered for this person; double-click the grip to put them back. */
+const FAB_DRAG = { on: false, moved: false };
+function fabClamp(r, t, el) { const w = el.offsetWidth, h = el.offsetHeight, top = (document.getElementById('topbar') || {}).offsetHeight || 60; return { r: Math.round(Math.max(8, Math.min(window.innerWidth - w - 8, r))), t: Math.round(Math.max(top + 8, Math.min(window.innerHeight - h - 8, t))) }; }
+function fabPlace(el, r, t) { const c = fabClamp(r, t, el); el.style.right = c.r + 'px'; el.style.top = c.t + 'px'; el.classList.add('moved'); return c; }
+document.addEventListener('pointerdown', e => {
+  const st = e.target.closest && e.target.closest('.fab-stack'); if (!st || e.button > 0) return;
+  const r0 = parseFloat(getComputedStyle(st).right), t0 = st.getBoundingClientRect().top;
+  Object.assign(FAB_DRAG, { on: true, moved: false, st, x: e.clientX, y: e.clientY, r0, t0, grip: !!e.target.closest('.fab-grip'), id: e.pointerId });
+});
+document.addEventListener('pointermove', e => {
+  if (!FAB_DRAG.on || e.pointerId !== FAB_DRAG.id) return;
+  const dx = e.clientX - FAB_DRAG.x, dy = e.clientY - FAB_DRAG.y;
+  if (!FAB_DRAG.moved && Math.hypot(dx, dy) < 6) return;
+  if (!FAB_DRAG.moved) { FAB_DRAG.moved = true; FAB_DRAG.st.classList.add('dragging'); try { FAB_DRAG.st.setPointerCapture(e.pointerId); } catch (x) { /* not needed */ } }
+  e.preventDefault(); FAB_DRAG.pos = fabPlace(FAB_DRAG.st, FAB_DRAG.r0 - dx, FAB_DRAG.t0 + dy);
+}, { passive: false });
+document.addEventListener('pointerup', () => {
+  if (!FAB_DRAG.on) return; FAB_DRAG.on = false;
+  if (FAB_DRAG.moved) { FAB_DRAG.st.classList.remove('dragging'); S.ui.fabPos = FAB_DRAG.pos; save(); FAB_DRAG.justMoved = true; setTimeout(() => { FAB_DRAG.justMoved = false; }, 0); }
+});
+// A drag that ends on a button is not a click on it
+document.addEventListener('click', e => { if (FAB_DRAG.justMoved && e.target.closest && e.target.closest('.fab-stack')) { e.stopPropagation(); e.preventDefault(); FAB_DRAG.justMoved = false; } }, true);
+document.addEventListener('keydown', e => {
+  const g = e.target.closest && e.target.closest('.fab-grip'); if (!g) return;
+  const k = { ArrowLeft: [24, 0], ArrowRight: [-24, 0], ArrowUp: [0, -24], ArrowDown: [0, 24] }[e.key]; if (!k) return;
+  e.preventDefault(); const st = g.closest('.fab-stack'); S.ui.fabPos = fabPlace(st, parseFloat(getComputedStyle(st).right) + k[0], st.getBoundingClientRect().top + k[1]); save();
+});
+document.addEventListener('dblclick', e => { const g = e.target.closest && e.target.closest('.fab-grip'); if (!g) return; delete S.ui.fabPos; save(); const st = g.closest('.fab-stack'); st.style.right = st.style.top = ''; st.classList.remove('moved'); toast('Buttons put back at the top.', 'info'); });
+window.addEventListener('resize', () => { const st = document.querySelector('.fab-stack.moved'); if (st && S.ui.fabPos && S.ui.fabPos.t != null) S.ui.fabPos = fabPlace(st, S.ui.fabPos.r, S.ui.fabPos.t); });
 function permBtn(perm, html) { return can(perm) ? html : html.replace('<button', `<button disabled title="${esc(noPerm(perm))}"`); }
 
 /* ---------------- Global event delegation ---------------- */

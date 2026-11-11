@@ -1155,14 +1155,28 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
   /* ---------------- FB3. Floating buttons on the main pages ---------------- */
   {
     await asUser('P-002'); const seen = [];
-    for (const [page, label] of [['#/assets', 'Add asset'], ['#/inspections/schedule', 'New inspection schedule'], ['#/maintenance', 'Report defect'], ['#/maintenance', 'Schedule maintenance'], ['#/incidents', 'Report incident'], ['#/actions', 'New action']]) {
+    for (const [page, label] of [['#/assets', 'Add asset'], ['#/inspections/schedule', 'New inspection schedule'], ['#/maintenance', 'Report defect'], ['#/maintenance', 'Schedule maintenance'], ['#/incidents', 'Report incident'], ['#/actions', 'New action'], ['#/documents', 'Upload document'], ['#/notices', 'Publish notice']]) {
       await go(page); await p.waitForTimeout(120); await p.evaluate(() => window.scrollTo(0, document.body.scrollHeight)); await p.waitForTimeout(60);
       const f = await p.$(`.fab-stack .fab:has-text("${label}")`);
-      if (f && await f.isVisible() && await f.evaluate(e => getComputedStyle(e.closest('.fab-stack')).position === 'fixed')) seen.push(label);
+      if (f && await f.isVisible() && await f.evaluate(e => getComputedStyle(e.closest('.fab-stack')).position === 'fixed' && e.closest('.fab-stack').getBoundingClientRect().top < window.innerHeight / 3)) seen.push(label);
     }
     await go('#/assets'); const noQr = !(await has('.page-head [data-act=qrScan]')) && !(await has('.page-head a[href="#/labels"]'));
     await go('#/assets/AS-001'); const onAsset = await has('a[href^="#/labels?ids=AS-001"]') && await has('a[href="#/qr/AS-001"]');
-    ok('FB3 Add asset, New inspection schedule, Report defect, Schedule maintenance, Report incident and New action float in view; QR scan and label printing are on the asset itself', seen.length === 6 && noQr && onAsset, seen.join(', '));
+    ok('FB3 Add asset, New inspection schedule, Report defect, Schedule maintenance, Report incident, New action, Upload document and Publish notice float in view, starting at the top; QR scan and label printing are on the asset itself', seen.length === 8 && noQr && onAsset, seen.join(', '));
+  }
+
+  /* ---------------- FB4. Moving the floating buttons ---------------- */
+  {
+    await asUser('P-002'); await go('#/maintenance'); await p.waitForTimeout(150);
+    const f = await p.$('.fab-stack .fab:has-text("Schedule maintenance")'), bx = await f.boundingBox();
+    await p.mouse.move(bx.x + 40, bx.y + 15); await p.mouse.down(); for (let k = 1; k <= 8; k++) await p.mouse.move(bx.x + 40 - k * 40, bx.y + 15 + k * 25); await p.mouse.up(); await p.waitForTimeout(150);
+    const pos = await S('S.ui.fabPos'), noClick = !(await modalOpen()), nb = await (await p.$('.fab-stack .fab:has-text("Schedule maintenance")')).boundingBox();
+    await go('#/actions'); await p.waitForTimeout(120);
+    const kept = await p.$eval('.fab-stack', e => [parseFloat(e.style.right), parseFloat(e.style.top)]);
+    await act('.fab-stack .fab:has-text("New action")'); const clicks = await modalOpen(); await p.keyboard.press('Escape'); await p.waitForTimeout(80);
+    await p.focus('.fab-grip'); await p.keyboard.press('ArrowLeft'); const keyed = await S('S.ui.fabPos.r');
+    await p.dblclick('.fab-grip'); await p.waitForTimeout(80); const reset = !(await S('S.ui.fabPos'));
+    ok('FB4 the floating buttons can be dragged anywhere (a drag is not a click), stay there on other pages, move with the arrow keys and go back with a double-click', !!pos && noClick && Math.abs(nb.x - (bx.x - 320)) < 4 && kept[0] === pos.r && kept[1] === pos.t && clicks && keyed === pos.r + 24 && reset, JSON.stringify(pos));
   }
 
   /* ---------------- L. Company logo ---------------- */

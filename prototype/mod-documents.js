@@ -64,7 +64,7 @@ ROUTES.documents = (p, q) => {
       { label: 'Next review', render: d => docActive(d) && docIssued(d) ? dueText(d.nextReview) : '<span class="muted">—</span>' }
     ]
   });
-  const html = `${pageHead('Document Manager', 'Upload controlled documents and route them through a set sequence of approvers. Each approver signs off in turn; any approver can return the document for correction. Issued revisions are controlled and reviewed periodically.', permBtn('doc.create', `<button class="btn primary" data-act="newDoc">${icon('upload', 'sm')} Upload document</button>`), scopePill())}
+  const html = `${pageHead('Document Manager', 'Upload controlled documents and route them through a set sequence of approvers. Each approver signs off in turn; any approver can return the document for correction. Issued revisions are controlled and reviewed periodically.', '', scopePill())}${can('doc.create') ? fabStack([{ act: 'newDoc', label: 'Upload document', icon: 'upload' }]) : ''}
     <div class="kpis">
       ${kpi('Awaiting my approval', mine.length, mine.length ? 'It is your turn on the approval route' : 'Nothing waiting for you', mine.length ? 'amber' : 'green', '#/documents?status=mine', 'user')}
       ${kpi('In approval', inAppr.length, 'Moving through approval routes', 'blue', '#/documents?status=In Approval', 'clock')}

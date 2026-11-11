@@ -23,6 +23,7 @@ To start again, open the user menu (top right) and choose **Reset demo data**.
 
 - **Top banner**, left to right: the **menu button** (hides or shows the side menu; on a phone it slides the menu in), the **VDW logo** (`vdw-logo.png`, also on the sign-in page), **search**, **My tasks**, **Notifications**, and the **signed-in person and their company** (with the company logo and the branch in view). Click the person and company to switch **company** or **branch / site**, change your password, or sign out.
 - **Back** and the breadcrumb trail sit just above the page on deeper pages.
+- **Floating buttons:** the main "add" buttons on each page (Upload document, Publish notice, Add asset, New inspection schedule, Report defect, Schedule maintenance, Report incident, New action, and the Administration tabs) float at the top right and stay in view while you scroll. **Drag** them (or the small handle above them) anywhere on the screen; they stay there on every page. The arrow keys move them when the handle is selected, and **double-clicking the handle** puts them back.
 - **Side menu:** the pages only: Dashboard, Notifications & Tasks, Document Manager, Assets & Equipment, Inspections, Maintenance & Defects, Incident Management, Corrective Actions, Reports and Administration.
 - **Top bar:** global search (press `/`), **My tasks** (✓ icon), notifications and the user menu.
 - **Own branch only:** branch managers, supervisors and employees work in their own branch.
@@ -366,6 +367,6 @@ prototype/
 └── README.md                     This file
 ```
 
-**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 246 workflow outcomes.
+**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 247 workflow outcomes.
 
 The earlier full HSEQ prototype, with legal, risk, people, PPE, chemicals, emergency and audits, is preserved in git history at commit `26b59bc`.
