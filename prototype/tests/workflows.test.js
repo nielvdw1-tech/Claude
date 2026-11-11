@@ -1174,9 +1174,9 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await go('#/actions'); await p.waitForTimeout(120);
     const kept = await p.$eval('.fab-stack', e => [parseFloat(e.style.right), parseFloat(e.style.top)]);
     await act('.fab-stack .fab:has-text("New action")'); const clicks = await modalOpen(); await p.keyboard.press('Escape'); await p.waitForTimeout(80);
-    await p.focus('.fab-grip'); await p.keyboard.press('ArrowLeft'); const keyed = await S('S.ui.fabPos.r');
-    await p.dblclick('.fab-grip'); await p.waitForTimeout(80); const reset = !(await S('S.ui.fabPos'));
-    ok('FB4 the floating buttons can be dragged anywhere (a drag is not a click), stay there on other pages, move with the arrow keys and go back with a double-click', !!pos && noClick && Math.abs(nb.x - (bx.x - 320)) < 4 && kept[0] === pos.r && kept[1] === pos.t && clicks && keyed === pos.r + 24 && reset, JSON.stringify(pos));
+    await p.focus('.fab-stack .fab'); await p.keyboard.press('Alt+ArrowLeft'); const keyed = await S('S.ui.fabPos.r'); const noGrip = !(await has('.fab-grip'));
+    await act('[data-act=userMenu]'); await act('.dropdown [data-act=fabReset]'); await p.waitForTimeout(80); const reset = !(await S('S.ui.fabPos')) && !(await has('.fab-stack.moved'));
+    ok('FB4 the floating buttons can be dragged anywhere (a drag is not a click), stay there on other pages, move with Alt + arrow keys and go back from the person\'s menu', noGrip && !!pos && noClick && Math.abs(nb.x - (bx.x - 320)) < 4 && kept[0] === pos.r && kept[1] === pos.t && clicks && keyed === pos.r + 24 && reset, JSON.stringify(pos));
   }
 
   /* ---------------- L. Company logo ---------------- */

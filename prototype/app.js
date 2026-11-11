@@ -649,19 +649,19 @@ function noPerm(perm) { const d = S.permissionDefs.find(p => p[0] === perm); ret
 function fabStack(items) {
   items = items.filter(Boolean); if (!items.length) return '';
   const pos = S.ui.fabPos && S.ui.fabPos.t != null ? S.ui.fabPos : null, at = pos ? ` style="right:${pos.r}px;top:${pos.t}px"` : '';
-  return `<div class="fab-stack${pos ? ' moved' : ''}"${at}><button type="button" class="fab-grip" aria-label="Move these buttons: drag, or use the arrow keys. Double-click to put them back." title="Drag to move · double-click to put back">${icon('menu', 'sm')}</button>${items.map(i => { const inner = `${icon(i.icon || 'plus', 'sm')}<span>${esc(i.label)}</span>`, cls = `btn ${i.cls || 'primary'} fab`;
+  return `<div class="fab-stack${pos ? ' moved' : ''}"${at}>${items.map(i => { const inner = `${icon(i.icon || 'plus', 'sm')}<span>${esc(i.label)}</span>`, cls = `btn ${i.cls || 'primary'} fab`;
     return i.href ? `<a class="${cls}" href="${i.href}" title="${esc(i.label)}">${inner}</a>` : `<button type="button" class="${cls}" data-act="${i.act}" ${i.attrs || ''} title="${esc(i.label)}">${inner}</button>`; }).join('')}</div>`;
 }
 function fabBtn(act, label, attrs = '') { return fabStack([{ act, label, attrs }]); }
-/* Moving the floating buttons: drag the grip or any of the buttons (a click is still a click), or use the
-   arrow keys on the grip. The place is remembered for this person; double-click the grip to put them back. */
+/* Moving the floating buttons: drag any of them (a click is still a click), or hold Alt and use the arrow keys
+   on a selected one. The place is remembered for this person; the person's menu puts them back. */
 const FAB_DRAG = { on: false, moved: false };
 function fabClamp(r, t, el) { const w = el.offsetWidth, h = el.offsetHeight, top = (document.getElementById('topbar') || {}).offsetHeight || 60; return { r: Math.round(Math.max(8, Math.min(window.innerWidth - w - 8, r))), t: Math.round(Math.max(top + 8, Math.min(window.innerHeight - h - 8, t))) }; }
 function fabPlace(el, r, t) { const c = fabClamp(r, t, el); el.style.right = c.r + 'px'; el.style.top = c.t + 'px'; el.classList.add('moved'); return c; }
 document.addEventListener('pointerdown', e => {
   const st = e.target.closest && e.target.closest('.fab-stack'); if (!st || e.button > 0) return;
   const r0 = parseFloat(getComputedStyle(st).right), t0 = st.getBoundingClientRect().top;
-  Object.assign(FAB_DRAG, { on: true, moved: false, st, x: e.clientX, y: e.clientY, r0, t0, grip: !!e.target.closest('.fab-grip'), id: e.pointerId });
+  Object.assign(FAB_DRAG, { on: true, moved: false, st, x: e.clientX, y: e.clientY, r0, t0, id: e.pointerId });
 });
 document.addEventListener('pointermove', e => {
   if (!FAB_DRAG.on || e.pointerId !== FAB_DRAG.id) return;
@@ -677,11 +677,11 @@ document.addEventListener('pointerup', () => {
 // A drag that ends on a button is not a click on it
 document.addEventListener('click', e => { if (FAB_DRAG.justMoved && e.target.closest && e.target.closest('.fab-stack')) { e.stopPropagation(); e.preventDefault(); FAB_DRAG.justMoved = false; } }, true);
 document.addEventListener('keydown', e => {
-  const g = e.target.closest && e.target.closest('.fab-grip'); if (!g) return;
+  const g = e.altKey && e.target.closest && e.target.closest('.fab-stack .fab'); if (!g) return;
   const k = { ArrowLeft: [24, 0], ArrowRight: [-24, 0], ArrowUp: [0, -24], ArrowDown: [0, 24] }[e.key]; if (!k) return;
   e.preventDefault(); const st = g.closest('.fab-stack'); S.ui.fabPos = fabPlace(st, parseFloat(getComputedStyle(st).right) + k[0], st.getBoundingClientRect().top + k[1]); save();
 });
-document.addEventListener('dblclick', e => { const g = e.target.closest && e.target.closest('.fab-grip'); if (!g) return; delete S.ui.fabPos; save(); const st = g.closest('.fab-stack'); st.style.right = st.style.top = ''; st.classList.remove('moved'); toast('Buttons put back at the top.', 'info'); });
+ACT.fabReset = () => { delete S.ui.fabPos; save(); document.querySelectorAll('.dropdown').forEach(d => d.remove()); rerender(); toast('Floating buttons put back at the top right.', 'info'); };
 window.addEventListener('resize', () => { const st = document.querySelector('.fab-stack.moved'); if (st && S.ui.fabPos && S.ui.fabPos.t != null) S.ui.fabPos = fabPlace(st, S.ui.fabPos.r, S.ui.fabPos.t); });
 function permBtn(perm, html) { return can(perm) ? html : html.replace('<button', `<button disabled title="${esc(noPerm(perm))}"`); }
 
@@ -740,6 +740,7 @@ ACT.userMenu = (el) => {
     <hr><div class="dd-head">Demo: sign in as someone else</div>
     ${users.map(u => `<button class="dd-item ${u.id === S.ui.user ? 'current' : ''}" data-act="switchUser" data-id="${u.id}"><span class="avatar sm">${initials(u.name)}</span><span><b>${esc(u.name)}</b><br><small>${esc(u.sysRole)} · ${esc(orgOf(u.org).short)} · ${esc(sname(u.site))}</small></span></button>`).join('')}
     <hr><button class="dd-item" data-act="go" data-href="#/admin/roles">${icon('lock', 'sm')} Roles & permissions</button>
+    ${S.ui.fabPos ? `<button class="dd-item" data-act="fabReset">${icon('refresh', 'sm')} Put floating buttons back</button>` : ''}
     <button class="dd-item" data-act="toggleOffline">${icon('alert', 'sm')} ${S.ui.simOffline ? 'Restore signal (demo)' : 'Simulate no signal (demo)'}</button>
     <button class="dd-item" data-act="resetDemo">${icon('refresh', 'sm')} Reset demo data</button>
     <div class="dd-head" style="text-transform:none;letter-spacing:0">Prototype: sign-in and permissions are checked in this browser only. The live system checks them on a secure server.</div>`;

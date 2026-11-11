@@ -1234,9 +1234,6 @@ body.auth-mode .main { padding-top: 0; }
 @media print { .fab-stack { display: none !important; } }
 
 /* Moving the floating buttons */
-.fab-grip { align-self: flex-end; width: 34px; height: 22px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); display: grid; place-items: center; cursor: grab; box-shadow: var(--shadow); padding: 0; touch-action: none; opacity: .85; }
-.fab-grip:hover, .fab-grip:focus-visible { opacity: 1; color: var(--brand); border-color: var(--line-strong); }
-.fab-grip svg { width: 14px; height: 14px; }
-.fab-stack .fab { touch-action: none; }
+.fab-stack .fab { touch-action: none; cursor: pointer; }
 .fab-stack.dragging, .fab-stack.dragging * { cursor: grabbing !important; user-select: none; }
 .fab-stack.dragging .fab { box-shadow: 0 12px 32px rgba(0, 40, 120, .38); }
