@@ -1223,3 +1223,10 @@ body.auth-mode .main { padding-top: 0; }
 .ack-sign .check.invalid span { color: var(--bad); }
 .ack-sign .btn { justify-self: start; }
 .ack-sig { height: 32px; width: auto; background: #fff; border: 1px solid var(--line); border-radius: 4px; flex: none; }
+
+/* Floating button: stays in view while the page scrolls */
+.fab { position: fixed; right: 28px; bottom: 28px; z-index: 40; border-radius: 999px; padding: 12px 20px; box-shadow: 0 6px 20px rgba(0, 40, 120, .28); }
+.fab:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0, 40, 120, .34); }
+.fab-space { height: 64px; }
+@media (max-width: 720px) { .fab { right: 16px; bottom: 16px; padding: 12px 16px; } }
+@media print { .fab, .fab-space { display: none !important; } }
