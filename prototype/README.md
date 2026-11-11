@@ -143,7 +143,7 @@ Defects can also be reported directly from the asset page or its **QR page** (e.
 - Submitted **without signal**, the signed inspection waits on the phone (*1 waiting to send*) and is **sent automatically when the signal returns**. The record shows when it was signed and when it was sent.
 - To try it: user menu → **Simulate no signal (demo)**, fill in and submit an inspection, then **Restore signal**.
 
-**Filters.** Above **Inspections → Inspection schedule** and **Maintenance & defects → Planned maintenance**, choose a **Site** and an **Asset** (or *Areas (no asset)* for area inspections) to narrow the list; the asset list follows the chosen site. The count shows how many match, and **Clear filters** shows everything again. The filter is kept in the page address, so Back returns to the filtered list.
+**Filters.** Above **Inspections → Inspection schedule** and **Maintenance & defects → Planned maintenance, Maintenance records and Defects**, choose a **Site** and an **Asset** (or *Areas (no asset)* for area inspections) to narrow the list; the asset list follows the chosen site. The count shows how many match, and **Clear filters** shows everything again. The filter is kept in the page address, so Back returns to the filtered list. **Corrective actions** can also be filtered by asset (the asset the action came from), next to the existing site, status, source, priority and owner filters.
 
 **Inspection calendar.** **Inspections → Calendar** shows the month: overdue (red), due (blue; later repeats in grey) and done (green), per branch, with a filter per inspector. Click an item to open it. On a phone it becomes a list by day.
 
@@ -193,6 +193,8 @@ Switch to **Tebogo Molefe** (Employee). The menu shows only **Scan & inspect** a
 
 Other pages are closed to employees. An inspection can only be started from the QR page of that asset. Employees are not offered as owners of corrective actions.
 
+**Languages on the phone screens.** Operators can use the phone screens in **English, Afrikaans or isiZulu**: tap the language under "Hello" on their home screen (or choose it in the user menu). Their own home screen, QR scanning, the asset's QR page, inspections, incident reporting, documents to read and notices switch language, and the choice is kept for that person. Content people wrote (checklist questions, notices, document titles, names) stays as written. **The Afrikaans and isiZulu wording is a first draft and must be checked by first-language speakers before it is used with a client.**
+
 ### Company notices (memos and important information)
 - **Who publishes:** the HSEQ Manager, Managing Director, Safety Consultant and Branch Managers. Go to **Company Notices → Publish notice**.
 - **What a notice holds:** a title and message, sent to all staff or to one branch, marked Normal or **Important**. It can carry an attachment (e.g. a memo PDF) and can require a **"read and understood"** acknowledgement.
@@ -217,6 +219,7 @@ Other pages are closed to employees. An inspection can only be started from the 
   - the month's key figures: incidents, LTIs, LTIFR, high-potential incidents, corrective actions raised and completed, inspections, assets out of service and documents;
   - the 12-month incident trend, what needs attention (most serious first), the overdue corrective actions and the branches side by side.
   - **Download PDF** gives an A4 report with the company logo. **E-mail to management** sends it to the MD, HSEQ Manager and Safety Consultant. After each month ends it is e-mailed to them automatically, once.
+- **Most failed checks:** which checklist items fail most often over the last 3, 6, 12 or 24 months, per asset type and branch: how often each was checked and failed, the fail rate, where, and when it last failed. An item that keeps failing points to training, pre-use checks, maintenance or the equipment itself. Export to CSV.
 - **Weekly summaries:** every Monday each manager (every role that can see reports) gets their own e-mail listing what is overdue and what is waiting for them, with their branch's figures. Reports → Weekly summaries shows your own as a preview, and **Send this week's summaries now** sends them on demand. Anyone can switch them off under **Notification settings → Monthly management report and weekly summary**.
 - **Hours worked reminder:** on the 1st, if last month's hours worked are missing for a branch, the HSEQ Manager and the System Administrator get an e-mail (the LTI frequency rate needs them).
 - In the prototype, e-mails are written to the outbox (Administration → E-mail outbox); they are not sent.
@@ -369,6 +372,6 @@ prototype/
 └── README.md                     This file
 ```
 
-**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 249 workflow outcomes.
+**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 252 workflow outcomes.
 
 The earlier full HSEQ prototype, with legal, risk, people, PPE, chemicals, emergency and audits, is preserved in git history at commit `26b59bc`.

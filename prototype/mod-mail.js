@@ -22,7 +22,7 @@ function queueEmail(to, cat, subject, text, link) {
     if (!mailPrefs(p)[cat]) return;   // the person turned this kind of e-mail off
     S.outbox.unshift({
       id: 'EM-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6), ts: nowTs(), org: org.id, to: id, toEmail: p.email, cat, subject,
-      body: `Hello ${p.name.split(' ')[0]},\n\n${text}\n\n${link ? `Open it in the system: ${link}\n\n` : ''}Regards\n${org.short} HSEQ Management System\nPowered by VDW HSEQ\n\nYou receive this e-mail because of your role in the system. You can choose which e-mails you receive under Notification settings.`,
+      body: `Hello ${p.name.split(' ')[0]},\n\n${text}\n\n${link ? `Open it in the system: ${link}\n\n` : ''}Regards\n${org.short} HSEQ Management System\nPowered by VDW\n\nYou receive this e-mail because of your role in the system. You can choose which e-mails you receive under Notification settings.`,
       link: link || '', status: 'Not sent (prototype)'
     });
   });

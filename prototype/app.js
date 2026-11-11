@@ -467,6 +467,13 @@ function sourceLink(a) {
   if (a.source === 'Maintenance') { const d = byId('maintenance', a.sourceId); href = d ? '#/assets/' + d.asset + '?tab=maintenance' : null; }
   return href ? `<a href="${href}">${esc(a.sourceId)}</a>` : esc(a.sourceId || '—');
 }
+// The asset an action concerns, worked out from where it was raised
+function actionAssetId(a) {
+  const s = a.sourceId; if (!s) return null;
+  const x = byId('inspections', s) || byId('defects', s) || byId('maintenance', s); if (x && x.asset) return x.asset;
+  const i = byId('incidents', s); if (i && i.links && i.links.assets && i.links.assets.length) return i.links.assets[0];
+  const d = S.defects.find(df => df.action === a.id); return d ? d.asset : null;
+}
 function createAction(o) {
   const id = nextId('ACT-', 'actions', 4, 1000);
   const site = o.site || defaultSite();
@@ -734,6 +741,7 @@ ACT.userMenu = (el) => {
       <label for="siteSel">Branch / site</label>
       <select id="siteSel" ${branchLimited() ? 'disabled title="You work in your own branch"' : ''}>${branchLimited() ? '' : '<option value="ALL">All branches (organisation view)</option>'}${orgSites().map(x => `<option value="${x.id}" ${x.id === S.ui.site ? 'selected' : ''}>${esc(x.short)}</option>`).join('')}</select>
     </div><hr>
+    ${typeof LANGS !== 'undefined' ? `<div class="dd-lang" data-no-tr><span>Language (phone screens)</span>${Object.keys(LANGS).map(k => `<button type="button" class="${(u.lang || 'en') === k ? 'on' : ''}" data-act="setLang" data-l="${k}">${LANGS[k]}</button>`).join('')}</div>` : ''}
     <button class="dd-item" data-act="go" data-href="#/password">${icon('lock', 'sm')} Change password</button>
     <button class="dd-item" data-act="go" data-href="#/settings">${icon('bell', 'sm')} Notification settings</button>
     <button class="dd-item" data-act="signOut">${icon('power', 'sm')} Sign out</button>

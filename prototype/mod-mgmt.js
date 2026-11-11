@@ -265,3 +265,38 @@ function runSchedules() {
 }
 const _rerenderBeforeMgmt = rerender;
 rerender = function (keepScroll) { if (S && signedIn() && S.ui.user) { try { runSchedules(); } catch (e) { console.error(e); } } _rerenderBeforeMgmt(keepScroll); };
+
+
+/* ---------------- Most failed checks ---------------- */
+// Which checklist items fail most: points to where training, maintenance or equipment needs attention.
+const MF = { months: 12, type: '' };
+function failedChecks(sid, months, type) {
+  const from = addDays(TODAY, -Math.round(months * 30.44)), map = {};
+  S.inspections.filter(i => inSite(i, sid) && i.date >= from && (!type || (byId('assets', i.asset) || {}).type === type)).forEach(i => {
+    (i.template.questions || []).forEach(q => {
+      const r = (i.results || []).find(x => x.qid === q.id); if (!r || r.result === 'N/A') return;
+      const k = i.template.docNumber + '|' + q.text.trim().toLowerCase();
+      const m = map[k] = map[k] || { doc: i.template.docNumber, title: i.template.title, text: q.text, critical: !!q.critical, checked: 0, failed: 0, last: null, assets: new Set(), sites: new Set() };
+      m.checked++; if (r.result === 'Fail') { m.failed++; if (!m.last || i.date > m.last.date) m.last = { date: i.date, id: i.id }; m.assets.add(i.target); m.sites.add(sname(i.site)); }
+    });
+  });
+  return Object.values(map).filter(m => m.failed).map(m => Object.assign(m, { rate: Math.round((m.failed / m.checked) * 100) })).sort((a, b) => b.failed - a.failed || b.rate - a.rate);
+}
+function failedChecksBuild() {
+  const rows = failedChecks(S.ui.site, MF.months, MF.type), total = S.inspections.filter(i => inSite(i, S.ui.site) && i.date >= addDays(TODAY, -Math.round(MF.months * 30.44))).length;
+  const pre = `<div class="mr-bar no-print"><label>Period <select id="mfMonths">${[3, 6, 12, 24].map(n => `<option value="${n}" ${MF.months === n ? 'selected' : ''}>Last ${n} months</option>`).join('')}</select></label>
+    <label>Asset type <select id="mfType"><option value="">All types and areas</option>${S.assetTypes.map(t => `<option value="${t.id}" ${MF.type === t.id ? 'selected' : ''}>${esc(t.name)}</option>`).join('')}</select></label>
+    <span class="muted">${total} inspection(s) in the period · ${esc(scopeLabel())}</span></div>`;
+  const html = rows.length ? `<h4>Failed most often</h4>${rankBars(rows.slice(0, 10).map(m => [m.text.length > 60 ? m.text.slice(0, 58) + '…' : m.text, m.failed]), { unit: 'times failed' })}
+    <div class="table-wrap mt"><table class="tbl compact stackable"><thead><tr><th>Checklist item</th><th>Checklist</th><th>Failed</th><th>Checked</th><th>Fail rate</th><th>Where</th><th>Last failed</th></tr></thead><tbody>
+    ${rows.map(m => `<tr><td data-label="Item">${esc(m.text)} ${m.critical ? badge('Critical item', 'red', true) : ''}</td><td data-label="Checklist"><span class="mono">${esc(m.doc)}</span><div class="t-sub">${esc(m.title)}</div></td><td data-label="Failed"><b>${m.failed}</b></td><td data-label="Checked">${m.checked}</td><td data-label="Fail rate"><b class="due ${m.rate >= 30 ? 'red' : m.rate >= 10 ? 'amber' : 'green'}">${m.rate}%</b></td><td data-label="Where">${esc([...m.assets].join(', '))}<div class="t-sub">${esc([...m.sites].join(', '))}</div></td><td data-label="Last failed"><a href="#/inspections/${m.last.id}">${fmt(m.last.date)}</a></td></tr>`).join('')}
+    </tbody></table></div>
+    <p class="muted mt" style="font-size:12px">An item that keeps failing usually points to a cause in the system: training, pre-use checks, maintenance intervals or the equipment itself. Consider a corrective action for the root cause rather than repairing each failure.</p>`
+    : '<p class="muted">No checklist items failed in this period.</p>';
+  return { desc: 'Which checklist items fail most often, how often they are checked, and where. Use it to find what needs training, maintenance or a change of equipment.', pre, html,
+    csv: [['Checklist item', 'Critical', 'Checklist', 'Failed', 'Checked', 'Fail rate %', 'Assets / areas', 'Sites', 'Last failed']].concat(rows.map(m => [m.text, m.critical ? 'Yes' : 'No', m.doc, m.failed, m.checked, m.rate, [...m.assets].join('; '), [...m.sites].join('; '), m.last.date])) };
+}
+const _buildReportBeforeMF = buildReport;
+buildReport = function (key) { return key === 'failedchecks' ? failedChecksBuild() : _buildReportBeforeMF(key); };
+REPORTS.splice(REPORTS.findIndex(r => r[0] === 'assets') + 1, 0, ['failedchecks', 'Most failed checks']);
+document.addEventListener('change', e => { if (e.target.id === 'mfMonths') { MF.months = +e.target.value; rerender(); } if (e.target.id === 'mfType') { MF.type = e.target.value; rerender(); } });

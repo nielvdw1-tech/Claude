@@ -18,6 +18,7 @@ ROUTES.actions = (p, q) => {
       { id: 'source', label: 'All source modules', options: SOURCE_MODULES, test: (a, v) => a.source === v },
       { id: 'priority', label: 'All priorities', options: S.config.priorities.map(x => x.name), test: (a, v) => a.priority === v },
       { id: 'site', label: 'All sites', options: orgSites().map(s => ({ value: s.id, label: s.short })), test: (a, v) => a.site === v },
+      { id: 'asset', label: 'All assets', options: uniq(rows.map(actionAssetId)).filter(Boolean).map(id => byId('assets', id)).filter(Boolean).sort((x, y) => x.tag.localeCompare(y.tag)).map(x => ({ value: x.id, label: `${x.tag} — ${x.name}` })), test: (a, v) => actionAssetId(a) === v },
       { id: 'owner', label: 'Any owner', options: [{ value: 'me', label: 'Assigned to me' }].concat(uniq(rows.map(a => a.owner)).filter(Boolean).map(o => ({ value: o, label: pname(o) }))), test: (a, v) => a.owner === (v === 'me' ? S.ui.user : v) }
     ],
     columns: [

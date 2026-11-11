@@ -1201,6 +1201,33 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     ok('FL2 planned maintenance can be filtered by site and by asset', cpt === wantC && cpt < mAll && mOne === wantA, `${mAll} → ${cpt} → ${mOne}`);
   }
 
+  /* ---------------- LG. Field screens in Afrikaans and isiZulu; MF. most failed checks; FL3. more filters ---------------- */
+  {
+    await asUser('P-009'); await go('#/field'); await p.waitForTimeout(150);
+    await act('.lang-pick [data-l=zu]'); await p.waitForTimeout(150);
+    const zu = await p.innerText('#content');
+    await act('.lang-pick [data-l=af]'); await go('#/report'); await p.waitForTimeout(150);
+    const af = await p.innerText('#content'), opt = await p.$eval('#incForm [name=type] option', e => e.textContent), val = await p.$eval('#incForm [name=type]', e => e.value);
+    const kept = await S("person('P-009').lang");
+    await asUser('P-002'); await go('#/dashboard'); await p.waitForTimeout(120); const office = await p.innerText('#content');
+    ok('LG1 an operator can use the phone screens in isiZulu or Afrikaans; the choice is kept for them and other people still see English', zu.includes('Skena ikhodi ye-QR yempahla') && zu.includes('Bika isehlakalo') && af.includes('Rapporteer ’n voorval') && af.includes('Soort voorval') && opt === 'Byna-ongeluk' && val === 'Near Miss' && kept === 'af' && /compliance status/i.test(office) && !/Kennisgewings/.test(office));
+    await asUser('P-009'); await S("(person('P-009').lang = 'en', save())"); await asUser('P-002');
+    await go('#/reports/failedchecks'); await p.waitForTimeout(150);
+    const want = await S("failedChecks(S.ui.site, 12, '').length"), rows = await p.$$eval('#content table.tbl tbody tr', e => e.length);
+    await p.selectOption('#mfType', 'AT-FL'); await p.waitForTimeout(150);
+    const fl = await p.$$eval('#content table.tbl tbody tr td[data-label=Checklist] .mono', e => e.map(x => x.textContent));
+    ok('MF1 the most failed checks report lists checklist items by how often they fail, filtered by period and asset type', want > 0 && rows === want && fl.length > 0 && fl.every(x => x === 'KIE-FRM-031'), `${want} item(s)`);
+    await p.selectOption('#mfType', ''); await go('#/maintenance/defects'); await p.waitForTimeout(150);
+    const dAll = await p.$$eval('#content table.tbl tbody tr', e => e.length);
+    await p.selectOption('.flt-bar [data-flt=fasset]', 'AS-009'); await p.waitForTimeout(150);
+    const dOne = await p.$$eval('#content table.tbl tbody tr', e => e.length), dWant = await S("S.defects.filter(d => d.asset === 'AS-009').length");
+    await go('#/actions'); await p.waitForTimeout(150);
+    await p.selectOption('[data-lvf=asset]', 'AS-009'); await p.waitForTimeout(150);
+    const ids = await p.$$eval('#lvb-acts .mono', e => e.map(x => x.textContent)), okA = await S(`${JSON.stringify(ids)}.every(id => actionAssetId(byId('actions', id)) === 'AS-009')`);
+    ok('FL3 defects and maintenance records filter by site and asset; corrective actions filter by asset', dOne === dWant && dOne < dAll && ids.length > 0 && okA, `${dAll} → ${dOne} defects, ${ids.length} action(s)`);
+    await p.selectOption('[data-lvf=asset]', '');
+  }
+
   /* ---------------- L. Company logo ---------------- */
   {
     await asUser('P-002'); await go('#/dashboard');

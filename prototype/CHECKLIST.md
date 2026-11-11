@@ -8,7 +8,7 @@ Status key:
 - **Not implemented**
 
 "Tested" means one of the following:
-- the automated browser test (`tests/workflows.test.js`, **249/249 passing**, no JavaScript errors);
+- the automated browser test (`tests/workflows.test.js`, **252/252 passing**, no JavaScript errors);
 - the route smoke test (77 routes plus a second organisation, no errors);
 - the mobile layout check (31 routes at 390 px, no horizontal overflow).
 
@@ -54,7 +54,8 @@ Status key:
 | Printable controlled inspection report with Page X of Y | Implemented | Page numbers need Chrome or Edge |
 | Maintenance scheduling and completion | Implemented | |
 | Inspections without signal: draft saved on the phone as you go and restored; signed inspection queued without signal and sent automatically when it returns; signed and sent times kept | Partial | OF1–OF4; signal loss simulated in the prototype (or real browser offline); live system needs a service worker and server sync |
-| Filter the inspection schedule and planned maintenance by site and asset | Implemented | FL1–FL2 |
+| Filter the inspection schedule, planned maintenance, maintenance records and defects by site and asset; corrective actions by asset | Implemented | FL1–FL3 |
+| Most failed checks report: fail rate per checklist item by period, asset type and branch | Implemented | MF1 |
 | Inspection calendar: month view of overdue, due, repeating and done inspections, per branch and inspector; list view on a phone | Implemented | CA1–CA2 |
 | Inspection default per equipment type: checklist and interval set by a competent person with the recorded basis; create schedules for assets without one; change existing intervals | Implemented | TD1; no legal intervals supplied by the system |
 
@@ -88,6 +89,7 @@ Status key:
 | Reports with print and CSV | Implemented | E9 |
 | Safety Consultant has full access; Employee limited to QR inspections and incident reporting | Implemented | H1–H9 (client-side demonstration of the intended permissions) |
 | Company notices (memos) to all staff or a branch, with optional attachment and read-and-understood acknowledgement; read/acknowledgement tracking | Implemented | N1–N7; reminders are in-app only (email/SMS simulated) |
+| Phone screens in English, Afrikaans and isiZulu, chosen per person | Partial | LG1; Afrikaans and isiZulu wording is a first draft to be checked by first-language speakers |
 | Incident safety alerts: draft notice created on each incident, published only after sequential approval by the HSEQ Manager and the Safety Consultant; approvers can edit or decline | Implemented | S1–S8 |
 | Company branding: top banner with menu button, VDW logo, search, tasks, notifications, and the person with their company name and logo; company and branch switching in the person's menu; logo in the company block of document, checklist and report headers | Implemented | L1–L5; logo kept in browser storage in the prototype |
 | Sign-in with accounts: add user with temporary password, forced password change, reset, deactivate/reactivate, lock after 5 failed attempts, sign out | Partial | AU1–AU9; checked in the browser only (the live system signs in on a server) |
