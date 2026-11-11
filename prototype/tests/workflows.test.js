@@ -1179,6 +1179,28 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     ok('FB4 the floating buttons can be dragged anywhere (a drag is not a click), stay there on other pages, move with Alt + arrow keys and go back from the person\'s menu', noGrip && !!pos && noClick && Math.abs(nb.x - (bx.x - 320)) < 4 && kept[0] === pos.r && kept[1] === pos.t && clicks && keyed === pos.r + 24 && reset, JSON.stringify(pos));
   }
 
+  /* ---------------- FL. Filter the inspection schedule and planned maintenance by site and asset ---------------- */
+  {
+    await asUser('P-002'); await go('#/inspections/schedule'); await p.waitForTimeout(150);
+    const all = await p.$$eval('#content table.tbl tbody tr', e => e.length);
+    await p.selectOption('.flt-bar [data-flt=fsite]', 'S-JHB'); await p.waitForTimeout(150);
+    const jhb = await p.$$eval('#content table.tbl tbody tr td[data-label=Site]', e => e.map(x => x.textContent.trim()));
+    const wantJ = await S("scoped('schedules').filter(s => s.site === 'S-JHB').length");
+    await p.selectOption('.flt-bar [data-flt=fasset]', 'AS-001'); await p.waitForTimeout(150);
+    const one = await p.$$eval('#content table.tbl tbody tr td[data-label=Target]', e => e.map(x => x.textContent.trim()));
+    const hash = await p.evaluate(() => location.hash);
+    await act('[data-act=fltClear]'); const back = await p.$$eval('#content table.tbl tbody tr', e => e.length);
+    ok('FL1 the inspection schedule can be filtered by site and by asset, and cleared', jhb.length === wantJ && jhb.every(t => t === 'Germiston') && one.length >= 1 && one.every(t => t === 'FL-01') && hash.includes('fsite=S-JHB') && hash.includes('fasset=AS-001') && back === all, `${all} → ${jhb.length} → ${one.length}`);
+    await go('#/maintenance/planned'); await p.waitForTimeout(150);
+    const mAll = await p.$$eval('#content table.tbl tbody tr', e => e.length);
+    await p.selectOption('.flt-bar [data-flt=fsite]', 'S-CPT'); await p.waitForTimeout(150);
+    const cpt = await p.$$eval('#content table.tbl tbody tr', e => e.length), wantC = await S("S.maintenance.filter(m => !m.completed && (byId('assets', m.asset) || {}).site === 'S-CPT').length");
+    const aid = await S("(S.maintenance.find(m => !m.completed && (byId('assets', m.asset) || {}).site === 'S-CPT') || {}).asset");
+    await p.selectOption('.flt-bar [data-flt=fasset]', aid); await p.waitForTimeout(150);
+    const mOne = await p.$$eval('#content table.tbl tbody tr', e => e.length), wantA = await S(`S.maintenance.filter(m => !m.completed && m.asset === '${aid}').length`);
+    ok('FL2 planned maintenance can be filtered by site and by asset', cpt === wantC && cpt < mAll && mOne === wantA, `${mAll} → ${cpt} → ${mOne}`);
+  }
+
   /* ---------------- L. Company logo ---------------- */
   {
     await asUser('P-002'); await go('#/dashboard');

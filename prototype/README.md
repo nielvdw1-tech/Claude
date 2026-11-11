@@ -143,6 +143,8 @@ Defects can also be reported directly from the asset page or its **QR page** (e.
 - Submitted **without signal**, the signed inspection waits on the phone (*1 waiting to send*) and is **sent automatically when the signal returns**. The record shows when it was signed and when it was sent.
 - To try it: user menu → **Simulate no signal (demo)**, fill in and submit an inspection, then **Restore signal**.
 
+**Filters.** Above **Inspections → Inspection schedule** and **Maintenance & defects → Planned maintenance**, choose a **Site** and an **Asset** (or *Areas (no asset)* for area inspections) to narrow the list; the asset list follows the chosen site. The count shows how many match, and **Clear filters** shows everything again. The filter is kept in the page address, so Back returns to the filtered list.
+
 **Inspection calendar.** **Inspections → Calendar** shows the month: overdue (red), due (blue; later repeats in grey) and done (green), per branch, with a filter per inspector. Click an item to open it. On a phone it becomes a list by day.
 
 **Inspection defaults per equipment type.** **Administration → Asset types → Inspection default → Change** sets the checklist and how often each type of equipment is inspected, with the **basis** for the interval (who set it and why). It can create schedules for assets of that type that have none, and change the interval on existing ones. The system does not supply legal intervals: a competent person sets them. Types without a recorded basis say so.
@@ -367,6 +369,6 @@ prototype/
 └── README.md                     This file
 ```
 
-**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 247 workflow outcomes.
+**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 249 workflow outcomes.
 
 The earlier full HSEQ prototype, with legal, risk, people, PPE, chemicals, emergency and audits, is preserved in git history at commit `26b59bc`.

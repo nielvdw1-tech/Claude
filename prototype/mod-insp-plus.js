@@ -99,3 +99,35 @@ MIGRATIONS.push(() => {
   const fl = S.assetTypes.find(t => t.id === 'AT-FL');
   if (fl && !fl.basis) fl.basis = { text: 'Demo: manufacturer\'s manual and the forklift risk assessment; legal requirement to be confirmed by the competent person.', by: 'P-006', on: addDays(TODAY, -40) };
 });
+
+/* ---------------- Filter by site and asset (inspection schedule, planned maintenance) ---------------- */
+// items: the rows; siteOf / assetOf: how to get each row's site and asset id. The choice is kept in the page address.
+function siteAssetFilter(items, q, siteOf, assetOf) {
+  return items.filter(x => (!q.fsite || siteOf(x) === q.fsite) && (!q.fasset || (q.fasset === 'none' ? !assetOf(x) : assetOf(x) === q.fasset)));
+}
+function siteAssetFilterBar(base, q, items, siteOf, assetOf, shown) {
+  const sites = [...new Set(items.map(siteOf))].filter(Boolean).map(id => site(id)).filter(Boolean).sort((a, b) => a.name.localeCompare(b.name));
+  const inSiteItems = items.filter(x => !q.fsite || siteOf(x) === q.fsite);
+  const assets = [...new Set(inSiteItems.map(assetOf))].filter(Boolean).map(id => byId('assets', id)).filter(Boolean).sort((a, b) => a.tag.localeCompare(b.tag));
+  const areas = inSiteItems.some(x => !assetOf(x));
+  const on = q.fsite || q.fasset;
+  return `<div class="flt-bar" data-base="${base}">
+    ${sites.length > 1 ? `<label>Site <select data-flt="fsite"><option value="">All sites</option>${sites.map(s => `<option value="${s.id}" ${q.fsite === s.id ? 'selected' : ''}>${esc(s.short || s.name)}</option>`).join('')}</select></label>` : ''}
+    <label>Asset <select data-flt="fasset"><option value="">All assets${areas ? ' and areas' : ''}</option>${assets.map(a => `<option value="${a.id}" ${q.fasset === a.id ? 'selected' : ''}>${esc(a.tag)} — ${esc(a.name)}</option>`).join('')}${areas ? `<option value="none" ${q.fasset === 'none' ? 'selected' : ''}>Areas (no asset)</option>` : ''}</select></label>
+    <span class="muted flt-n">${shown} of ${items.length}</span>
+    ${on ? `<button type="button" class="link-btn" data-act="fltClear">Clear filters</button>` : ''}
+  </div>`;
+}
+function fltGo(bar, changes) {
+  const q = Object.assign({}, parseHash().q, changes);
+  Object.keys(q).forEach(k => { if (!q[k]) delete q[k]; });
+  const qs = Object.keys(q).map(k => `${encodeURIComponent(k)}=${encodeURIComponent(q[k])}`).join('&');
+  navigate(bar.dataset.base + (qs ? '?' + qs : ''));
+}
+document.addEventListener('change', e => {
+  const sel = e.target.closest && e.target.closest('[data-flt]'); if (!sel) return;
+  const bar = sel.closest('.flt-bar'), ch = { [sel.dataset.flt]: sel.value };
+  if (sel.dataset.flt === 'fsite') ch.fasset = '';   // a different site has different assets
+  fltGo(bar, ch);
+});
+ACT.fltClear = (el) => fltGo(el.closest('.flt-bar'), { fsite: '', fasset: '' });
