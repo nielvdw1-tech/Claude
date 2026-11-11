@@ -42,9 +42,9 @@ function inspCalendarHtml(q) {
   const label = new Date(ym + '-01T00:00:00').toLocaleDateString('en-ZA', { month: 'long', year: 'numeric' });
   const keep = `${q.fsite ? '&fsite=' + encodeURIComponent(q.fsite) : ''}${q.fasset ? '&fasset=' + encodeURIComponent(q.fasset) : ''}`;
   const link = (m, w) => `#/inspections/calendar?m=${m}${w ? '&who=' + encodeURIComponent(w) : ''}${keep}`;
-  const allSch = scoped('schedules'), fltBar = siteAssetFilterBar('#/inspections/calendar', q, allSch, s => s.site, s => s.asset, siteAssetFilter(allSch, q, s => s.site, s => s.asset).length);
+  const allSch = scoped('schedules'), fltBar = siteAssetFilterBar('#/inspections/calendar', q, allSch, s => s.site, s => s.asset, siteAssetFilter(allSch, q, s => s.site, s => s.asset).length, 'Search asset, area or inspection…');
   const n = { late: items.filter(x => x.kind === 'overdue').length, due: items.filter(x => x.kind === 'due').length, done: items.filter(x => x.kind === 'done').length };
-  return `${fltBar}<div class="card cal-card"><div class="cal-bar">
+  return `<div class="card cal-card">${fltBar}<div class="cal-bar">
       <div class="cal-nav"><a class="btn sm" href="${link(addMonthYm(ym, -1), q.who)}" aria-label="Previous month">${icon('arrowL', 'sm')}</a><h2>${esc(label)}</h2><a class="btn sm" href="${link(addMonthYm(ym, 1), q.who)}" aria-label="Next month">${icon('chevronR', 'sm')}</a>${ym !== TODAY.slice(0, 7) ? `<a class="btn sm ghost" href="${link(TODAY.slice(0, 7), q.who)}">Today</a>` : ''}</div>
       <label class="cal-who">Inspector <select id="calWho"><option value="">Everyone</option><option value="me" ${q.who === 'me' ? 'selected' : ''}>Me</option>${people.map(p => `<option value="${p}" ${q.who === p ? 'selected' : ''}>${esc(pname(p))}</option>`).join('')}</select></label>
     </div>
@@ -107,19 +107,32 @@ MIGRATIONS.push(() => {
 function siteAssetFilter(items, q, siteOf, assetOf) {
   return items.filter(x => (!q.fsite || siteOf(x) === q.fsite) && (!q.fasset || (q.fasset === 'none' ? !assetOf(x) : assetOf(x) === q.fasset)));
 }
-function siteAssetFilterBar(base, q, items, siteOf, assetOf, shown) {
+// The same toolbar as the asset register: search, then the filters, then "N of M records" — inside the list's card
+const FLT_Q = {};
+function siteAssetFilterBar(base, q, items, siteOf, assetOf, shown, placeholder) {
   const sites = [...new Set(items.map(siteOf))].filter(Boolean).map(id => site(id)).filter(Boolean).sort((a, b) => a.name.localeCompare(b.name));
   const inSiteItems = items.filter(x => !q.fsite || siteOf(x) === q.fsite);
   const assets = [...new Set(inSiteItems.map(assetOf))].filter(Boolean).map(id => byId('assets', id)).filter(Boolean).sort((a, b) => a.tag.localeCompare(b.tag));
   const areas = inSiteItems.some(x => !assetOf(x));
-  const on = q.fsite || q.fasset;
-  return `<div class="flt-bar" data-base="${base}">
-    ${sites.length > 1 ? `<label>Site <select data-flt="fsite"><option value="">All sites</option>${sites.map(s => `<option value="${s.id}" ${q.fsite === s.id ? 'selected' : ''}>${esc(s.short || s.name)}</option>`).join('')}</select></label>` : ''}
-    <label>Asset <select data-flt="fasset"><option value="">All assets${areas ? ' and areas' : ''}</option>${assets.map(a => `<option value="${a.id}" ${q.fasset === a.id ? 'selected' : ''}>${esc(a.tag)} — ${esc(a.name)}</option>`).join('')}${areas ? `<option value="none" ${q.fasset === 'none' ? 'selected' : ''}>Areas (no asset)</option>` : ''}</select></label>
-    <span class="muted flt-n">${shown} of ${items.length}</span>
-    ${on ? `<button type="button" class="link-btn" data-act="fltClear">Clear filters</button>` : ''}
+  setTimeout(() => fltSearch(base), 0);
+  return `<div class="toolbar flt-bar" data-base="${base}" data-total="${items.length}" data-shown="${shown}">
+    <div class="search">${icon('search', 'sm')}<input type="search" data-fq="${base}" placeholder="${esc(placeholder || 'Search…')}" value="${esc(FLT_Q[base] || '')}" aria-label="Search list"></div>
+    ${sites.length > 1 ? `<select data-flt="fsite" aria-label="Site"><option value="">All sites</option>${sites.map(x => `<option value="${x.id}" ${q.fsite === x.id ? 'selected' : ''}>${esc(x.short || x.name)}</option>`).join('')}</select>` : ''}
+    <select data-flt="fasset" aria-label="Asset"><option value="">All assets${areas ? ' and areas' : ''}</option>${assets.map(a => `<option value="${a.id}" ${q.fasset === a.id ? 'selected' : ''}>${esc(a.tag)} — ${esc(a.name)}</option>`).join('')}${areas ? `<option value="none" ${q.fasset === 'none' ? 'selected' : ''}>Areas (no asset)</option>` : ''}</select>
+    ${q.fsite || q.fasset ? `<button type="button" class="link-btn" data-act="fltClear">Clear filters</button>` : ''}
+    <span class="tb-count">${shown} of ${items.length} records</span>
   </div>`;
 }
+// Typing in the search box narrows the rows (or calendar entries) shown, straight away
+function fltSearch(base) {
+  const bar = document.querySelector(`.flt-bar[data-base="${base}"]`); if (!bar) return;
+  const term = (FLT_Q[base] || '').trim().toLowerCase(), card = bar.closest('.card');
+  const rows = card ? [...card.querySelectorAll('tbody tr, .cal-chip')] : [];
+  let n = 0; rows.forEach(r => { const hit = !term || r.textContent.toLowerCase().includes(term); r.style.display = hit ? '' : 'none'; if (hit) n++; });
+  const c = bar.querySelector('.tb-count'), tot = bar.dataset.total;
+  if (c) c.textContent = term ? `${n} matching · ${bar.dataset.shown} of ${tot} records` : `${bar.dataset.shown} of ${tot} records`;
+}
+document.addEventListener('input', e => { const t = e.target; if (t.dataset && t.dataset.fq) { FLT_Q[t.dataset.fq] = t.value; fltSearch(t.dataset.fq); } });
 function fltGo(bar, changes) {
   const q = Object.assign({}, parseHash().q, changes);
   Object.keys(q).forEach(k => { if (!q[k]) delete q[k]; });
