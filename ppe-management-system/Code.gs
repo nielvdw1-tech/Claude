@@ -819,19 +819,11 @@ function issuePPE(details) {
   }
 
   /*
-   * An approved request must have reserved budget.
+   * Linked request: must be approved and not yet issued.
    */
   let requestRow = 0;
 
   if (details.requestID) {
-    if (!getPPEBudgetReservationByRequest_(details.requestID)) {
-      throw new Error(
-        "The PPE cannot be issued because no reserved budget was found for request " +
-        details.requestID +
-        "."
-      );
-    }
-
     requestRow = findPPERequestRow_(details.requestID);
 
     if (!requestRow) {
@@ -839,6 +831,38 @@ function issuePPE(details) {
         "The linked PPE request could not be found: " +
         details.requestID
       );
+    }
+
+    const request =
+      readPPERequestRow_(
+        getPPESheet_("PPE Requests")
+          .getRange(requestRow, 1, 1, 18)
+          .getValues()[0],
+        requestRow
+      );
+
+    if (cleanPPEKey_(request.status) !== "approved") {
+      throw new Error(
+        "Request " + details.requestID +
+        " is not approved. Current status: " + request.status
+      );
+    }
+
+    if (request.issueID) {
+      throw new Error(
+        "Request " + details.requestID +
+        " has already been issued (" + request.issueID + ")."
+      );
+    }
+
+    /*
+     * Approved without a budget reservation (for example when
+     * "Approved" was chosen directly in the sheet): reserve now.
+     * This still stops if the item has no Unit Cost or the
+     * branch budget is not enough.
+     */
+    if (!getPPEBudgetReservationByRequest_(details.requestID)) {
+      reserveBudgetForPPERequest_(request);
     }
   }
 
