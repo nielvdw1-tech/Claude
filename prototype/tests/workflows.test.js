@@ -1201,17 +1201,9 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     ok('FL2 planned maintenance can be filtered by site and by asset', cpt === wantC && cpt < mAll && mOne === wantA, `${mAll} → ${cpt} → ${mOne}`);
   }
 
-  /* ---------------- LG. Field screens in Afrikaans and isiZulu; MF. most failed checks; FL3. more filters ---------------- */
+  /* ---------------- MF. most failed checks; FL3. more filters ---------------- */
   {
-    await asUser('P-009'); await go('#/field'); await p.waitForTimeout(150);
-    await act('.lang-pick [data-l=zu]'); await p.waitForTimeout(150);
-    const zu = await p.innerText('#content');
-    await act('.lang-pick [data-l=af]'); await go('#/report'); await p.waitForTimeout(150);
-    const af = await p.innerText('#content'), opt = await p.$eval('#incForm [name=type] option', e => e.textContent), val = await p.$eval('#incForm [name=type]', e => e.value);
-    const kept = await S("person('P-009').lang");
-    await asUser('P-002'); await go('#/dashboard'); await p.waitForTimeout(120); const office = await p.innerText('#content');
-    ok('LG1 an operator can use the phone screens in isiZulu or Afrikaans; the choice is kept for them and other people still see English', zu.includes('Skena ikhodi ye-QR yempahla') && zu.includes('Bika isehlakalo') && af.includes('Rapporteer ’n voorval') && af.includes('Soort voorval') && opt === 'Byna-ongeluk' && val === 'Near Miss' && kept === 'af' && /compliance status/i.test(office) && !/Kennisgewings/.test(office));
-    await asUser('P-009'); await S("(person('P-009').lang = 'en', save())"); await asUser('P-002');
+    await asUser('P-002');
     await go('#/reports/failedchecks'); await p.waitForTimeout(150);
     const want = await S("failedChecks(S.ui.site, 12, '').length"), rows = await p.$$eval('#content table.tbl tbody tr', e => e.length);
     await p.selectOption('#mfType', 'AT-FL'); await p.waitForTimeout(150);
@@ -1225,7 +1217,14 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await p.selectOption('[data-lvf=asset]', 'AS-009'); await p.waitForTimeout(150);
     const ids = await p.$$eval('#lvb-acts .mono', e => e.map(x => x.textContent)), okA = await S(`${JSON.stringify(ids)}.every(id => actionAssetId(byId('actions', id)) === 'AS-009')`);
     ok('FL3 defects and maintenance records filter by site and asset; corrective actions filter by asset', dOne === dWant && dOne < dAll && ids.length > 0 && okA, `${dAll} → ${dOne} defects, ${ids.length} action(s)`);
-    await p.selectOption('[data-lvf=asset]', '');
+    await go('#/inspections/records'); await p.waitForTimeout(120); const rAll = await p.$$eval('#content table.tbl tbody tr', e => e.length);
+    await p.selectOption('.flt-bar [data-flt=fsite]', 'S-DBN'); await p.waitForTimeout(150);
+    const rD = await p.$$eval('#content table.tbl tbody tr', e => e.length), rWant = await S("scoped('inspections').filter(i => i.site === 'S-DBN').length");
+    await go('#/inspections/calendar?fsite=S-DBN'); await p.waitForTimeout(150);
+    const calOk = await S("calendarItems(TODAY.slice(0, 7), '', { fsite: 'S-DBN' }).length") === (await p.$$eval('.cal-chip', e => e.length));
+    await act('.cal-nav a[aria-label="Next month"]'); const keepsSite = (await p.evaluate(() => location.hash)).includes('fsite=S-DBN');
+    ok('FL4 inspection records and the inspection calendar filter by site and asset too', rD === rWant && rD < rAll && calOk && keepsSite, `${rAll} → ${rD} records`);
+    await go('#/actions'); await p.waitForTimeout(120); await p.selectOption('[data-lvf=asset]', '');
   }
 
   /* ---------------- L. Company logo ---------------- */

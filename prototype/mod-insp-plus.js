@@ -21,13 +21,13 @@ function monthGrid(ym) {
 }
 function addMonthYm(ym, n) { const d = new Date(ym + '-01T00:00:00'); d.setMonth(d.getMonth() + n); return isoDate(d).slice(0, 7); }
 // Everything that falls in the month: inspections done, and due dates (the next due date, then every interval after it)
-function calendarItems(ym, who) {
+function calendarItems(ym, who, q = {}) {
   const from = ym + '-01', to = addMonthYm(ym, 1) + '-01', items = [];
-  scoped('schedules').filter(s => !who || s.assignee === who).forEach(s => {
+  siteAssetFilter(scoped('schedules'), q, s => s.site, s => s.asset).filter(s => !who || s.assignee === who).forEach(s => {
     let d = s.nextDue, k = 0;
     while (d < to && k < 60) { if (d >= from) items.push({ date: d, kind: k === 0 && daysTo(d) < 0 ? 'overdue' : 'due', s, projected: k > 0 }); d = addDays(d, s.freqDays || 30); k++; }
   });
-  scoped('inspections').filter(i => i.date >= from && i.date < to && (!who || i.inspector === who)).forEach(i => items.push({ date: i.date, kind: 'done', i }));
+  siteAssetFilter(scoped('inspections'), q, i => i.site, i => i.asset).filter(i => i.date >= from && i.date < to && (!who || i.inspector === who)).forEach(i => items.push({ date: i.date, kind: 'done', i }));
   return items;
 }
 function calChip(x) {
@@ -37,12 +37,14 @@ function calChip(x) {
 }
 function inspCalendarHtml(q) {
   const ym = /^\d{4}-\d{2}$/.test(q.m || '') ? q.m : TODAY.slice(0, 7), who = q.who === 'me' ? S.ui.user : q.who || '';
-  const items = calendarItems(ym, who), days = monthGrid(ym), byDay = d => items.filter(x => x.date === d);
+  const items = calendarItems(ym, who, q), days = monthGrid(ym), byDay = d => items.filter(x => x.date === d);
   const people = [...new Set(scoped('schedules').map(s => s.assignee))].filter(Boolean);
   const label = new Date(ym + '-01T00:00:00').toLocaleDateString('en-ZA', { month: 'long', year: 'numeric' });
-  const link = (m, w) => `#/inspections/calendar?m=${m}${w ? '&who=' + encodeURIComponent(w) : ''}`;
+  const keep = `${q.fsite ? '&fsite=' + encodeURIComponent(q.fsite) : ''}${q.fasset ? '&fasset=' + encodeURIComponent(q.fasset) : ''}`;
+  const link = (m, w) => `#/inspections/calendar?m=${m}${w ? '&who=' + encodeURIComponent(w) : ''}${keep}`;
+  const allSch = scoped('schedules'), fltBar = siteAssetFilterBar('#/inspections/calendar', q, allSch, s => s.site, s => s.asset, siteAssetFilter(allSch, q, s => s.site, s => s.asset).length);
   const n = { late: items.filter(x => x.kind === 'overdue').length, due: items.filter(x => x.kind === 'due').length, done: items.filter(x => x.kind === 'done').length };
-  return `<div class="card cal-card"><div class="cal-bar">
+  return `${fltBar}<div class="card cal-card"><div class="cal-bar">
       <div class="cal-nav"><a class="btn sm" href="${link(addMonthYm(ym, -1), q.who)}" aria-label="Previous month">${icon('arrowL', 'sm')}</a><h2>${esc(label)}</h2><a class="btn sm" href="${link(addMonthYm(ym, 1), q.who)}" aria-label="Next month">${icon('chevronR', 'sm')}</a>${ym !== TODAY.slice(0, 7) ? `<a class="btn sm ghost" href="${link(TODAY.slice(0, 7), q.who)}">Today</a>` : ''}</div>
       <label class="cal-who">Inspector <select id="calWho"><option value="">Everyone</option><option value="me" ${q.who === 'me' ? 'selected' : ''}>Me</option>${people.map(p => `<option value="${p}" ${q.who === p ? 'selected' : ''}>${esc(pname(p))}</option>`).join('')}</select></label>
     </div>
@@ -53,7 +55,7 @@ function inspCalendarHtml(q) {
     </div>
   </div>`;
 }
-document.addEventListener('change', e => { if (e.target.id === 'calWho') { const m = (parseHash().q.m) || TODAY.slice(0, 7); navigate(`#/inspections/calendar?m=${m}${e.target.value ? '&who=' + encodeURIComponent(e.target.value) : ''}`); } });
+document.addEventListener('change', e => { if (e.target.id === 'calWho') { const m = (parseHash().q.m) || TODAY.slice(0, 7); const q = parseHash().q; navigate(`#/inspections/calendar?m=${m}${e.target.value ? '&who=' + encodeURIComponent(e.target.value) : ''}${q.fsite ? '&fsite=' + encodeURIComponent(q.fsite) : ''}${q.fasset ? '&fasset=' + encodeURIComponent(q.fasset) : ''}`); } });
 
 /* ---------------- Default intervals per equipment type (Administration → Asset types) ---------------- */
 function typeDefaultHtml(t, ro) {

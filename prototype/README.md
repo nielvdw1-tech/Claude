@@ -143,7 +143,7 @@ Defects can also be reported directly from the asset page or its **QR page** (e.
 - Submitted **without signal**, the signed inspection waits on the phone (*1 waiting to send*) and is **sent automatically when the signal returns**. The record shows when it was signed and when it was sent.
 - To try it: user menu → **Simulate no signal (demo)**, fill in and submit an inspection, then **Restore signal**.
 
-**Filters.** Above **Inspections → Inspection schedule** and **Maintenance & defects → Planned maintenance, Maintenance records and Defects**, choose a **Site** and an **Asset** (or *Areas (no asset)* for area inspections) to narrow the list; the asset list follows the chosen site. The count shows how many match, and **Clear filters** shows everything again. The filter is kept in the page address, so Back returns to the filtered list. **Corrective actions** can also be filtered by asset (the asset the action came from), next to the existing site, status, source, priority and owner filters.
+**Filters.** Above **Inspections → Inspection schedule, Calendar and Inspection records** and **Maintenance & defects → Planned maintenance, Maintenance records and Defects**, choose a **Site** and an **Asset** (or *Areas (no asset)* for area inspections) to narrow the list; the asset list follows the chosen site. The count shows how many match, and **Clear filters** shows everything again. The filter is kept in the page address, so Back returns to the filtered list. **Corrective actions** can also be filtered by asset (the asset the action came from), next to the existing site, status, source, priority and owner filters.
 
 **Inspection calendar.** **Inspections → Calendar** shows the month: overdue (red), due (blue; later repeats in grey) and done (green), per branch, with a filter per inspector. Click an item to open it. On a phone it becomes a list by day.
 
@@ -192,8 +192,6 @@ Switch to **Tebogo Molefe** (Employee). The menu shows only **Scan & inspect** a
 3. **Report incident** opens the phone-friendly form. Reported incidents are listed on the employee's home screen.
 
 Other pages are closed to employees. An inspection can only be started from the QR page of that asset. Employees are not offered as owners of corrective actions.
-
-**Languages on the phone screens.** Operators can use the phone screens in **English, Afrikaans or isiZulu**: tap the language under "Hello" on their home screen (or choose it in the user menu). Their own home screen, QR scanning, the asset's QR page, inspections, incident reporting, documents to read and notices switch language, and the choice is kept for that person. Content people wrote (checklist questions, notices, document titles, names) stays as written. **The Afrikaans and isiZulu wording is a first draft and must be checked by first-language speakers before it is used with a client.**
 
 ### Company notices (memos and important information)
 - **Who publishes:** the HSEQ Manager, Managing Director, Safety Consultant and Branch Managers. Go to **Company Notices → Publish notice**.

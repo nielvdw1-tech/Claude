@@ -741,7 +741,6 @@ ACT.userMenu = (el) => {
       <label for="siteSel">Branch / site</label>
       <select id="siteSel" ${branchLimited() ? 'disabled title="You work in your own branch"' : ''}>${branchLimited() ? '' : '<option value="ALL">All branches (organisation view)</option>'}${orgSites().map(x => `<option value="${x.id}" ${x.id === S.ui.site ? 'selected' : ''}>${esc(x.short)}</option>`).join('')}</select>
     </div><hr>
-    ${typeof LANGS !== 'undefined' ? `<div class="dd-lang" data-no-tr><span>Language (phone screens)</span>${Object.keys(LANGS).map(k => `<button type="button" class="${(u.lang || 'en') === k ? 'on' : ''}" data-act="setLang" data-l="${k}">${LANGS[k]}</button>`).join('')}</div>` : ''}
     <button class="dd-item" data-act="go" data-href="#/password">${icon('lock', 'sm')} Change password</button>
     <button class="dd-item" data-act="go" data-href="#/settings">${icon('bell', 'sm')} Notification settings</button>
     <button class="dd-item" data-act="signOut">${icon('power', 'sm')} Sign out</button>
