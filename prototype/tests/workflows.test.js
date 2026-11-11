@@ -1132,6 +1132,26 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await asUser('P-002');
   }
 
+  /* ---------------- FB. Floating add buttons on the Administration tabs ---------------- */
+  {
+    await asUser('P-002'); const seen = [];
+    for (const [tab, act] of [['orgs', 'addSite'], ['users', 'userNew'], ['roles', 'roleNew'], ['doccats', 'addCat'], ['assettypes', 'atNew'], ['templates', 'tplNew']]) {
+      await go('#/admin/' + tab); await p.waitForTimeout(120);
+      await p.evaluate(() => window.scrollTo(0, document.body.scrollHeight)); await p.waitForTimeout(80);
+      const f = await p.$(`.fab[data-act="${act}"]`); const pos = f && await f.evaluate(e => getComputedStyle(e).position); const vis = f && await f.isVisible();
+      if (f && pos === 'fixed' && vis) { await f.click(); await p.waitForTimeout(150); if (await modalOpen()) seen.push(tab); await p.keyboard.press('Escape'); await p.waitForTimeout(80); }
+    }
+    ok('FB1 each Administration tab has its add button floating in view, and it opens the form', seen.length === 6, seen.join(', '));
+    await go('#/admin/templates'); await act('.fab[data-act=tplNew]');
+    await mfill('title', 'Ladder Inspection Checklist'); await mfill('docNumber', 'KIE-FRM-099'); await mfill('scope', 'Asset: Ladders');
+    await p.fill('.modal [name=questions]', '!Stiles free of cracks or bends\nRungs secure\nFeet and pads in place');
+    await mbtn('Save draft template'); await p.waitForTimeout(150);
+    const t = await S("S.templates.find(t => t.docNumber === 'KIE-FRM-099')");
+    const usable = await S("!!tplCurrent(S.templates.find(t => t.docNumber === 'KIE-FRM-099'))");
+    await act(`[data-act=tplApprove][data-id="${t.id}"]`); await mbtn('Approve'); await p.waitForTimeout(120);
+    ok('FB2 a new inspection template starts as a Rev 1 draft and can only be used once approved', t.revisions[0].status === 'Draft' && t.revisions[0].questions.length === 3 && t.revisions[0].questions[0].critical && !usable && await S(`!!tplCurrent(byId('templates', '${t.id}'))`), t.id);
+  }
+
   /* ---------------- L. Company logo ---------------- */
   {
     await asUser('P-002'); await go('#/dashboard');

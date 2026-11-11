@@ -138,7 +138,7 @@ function userOpenWork(uid) {
 }
 function usersAdminHtml(ro) {
   const list = S.people.filter(x => x.sysRole && x.org === S.ui.org);
-  return `${ro ? '' : `<div class="btn-row mb"><button class="btn primary" data-act="userNew">${icon('plus', 'sm')} Add user</button></div>`}
+  return `${ro ? '' : fabBtn('userNew', 'Add user')}
   <div class="card"><div class="card-body flush"><table class="tbl stackable"><thead><tr><th>User</th><th>Branch</th><th>System role</th><th>Status</th><th>Last sign-in</th><th></th></tr></thead><tbody>${list.map(u => { const a = account(u), act = isActive(u);
     return `<tr class="${act ? '' : 'row-muted'}"><td data-label="User"><b>${esc(u.name)}</b><div class="t-sub">${esc(u.email)}</div></td><td data-label="Branch">${esc(sname(u.site))}</td>
     <td data-label="Role">${ro || !act ? esc(u.sysRole) : `<select data-act-role="${u.id}" style="padding:5px;border:1px solid var(--line-strong);border-radius:6px">${opts(S.roles.map(r => r.name), u.sysRole)}</select>`}</td>

@@ -38,7 +38,7 @@ function rolesAdminHtml(ro) {
       ${r.allPerms ? `<p style="margin:0">${icon('checkCircle', 'sm')} Every area and every permission, including any added in future.</p>` : groups.map(([label, defs]) => `<h4>${esc(label)}</h4><div class="perm-chips">${defs.filter(d => roleHas(r, d[0])).map(d => `<span class="tag">${esc(d[1])}</span>`).join('') || '<span class="muted">None</span>'}</div>`).join('')}
     </div></div>`;
   return `<div class="alert warn">${icon('lock')}<div><b>Prototype:</b> roles and permissions are applied in the browser. The live system enforces them on the server for every request.</div></div>
-    ${ro ? '' : `<div class="btn-row mb"><button class="btn primary" data-act="roleNew">${icon('plus', 'sm')} New role</button></div>`}
+    ${ro ? '' : fabBtn('roleNew', 'New role')}
     <div class="grid g2">${S.roles.map(card).join('')}</div>
     <div class="card mt"><div class="card-head"><h2>Overview</h2><span class="ch-sub">Every role against every area and permission</span></div><div class="card-body flush"><div class="table-wrap"><table class="tbl compact perm-matrix"><thead><tr><th>Area / permission</th>${S.roles.map(r => `<th>${esc(r.name)}</th>`).join('')}</tr></thead><tbody>
       ${groups.map(([label, defs]) => `<tr class="pm-group"><td colspan="${S.roles.length + 1}">${esc(label)}</td></tr>` + defs.map(([k, d]) => `<tr><td><b>${esc(d)}</b><div class="t-sub mono">${k}</div></td>${S.roles.map(r => `<td>${roleHas(r, k) ? `<span class="pm-yes" title="Yes">${icon('check', 'sm')}</span>` : '<span class="muted">—</span>'}</td>`).join('')}</tr>`).join('')).join('')}
