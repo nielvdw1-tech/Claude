@@ -21,7 +21,7 @@ discover who God is and grow in relationship with Him: child of God, friend of J
 - **Journey trails** play in order and advance only when a night is completed. There are no
   calendar dates and no lost progress. After the last trail the cycle repeats, and we keep adding new trails.
 - **Seasonal trails override by date:** Christmas runs 1–25 December, Easter runs from Palm Sunday to
-  Easter Sunday. Then the journey resumes where it paused. (Logic and tests: `schedule.ts`.)
+  Easter Sunday. Then the journey resumes where it paused. (Logic and tests: `app/src/lib/schedule.ts`.)
 - **One family position:** siblings hear the same Bible story each night, each in their own band.
 - Content is published to the server, so new trails appear without an app update.
 
@@ -43,12 +43,12 @@ discover who God is and grow in relationship with Him: child of God, friend of J
 | Web payments | Paddle as merchant of record: handles global tax and VAT. *Confirm South African seller support before setup.* |
 | Store payments (later) | Apple and Google in-app purchase through RevenueCat, sharing one entitlement with web |
 | Hosting | Static hosting (for example Cloudflare Pages or Vercel) |
-| Content | Authored as structured files (`content-model.ts`), validated, then published to Supabase |
+| Content | Authored as structured files (`app/src/lib/model.ts`), validated, then published to Supabase |
 
 ## Roadmap
 
 1. **Foundations:** project folder · content guide · content model · scheduling rules *(done)*
-2. **Content engine:** one app that renders any night from data; the existing 56 nights converted; Adventure and Starlight looks
+2. **Content engine:** one app that renders any night from data; the existing 56 nights converted; Adventure and Starlight looks *(done 12 November 2026)*
 3. **Accounts:** sign-up, family and child profiles, onboarding, progress synced across devices
 4. **Subscriptions:** trial, paywall, Paddle checkout and webhooks, entitlement checks
 5. **Content scale-up:** Year 1 story plan, all five bands, both languages, review workflow

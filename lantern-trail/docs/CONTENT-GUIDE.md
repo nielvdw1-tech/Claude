@@ -128,7 +128,7 @@ All five bands follow **the same Bible story on the same night**, each at its ow
 - **English** uses international/UK spelling (colour, Saviour, Mom stays "Mom").
 - **Afrikaans** is written natively, not translated word for word. Use Afrikaans Bible book names.
 - The child's name and pronouns are filled in from their profile. Use the tokens in
-  `content-model.ts` (`{name}`, `{subj}`, `{obj}`, `{poss}` and their capitalised forms) rather than
+  `app/src/lib/model.ts` (`{name}`, `{subj}`, `{obj}`, `{poss}` and their capitalised forms) rather than
   writing "he" or "she" in parent-facing text.
 
 ## 7. Review checklist (every night, before publishing)

@@ -1,13 +1,15 @@
 /**
  * The Lantern Trail: which night does a family see tonight?
  *
- * Rules (see PLAN.md):
+ * Rules (see docs/PLAN.md):
  * 1. The journey never ends and is not tied to the calendar. It advances only when a night is
  *    completed, so missed nights never lose progress (no streak shaming).
  *    Trails play in order; after the last one, the cycle starts again.
  * 2. Seasonal trails override the journey by date, then the journey resumes where it paused:
- *    - Christmas: 1–25 December, one night per date.
- *    - Easter: Palm Sunday to Easter Sunday (8 nights), one night per date.
+ *    - Christmas ends on 25 December. A trail of N nights (up to 25) runs 25-N+1 .. 25 December.
+ *    - Easter ends on Easter Sunday. A trail of N nights (up to 8) starts N-1 days before it
+ *      (8 nights = Palm Sunday to Easter Sunday).
+ *    A season with 0 nights published is skipped.
  * 3. The journey position is kept per family, so siblings stay on the same Bible story
  *    (each in their own age band).
  */
@@ -17,10 +19,11 @@ export interface DateOnly { y: number; m: number; d: number } // m = 1..12
 const toUTC = (x: DateOnly) => Date.UTC(x.y, x.m - 1, x.d);
 const DAY = 86_400_000;
 export const daysBetween = (a: DateOnly, b: DateOnly) => Math.round((toUTC(b) - toUTC(a)) / DAY);
-const addDays = (x: DateOnly, n: number): DateOnly => {
+export const addDays = (x: DateOnly, n: number): DateOnly => {
   const t = new Date(toUTC(x) + n * DAY);
   return { y: t.getUTCFullYear(), m: t.getUTCMonth() + 1, d: t.getUTCDate() };
 };
+export const today = (now = new Date()): DateOnly => ({ y: now.getFullYear(), m: now.getMonth() + 1, d: now.getDate() });
 
 /** Western (Gregorian) Easter Sunday: Anonymous Gregorian algorithm. */
 export function easterSunday(year: number): DateOnly {
@@ -34,30 +37,39 @@ export function easterSunday(year: number): DateOnly {
   return { y: year, m: month, d: day };
 }
 
+export interface SeasonLengths { christmas: number; easter: number }
+
 export type Tonight =
   | { kind: "seasonal"; season: "christmas" | "easter"; nightIndex: number } // 0-based within the seasonal trail
   | { kind: "journey"; trailIndex: number; nightIndex: number; cycle: number };
 
 /** Seasonal night for this date, or null if no season is active. */
-export function seasonalNight(today: DateOnly): Tonight | null {
-  if (today.m === 12 && today.d <= 25) return { kind: "seasonal", season: "christmas", nightIndex: today.d - 1 };
-  const easter = easterSunday(today.y);
-  const palmSunday = addDays(easter, -7);
-  const i = daysBetween(palmSunday, today);
-  if (i >= 0 && i <= 7) return { kind: "seasonal", season: "easter", nightIndex: i };
+export function seasonalNight(date: DateOnly, seasons: SeasonLengths): Tonight | null {
+  const xn = Math.min(seasons.christmas, 25);
+  if (xn > 0 && date.m === 12 && date.d <= 25) {
+    const first = 25 - xn + 1;
+    if (date.d >= first) return { kind: "seasonal", season: "christmas", nightIndex: date.d - first };
+  }
+  const en = Math.min(seasons.easter, 8);
+  if (en > 0) {
+    const easter = easterSunday(date.y);
+    const i = daysBetween(addDays(easter, -(en - 1)), date);
+    if (i >= 0 && i < en) return { kind: "seasonal", season: "easter", nightIndex: i };
+  }
   return null;
 }
 
 /**
- * @param completedJourneyNights how many journey nights the family has completed
+ * @param journeyPosition 0-based position in the whole journey (normally the first night not yet completed)
  * @param journeyTrailLengths number of nights in each journey trail, in order
  */
-export function tonight(today: DateOnly, completedJourneyNights: number, journeyTrailLengths: number[]): Tonight {
-  const s = seasonalNight(today);
+export function tonight(date: DateOnly, journeyPosition: number, journeyTrailLengths: number[], seasons: SeasonLengths): Tonight {
+  const s = seasonalNight(date, seasons);
   if (s) return s;
   const total = journeyTrailLengths.reduce((a, b) => a + b, 0);
-  const cycle = Math.floor(completedJourneyNights / total);
-  let pos = completedJourneyNights % total;
+  if (total === 0) throw new Error("No journey content published");
+  const cycle = Math.floor(journeyPosition / total);
+  let pos = journeyPosition % total;
   for (let t = 0; t < journeyTrailLengths.length; t++) {
     if (pos < journeyTrailLengths[t]) return { kind: "journey", trailIndex: t, nightIndex: pos, cycle };
     pos -= journeyTrailLengths[t];

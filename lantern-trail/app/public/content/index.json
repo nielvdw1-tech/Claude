@@ -1,0 +1,20 @@
+{
+  "version": "2026.11.1",
+  "trails": [
+    {
+      "id": "j01",
+      "kind": "journey",
+      "order": 1,
+      "file": "journey-01.json",
+      "nights": 48
+    },
+    {
+      "id": "xmas",
+      "kind": "seasonal",
+      "season": "christmas",
+      "order": 0,
+      "file": "christmas.json",
+      "nights": 8
+    }
+  ]
+}

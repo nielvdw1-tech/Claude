@@ -1,0 +1,109 @@
+/* Screen text in English and Afrikaans. Tokens: {name} {subj} {Subj} {obj} {Obj} {poss} {Poss}
+   (filled by personalise) and {n} {band} {trait} {ref} {max} (filled by fill). */
+import type { Lang } from "./model";
+
+const en = {
+  appName: "The Lantern Trail",
+  themeVerse: "“Your word is a lamp for my feet and a light on my path.”",
+  themeVerseRef: "Psalm 119:105",
+  navMap: "Trail Map", navGuide: "For Parents", navCompass: "Friendship Compass", navFamily: "Family",
+  // home
+  homeLede: "A bedtime adventure to discover who God is, and what it means to be a child of God and a friend of Jesus.",
+  tonight: "Tonight's trail", startTonight: "Start tonight's trail", welcomeBack: "Welcome back! Your lantern is still lit.",
+  treasuresFound: "{n} treasures found", christmasTrail: "Christmas trail", christmasOpens: "Opens in December and ends on Christmas Day",
+  trailDone: "You have walked the whole trail! New trails are on their way.", startAgain: "Walk the trail again",
+  expedition: "Expedition {n}", nightsRange: "Nights {a}–{b}", campfireNight: "Campfire Night", christmasCampfire: "Christmas Campfire",
+  grandCampfire: "Grand Campfire", reviewNight: "Review night", found: "Found: ",
+  // night
+  backMap: "← Trail Map", prev: "‹ Back", next: "Next ›", night: "Night {n}", christmasNight: "Christmas night {n}",
+  bibleStory: "Bible story: {ref}", tonightsTreasure: "Tonight's treasure about God",
+  stepLantern: "Light the lantern", lanternTip: "Dim the lights, switch on a torch or bedside lamp, and say together: “Your word is a lamp for my feet.”",
+  stepStory: "Story trail", stepWord: "God's Word says",
+  wordTipRepeat: "Say it three times: in a whisper, in a normal voice, then in a big explorer voice!",
+  wordTipRead: "Read it out loud yourself, then cover it and see if you can say it from memory.",
+  findIt: "Find it in your own Bible: {ref}. Can you find the book, the chapter and the verse?",
+  stepTreasure: "Treasure found", didYouKnow: "Did you know?", stepTalk: "Adventure talk", thinkDeeper: "Think deeper:",
+  stepPray: "Talk to God", prayRepeat: "Say a line, and {name} repeats it.", prayTogether: "Read it together, or take turns reading a line each.",
+  ownWordsRepeat: "Now let {name} add {poss} own words to God, or a simple ‘thank you for…’.",
+  ownWordsTogether: "Now add your own words to God: a thank you, a sorry, a please, or anything on your heart.",
+  stepMission: "Explorer mission for tomorrow", stepMissionCamp: "Explorer mission",
+  stepJournal: "Explorer's journal", journalTip: "For a notebook: tonight, tomorrow, or whenever {subj} likes. Writing or drawing both count!",
+  goodnight: "Goodnight words", goodnightText: "Before lights out, say together: “I am a child of God and a friend of Jesus!”",
+  collect: "We did it! Collect the treasure", collected: "Treasure collected!", toastFound: "Treasure found: {trait}!", toastCamp: "Campfire badge earned!",
+  campAround: "Around the campfire", campGems: "Treasures from this expedition", campGemsTip: "Point to each one. Can {name} remember the story that goes with it?",
+  memoryVerse: "Treasure Verse", memoryTip: "This expedition's verse to learn by heart. Make up actions for each part.", campGame: "Campfire game",
+  fallbackBand: "The {band} version of this night is still being written, so this is the {band2} version.",
+  fallbackLang: "This night is not yet available in English, so it is shown in Afrikaans.",
+  compass: { talk: "Talk", listen: "Listen", trust: "Trust", love: "Love" },
+  inviteTitle: "Would {name} like to follow Jesus?",
+  invite: "On this trail {name} has heard that God made {obj}, loves {obj}, came looking for {obj}, and sent Jesus to rescue {obj}. If {subj} says {subj} wants to be a child of God and a friend and follower of Jesus, you can pray this together. Only if {subj} wants to: never press. If {subj} is not ready, that is fine. You can come back to this any night.",
+  invitePrayer: ["Dear Jesus,", "I believe you are God's Son.", "Thank you for dying on the cross for me", "and coming alive again.", "I'm sorry for the wrong things I do.", "Please forgive me and give me a brand-new heart.", "I want to follow you and be your friend forever.", "Thank you that I am a child of God.", "Please fill me with your Holy Spirit. Amen."],
+  inviteAfter: "If {subj} prays this, celebrate! Write the date in {poss} Bible and tell someone who loves {obj}. Heaven is having a party (remember the lost sheep?).",
+  certTitle: "Explorer certificate", certHeading: "Official Trail Explorer", certSub: "Child of God · Friend of Jesus",
+  certBody: "has walked the whole trail and discovered that God is Creator, Holy, Mighty, Good, Kind, King, Friend and Saviour, and that He is with me always.",
+  certTip: "Take a screenshot of this certificate to keep.",
+  // onboarding + family
+  obTitle: "Welcome to The Lantern Trail", obLede: "Tell us about your child, and we'll light the right trail for them.",
+  obLang: "Language", obName: "Child's first name", obAge: "Age", obGender: "Boy or girl?", boy: "Boy", girl: "Girl",
+  obLook: "Pick a look", adventure: "Adventure", starlight: "Starlight", suggested: "suggested",
+  obStart: "Light the lantern", obPrivacy: "We only keep your child's first name, age and boy/girl, to fill in the stories.",
+  famTitle: "Your family", famLede: "Up to {max} children. Everyone follows the same Bible story each night, each at their own level.",
+  famActive: "Tonight with", famAdd: "Add a child", famSave: "Save", famRemove: "Remove", famCancel: "Cancel", famEdit: "Edit",
+  ageBand: "Ages {band}", ageYears: "{n} years",
+};
+type Strings = typeof en;
+
+const af: Strings = {
+  appName: "Die Lanternpad",
+  themeVerse: "“U woord is ’n lamp vir my voet en ’n lig op my pad.”",
+  themeVerseRef: "Psalm 119:105",
+  navMap: "Roetekaart", navGuide: "Vir Ouers", navCompass: "Vriendskapskompas", navFamily: "Gesin",
+  homeLede: "’n Slaaptyd-avontuur om te ontdek wie God is, en wat dit beteken om ’n kind van God en ’n vriend van Jesus te wees.",
+  tonight: "Vanaand se pad", startTonight: "Begin vanaand se pad", welcomeBack: "Welkom terug! Jou lantern brand nog.",
+  treasuresFound: "{n} skatte gevind", christmasTrail: "Kerspad", christmasOpens: "Begin in Desember en eindig op Kersdag",
+  trailDone: "Jy het die hele pad gestap! Nuwe paaie is op pad.", startAgain: "Stap die pad weer",
+  expedition: "Ekspedisie {n}", nightsRange: "Aande {a}–{b}", campfireNight: "Kampvuuraand", christmasCampfire: "Kerskampvuur",
+  grandCampfire: "Groot Kampvuur", reviewNight: "Hersieningsaand", found: "Gevind: ",
+  backMap: "← Roetekaart", prev: "‹ Terug", next: "Volgende ›", night: "Aand {n}", christmasNight: "Kersaand {n}",
+  bibleStory: "Bybelverhaal: {ref}", tonightsTreasure: "Vanaand se skat oor God",
+  stepLantern: "Steek die lantern aan", lanternTip: "Maak die ligte dof, skakel ’n flitslig of bedlampie aan, en sê saam: “U woord is ’n lamp vir my voet.”",
+  stepStory: "Storiepad", stepWord: "God se Woord sê",
+  wordTipRepeat: "Sê dit drie keer: fluisterend, met ’n gewone stem, en dan met ’n groot ontdekkerstem!",
+  wordTipRead: "Lees dit self hardop, bedek dit dan en kyk of jy dit uit jou kop kan sê.",
+  findIt: "Soek dit in jou eie Bybel: {ref}. Kan jy die boek, die hoofstuk en die vers kry?",
+  stepTreasure: "Skat gevind", didYouKnow: "Het jy geweet?", stepTalk: "Avontuurgesels", thinkDeeper: "Dink dieper:",
+  stepPray: "Praat met God", prayRepeat: "Sê ’n reël, en {name} sê dit agterna.", prayTogether: "Lees dit saam, of lees om die beurt ’n reël.",
+  ownWordsRepeat: "Laat {name} nou {poss} eie woorde vir God sê, of ’n eenvoudige ‘dankie vir…’.",
+  ownWordsTogether: "Sê nou jou eie woorde vir God: dankie, jammer, asseblief, of enigiets op jou hart.",
+  stepMission: "Ontdekkersending vir môre", stepMissionCamp: "Ontdekkersending",
+  stepJournal: "Ontdekkersjoernaal", journalTip: "Vir ’n notaboek: vanaand, môre, of wanneer {subj} wil. Skryf of teken, albei tel!",
+  goodnight: "Goeienag-woorde", goodnightText: "Voor die ligte afgaan, sê saam: “Ek is ’n kind van God en ’n vriend van Jesus!”",
+  collect: "Ons het dit gedoen! Versamel die skat", collected: "Skat versamel!", toastFound: "Skat gevind: {trait}!", toastCamp: "Kampvuurkenteken verdien!",
+  campAround: "Om die kampvuur", campGems: "Skatte van hierdie ekspedisie", campGemsTip: "Wys na elkeen. Kan {name} die storie onthou wat daarby hoort?",
+  memoryVerse: "Skatvers", memoryTip: "Hierdie ekspedisie se vers om uit die kop te leer. Maak aksies op vir elke deel.", campGame: "Kampvuurspeletjie",
+  fallbackBand: "Die {band}-weergawe van hierdie aand word nog geskryf, so dit is die {band2}-weergawe.",
+  fallbackLang: "Hierdie aand is nog nie in Afrikaans beskikbaar nie, so dit word in Engels gewys.",
+  compass: { talk: "Praat", listen: "Luister", trust: "Vertrou", love: "Liefhê" },
+  inviteTitle: "Wil {name} Jesus volg?",
+  invite: "Op hierdie pad het {name} gehoor dat God {obj} gemaak het, {obj} liefhet, na {obj} kom soek het, en Jesus gestuur het om {obj} te red. As {subj} sê {subj} wil ’n kind van God en ’n vriend en volgeling van Jesus wees, kan julle hierdie gebed saam bid. Net as {subj} wil: moet nooit druk nie. As {subj} nog nie gereed is nie, is dit reg so. Julle kan enige aand hierheen terugkom.",
+  invitePrayer: ["Liewe Jesus,", "ek glo U is God se Seun.", "Dankie dat U aan die kruis vir my gesterf het", "en weer lewendig geword het.", "Ek is jammer vir die verkeerde dinge wat ek doen.", "Vergewe my asseblief en gee my ’n splinternuwe hart.", "Ek wil U volg en vir altyd u vriend wees.", "Dankie dat ek ’n kind van God is.", "Vul my asseblief met u Heilige Gees. Amen."],
+  inviteAfter: "As {subj} dit bid, vier fees! Skryf die datum in {poss} Bybel en vertel iemand wat lief is vir {obj}. Die hemel hou partytjie (onthou die verlore skapie?).",
+  certTitle: "Ontdekkersertifikaat", certHeading: "Amptelike Padontdekker", certSub: "Kind van God · Vriend van Jesus",
+  certBody: "het die hele pad gestap en ontdek dat God Skepper, Heilig, Magtig, Goed, Vriendelik, Koning, Vriend en Verlosser is, en dat Hy altyd by my is.",
+  certTip: "Neem ’n skermskoot van hierdie sertifikaat om te hou.",
+  obTitle: "Welkom by Die Lanternpad", obLede: "Vertel ons van jou kind, en ons steek die regte pad vir hulle aan.",
+  obLang: "Taal", obName: "Kind se voornaam", obAge: "Ouderdom", obGender: "Seun of dogter?", boy: "Seun", girl: "Dogter",
+  obLook: "Kies ’n voorkoms", adventure: "Avontuur", starlight: "Sterlig", suggested: "voorgestel",
+  obStart: "Steek die lantern aan", obPrivacy: "Ons hou net jou kind se voornaam, ouderdom en seun/dogter, om die stories in te vul.",
+  famTitle: "Jou gesin", famLede: "Tot {max} kinders. Almal volg elke aand dieselfde Bybelverhaal, elkeen op sy of haar eie vlak.",
+  famActive: "Vanaand saam met", famAdd: "Voeg ’n kind by", famSave: "Stoor", famRemove: "Verwyder", famCancel: "Kanselleer", famEdit: "Wysig",
+  ageBand: "Ouderdom {band}", ageYears: "{n} jaar",
+};
+
+export const STRINGS: Record<Lang, Strings> = { en, af };
+export type { Strings };
+
+/** Fill {n}, {band} etc. */
+export function fill(s: string, vars: Record<string, string | number>): string {
+  return s.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m));
+}

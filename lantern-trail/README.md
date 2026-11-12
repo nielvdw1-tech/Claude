@@ -12,10 +12,11 @@ Afrikaans. It helps children know God as their Father and live as a child of God
 |---|---|
 | `docs/PLAN.md` | Product plan: decisions, roadmap, open items. **Read first.** |
 | `docs/CONTENT-GUIDE.md` | Doctrine (Rhema Bible Church), the Five Lights, tone rules, age bands, review checklist |
-| `docs/content-model.ts` | Data format for every devotional night |
-| `docs/schedule.ts` | Which night a family sees: endless journey, plus Christmas and Easter by date (tested) |
 | `prototypes/` | The three finished 56-night devotionals (English age 5, Afrikaans age 5, Starlight girl age 7) |
-| `app/` | *(coming in roadmap step 2)* the app itself |
+| `app/` | The app (React + TypeScript + Vite, installable). See `app/README.md` |
+| `app/src/lib/model.ts` | Data format for every devotional night |
+| `app/src/lib/schedule.ts` | Which night a family sees: endless journey, plus Christmas and Easter by date (tested) |
+| `app/public/content/` | Published trail content (JSON), generated from the prototypes by `app/scripts/convert-prototypes.mjs` |
 
 ## Notes for future Claude sessions
 - Work only inside this folder. Never change files outside `lantern-trail/`.
