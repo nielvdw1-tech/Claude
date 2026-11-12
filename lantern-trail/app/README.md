@@ -32,6 +32,6 @@ Hand-written band content lives in `content-src/*.mjs` and is merged by `npm run
 |---|---|---|
 | 2–3 | Expedition 1 (7 nights, draft) | Expedition 1 (7 nights, draft) |
 | 4–5 | 56 nights | 56 nights |
-| 6–7 | 56 nights | – (shows 4–5) |
+| 6–7 | 56 nights | 56 nights |
 | 8–9 | Expedition 1 (7 nights, draft) | Expedition 1 (7 nights, draft) |
 | 10–12 | – (shows 6–7) | – (shows 4–5) |

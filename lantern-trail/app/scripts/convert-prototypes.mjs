@@ -12,6 +12,7 @@ import fs from "node:fs";
 import path from "node:path";
 import vm from "node:vm";
 import { fileURLToPath } from "node:url";
+import afExtras from "./af-67-extras.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const proto = path.resolve(here, "../../prototypes");
@@ -45,6 +46,10 @@ const FIXES = {
     ["Luister môre die eerste keer as jy gevra word, sonder om te kla!", "Wys môre vir God jy is lief vir Hom: sê die eerste keer bly ‘ja’ as jy gevra word."],
   ],
 };
+// The age-7 extras were first written for a girl; make them fit every child.
+girl.X[12][1] = girl.X[12][1].replace("girls your age", "children your age");
+girl.X[55][1] = girl.X[55][1].replace("a seven-year-old", "someone your age");
+if (/girls your age|seven-year-old/.test(JSON.stringify(girl.X))) throw new Error("gendered or age-specific extra left");
 const used = { en: new Set(), af: new Set() };
 function fix(lang, s) {
   if (typeof s !== "string") return s;
@@ -68,7 +73,9 @@ function text(d, lang, band, extras) {
       title: d.t, story: [d.intro], lessons: [], questions: d.q, prayer: d.p.split(" / "),
       prayerStyle: band === "6-7" ? "together" : "repeat", mission: { compass: COMPASS[d.m[0]], text: d.m[1] }, game: d.game,
     };
-    if (band === "6-7") t.journal = "Draw your favourite treasure from this expedition, and write why it is special to you.";
+    if (band === "6-7") t.journal = lang === "af"
+      ? "Teken jou gunstelingskat van hierdie ekspedisie, en skryf hoekom dit vir jou spesiaal is."
+      : "Draw your favourite treasure from this expedition, and write why it is special to you.";
     return t;
   }
   const t = {
@@ -86,7 +93,7 @@ function night(i, id) {
     id, kind: d.c ? "campfire" : "story", scene: scene(i),
     bands: {
       "4-5": { en: text(d, "en", "4-5"), af: text(a, "af", "4-5") },
-      "6-7": { en: text(d, "en", "6-7", girl.X[dayNo]) },
+      "6-7": { en: text(d, "en", "6-7", girl.X[dayNo]), af: text(a, "af", "6-7", afExtras[dayNo]) },
     },
   };
   if (d.xmas) n.special = "christmas-day";

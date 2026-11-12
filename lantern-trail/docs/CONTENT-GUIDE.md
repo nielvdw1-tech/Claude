@@ -127,6 +127,9 @@ All five bands follow **the same Bible story on the same night**, each at its ow
 
 - **English** uses international/UK spelling (colour, Saviour, Mom stays "Mom").
 - **Afrikaans** is written natively, not translated word for word. Use Afrikaans Bible book names.
+- **Afrikaans uses simple, everyday words** that young children understand (owner's request, 12 November 2026).
+  Prefer the spoken word over the formal or church word where both are correct, for example *bly* over *verheug*, *dankie sê* over *dank betuig*,
+  *kwaad* over *toornig*, and explain any Bible word that has to stay (for example *genade*, *geregtigheid*) the first time it appears.
 - The child's name and pronouns are filled in from their profile. Use the tokens in
   `app/src/lib/model.ts` (`{name}`, `{subj}`, `{obj}`, `{poss}` and their capitalised forms) rather than
   writing "he" or "she" in parent-facing text.
