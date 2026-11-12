@@ -63,7 +63,7 @@ p { margin: 0 0 1em; }
 .btn-primary { background: var(--orange); color: var(--charcoal); box-shadow: 0 4px 14px rgba(243, 146, 25, .35); }
 .btn-primary:hover { background: var(--orange-dark); transform: translateY(-1px); }
 .btn-outline { background: transparent; color: var(--charcoal); border-color: var(--charcoal); }
-.btn-outline:hover { background: var(--charcoal); color: #fff; padding: 26px 0; }
+.btn-outline:hover { background: var(--charcoal); color: #fff; }
 .btn-lg { padding: 20px 42px; font-size: 17px; }
 .btn-sm { padding: 11px 20px; font-size: 14px; }
 .btn-block { width: 100%; }
