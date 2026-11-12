@@ -11,6 +11,11 @@ If a piece of content conflicts with this guide, the guide wins.
 
 ## 1. What we believe
 
+> **Doctrinal basis:** the teaching of **Rhema Bible Church** (South Africa): its full statement of faith,
+> and the *rhema* teaching that God speaks personally today. *Open item: paste Rhema's official
+> statement of faith into Appendix A; where this summary and the statement differ, the statement wins.*
+> Topics to weave in deliberately: faith, healing, the gifts and power of the Holy Spirit, and speaking God's Word.
+
 1. **The Bible is God's Word.** It is true and trustworthy, and it is how God reveals Himself to us.
 2. **God is one God in three Persons: Father, Son and Holy Spirit.**
 3. **Jesus is the Son of God and God in the flesh,** fully God and fully human. He died on the
@@ -126,3 +131,9 @@ All five bands follow **the same Bible story on the same night**, each at its ow
 - [ ] Pronouns use tokens, so it works for boys and girls.
 - [ ] Afrikaans reads naturally.
 - [ ] A reviewer has signed it off.
+
+---
+
+## Appendix A: Rhema Bible Church statement of faith
+
+*To be pasted from Rhema's official website.*
