@@ -2,7 +2,7 @@
 
 A reusable, conversion-focused framework for a small-business website. It has three page types: **Homepage**, **Service page** and **Landing page** (for one offer, such as a free assessment).
 
-First used for VDW Health & Safety Solutions. The working example is in `prototype/` (`index.html`, `gap-audit.html`, `safety-file.html`, `compliance-management.html`, `free-assessment.html`).
+First used for VDW Health & Safety Solutions. The original wireframes are in `framework/wireframes/` and shown under each page below. The working example is in `prototype/` (`index.html`, `gap-audit.html`, `safety-file.html`, `compliance-management.html`, `free-assessment.html`).
 
 ---
 
@@ -21,14 +21,68 @@ Start a new conversation and attach this file. Then give Claude:
 Then say: *"Build the homepage, service pages and landing page using this framework, as a prototype first."*
 
 Ground rules that worked well:
-- Upload wireframes in batches, and only start building on **"go"**.
+- Upload wireframes in batches (or point Claude to the ones in `framework/wireframes/`), and only start building on **"go"**.
 - Build as a **prototype** in its own folder first, and leave any live site untouched.
 - Publish a private preview link to review on desktop and phone.
 - Never invent testimonials, guarantees, prices or stats. Mark placeholders clearly and confirm them before going live.
 
 ---
 
-## Page 1: Homepage (14 sections)
+## Page 1: Homepage (17 sections)
+
+### Wireframes
+
+The original wireframes for this page, top to bottom.
+
+**1. Header, hero and social proof #2 strip**
+
+![Header, hero and social proof #2 strip](wireframes/homepage/01.webp)
+
+**2. Social proof: 3 cards**
+
+![Social proof: 3 cards](wireframes/homepage/02.webp)
+
+**3. Pain point**
+
+![Pain point](wireframes/homepage/03.webp)
+
+**4. Value prop #1 (image left)**
+
+![Value prop #1 (image left)](wireframes/homepage/04.webp)
+
+**5. Value prop #2 (image right)**
+
+![Value prop #2 (image right)](wireframes/homepage/05.webp)
+
+**6. Value prop #3 (image left)**
+
+![Value prop #3 (image left)](wireframes/homepage/06.webp)
+
+**7. Services: 3 cards**
+
+![Services: 3 cards](wireframes/homepage/07.png)
+
+**8. Social proof: 1 wide card**
+
+![Social proof: 1 wide card](wireframes/homepage/08.png)
+
+**9. Differentiators: 6 cards**
+
+![Differentiators: 6 cards](wireframes/homepage/09.png)
+
+**10. How it works, meet the team, social proof #2 strip**
+
+![How it works, meet the team, social proof #2 strip](wireframes/homepage/10.png)
+
+**11. FAQ and blog / locations section**
+
+![FAQ and blog / locations section](wireframes/homepage/11.png)
+
+**12. Final recap and footer**
+
+![Final recap and footer](wireframes/homepage/12.png)
+
+### Sections
 
 | # | Section | Purpose and content |
 |---|---------|-------------------|
@@ -54,6 +108,52 @@ Ground rules that worked well:
 
 Same header and footer as the homepage, with the current page highlighted in the menu.
 
+### Wireframes
+
+The original wireframes for this page, top to bottom.
+
+**1. Header, hero (SEO keyword H1) and social proof #2 strip**
+
+![Header, hero (SEO keyword H1) and social proof #2 strip](wireframes/service-page/01.png)
+
+**2. Pain point and social proof: 3 cards**
+
+![Pain point and social proof: 3 cards](wireframes/service-page/02.png)
+
+**3. Social proof: 3 cards**
+
+![Social proof: 3 cards](wireframes/service-page/03.png)
+
+**4. Value props #1 and #2**
+
+![Value props #1 and #2](wireframes/service-page/04.png)
+
+**5. Value prop #3 and social proof: 1 wide card**
+
+![Value prop #3 and social proof: 1 wide card](wireframes/service-page/05.png)
+
+**6. Differentiators: 6 cards**
+
+![Differentiators: 6 cards](wireframes/service-page/06.png)
+
+**7. How it works**
+
+![How it works](wireframes/service-page/07.png)
+
+**8. Meet the team and social proof #2 strip**
+
+![Meet the team and social proof #2 strip](wireframes/service-page/08.png)
+
+**9. FAQ**
+
+![FAQ](wireframes/service-page/09.png)
+
+**10. Final recap and footer**
+
+![Final recap and footer](wireframes/service-page/10.png)
+
+### Sections
+
 | # | Section | Purpose and content |
 |---|---------|-------------------|
 | 1 | **Hero** | **Small H1 = SEO keyword** (for example "Health & Safety File Development in Pretoria") · big headline = dream outcome / WIIFM (styled large, not the H1) · pain-point subtext · CTA · FUD line · social proof #1 line (stars and "Trusted by..."). Image right. |
@@ -73,6 +173,56 @@ Same header and footer as the homepage, with the current page highlighted in the
 ## Page 3: Landing page (one offer, such as a free assessment)
 
 **No site menu.** The header has only the logo (links home), a small "← Back to website" link, the phone number and a CTA button. Every button goes to the one offer. Minimal footer: logo, contact, "← Back to website", copyright.
+
+### Wireframes
+
+The original wireframes for this page, top to bottom.
+
+**1. Header (no menu), hero and social proof #2 strip**
+
+![Header (no menu), hero and social proof #2 strip](wireframes/landing-page/01.png)
+
+**2. Social proof: 3 cards**
+
+![Social proof: 3 cards](wireframes/landing-page/02.png)
+
+**3. Pain point and value prop #1**
+
+![Pain point and value prop #1](wireframes/landing-page/03.png)
+
+**4. Value props #2 and #3**
+
+![Value props #2 and #3](wireframes/landing-page/04.png)
+
+**5. Social proof: 1 wide card**
+
+![Social proof: 1 wide card](wireframes/landing-page/05.png)
+
+**6. Differentiators: 6 cards**
+
+![Differentiators: 6 cards](wireframes/landing-page/06.png)
+
+**7. How it works**
+
+![How it works](wireframes/landing-page/07.png)
+
+**8. Meet the team**
+
+![Meet the team](wireframes/landing-page/08.png)
+
+**9. Guarantee (optional) and social proof #2 strip**
+
+![Guarantee (optional) and social proof #2 strip](wireframes/landing-page/09.png)
+
+**10. FAQ**
+
+![FAQ](wireframes/landing-page/10.png)
+
+**11. Final recap and footer**
+
+![Final recap and footer](wireframes/landing-page/11.png)
+
+### Sections
 
 | # | Section | Purpose and content |
 |---|---------|-------------------|
