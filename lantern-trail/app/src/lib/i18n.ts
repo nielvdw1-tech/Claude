@@ -47,7 +47,7 @@ const en = {
   obLang: "Language", obName: "Child's first name", obAge: "Age", obGender: "Boy or girl?", boy: "Boy", girl: "Girl",
   obLook: "Pick a look", adventure: "Adventure", starlight: "Starlight", suggested: "suggested",
   obStart: "Light the lantern", obPrivacy: "We only keep your child's first name, age and boy/girl, to fill in the stories.",
-  famTitle: "Your family", famLede: "Up to {max} children. Everyone follows the same Bible story each night, each at their own level.",
+  famTitle: "Your family", famLede: "Up to {max} children. Each child has their own trail and progress. Do them together and they stay on the same Bible story, each at their own level.",
   famActive: "Tonight with", famAdd: "Add a child", famSave: "Save", famRemove: "Remove", famCancel: "Cancel", famEdit: "Edit",
   ageBand: "Ages {band}", ageYears: "{n} years",
 };
@@ -95,7 +95,7 @@ const af: Strings = {
   obLang: "Taal", obName: "Kind se voornaam", obAge: "Ouderdom", obGender: "Seun of dogter?", boy: "Seun", girl: "Dogter",
   obLook: "Kies ’n voorkoms", adventure: "Avontuur", starlight: "Sterlig", suggested: "voorgestel",
   obStart: "Steek die lantern aan", obPrivacy: "Ons hou net jou kind se voornaam, ouderdom en seun/dogter, om die stories in te vul.",
-  famTitle: "Jou gesin", famLede: "Tot {max} kinders. Almal volg elke aand dieselfde Bybelverhaal, elkeen op sy of haar eie vlak.",
+  famTitle: "Jou gesin", famLede: "Tot {max} kinders. Elke kind het sy of haar eie pad en vordering. Doen hulle saam, dan bly hulle by dieselfde Bybelverhaal, elkeen op sy of haar eie vlak.",
   famActive: "Vanaand saam met", famAdd: "Voeg ’n kind by", famSave: "Stoor", famRemove: "Verwyder", famCancel: "Kanselleer", famEdit: "Wysig",
   ageBand: "Ouderdom {band}", ageYears: "{n} jaar",
 };

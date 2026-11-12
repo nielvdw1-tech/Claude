@@ -22,7 +22,7 @@ discover who God is and grow in relationship with Him: child of God, friend of J
   calendar dates and no lost progress. After the last trail the cycle repeats, and we keep adding new trails.
 - **Seasonal trails override by date:** Christmas runs 1–25 December, Easter runs from Palm Sunday to
   Easter Sunday. Then the journey resumes where it paused. (Logic and tests: `app/src/lib/schedule.ts`.)
-- **One family position:** siblings hear the same Bible story each night, each in their own band.
+- **Each child has their own progress** (decided 12 November 2026). Siblings who do the night together stay on the same Bible story, each in their own band.
 - Content is published to the server, so new trails appear without an app update.
 
 ## Year 1 content shape

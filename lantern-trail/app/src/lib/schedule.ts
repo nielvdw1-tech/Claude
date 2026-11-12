@@ -10,8 +10,8 @@
  *    - Easter ends on Easter Sunday. A trail of N nights (up to 8) starts N-1 days before it
  *      (8 nights = Palm Sunday to Easter Sunday).
  *    A season with 0 nights published is skipped.
- * 3. The journey position is kept per family, so siblings stay on the same Bible story
- *    (each in their own age band).
+ * 3. Each child has their own journey position. Siblings who do the night together stay on the
+ *    same Bible story (each in their own age band).
  */
 
 export interface DateOnly { y: number; m: number; d: number } // m = 1..12

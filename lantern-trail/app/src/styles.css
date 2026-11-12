@@ -96,6 +96,10 @@ img, svg { max-width: 100%; }
 .tonight b { font-family: var(--display); font-size: 1.45rem; line-height: 1.2; }
 .tonight em { font-style: normal; color: var(--hero-muted); }
 .tonight .btn { grid-column: 1 / -1; justify-self: start; }
+.who { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.who > span { font-family: var(--display); font-weight: 600; font-size: .85rem; letter-spacing: .08em; text-transform: uppercase; color: var(--hero-muted); }
+.who-btn { display: inline-flex; align-items: center; gap: 8px; font: 600 1rem var(--display); color: var(--hero-ink); background: transparent; border: 2px solid rgba(255,255,255,.35); border-radius: 999px; padding: 7px 14px; cursor: pointer; }
+.who-btn[aria-pressed="true"] { background: var(--amber); border-color: var(--amber); color: var(--on-amber); }
 .hero-row { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; }
 .welcome { color: var(--hero-muted); }
 .progress { display: flex; align-items: center; gap: 10px; font-size: .95rem; color: var(--hero-muted); }

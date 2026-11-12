@@ -4,7 +4,7 @@ import { loadLibrary, type Library, type NightRef } from "./lib/content";
 import { STRINGS } from "./lib/i18n";
 import { personalise } from "./lib/model";
 import { tonight as scheduleTonight, today, type DateOnly } from "./lib/schedule";
-import { activeChild, childBand, loadFamily, saveFamily, type Family } from "./lib/store";
+import { activeChild, childBand, loadFamily, progressOf, saveFamily, withProgress, type Family } from "./lib/store";
 import { Home } from "./components/Home";
 import { NightView } from "./components/NightView";
 import { FamilyPage, Onboarding } from "./components/Family";
@@ -58,16 +58,17 @@ export function App() {
     const lang = family.lang, s = STRINGS[lang];
     const isSeasonal = (r: NightRef) => r.journeyIndex === undefined;
     const seasonKey = (r: NightRef) => `${date.y}:${r.night.id}`;
-    const isDone = (r: NightRef) => isSeasonal(r) ? family.seasonalCompleted.includes(seasonKey(r)) : family.completed.includes(r.night.id);
+    const prog = progressOf(family, child.id);
+    const isDone = (r: NightRef) => isSeasonal(r) ? prog.seasonalCompleted.includes(seasonKey(r)) : prog.completed.includes(r.night.id);
     const toggleDone = (r: NightRef) => {
       const on = !isDone(r);
       const flip = (list: string[], k: string) => on ? [...list, k] : list.filter(x => x !== k);
-      setFamily(isSeasonal(r)
-        ? { ...family, seasonalCompleted: flip(family.seasonalCompleted, seasonKey(r)) }
-        : { ...family, completed: flip(family.completed, r.night.id) });
+      setFamily(withProgress(family, child.id, isSeasonal(r)
+        ? { ...prog, seasonalCompleted: flip(prog.seasonalCompleted, seasonKey(r)) }
+        : { ...prog, completed: flip(prog.completed, r.night.id) }));
       return on;
     };
-    const firstOpen = lib.journeyNights.findIndex(r => !family.completed.includes(r.night.id));
+    const firstOpen = lib.journeyNights.findIndex(r => !prog.completed.includes(r.night.id));
     let tonight: NightRef | null = null;
     const t = scheduleTonight(date, firstOpen === -1 ? 0 : firstOpen, lib.journey.map(tr => tr.expeditions.reduce((a, e) => a + e.nights.length, 0)),
       { christmas: lib.christmasNights.length, easter: lib.easterNights.length });

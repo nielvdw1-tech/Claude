@@ -57,7 +57,7 @@ export function Onboarding({ onDone }: { onDone: (f: Family) => void }) {
             <div className="choices">{(["en", "af"] as const).map(l =>
               <label key={l} className={`choice${lang === l ? " on" : ""}`}><input type="radio" name="ob-lang" checked={lang === l} onChange={() => setLang(l)} />{l === "en" ? "English" : "Afrikaans"}</label>)}</div>
           </fieldset>
-          <ChildForm lang={lang} submitLabel={s.obStart} onSave={c => onDone({ lang, children: [c], activeChildId: c.id, completed: [], seasonalCompleted: [], cycle: 0 })} />
+          <ChildForm lang={lang} submitLabel={s.obStart} onSave={c => onDone({ lang, children: [c], activeChildId: c.id, progress: {} })} />
         </div>
         <p className="tip">{s.obPrivacy}</p>
       </div>
@@ -75,7 +75,8 @@ export function FamilyPage() {
   };
   const remove = (id: string) => {
     const children = family.children.filter(x => x.id !== id);
-    setFamily({ ...family, children, activeChildId: family.activeChildId === id ? children[0].id : family.activeChildId });
+    const { [id]: _gone, ...progress } = family.progress;
+    setFamily({ ...family, children, progress, activeChildId: family.activeChildId === id ? children[0].id : family.activeChildId });
   };
   return (
     <section className="page gutter"><div className="inner prose">

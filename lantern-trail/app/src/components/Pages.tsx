@@ -39,7 +39,7 @@ const COPY: Copy = {
     seasons: [
       "The trail never runs out and never punishes. It moves on only when you tap “We did it”, so a missed night simply waits for you.",
       "In December the Christmas trail opens by itself and ends on Christmas Day. At Easter the Easter trail does the same. Afterwards you carry on exactly where you left off.",
-      "Brothers and sisters follow the same Bible story each night, each at their own level, so you can talk about it together.",
+      "Each child has their own trail and progress. Use the name buttons on the Trail Map to switch. If you do the night with brothers and sisters together, they stay on the same Bible story, each at their own level, so you can talk about it together.",
     ],
     tipsTitle: "Tips",
     tips: [
@@ -100,7 +100,7 @@ const COPY: Copy = {
     seasons: [
       "Die pad raak nooit op nie en straf nooit nie. Dit beweeg eers aan as jy op “Ons het dit gedoen” tik, so ’n gemiste aand wag net vir jou.",
       "In Desember gaan die Kerspad vanself oop en eindig op Kersdag. Met Paasfees doen die Paaspad dieselfde. Daarna gaan julle voort presies waar julle opgehou het.",
-      "Broers en susters volg elke aand dieselfde Bybelverhaal, elkeen op sy of haar eie vlak, sodat julle saam daaroor kan gesels.",
+      "Elke kind het sy of haar eie pad en vordering. Gebruik die naamknoppies op die Roetekaart om te wissel. As julle die aand saam met broers en susters doen, bly hulle by dieselfde Bybelverhaal, elkeen op sy of haar eie vlak, sodat julle saam daaroor kan gesels.",
     ],
     tipsTitle: "Wenke",
     tips: [

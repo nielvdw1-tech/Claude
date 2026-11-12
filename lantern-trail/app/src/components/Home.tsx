@@ -3,6 +3,7 @@ import { gem, heroArt } from "../lib/art";
 import { fill } from "../lib/i18n";
 import type { NightRef } from "../lib/content";
 import type { Trail } from "../lib/model";
+import { progressOf, withProgress } from "../lib/store";
 
 function Stone({ r, next }: { r: NightRef; next: boolean }) {
   const { s, lang, isDone } = useApp();
@@ -44,7 +45,8 @@ export function Home() {
   const found = lib.journeyNights.filter(r => isDone(r) && r.night.kind === "story").length;
   const total = lib.journeyNights.filter(r => r.night.kind === "story").length;
   const allDone = lib.journeyNights.every(isDone);
-  const returning = family.completed.length > 0;
+  const prog = progressOf(family, child.id);
+  const returning = prog.completed.length > 0;
   const tText = tonight && (tonight.night.bands["4-5"]?.[lang]?.title ?? tonight.night.bands["4-5"]?.en?.title);
   return (
     <>
@@ -52,6 +54,16 @@ export function Home() {
         <div className="inner">
           <h1>{lang === "af" ? <>Die <span>Lantern</span>pad</> : <>The <span>Lantern</span> Trail</>}</h1>
           <p className="lede">{s.homeLede}</p>
+          {family.children.length > 1 && (
+            <div className="who" role="group" aria-label={s.famActive}>
+              <span>{s.famActive}</span>
+              {family.children.map(c => (
+                <button key={c.id} type="button" className={`who-btn look-${c.look}`} aria-pressed={c.id === child.id}
+                  onClick={() => setFamily({ ...family, activeChildId: c.id })}>
+                  <span className="kid-dot" aria-hidden="true" />{c.name}
+                </button>))}
+            </div>
+          )}
           <p className="theme-verse">{s.themeVerse}<small>{s.themeVerseRef}</small></p>
           {tonight ? (
             <a className="tonight" href={`#night-${tonight.night.id}`} style={{ ["--exc" as string]: `var(--ex${tonight.expedition.color})` }}>
@@ -65,7 +77,7 @@ export function Home() {
             </a>
           ) : allDone && (
             <div className="tonight done-all"><span className="tn-body"><b>{s.trailDone}</b></span>
-              <button className="btn" type="button" onClick={() => setFamily({ ...family, completed: [], cycle: family.cycle + 1 })}>{s.startAgain}</button></div>
+              <button className="btn" type="button" onClick={() => setFamily(withProgress(family, child.id, { ...prog, completed: [], cycle: prog.cycle + 1 }))}>{s.startAgain}</button></div>
           )}
           <div className="hero-row">
             {returning && <span className="welcome">{s.welcomeBack}</span>}

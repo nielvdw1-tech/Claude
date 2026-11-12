@@ -10,12 +10,21 @@ export interface Family {
   lang: Lang;
   children: Child[];
   activeChildId: string;
-  /** Night ids the family has completed in the current journey cycle (journey is shared by siblings). */
+  /** Each child's own progress, keyed by child id. */
+  progress: Record<string, Progress>;
+}
+
+export interface Progress {
+  /** Journey night ids completed in the current cycle. */
   completed: string[];
   /** Seasonal night ids completed, kept per year, e.g. "2026:xmas-n03". */
   seasonalCompleted: string[];
   cycle: number;
 }
+
+export const emptyProgress = (): Progress => ({ completed: [], seasonalCompleted: [], cycle: 0 });
+export const progressOf = (f: Family, childId: string): Progress => f.progress[childId] ?? emptyProgress();
+export const withProgress = (f: Family, childId: string, p: Progress): Family => ({ ...f, progress: { ...f.progress, [childId]: p } });
 
 const KEY = "lantern-trail:family:v1";
 
@@ -23,9 +32,14 @@ export function loadFamily(): Family | null {
   try {
     const raw = localStorage.getItem(KEY);
     if (!raw) return null;
-    const f = JSON.parse(raw) as Family;
+    const f = JSON.parse(raw) as Family & Partial<Progress>;
     if (!f.children?.length) return null;
-    return { ...f, seasonalCompleted: f.seasonalCompleted ?? [], cycle: f.cycle ?? 0, completed: f.completed ?? [] };
+    let progress = f.progress ?? {};
+    // Earlier versions kept one shared progress list for the whole family: give each child a copy.
+    if (!f.progress && (f.completed || f.seasonalCompleted)) {
+      progress = Object.fromEntries(f.children.map(c => [c.id, { completed: f.completed ?? [], seasonalCompleted: f.seasonalCompleted ?? [], cycle: f.cycle ?? 0 }]));
+    }
+    return { lang: f.lang, children: f.children, activeChildId: f.activeChildId, progress };
   } catch { return null; }
 }
 
