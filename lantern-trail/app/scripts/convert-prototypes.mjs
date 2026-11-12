@@ -122,6 +122,21 @@ const christmas = {
   expeditions: [expedition(6, 7, "xmas", xc)],
 };
 
+/* ---- merge hand-written band content from content-src/*.mjs ---- */
+const srcDir = path.resolve(here, "../content-src");
+const allNights = new Map([journey, christmas].flatMap(t => t.expeditions.flatMap(e => e.nights)).map(n => [n.id, n]));
+let merged = 0;
+for (const f of fs.existsSync(srcDir) ? fs.readdirSync(srcDir).filter(f => f.endsWith(".mjs")).sort() : []) {
+  const mod = (await import(path.join(srcDir, f))).default;
+  for (const [id, bands] of Object.entries(mod)) {
+    const n = allNights.get(id);
+    if (!n) throw new Error(`${f}: unknown night ${id}`);
+    for (const [band, langs] of Object.entries(bands))
+      for (const [lang, t] of Object.entries(langs)) { (n.bands[band] ??= {})[lang] = t; merged++; }
+  }
+}
+console.log(`merged ${merged} night texts from content-src`);
+
 FIXES.en.forEach((_, i) => { if (!used.en.has(i)) throw new Error("English fix not applied: " + FIXES.en[i][0]); });
 FIXES.af.forEach((_, i) => { if (!used.af.has(i)) throw new Error("Afrikaans fix not applied: " + FIXES.af[i][0]); });
 

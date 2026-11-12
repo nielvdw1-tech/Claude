@@ -38,8 +38,11 @@ export function NightView({ id }: { id: string }) {
   const { text: t } = picked, n = r.night, e = r.expedition, ec = `var(--ex${e.color})`;
   const list = r.journeyIndex === undefined ? (r.trail.season === "easter" ? lib.easterNights : lib.christmasNights) : lib.journeyNights;
   const i = list.findIndex(x => x.night.id === id), prev = list[i - 1], next = list[i + 1];
-  const older = band !== "2-3" && band !== "4-5";           // 6+ read and look things up themselves
-  const textBand = picked.band, together = t.prayerStyle !== "repeat";
+  const textBand = picked.band;
+  const toddler = textBand === "2-3";
+  const older = textBand !== "2-3" && textBand !== "4-5";   // 6+ read and look things up themselves
+  const prayTip = t.prayerStyle === "own" ? s.prayOwn : t.prayerStyle === "together" ? s.prayTogether : s.prayRepeat;
+  const prayOwnWords = t.prayerStyle === "own" ? undefined : t.prayerStyle === "together" ? s.ownWordsTogether : s.ownWordsRepeat;
   const done = isDone(r);
   const label = r.journeyIndex === undefined ? fill(s.christmasNight, { n: r.number }) : fill(s.night, { n: r.journeyIndex + 1 });
   const exNo = r.trail.expeditions.indexOf(e) + 1;
@@ -73,19 +76,22 @@ export function NightView({ id }: { id: string }) {
         {n.kind === "story" ? <>
           {n.treasure && <div className="trait"><span {...svg(gem(ec, 40))} /><div><small>{s.tonightsTreasure}</small><strong>{n.treasure.trait[lang]}</strong></div></div>}
           <section className="step"><Sign n={st()}>{s.stepLantern}</Sign><p className="tip">{s.lanternTip}</p></section>
+          {t.readPassage && <section className="step"><Sign n={st()}>{s.stepRead}</Sign><div className="read-box"><b>{t.readPassage}</b><p className="tip">{fill(s.readTip, { ref: t.readPassage })}</p></div></section>}
           <section className="step story"><Sign n={st()}>{s.stepStory}</Sign>{t.story.map((x, k) => <p key={k}>{p(x)}</p>)}</section>
           {t.verse && <section className="step"><Sign n={st()}>{s.stepWord}</Sign><Bubble v={t.verse} />
             <p className="tip">{older ? s.wordTipRead : s.wordTipRepeat}</p>
             {older && <p className="tip"><b>{fill(s.findIt, { ref: t.verse.refText })}</b></p>}</section>}
-          <section className="step"><Sign n={st()}>{s.stepTreasure}</Sign>
+          {t.action && <section className="step"><Sign n={st()}>{s.stepAction}</Sign><div className="card action"><p>{p(t.action)}</p></div></section>}
+          <section className="step"><Sign n={st()}>{toddler ? s.stepTruth : s.stepTreasure}</Sign>
             <ul className="treasure">{t.lessons.map((x, k) => <li key={k}><span {...svg(gem(ec, 18))} /><span>{p(x)}</span></li>)}</ul>
             {t.fact && <div className="fact"><span {...svg(gem(ec, 24))} /><p><small>{s.didYouKnow}</small>{p(t.fact)}</p></div>}
           </section>
           <section className="step"><Sign n={st()}>{s.stepTalk}</Sign>
             <ol className="talk">{t.questions.map((x, k) => <li key={k}>{p(x)}</li>)}
               {t.deeper && <li className="deeper"><b>{s.thinkDeeper}</b> {p(t.deeper)}</li>}</ol></section>
-          <section className="step"><Sign n={st()}>{s.stepPray}</Sign><p className="tip">{p(together ? s.prayTogether : s.prayRepeat)}</p>
-            <Prayer lines={t.prayer} own={together ? s.ownWordsTogether : s.ownWordsRepeat} /></section>
+          {t.listen && <section className="step"><Sign n={st()}>{s.stepListen}</Sign><div className="card listen"><p>{p(t.listen)}</p></div></section>}
+          <section className="step"><Sign n={st()}>{s.stepPray}</Sign><p className="tip">{p(prayTip)}</p>
+            <Prayer lines={t.prayer} own={prayOwnWords} /></section>
           {t.mission && <section className="step"><Sign n={st()}>{s.stepMission}</Sign><Mission c={t.mission.compass} text={p(t.mission.text)} /></section>}
           {t.journal && <section className="step"><Sign n={st()}>{s.stepJournal}</Sign><p className="tip">{p(s.journalTip)}</p><div className="journal"><p>{p(t.journal)}</p></div></section>}
         </> : <>
@@ -99,7 +105,7 @@ export function NightView({ id }: { id: string }) {
           <section className="step"><Sign n={st()}>{s.memoryVerse}</Sign><Bubble v={e.memoryVerse[lang]} /><p className="tip">{s.memoryTip}</p></section>
           {t.game && <section className="step"><Sign n={st()}>{s.campGame}</Sign><div className="card"><p>{p(t.game)}</p></div></section>}
           <section className="step"><Sign n={st()}>{s.stepTalk}</Sign><ol className="talk">{t.questions.map((x, k) => <li key={k}>{p(x)}</li>)}</ol></section>
-          <section className="step"><Sign n={st()}>{s.stepPray}</Sign><Prayer lines={t.prayer} /></section>
+          <section className="step"><Sign n={st()}>{s.stepPray}</Sign>{t.prayerStyle === "own" && <p className="tip">{s.prayOwn}</p>}<Prayer lines={t.prayer} /></section>
           {t.mission && <section className="step"><Sign n={st()}>{s.stepMissionCamp}</Sign><Mission c={t.mission.compass} text={p(t.mission.text)} /></section>}
           {t.journal && <section className="step"><Sign n={st()}>{s.stepJournal}</Sign><div className="journal"><p>{p(t.journal)}</p></div></section>}
           {n.special === "finale" && <>

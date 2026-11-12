@@ -26,10 +26,12 @@ npm run content:convert  # regenerate public/content from ../prototypes
 Testing tip: add `?date=2026-12-20` to the URL to preview another day (for example, the Christmas trail).
 
 ## Content status
+Hand-written band content lives in `content-src/*.mjs` and is merged by `npm run content:convert`. Nights without a band fall back to the nearest one.
+
 | Band | English | Afrikaans |
 |---|---|---|
-| 2–3 | – (shows 4–5) | – (shows 4–5) |
+| 2–3 | Expedition 1 (7 nights, draft) | Expedition 1 (7 nights, draft) |
 | 4–5 | 56 nights | 56 nights |
 | 6–7 | 56 nights | – (shows 4–5) |
-| 8–9 | – (shows 6–7) | – (shows 4–5) |
+| 8–9 | Expedition 1 (7 nights, draft) | Expedition 1 (7 nights, draft) |
 | 10–12 | – (shows 6–7) | – (shows 4–5) |

@@ -87,7 +87,8 @@ export interface NightText {
   bibleStory?: string;        // display, e.g. "Genesis 1"
   story: string[];            // paragraphs (campfire: the intro)
   verse?: Verse;              // story nights; campfires use the expedition memory verse
-  passage?: Verse;            // 8–9 and 10–12: the real Bible passage to read
+  passage?: Verse;            // reserved: a quoted passage (BSB), if we ever print one
+  readPassage?: string;       // 8–9 and 10–12: passage to read in the child's own Bible, e.g. "Genesis 1:1–5"
   lessons: string[];
   questions: string[];
   deeper?: string;            // 6–7+: "Think deeper"

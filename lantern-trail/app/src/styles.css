@@ -166,6 +166,10 @@ section.step { display: grid; gap: 12px; }
 .cbadge { display: grid; place-items: center; gap: 2px; width: 64px; font-family: var(--display); font-weight: 600; font-size: .78rem; text-transform: uppercase; color: var(--pc); }
 .journal { border: 2px solid var(--line); border-radius: 18px; padding: 16px 18px; background: repeating-linear-gradient(var(--surface) 0 31px, var(--line) 31px 32px); }
 .journal p { font-family: var(--hand); font-size: 1.35rem; line-height: 32px; }
+.read-box { display: grid; gap: 6px; background: var(--surface); border: 2px solid var(--exc); border-radius: 18px; padding: 14px 18px; }
+.read-box b { font-family: var(--display); font-size: 1.3rem; }
+.card.action { border-color: var(--amber); background: var(--amber-soft); font-size: 1.1rem; }
+.card.listen { border-color: var(--sky); border-style: dashed; }
 .gems { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
 .gems a { display: flex; gap: 10px; align-items: center; text-decoration: none; background: var(--surface); border: 2px solid var(--line); border-radius: 14px; padding: 10px 12px; min-width: 0; }
 .gems b { display: block; font-family: var(--display); font-weight: 600; line-height: 1.2; }
