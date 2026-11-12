@@ -322,3 +322,21 @@ h1.eyebrow { font-size: 14px; letter-spacing: .08em; line-height: 1.4; }
   .icon-visual { min-height: 300px; }
   .featured-quote { padding: 28px 22px; }
 }
+
+/* ---------- Free assessment landing page ---------- */
+.landing .header-actions { margin-left: auto; }
+.proof-line-top { margin: 0 0 16px; }
+.guarantee { display: flex; align-items: center; gap: 32px; max-width: 900px; margin: 0 auto; padding: 40px; border-width: 2px; }
+.guarantee h3 { font-size: 24px; }
+.guarantee-seal { flex: none; width: 96px; height: 96px; border-radius: 50%; background: var(--blue-tint); border: 3px solid var(--blue); display: grid; place-items: center; }
+.guarantee-seal svg { width: 48px; height: 48px; fill: none; stroke: var(--blue-dark); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.site-footer-min { padding-top: 40px; }
+.footer-min { display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+.footer-min img { height: 60px; width: auto; }
+.footer-min-contact { display: flex; gap: 8px 28px; flex-wrap: wrap; color: var(--muted); font-size: 15px; }
+.site-footer-min .footer-bottom { margin-top: 32px; }
+@media (max-width: 640px) {
+  .landing .header-actions .btn { padding: 10px 12px; font-size: 12px; }
+  .guarantee { flex-direction: column; text-align: center; padding: 28px 22px; gap: 20px; }
+  .footer-min-contact { flex-direction: column; }
+}
