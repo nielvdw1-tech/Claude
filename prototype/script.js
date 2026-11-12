@@ -39,6 +39,17 @@
     });
   });
 
+  // Always open a page at the top (unless a link points to a section)
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  function toTop() {
+    if (location.hash && location.hash.length > 1) return;
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }
+  toTop();
+  window.addEventListener('load', toTop);
+  window.addEventListener('pageshow', toTop);
+  setTimeout(toTop, 150);
+
   // Footer year
   var yearEl = document.getElementById('year');
   if (yearEl) yearEl.textContent = new Date().getFullYear();
