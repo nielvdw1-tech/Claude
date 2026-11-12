@@ -11,24 +11,32 @@ If a piece of content conflicts with this guide, the guide wins.
 
 ## 1. What we believe
 
-> **Doctrinal basis:** the teaching of **Rhema Bible Church** (South Africa): its full statement of faith,
-> and the *rhema* teaching that God speaks personally today. *Open item: paste Rhema's official
-> statement of faith into Appendix A; where this summary and the statement differ, the statement wins.*
-> Topics to weave in deliberately: faith, healing, the gifts and power of the Holy Spirit, and speaking God's Word.
+> **Doctrinal basis:** the teaching of **Rhema Bible Church** (South Africa): its statement of faith
+> (Appendix A) and the *rhema* teaching that God speaks personally today. Where this summary and the
+> statement differ, the statement wins. Topics to weave in deliberately: the new birth, faith, healing,
+> the gifts and power of the Holy Spirit, and speaking God's Word.
 
 1. **The Bible is God's Word.** It is true and trustworthy, and it is how God reveals Himself to us.
-2. **God is one God in three Persons: Father, Son and Holy Spirit.**
-3. **Jesus is the Son of God and God in the flesh,** fully God and fully human. He died on the
-   cross for our sin and rose again bodily.
-4. **God is our Father.** He made us for relationship and wants us to live as His children.
-5. **Through the cross we have open access to God's presence.** The curtain is torn
+2. **God is one God, existing eternally in three Persons: Father, Son and Holy Spirit.**
+3. **God created people in His own image.** People sinned, and sin brought physical and spiritual
+   death. Everyone is born with a sinful nature, which leads to wrong choices and real guilt.
+4. **Jesus is the Son of God and God in the flesh,** fully God and fully human. He died in our place
+   as a substitutionary sacrifice for our sins, and everyone who believes in Him is made right with God
+   (justified) through His shed blood.
+5. **Jesus rose bodily from the dead and ascended into heaven,** where He now prays for us as our
+   High Priest and speaks for us as our Advocate.
+6. **Jesus is coming back,** personally, and it could be soon.
+7. **The new birth:** everyone who repents of their sins and receives Jesus by faith is born again by
+   the Holy Spirit, becomes a child of God and has eternal life.
+8. **God is our Father.** He made us for relationship and wants us to live as His children.
+9. **Through the cross we have open access to God's presence.** The curtain is torn
    (Matthew 27:51; Hebrews 10:19–22). Children can come close to God at any time, just as they are.
-6. **We are saved by grace through faith,** not by being good enough (Ephesians 2:8–9).
-7. **The Holy Spirit lives in everyone who follows Jesus.** He helps, comforts, leads and empowers us.
-8. **God speaks today.** He speaks through His written Word, and personally by His Spirit (the
+10. **We are saved by grace through faith,** not by being good enough (Ephesians 2:8–9).
+11. **The Holy Spirit lives in everyone who follows Jesus.** He helps, comforts, leads and empowers us.
+12. **God speaks today.** He speaks through His written Word, and personally by His Spirit (the
    *rhema* word: the living word God speaks into a person's heart). What God says personally
    always agrees with the Bible and sounds like His love.
-9. **Obedience flows from love.** We keep God's commandments because we love Him and want to
+13. **Obedience flows from love.** We keep God's commandments because we love Him and want to
    please Him (John 14:15; 1 John 4:19), never to earn His acceptance. We do not neglect God's law;
    we see it as the good way of a loving Father.
 
@@ -57,6 +65,10 @@ The nightly closing words in every band: **"I am a child of God and a friend of 
 - Frame obedience as a **response to love**: "Because God loves you so much, you can…"
 - Speak identity over the child: "You are His child", "God is proud of you", "God delights in you".
 - Make God's presence **warm and safe**: He is close, He hears, He welcomes.
+- Present the **return of Jesus** as the happiest day ahead: we will see our Friend face to face.
+  It is a hope, never a threat.
+- Explain **sin** as something every person has inside (not just "bad kids"), and Jesus as the
+  One who takes it away and gives a brand-new heart (the new birth).
 - Encourage **listening to God**: short quiet moments, with the guardrail that God's voice
   always agrees with the Bible, always sounds like love, and is good to share with a parent.
 
@@ -136,4 +148,25 @@ All five bands follow **the same Bible story on the same night**, each at its ow
 
 ## Appendix A: Rhema Bible Church statement of faith
 
-*To be pasted from Rhema's official website.*
+*Summary as provided by the project owner (12 November 2026). Replace it with the official wording if needed.*
+
+- **The Bible:** the Scriptures are the inspired and authoritative Word of God.
+- **The Trinity:** God exists eternally in three Persons: the Father, the Son and the Holy Spirit.
+- **Creation and sin:** God created man in His own image, but man sinned and incurred physical and
+  spiritual death, inheriting a sinful nature that leads to actual transgression and personal guilt.
+- **Substitutionary sacrifice:** the Lord Jesus Christ died for our sins as a substitutionary sacrifice
+  according to the Scriptures, and all who believe in Him are justified through His shed blood.
+- **Resurrection and ascension:** the bodily resurrection of Jesus Christ, His ascension into heaven,
+  and His ongoing ministry as High Priest and Advocate.
+- **Return of Christ:** the personal, imminent return of the Lord Jesus Christ.
+- **New birth (regeneration):** all who repent of their sins and receive Jesus Christ by faith are born
+  again of the Holy Spirit, becoming children of God with eternal life.
+
+### How this shows up for children
+| Belief | Where it appears on the trail |
+|---|---|
+| Creation and sin | Days 1–3 (made in God's image; the garden; God comes looking) |
+| Substitutionary sacrifice | "Jesus' Greatest Rescue" (took our place) and the Christmas "Best Present" night |
+| Resurrection, ascension, High Priest | "He Is Alive!", "The Helper Comes" (Jesus is in heaven praying for us) |
+| Return of Christ | The final night of every journey cycle: "Jesus is coming back", told as joyful hope |
+| New birth | The invitation prayer on the last night of each trail, explained age-appropriately |

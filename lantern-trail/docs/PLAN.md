@@ -12,7 +12,8 @@ discover who God is and grow in relationship with Him: child of God, friend of J
 | Age bands | **2–3, 4–5, 6–7, 8–9, 10–12** (10–12 are self-guided) |
 | Child profile | Parent enters the child's **name, age and gender**. Gender sets he/she throughout. The parent then **picks a look**: *Adventure* or *Starlight* (one is suggested from the gender, and either can be chosen). |
 | Pricing | **Family plan, up to 4 children: about US$3.99/month or US$29.99/year, 7-day free trial.** Local prices per country. |
-| Doctrine | See CONTENT-GUIDE.md: Trinity, Jesus God in the flesh, God as Father, open access through the cross, God speaks today (rhema), and obedience flowing from love, not fear. |
+| Doctrine | **Rhema Bible Church** statement of faith and the *rhema* teaching. See CONTENT-GUIDE.md: Trinity, Jesus God in the flesh, new birth, God as Father, open access through the cross, God speaks today, and obedience flowing from love, not fear. |
+| Where the work lives | In this repository (the owner's husband's GitHub, with permission), **only inside the `lantern-trail/` folder**, on its own branch. One Claude account, no separate subscription. |
 | Launch order | **Web first** (installable web app), then iPhone and Android |
 
 ## How the content never runs out
@@ -46,7 +47,7 @@ discover who God is and grow in relationship with Him: child of God, friend of J
 
 ## Roadmap
 
-1. **Foundations:** new repo · content guide · content model · scheduling rules *(content guide, model and rules done)*
+1. **Foundations:** project folder · content guide · content model · scheduling rules *(done)*
 2. **Content engine:** one app that renders any night from data; the existing 56 nights converted; Adventure and Starlight looks
 3. **Accounts:** sign-up, family and child profiles, onboarding, progress synced across devices
 4. **Subscriptions:** trial, paywall, Paddle checkout and webhooks, entitlement checks
@@ -56,9 +57,10 @@ discover who God is and grow in relationship with Him: child of God, friend of J
 
 ## Open items
 
-- [ ] **Owner:** create a dedicated GitHub repository (suggested name: `lantern-trail`) and add it to the session.
-- [ ] **Owner:** confirm what "Rhema" means for the content (the *rhema* word teaching only, or Rhema Bible Church's
-      full doctrinal statement).
+- [x] Project location: the `lantern-trail/` folder in this repository *(decided 12 November 2026)*.
+- [x] Doctrine: Rhema Bible Church statement of faith plus the *rhema* teaching *(Appendix A of the content guide)*.
+- [ ] Never merge the Lantern Trail branch into the VDW site's main branch without checking how that site is
+      hosted. If it is published straight from the repository, these files could become public.
 - [ ] **Owner:** find a content reviewer (pastor or children's ministry leader).
 - [ ] Confirm Paddle supports a South African seller, and its payout terms.
 - [ ] Confirm which Afrikaans Bible translation may be quoted commercially.
