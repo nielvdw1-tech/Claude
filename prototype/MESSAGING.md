@@ -1,6 +1,8 @@
-# VDW Messaging Guide (draft for review)
+# VDW Messaging Guide
 
-This guide sets out who the website speaks to, what problem it solves and the words to use. Once it's approved, the homepage, service pages and free assessment page get rewritten to match.
+This guide sets out who the website speaks to, what problem it solves and the words to use. The prototype pages now follow it.
+
+**Lead with the problem, not the client type.** Headlines speak to the audit scramble, scattered documents and lack of visibility across branches. "Suppliers to industrial & mining clients" appears in supporting lines (eyebrows, "Built for" strip, FAQ), not as the headline.
 
 ---
 
@@ -89,10 +91,16 @@ Use this language on the site. It's how they describe it, not how a consultant w
 - "How long does it take to get all branches on one system?" → *(Need a real timeframe.)*
 - "What happens when our mining client audits us?" → You pull the documents from one place, and we can help you prepare.
 
-## 10. What we still need from you
+## 10. Decisions made
 
-- [ ] **Compliance Portal:** it fits this client perfectly, since a centralised system and a branch dashboard are exactly what it does. Is it ready to show clients? If yes, it should come back on the site as the proof behind "one centralised system".
-- [ ] **A case study from your current client:** before and after, even without their name (for example "a supplier to the mining industry with X branches"). Get their permission first.
-- [ ] **Areas you cover:** Gauteng only, or nationwide, given that branches are spread out?
-- [ ] **Industries:** focus fully on suppliers to industrial and mining clients, or keep warehousing, engineering and manufacturing as secondary audiences?
-- [ ] **Mining-specific requirements:** if your clients' audits follow specific mine or client standards, name them so the site can mention them accurately.
+- **Compliance Portal:** not ready, so it is not mentioned. The "central system" is the organised document system, expiry tracking and monthly MD reports that VDW sets up.
+- **Case study:** approved. The current client appears as an anonymous case study ("Equipment supplier to industrial & mining clients · Multiple branches"). **The results still need real figures**, confirmed with the client.
+- **Coverage:** nationwide. Head office in Pretoria, with on-site visits to branches across South Africa and remote support in between.
+- **Audience:** companies that supply products or equipment to industrial and mining clients. The focus is on the problem solved.
+
+## 11. Still open
+
+- [ ] Real results for the case study, plus the client's permission
+- [ ] Real testimonials from this type of client (the current three are unverified and mention other industries)
+- [ ] Realistic timeframes (audit per branch, system setup)
+- [ ] Any specific client or mine audit standards to name on the site

@@ -347,3 +347,21 @@ h1.eyebrow { font-size: 14px; letter-spacing: .08em; line-height: 1.4; }
 @media (max-width: 640px) {
   .back-link { font-size: 13px; }
 }
+
+/* ---------- Multi-branch messaging additions ---------- */
+.report-line .st { font-family: var(--font-body); }
+.branch-list { list-style: none; padding: 0; margin: 0 0 14px; display: grid; gap: 14px; }
+.branch-list li { display: grid; grid-template-columns: 92px 1fr 42px; align-items: center; gap: 12px; font-weight: 700; color: var(--charcoal); }
+.branch-list b { text-align: right; font-family: var(--font-head); font-variant-numeric: tabular-nums; }
+.branch-bar { height: 10px; background: #e6e8ea; border-radius: 999px; overflow: hidden; }
+.branch-bar i { display: block; height: 100%; background: var(--ok); border-radius: 999px; }
+.branch-bar.warn i { background: var(--orange); }
+.branch-bar.bad i { background: var(--bad); }
+.case-study { max-width: 1000px; margin: 0 auto; padding: 40px; }
+.case-study .case-label { font-size: 13px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; color: var(--orange-dark); margin-bottom: 24px; }
+.case-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
+.case-grid > div { min-width: 0; }
+.case-grid h3 { font-size: 18px; padding-top: 14px; border-top: 3px solid var(--blue); }
+.placeholder-text { background: #fef3e4; border: 1.5px dashed var(--orange); border-radius: 6px; padding: 10px 12px; font-style: italic; }
+@media (max-width: 960px) { .case-grid { grid-template-columns: 1fr; gap: 20px; } }
+@media (max-width: 640px) { .case-study { padding: 26px 20px; } .branch-list li { grid-template-columns: 80px 1fr 38px; } }
