@@ -2,7 +2,7 @@
 import sys, os
 
 OUT = sys.argv[1]
-ASSESS = "https://vdwassessment.zite.so"
+ASSESS = "free-assessment.html"
 
 ICONS = {
     "search": '<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>',
