@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en-ZA">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Multi-Branch Compliance Check | VDW Health &amp; Safety Solutions</title>
+<meta name="description" content="Free health & safety compliance check for companies with multiple branches. Answer 23 yes/no questions and get your score and gap list instantly.">
+<link rel="icon" href="assets/vdw-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="landing assessment-page">
+
+<a class="skip-link" href="#main">Skip to main content</a>
+
+<header class="site-header" id="top">
+  <div class="container header-inner">
+    <a class="logo" href="index.html" aria-label="Back to the VDW Health and Safety Solutions website">
+      <img src="assets/vdw-logo.png" alt="VDW Health and Safety Solutions" width="218" height="114">
+    </a>
+    <div class="header-actions">
+      <a class="back-link" href="index.html"><span aria-hidden="true">&larr;</span> Back to website</a>
+      <!-- TODO: replace with your real phone number -->
+      <a class="header-phone" href="tel:+27120000000" aria-label="Call us on 012 000 0000">
+        <span class="phone-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></svg></span>
+        <span class="phone-number">012 000 0000</span>
+      </a>
+    </div>
+  </div>
+</header>
+
+<main id="main" class="section section-grey assess-main">
+  <div class="container assess-wrap">
+
+    <!-- Progress (hidden on intro and results) -->
+    <div class="assess-progress" id="progress" hidden>
+      <div class="assess-progress-top">
+        <span id="progressLabel">Step 1 of 7</span>
+        <span id="progressSection"></span>
+      </div>
+      <div class="assess-progress-bar" aria-hidden="true"><span id="progressFill"></span></div>
+    </div>
+
+    <!-- STEP: INTRO -->
+    <section class="card assess-card" data-step="intro" aria-labelledby="introTitle">
+      <span class="badge">Free &middot; About 4 minutes</span>
+      <h1 id="introTitle" class="assess-title">Multi-Branch Compliance Check</h1>
+      <p class="assess-lead">Find out how ready your company is for its next client audit. Answer 23 simple yes/no questions about your branches and documentation, and get your compliance score and gap list straight away.</p>
+      <ul class="tick-list">
+        <li>Your overall compliance score and risk level</li>
+        <li>Separate scores for audit readiness and legal compliance</li>
+        <li>Every gap, with the OHS Act reference and how to fix it</li>
+      </ul>
+      <p class="assess-note">Answer for your company as a whole. If something is in place at some branches but not all, answer <strong>No</strong>.</p>
+      <button class="btn btn-primary btn-lg" type="button" data-next>Start the Check</button>
+      <p class="fud">Free &middot; No obligation &middot; Based on the OHS Act 85 of 1993</p>
+    </section>
+
+    <!-- STEP: COMPANY -->
+    <section class="card assess-card" data-step="company" aria-labelledby="companyTitle" hidden>
+      <p class="eyebrow">About your company</p>
+      <h2 id="companyTitle" class="assess-step-title">First, a little about your company</h2>
+      <form class="assess-form" id="companyForm" novalidate>
+        <div class="field">
+          <label for="branches">How many branches or sites do you have?</label>
+          <select id="branches" name="branches" required>
+            <option value="">Select</option>
+            <option>1</option><option>2&ndash;3</option><option>4&ndash;10</option><option>More than 10</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="employees">Total number of employees</label>
+          <select id="employees" name="employees" required>
+            <option value="">Select</option>
+            <option>1&ndash;10</option><option>11&ndash;50</option><option>51&ndash;100</option><option>101&ndash;500</option><option>More than 500</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="industry">What best describes your company?</label>
+          <select id="industry" name="industry" required>
+            <option value="">Select</option>
+            <option>Equipment supplier</option>
+            <option>Industrial distributor</option>
+            <option>Plant &amp; equipment hire</option>
+            <option>Parts &amp; consumables supplier</option>
+            <option>Engineering &amp; maintenance services</option>
+            <option>Manufacturing</option>
+            <option>Logistics &amp; warehousing</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <fieldset class="field">
+          <legend>Do your clients audit your health &amp; safety compliance?</legend>
+          <div class="choice-row">
+            <label class="choice"><input type="radio" name="clientAudits" value="Regularly" required><span>Regularly</span></label>
+            <label class="choice"><input type="radio" name="clientAudits" value="Sometimes"><span>Sometimes</span></label>
+            <label class="choice"><input type="radio" name="clientAudits" value="Not yet"><span>Not yet</span></label>
+          </div>
+        </fieldset>
+        <p class="form-error" id="companyError" role="alert" hidden>Please answer all four questions to continue.</p>
+        <div class="assess-nav">
+          <button class="btn btn-outline" type="button" data-back>&larr; Back</button>
+          <button class="btn btn-primary" type="submit">Continue &rarr;</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- STEP: QUESTION SECTIONS (filled by assessment.js) -->
+    <div id="questionSteps"></div>
+
+    <!-- STEP: CONTACT -->
+    <section class="card assess-card" data-step="contact" aria-labelledby="contactTitle" hidden>
+      <p class="eyebrow">Almost done</p>
+      <h2 id="contactTitle" class="assess-step-title">Where should we send your results?</h2>
+      <p class="assess-lead">You'll see your score on the next screen. We'll also email you a copy of your results and gap list.</p>
+      <form class="assess-form" id="contactForm" novalidate>
+        <div class="field-grid">
+          <div class="field">
+            <label for="fullName">Full name</label>
+            <input id="fullName" name="fullName" type="text" autocomplete="name" required>
+          </div>
+          <div class="field">
+            <label for="role">Your role</label>
+            <input id="role" name="role" type="text" autocomplete="organization-title" placeholder="e.g. Managing Director">
+          </div>
+          <div class="field">
+            <label for="company">Company name</label>
+            <input id="company" name="company" type="text" autocomplete="organization" required>
+          </div>
+          <div class="field">
+            <label for="phone">Phone number</label>
+            <input id="phone" name="phone" type="tel" autocomplete="tel" required>
+          </div>
+          <div class="field field-wide">
+            <label for="email">Work email</label>
+            <input id="email" name="email" type="email" autocomplete="email" required>
+          </div>
+        </div>
+        <label class="consent">
+          <input type="checkbox" id="consent" name="consent" required>
+          <span>I agree that VDW Health &amp; Safety Solutions may use these details to send my results and contact me about them. My information won't be shared with anyone else.</span>
+        </label>
+        <p class="form-error" id="contactError" role="alert" hidden></p>
+        <div class="assess-nav">
+          <button class="btn btn-outline" type="button" data-back>&larr; Back</button>
+          <button class="btn btn-primary" type="submit">See My Results &rarr;</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- STEP: RESULTS (filled by assessment.js) -->
+    <section class="assess-results" data-step="results" aria-labelledby="resultsTitle" hidden>
+      <div class="card results-head">
+        <div class="score-big" id="scoreRing" role="img" aria-label="">
+          <span id="scoreNum">0%</span><small>compliant</small>
+        </div>
+        <div class="results-summary">
+          <p class="eyebrow" id="resultsFor"></p>
+          <h1 id="resultsTitle" class="assess-title"></h1>
+          <p id="resultsSummary"></p>
+        </div>
+      </div>
+
+      <div class="grid-2 results-scores">
+        <div class="card sub-score">
+          <h2>Audit readiness</h2>
+          <p class="sub-score-num" id="auditScore"></p>
+          <p>How quickly and consistently you can show clients your compliance across branches.</p>
+        </div>
+        <div class="card sub-score">
+          <h2>Legal compliance</h2>
+          <p class="sub-score-num" id="legalScore"></p>
+          <p>How well the core OHS Act requirements are in place.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="results-h2">Score by area</h2>
+        <ul class="branch-list section-bars" id="sectionBars"></ul>
+      </div>
+
+      <div class="card">
+        <h2 class="results-h2" id="gapsTitle">Your compliance gaps</h2>
+        <div id="gapList"></div>
+      </div>
+
+      <div class="card results-cta">
+        <h2>Book a free 15-minute discovery call</h2>
+        <p>We'll walk you through your gaps, explain what they mean for your next client audit, and map out a clear plan to get every branch compliant.</p>
+        <div class="results-cta-actions">
+          <a class="btn btn-primary btn-lg" href="mailto:hello@vdwsafety.co.za?subject=Discovery%20call%20-%20Multi-Branch%20Compliance%20Check">Book My Discovery Call</a>
+          <span class="results-contact">or call <strong>012 000 0000</strong> &middot; <strong>hello@vdwsafety.co.za</strong></span>
+        </div>
+      </div>
+
+      <p class="assess-disclaimer">This check is a screening based on your answers. It doesn't confirm full legal compliance. Hidden risks and documentation gaps often only show up in a formal on-site audit.</p>
+      <p class="text-center"><button class="btn btn-outline" type="button" id="restart">Start Again</button></p>
+    </section>
+
+  </div>
+</main>
+
+<footer class="site-footer site-footer-min">
+  <div class="container footer-min">
+    <img src="assets/vdw-logo.png" alt="VDW Health and Safety Solutions" width="218" height="114">
+    <div class="footer-min-contact">
+      <span>012 000 0000</span>
+      <span>hello@vdwsafety.co.za</span>
+      <span>Pretoria, South Africa &middot; Nationwide</span>
+      <a href="index.html">&larr; Back to website</a>
+    </div>
+  </div>
+  <div class="container footer-bottom">
+    <p>&copy; <span id="year"></span> VDW Health &amp; Safety Solutions. All rights reserved.</p>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+<script src="assessment-data.js"></script>
+<script src="assessment.js"></script>
+</body>
+</html>
