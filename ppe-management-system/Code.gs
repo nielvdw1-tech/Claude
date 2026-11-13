@@ -130,6 +130,80 @@ function cleanPPEKey_(value) {
 }
 
 /**
+ * Reads a number from a cell, even when it was typed as text:
+ * "R 250", "250,00", "1 234,50", "1,234.50" all work.
+ * Anything unreadable becomes 0 (never NaN, which shows as
+ * #NUM! in the sheet and stops sidebars from loading).
+ */
+function toPPENumber_(value) {
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : 0;
+  }
+
+  let text = cleanPPEText_(value).replace(/[^\d,.\-]/g, "");
+
+  if (!text) {
+    return 0;
+  }
+
+  const lastComma = text.lastIndexOf(",");
+  const lastDot = text.lastIndexOf(".");
+
+  if (lastComma !== -1 && lastDot !== -1) {
+    // Both used: the last one is the decimal mark.
+    text = lastComma > lastDot
+      ? text.replace(/\./g, "").replace(",", ".")
+      : text.replace(/,/g, "");
+  } else if (lastComma !== -1) {
+    // Only commas: "250,50" is a decimal, "1,250" is thousands.
+    text = /^-?\d*,\d{1,2}$/.test(text)
+      ? text.replace(",", ".")
+      : text.replace(/,/g, "");
+  } else if ((text.match(/\./g) || []).length > 1) {
+    // "1.234.567" – dots used as thousands separators.
+    text = text.replace(/\./g, "");
+  }
+
+  const number = Number(text);
+
+  return Number.isFinite(number) ? number : 0;
+}
+
+/**
+ * Turns number cells that were typed as text into real numbers.
+ * Used by Repair PPE System.
+ */
+function convertPPETextNumbers_(sheet, columns) {
+  const lastRow = sheet.getLastRow();
+
+  if (lastRow < 2) {
+    return 0;
+  }
+
+  let fixed = 0;
+
+  columns.forEach(function(column) {
+    const range = sheet.getRange(2, column, lastRow - 1, 1);
+    const values = range.getValues();
+    let changed = false;
+
+    values.forEach(function(row) {
+      if (typeof row[0] === "string" && cleanPPEText_(row[0]) !== "") {
+        row[0] = toPPENumber_(row[0]);
+        changed = true;
+        fixed++;
+      }
+    });
+
+    if (changed) {
+      range.setValues(values);
+    }
+  });
+
+  return fixed;
+}
+
+/**
  * Yes / Active / TRUE / 1 all count as active.
  */
 function isPPEActive_(value) {
@@ -475,12 +549,12 @@ function findPPEItemByID(itemSheet, ppeID) {
       brand: cleanPPEText_(data[i][3]),
       size: cleanPPEText_(data[i][4]),
       unit: cleanPPEText_(data[i][5]),
-      minimumStock: Number(data[i][6] || 0),
-      reorderQuantity: Number(data[i][7] || 0),
-      unitCost: Number(data[i][8] || 0),
+      minimumStock: toPPENumber_(data[i][6]),
+      reorderQuantity: toPPENumber_(data[i][7]),
+      unitCost: toPPENumber_(data[i][8]),
       supplier: cleanPPEText_(data[i][9]),
       supplierEmail: cleanPPEText_(data[i][10]),
-      replacementPeriodMonths: Number(data[i][11] || 0),
+      replacementPeriodMonths: toPPENumber_(data[i][11]),
       active: isPPEActive_(data[i][12]),
       notes: cleanPPEText_(data[i][13])
     };
@@ -505,8 +579,8 @@ function getPPEStockMap_(stockSheet) {
     }
 
     stockMap[key] = {
-      currentStock: Number(data[i][6] || 0),
-      minimumStock: Number(data[i][7] || 0)
+      currentStock: toPPENumber_(data[i][6]),
+      minimumStock: toPPENumber_(data[i][7])
     };
   }
 
@@ -556,7 +630,7 @@ function getActivePPEItemsWithStock(itemSheet, stockSheet) {
     const stock =
       stockMap[ppeID.toLowerCase()] || {
         currentStock: 0,
-        minimumStock: Number(row[6] || 0)
+        minimumStock: toPPENumber_(row[6])
       };
 
     items.push({
@@ -566,10 +640,10 @@ function getActivePPEItemsWithStock(itemSheet, stockSheet) {
       size: cleanPPEText_(row[4]),
       currentStock: stock.currentStock,
       minimumStock: stock.minimumStock,
-      reorderQuantity: Number(row[7] || 0),
-      unitCost: Number(row[8] || 0),
+      reorderQuantity: toPPENumber_(row[7]),
+      unitCost: toPPENumber_(row[8]),
       supplier: cleanPPEText_(row[9]),
-      replacementPeriodMonths: Number(row[11] || 0)
+      replacementPeriodMonths: toPPENumber_(row[11])
     });
   }
 
@@ -1216,7 +1290,7 @@ function getOutstandingPPEIssuesForReturn_(issueSheet) {
     const issueID = cleanPPEText_(row[issueIDColumn]);
     const employeeID = cleanPPEText_(row[employeeIDColumn]);
     const ppeID = cleanPPEText_(row[ppeIDColumn]);
-    const quantityIssued = Number(row[quantityColumn] || 0);
+    const quantityIssued = toPPENumber_(row[quantityColumn]);
 
     if (!issueID || !employeeID || !ppeID || !(quantityIssued > 0)) {
       continue;
@@ -1273,7 +1347,7 @@ function getReturnedPPEQuantityMap_() {
 
   for (let i = 1; i < data.length; i++) {
     const issueID = cleanPPEText_(data[i][14]);
-    const quantity = Number(data[i][9] || 0);
+    const quantity = toPPENumber_(data[i][9]);
 
     if (!issueID || !(quantity > 0)) {
       continue;
@@ -1310,7 +1384,7 @@ function findPPEIssueByID(issueSheet, issueID) {
       ppeID: cleanPPEText_(data[i][7]),
       description: cleanPPEText_(data[i][8]),
       size: cleanPPEText_(data[i][9]),
-      quantityIssued: Number(data[i][10] || 0)
+      quantityIssued: toPPENumber_(data[i][10])
     };
   }
 
@@ -1710,7 +1784,7 @@ function readPPERequestRow_(row, rowNumber) {
     ppeID: cleanPPEText_(row[6]),
     ppeDescription: cleanPPEText_(row[7]),
     size: cleanPPEText_(row[8]),
-    quantity: Number(row[9] || 0),
+    quantity: toPPENumber_(row[9]),
     reason: cleanPPEText_(row[10]),
     urgency: cleanPPEText_(row[11]),
     supervisor: cleanPPEText_(row[12]),
@@ -3619,8 +3693,8 @@ function rebuildPPECurrentStock() {
       continue;
     }
 
-    const quantityIn = Number(transactionData[i][6] || 0);
-    const quantityOut = Number(transactionData[i][7] || 0);
+    const quantityIn = toPPENumber_(transactionData[i][6]);
+    const quantityOut = toPPENumber_(transactionData[i][7]);
 
     if (!stockTotals[ppeID]) {
       stockTotals[ppeID] = { totalReceived: 0, totalIssued: 0 };
@@ -3664,10 +3738,10 @@ function rebuildPPECurrentStock() {
     const totalIssued = Number(totals.totalIssued || 0);
     const currentStock = totalReceived - totalIssued;
 
-    const minimumStock = Number(row[6] || 0);
-    const reorderQuantity = Number(row[7] || 0);
-    const unitCost = Number(row[8] || 0);
-    const leadTimeDays = Number(row[15] || 0); // P – entered manually
+    const minimumStock = toPPENumber_(row[6]);
+    const reorderQuantity = toPPENumber_(row[7]);
+    const unitCost = toPPENumber_(row[8]);
+    const leadTimeDays = toPPENumber_(row[15]); // P – entered manually
 
     const averageMonthlyUsage = Number(usageTotals[key] || 0) / 3;
 
@@ -3847,8 +3921,8 @@ function loadOpeningStock() {
   for (let i = 1; i < data.length; i++) {
     const sheetRow = i + 1;
     const ppeID = cleanPPEText_(data[i][0]);
-    const quantity = Number(data[i][3] || 0);
-    const unitCost = Number(data[i][4] || 0);
+    const quantity = toPPENumber_(data[i][3]);
+    const unitCost = toPPENumber_(data[i][4]);
     const branch = cleanPPEText_(data[i][5]);
 
     // Skip loaded, empty and zero-quantity rows.
@@ -4029,13 +4103,26 @@ function repairPPEManagementSystem() {
   stockSheet.getRange("M2:N").setNumberFormat(PPE_CURRENCY_FORMAT);
   stockSheet.getRange("Q2:Q").setNumberFormat("yyyy-mm-dd");
 
+  /*
+   * Numbers typed as text (e.g. "R250" or "250,00") cause #NUM!
+   * and "Unit Cost not added" errors. Convert them to numbers:
+   * PPE Items G Min Stock, H Reorder Qty, I Unit Cost,
+   * L Replacement Months, P Lead Time; PPE Budgets E Budget.
+   */
+  const numbersFixed =
+    convertPPETextNumbers_(itemSheet, [7, 8, 9, 12, 16]) +
+    (ss.getSheetByName("PPE Budgets")
+      ? convertPPETextNumbers_(ss.getSheetByName("PPE Budgets"), [5])
+      : 0);
+
   rebuildPPECurrentStock();
   recalculatePPEBudgets();
 
   SpreadsheetApp.flush();
 
   ss.toast(
-    "PPE system headings and formatting were repaired successfully.",
+    "PPE system repaired. " + numbersFixed +
+    " number cell(s) typed as text were converted.",
     "PPE System Repair",
     6
   );
@@ -4086,10 +4173,10 @@ function getBranchPPEBudget_(branch, year) {
         year: searchYear,
         branch: data[i][2],
         department: data[i][3],
-        budgetAmount: Number(data[i][4] || 0),
-        spent: Number(data[i][5] || 0),
-        committed: Number(data[i][6] || 0),
-        remaining: Number(data[i][7] || 0),
+        budgetAmount: toPPENumber_(data[i][4]),
+        spent: toPPENumber_(data[i][5]),
+        committed: toPPENumber_(data[i][6]),
+        remaining: toPPENumber_(data[i][7]),
         status: cleanPPEText_(data[i][8])
       };
     }
@@ -4119,16 +4206,8 @@ function recalculatePPEBudgets() {
     );
   }
 
-  // Accepts numbers and text such as "R 1,700.00".
-  function parseMoney(value) {
-    if (typeof value === "number" && Number.isFinite(value)) {
-      return value;
-    }
-
-    const parsed = Number(String(value || "").replace(/[^\d.-]/g, ""));
-
-    return Number.isFinite(parsed) ? parsed : 0;
-  }
+  // Accepts numbers and text such as "R 1 700,00".
+  const parseMoney = toPPENumber_;
 
   function budgetKey(value) {
     return cleanPPEText_(value).toUpperCase().replace(/-/g, "");
@@ -4426,7 +4505,7 @@ function getPPEBudgetReservationByRequest_(requestID) {
       transactionID: cleanPPEText_(row[0]),
       date: row[1],
       budgetID: cleanPPEText_(row[2]),
-      year: Number(row[3] || 0),
+      year: toPPENumber_(row[3]),
       branch: cleanPPEText_(row[4]),
       department: cleanPPEText_(row[5]),
       requestID: cleanPPEText_(row[7]),
@@ -4435,9 +4514,9 @@ function getPPEBudgetReservationByRequest_(requestID) {
       employeeName: cleanPPEText_(row[10]),
       ppeID: cleanPPEText_(row[11]),
       ppeDescription: cleanPPEText_(row[12]),
-      quantity: Number(row[13] || 0),
-      unitCost: Number(row[14] || 0),
-      amount: Number(row[15] || 0)
+      quantity: toPPENumber_(row[13]),
+      unitCost: toPPENumber_(row[14]),
+      amount: toPPENumber_(row[15])
     };
   }
 
