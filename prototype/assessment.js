@@ -227,5 +227,6 @@
     return payload;
   }
 
-  show(0);
+  // Buttons that say "Start My Free Check" link to assessment.html#start and skip the intro
+  show(location.hash === '#start' ? 1 : 0);
 })();
