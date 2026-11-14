@@ -473,3 +473,32 @@ h1.eyebrow { font-size: 14px; letter-spacing: .08em; line-height: 1.4; }
   .shot-stack .shot-front { width: 100%; }
   .shot-stack .shot-back { position: static; width: 100%; margin-top: 12px; }
 }
+
+/* ---------- Background photo sections ---------- */
+/* A section with data-photo-src shows that photo under a dark overlay once the file exists
+   (script.js loads it). Until then it shows a dark placeholder naming the photo it needs. */
+.bg-photo {
+  position: relative;
+  color: #fff;
+  background-color: var(--charcoal);
+  background-image: linear-gradient(rgba(20, 24, 28, .74), rgba(20, 24, 28, .74)), var(--photo, linear-gradient(135deg, #2c343b 0%, #1f2429 55%, #2a2219 100%));
+  background-size: cover;
+  background-position: center;
+}
+.bg-photo .hero-copy h1, .bg-photo .hero-title, .bg-photo .recap-title,
+.bg-photo > .container > h2, .bg-photo .narrow > h2, .bg-photo .hero-copy h2 { color: #fff; }
+.bg-photo .lead, .bg-photo .section-lead, .bg-photo .hero-copy .fud, .bg-photo .proof-line { color: #d3d8dd; }
+.bg-photo .hero-copy .eyebrow, .bg-photo .narrow .eyebrow { color: #7fd0f2; }
+.bg-photo .hero-copy .tick-list li { color: #fff; }
+.bg-photo .hero-copy a:not(.btn) { color: #9fdcf6; }
+.bg-photo + .proof-strip { border-top-color: rgba(255, 255, 255, .12); }
+.photo-slot::after {
+  content: attr(data-photo);
+  position: absolute; right: 16px; bottom: 14px; max-width: calc(100% - 32px);
+  font-size: 12px; font-weight: 700; color: #f5c27a;
+  border: 1.5px dashed rgba(245, 194, 122, .7); border-radius: 6px; padding: 4px 10px;
+  background: rgba(20, 24, 28, .6); pointer-events: none;
+}
+.photo-placeholder.has-photo { border: 0; background: none; padding: 0; overflow: hidden; }
+.photo-placeholder.has-photo img { width: 100%; height: 100%; object-fit: cover; opacity: 1; }
+@media (max-width: 640px) { .photo-slot::after { left: 16px; right: auto; font-size: 11px; } }

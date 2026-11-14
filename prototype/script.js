@@ -50,6 +50,28 @@
   window.addEventListener('pageshow', toTop);
   setTimeout(toTop, 150);
 
+  // Photos: load each data-photo-src if the file exists, otherwise keep the placeholder
+  document.querySelectorAll('[data-photo-src]').forEach(function (el) {
+    var src = el.getAttribute('data-photo-src');
+    var img = new Image();
+    img.onload = function () {
+      if (el.classList.contains('photo-placeholder')) {
+        var photo = document.createElement('img');
+        photo.src = src;
+        photo.alt = el.getAttribute('data-photo-alt') || '';
+        el.innerHTML = '';
+        el.appendChild(photo);
+        el.classList.add('has-photo');
+        el.removeAttribute('role');
+        el.removeAttribute('aria-label');
+      } else {
+        el.style.setProperty('--photo', 'url("' + src + '")');
+      }
+      el.classList.remove('photo-slot');
+    };
+    img.src = src;
+  });
+
   // Footer year
   var yearEl = document.getElementById('year');
   if (yearEl) yearEl.textContent = new Date().getFullYear();

@@ -173,7 +173,7 @@ def page(fname, d):
 <main id="main">
 
   <!-- HERO -->
-  <section class="hero">
+  <section class="hero bg-photo photo-slot" data-photo-src="assets/photos/{d["hero_photo"][0]}" data-photo="Photo: {d["hero_photo"][1]}">
     <div class="container hero-grid">
       <div class="hero-copy">
         <h1 class="eyebrow">{d["keyword"]}</h1>
@@ -192,7 +192,7 @@ def page(fname, d):
   </div>
 
   <!-- PAIN POINT -->
-  <section class="section">
+  <section class="section bg-photo photo-slot" data-photo-src="assets/photos/audit-scramble.jpg" data-photo="Photo: Binders and files piled on a branch counter, someone on the phone">
     <div class="container narrow text-center">
       <h2 class="section-title">{d["pain_title"]}</h2>
       <p class="section-lead">{d["pain_body"]}</p>
@@ -261,7 +261,7 @@ def page(fname, d):
           <p>{d["team_body"]}</p>
         </div>
         <!-- TODO: replace with a real team or on-site photo -->
-        <div class="photo-placeholder" role="img" aria-label="Team photo placeholder">
+        <div class="photo-placeholder" data-photo-src="assets/photos/team-on-site.jpg" data-photo-alt="The VDW team on site at a client branch" role="img" aria-label="Team photo placeholder">
           <img src="assets/vdw-logo.png" alt="" width="218" height="114">
           <span>Your team photo here</span>
         </div>
@@ -290,7 +290,7 @@ def page(fname, d):
   </section>
 
   <!-- FINAL RECAP -->
-  <section class="section section-grey" id="contact">
+  <section class="section bg-photo photo-slot" data-photo-src="assets/photos/truck-leaving.jpg" data-photo="Photo: Truck loaded with equipment leaving for a client site" id="contact">
     <div class="container hero-grid">
       <div class="hero-copy">
         <p class="eyebrow">{d["recap_eyebrow"]}</p>
@@ -315,7 +315,13 @@ def page(fname, d):
 
 exec(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'pages_content.py')).read())
 
+HERO_PHOTOS = {
+    'gap-audit.html': ('inspection-finding.jpg', 'Consultant photographing a finding at a branch'),
+    'safety-file.html': ('organised-files.jpg', 'Neatly labelled compliance files or folder structure'),
+    'compliance-management.html': ('site-walk.jpg', 'Monthly site walk-through with a branch manager'),
+}
 for fname, d in PAGES.items():
+    d['hero_photo'] = HERO_PHOTOS[fname]
     with open(os.path.join(OUT, fname), "w") as f:
         f.write(page(fname, d))
     print("wrote", fname)
