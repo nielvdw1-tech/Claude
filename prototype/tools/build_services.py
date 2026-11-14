@@ -73,7 +73,7 @@ FOOTER = '''<footer class="site-footer">
   <div class="container footer-grid">
     <div class="footer-brand">
       <img src="assets/vdw-logo.png" alt="VDW Health and Safety Solutions" width="218" height="114">
-      <p>We manage health &amp; safety compliance for multi-branch companies, using our own compliance management system. Pretoria-based, working nationwide.</p>
+      <p>We manage health &amp; safety compliance for multi-branch companies, using our own VDW Compliance Control System. Pretoria-based, working nationwide.</p>
     </div>
     <nav aria-label="Footer services">
       <h4>Services</h4>

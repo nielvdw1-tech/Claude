@@ -47,7 +47,7 @@ Use this language on the site. It's how they describe it, not how a consultant w
 
 ## 4. Positioning statement
 
-> VDW Health & Safety Solutions is the **outsourced safety department for multi-branch companies**. We manage your health & safety compliance at every branch, **using our own compliance management system**, so you're ready whenever your industrial and mining clients audit you, and your MD always knows where each branch stands.
+> VDW Health & Safety Solutions is the **outsourced safety department for multi-branch companies**. We manage your health & safety compliance at every branch, **using our own VDW Compliance Control System**, so you're ready whenever your industrial and mining clients audit you, and your MD always knows where each branch stands.
 
 **Important:** VDW doesn't hand clients a system to maintain themselves. VDW runs the system and manages the client's compliance with it. The copy says "we manage it for you", "on our system" and "your outsourced safety department". It never implies the client's team does the upkeep.
 
@@ -95,7 +95,7 @@ Use this language on the site. It's how they describe it, not how a consultant w
 
 ## 10. Decisions made
 
-- **The system:** VDW manages clients' compliance on its own compliance management system. The site calls it "our compliance management system". It isn't named or shown, and clients aren't promised a login. Documents remain the client's, sent on request.
+- **The system:** VDW manages clients' compliance on its own system, the **VDW Compliance Control System**. Use the full name a few times per page (hero, services, about), then "our system". It isn't shown on the site, and clients aren't promised a login. Documents remain the client's and are sent on request.
 - **Case study:** approved. The current client appears as an anonymous case study ("Equipment supplier to industrial & mining clients · Multiple branches"). **The results still need real figures**, confirmed with the client.
 - **Coverage:** nationwide. Head office in Pretoria, with on-site visits to branches across South Africa and remote support in between.
 - **Audience:** companies that supply products or equipment to industrial and mining clients. The focus is on the problem solved.
