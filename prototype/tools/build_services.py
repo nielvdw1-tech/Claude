@@ -36,8 +36,8 @@ def btn(label, href=ASSESS, cls="btn btn-primary"):
 
 SERVICES = [
     ("gap-audit.html", "Compliance Audits"),
-    ("safety-file.html", "Compliance System"),
-    ("compliance-management.html", "Ongoing Management"),
+    ("safety-file.html", "System Onboarding"),
+    ("compliance-management.html", "Managed Compliance"),
 ]
 
 def header(current):
@@ -73,14 +73,14 @@ FOOTER = '''<footer class="site-footer">
   <div class="container footer-grid">
     <div class="footer-brand">
       <img src="assets/vdw-logo.png" alt="VDW Health and Safety Solutions" width="218" height="114">
-      <p>One centralised health &amp; safety compliance system for every branch. Pretoria-based, working nationwide.</p>
+      <p>We manage health &amp; safety compliance for multi-branch companies, using our own compliance management system. Pretoria-based, working nationwide.</p>
     </div>
     <nav aria-label="Footer services">
       <h4>Services</h4>
       <ul>
         <li><a href="gap-audit.html">Multi-Branch Compliance Audit</a></li>
-        <li><a href="safety-file.html">Centralised Compliance System</a></li>
-        <li><a href="compliance-management.html">Ongoing Compliance Management</a></li>
+        <li><a href="safety-file.html">Compliance System Onboarding</a></li>
+        <li><a href="compliance-management.html">Managed Compliance</a></li>
         <li><a href="free-assessment.html">Free Compliance Check</a></li>
       </ul>
     </nav>
