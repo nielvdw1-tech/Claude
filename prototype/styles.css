@@ -519,3 +519,54 @@ h1.eyebrow { font-size: 14px; letter-spacing: .08em; line-height: 1.4; }
   .whatsapp-float span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 }
 @media (prefers-reduced-motion: reduce) { .whatsapp-float { transition: none; } }
+
+/* ---------- Responsive fine-tuning ---------- */
+/* Tablets: groups of three cards keep 3 columns down to 900px, then stack in one centred column
+   (2 columns would leave the third card on its own). Six-card grids use 2 columns. */
+@media (min-width: 901px) and (max-width: 960px) {
+  .grid-3 { grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .grid-3.diff-grid { grid-template-columns: repeat(3, 1fr); }
+  .card { padding: 26px; }
+}
+@media (min-width: 641px) and (max-width: 900px) {
+  .grid-3 { grid-template-columns: 1fr; max-width: 620px; margin-left: auto; margin-right: auto; }
+  .grid-3.diff-grid { grid-template-columns: 1fr 1fr; max-width: none; }
+}
+@media (max-width: 960px) {
+  .hero-card, .hero-grid > .feature-visual, .hero-grid > .shot-visual { width: 100%; max-width: 560px; margin-left: auto; margin-right: auto; }
+  .proof-strip-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 24px; justify-content: stretch; }
+  .about-card .photo-placeholder { aspect-ratio: 16 / 9; }
+  .team-grid .photo-placeholder { min-height: 240px; }
+  .feature-visual { max-width: 560px; width: 100%; margin-left: auto; margin-right: auto; }
+}
+@media (max-width: 640px) {
+  .proof-strip-inner { grid-template-columns: 1fr; }
+}
+/* Very small phones (320–360px) */
+@media (max-width: 360px) {
+  .container { padding: 0 14px; }
+  .hero h1, .hero-title { font-size: 30px; }
+  .section-title { font-size: 26px; }
+  .btn { padding: 14px 18px; font-size: 14px; letter-spacing: .02em; }
+  .btn-lg { padding: 16px 18px; font-size: 15px; }
+  .logo img { height: 40px; }
+}
+/* Large monitors: a wider layout and slightly larger type, so the page doesn't look small */
+@media (min-width: 1800px) {
+  :root { --container: 1360px; }
+  body { font-size: 18px; }
+  .hero { padding: 96px 0 104px; }
+  .hero h1, .hero-title { font-size: 64px; }
+  .section-title { font-size: 46px; }
+  .lead { font-size: 21px; }
+  .section { padding: 112px 0; }
+}
+@media (max-width: 960px) { .proof-strip-inner .strip-label { grid-column: 1 / -1; } }
+/* Landscape phones and other short screens: slimmer header that scrolls away */
+@media (max-height: 500px) and (orientation: landscape) {
+  .site-header { position: relative; }
+  .header-inner { min-height: 60px; }
+  .logo img { height: 42px; }
+  .main-nav { z-index: 101; }
+  .hero { padding: 36px 0 44px; }
+}

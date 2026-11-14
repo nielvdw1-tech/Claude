@@ -6,3 +6,5 @@
   `python3 tools/build_preview.py . <output-folder>`
 
 The homepage (`index.html`) and the landing page (`free-assessment.html`) are edited directly.
+- `check_layout.js` opens every page at 20 screen widths, from 320px phones to 2560px monitors, and reports sideways scrolling, elements past the screen edge, clipped text and header overlaps. Run it from the `prototype/` folder after layout changes:
+  `node tools/check_layout.js "$PWD"`
