@@ -265,7 +265,7 @@ def page(fname, d):
           <span>Your team photo here</span>
         </div>
       </div>
-      <div class="center-cta">{btn("Speak to a Consultant", "#contact")}</div>
+      <div class="center-cta">{btn("Speak to a Consultant on WhatsApp", "https://wa.me/27728438094?text=Hi%20Niel%2C%20I%27d%20like%20to%20speak%20to%20a%20consultant%20about%20our%20health%20%26%20safety%20compliance.")}</div>
     </div>
   </section>
 
