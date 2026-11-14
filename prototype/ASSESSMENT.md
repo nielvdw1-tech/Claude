@@ -24,7 +24,7 @@
 
 ## 2. The new Multi-Branch Compliance Check (`assessment.html`)
 
-**Flow:** intro → about your company (not personal details) → 5 question sections → contact details → instant results.
+**Flow:** free check landing page → about your company (not personal details) → 5 question sections → contact details → instant results. The check has no intro screen of its own: the landing page does that job, and Back on the first step returns to it.
 
 | Step | What's asked |
 |---|---|

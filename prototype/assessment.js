@@ -53,19 +53,19 @@
   var steps = Array.prototype.slice.call(document.querySelectorAll('[data-step]'));
   var current = 0;
   var progress = document.getElementById('progress');
-  var countedSteps = steps.length - 2; // everything except intro and results
+  var countedSteps = steps.length - 1; // everything except results
 
   function show(index) {
     current = index;
     steps.forEach(function (el, i) { el.hidden = i !== index; });
     var name = steps[index].getAttribute('data-step');
-    var inFlow = name !== 'intro' && name !== 'results';
+    var inFlow = name !== 'results';
     progress.hidden = !inFlow;
     if (inFlow) {
-      document.getElementById('progressLabel').textContent = 'Step ' + index + ' of ' + countedSteps;
+      document.getElementById('progressLabel').textContent = 'Step ' + (index + 1) + ' of ' + countedSteps;
       var title = steps[index].querySelector('.assess-step-title');
       document.getElementById('progressSection').textContent = title ? title.textContent : '';
-      document.getElementById('progressFill').style.width = Math.round((index - 1) / countedSteps * 100) + '%';
+      document.getElementById('progressFill').style.width = Math.round(index / countedSteps * 100) + '%';
     }
     window.scrollTo({ top: 0, behavior: 'instant' });
     var heading = steps[index].querySelector('h1, h2');
@@ -227,6 +227,6 @@
     return payload;
   }
 
-  // Buttons that say "Start My Free Check" link to assessment.html#start and skip the intro
-  show(location.hash === '#start' ? 1 : 0);
+  // The check opens at the first step; its Back button returns to the landing page
+  show(0);
 })();
