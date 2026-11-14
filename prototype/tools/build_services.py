@@ -320,7 +320,7 @@ exec(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'pages_conten
 
 HERO_PHOTOS = {
     'gap-audit.html': ('inspection-finding.jpg', 'Consultant photographing a finding at a branch'),
-    'safety-file.html': ('organised-files.jpg', 'Neatly labelled compliance files or folder structure'),
+    'safety-file.html': ('organised-files.jpg', 'Someone updating compliance records on a laptop in a branch warehouse'),
     'compliance-management.html': ('site-walk.jpg', 'Monthly site walk-through with a branch manager'),
 }
 for fname, d in PAGES.items():
