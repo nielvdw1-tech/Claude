@@ -58,10 +58,9 @@ def header(current):
       </ul>
     </nav>
     <div class="header-actions">
-      <!-- TODO: replace with your real phone number -->
-      <a class="header-phone" href="tel:+27120000000" aria-label="Call us on 012 000 0000">
+      <a class="header-phone" href="tel:+27728438094" aria-label="Call us on 072 843 8094">
         <span class="phone-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></svg></span>
-        <span class="phone-number">012 000 0000</span>
+        <span class="phone-number">072 843 8094</span>
       </a>
       <a class="btn btn-outline btn-sm header-cta" href="free-assessment.html">Free Compliance Check</a>
       <button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="main-nav" aria-label="Toggle navigation menu"><span></span><span></span><span></span></button>
@@ -95,8 +94,8 @@ FOOTER = '''<footer class="site-footer">
     </nav>
     <div class="footer-contact">
       <h4>Get in Touch</h4>
-      <p><a href="tel:+27120000000">012 000 0000</a></p>
-      <p><a href="mailto:hello@vdwsafety.co.za">hello@vdwsafety.co.za</a></p>
+      <p><a href="tel:+27728438094">072 843 8094</a></p>
+      <p><a href="mailto:niel@vdwsafety.com">niel@vdwsafety.com</a></p>
       <p>Pretoria, South Africa &middot; Nationwide</p>
     </div>
   </div>
@@ -298,7 +297,7 @@ def page(fname, d):
         <p class="lead">{d["recap_body"]}</p>
         <ul class="tick-list">{tick(d["recap_points"])}</ul>
         {btn(d["cta"], cls="btn btn-primary btn-lg")}
-        <p class="fud">No obligation &middot; Practical findings &middot; Or email <a href="mailto:hello@vdwsafety.co.za">hello@vdwsafety.co.za</a></p>
+        <p class="fud">No obligation &middot; Practical findings &middot; Or email <a href="mailto:niel@vdwsafety.com">niel@vdwsafety.com</a></p>
       </div>
       {icon_visual(d["recap_icon"], d["recap_chips"])}
     </div>

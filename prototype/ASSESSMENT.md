@@ -20,7 +20,7 @@
 - **Fear-heavy claims.** "R50,000 per violation" and shutdown warnings need to be checked against the current Act before they're used anywhere. The new site leads with control and confidence instead.
 - **Mixed message.** The intro says results are instant, but also that assessments are "personally reviewed". Pick one.
 - **Industries list** is broad (agriculture, education, healthcare and so on) rather than the suppliers you want to attract.
-- **Separate look and contact details.** It uses different branding from the new site and a different email (niel@vdwsafety.com rather than hello@vdwsafety.co.za).
+- **Separate look.** It uses different branding from the new site.
 
 ## 2. The new Multi-Branch Compliance Check (`assessment.html`)
 
@@ -44,6 +44,5 @@
 
 - [ ] **Connect a backend (most important).** Right now results show on screen but are **not sent anywhere**: VDW isn't notified and the visitor isn't emailed. The `submitResults` function in `assessment.js` already builds everything needed (contact details, company details, score, gaps and answers). It needs connecting to something that stores the lead and sends emails. The repo already uses Supabase for the Compliance Portal, which is one option.
 - [ ] **Booking link.** The "Book My Discovery Call" button opens an email. A calendar booking link (such as Calendly or Microsoft Bookings) would convert better.
-- [ ] **Confirm the email address** to use: hello@vdwsafety.co.za or niel@vdwsafety.com.
 - [ ] **Check the legal wording** of the 18 original questions after the "every branch" edits.
 - [ ] **Credentials.** The landing page now mentions your SAMTRAC, ISO 9001 Lead Auditor and ISO 31000 credentials, taken from the Zite intro. Confirm they're current.
