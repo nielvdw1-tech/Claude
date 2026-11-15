@@ -33,6 +33,8 @@ const widths = [320,360,375,390,414,480,600,768,820,900,960,1024,1100,1180,1280,
         if (hdr[i].contains(hdr[j]) || hdr[j].contains(hdr[i])) continue;
         if (a.left < c.right - 1 && c.left < a.right - 1 && a.top < c.bottom - 1 && c.top < a.bottom - 1) out.push('header overlap: ' + label(hdr[i]) + ' / ' + label(hdr[j]));
       }
+      // small labels (eyebrows) must stay small, whatever heading tag they use
+      document.querySelectorAll('.eyebrow').forEach(e => { if (parseFloat(getComputedStyle(e).fontSize) > 16) out.push('label too large: ' + label(e)); });
       const h = document.querySelector('.site-header').getBoundingClientRect().height;
       if (h > 110) out.push('header too tall: ' + Math.round(h) + 'px');
       return out;

@@ -545,7 +545,7 @@ h1.eyebrow { font-size: 14px; letter-spacing: .08em; line-height: 1.4; }
 /* Very small phones (320–360px) */
 @media (max-width: 360px) {
   .container { padding: 0 14px; }
-  .hero h1, .hero-title { font-size: 30px; }
+  .hero h1:not(.eyebrow), .hero-title { font-size: 30px; }
   .section-title { font-size: 26px; }
   .btn { padding: 14px 18px; font-size: 14px; letter-spacing: .02em; }
   .btn-lg { padding: 16px 18px; font-size: 15px; }
@@ -556,7 +556,7 @@ h1.eyebrow { font-size: 14px; letter-spacing: .08em; line-height: 1.4; }
   :root { --container: 1360px; }
   body { font-size: 18px; }
   .hero { padding: 96px 0 104px; }
-  .hero h1, .hero-title { font-size: 64px; }
+  .hero h1:not(.eyebrow), .hero-title { font-size: 64px; }
   .section-title { font-size: 46px; }
   .lead { font-size: 21px; }
   .section { padding: 112px 0; }
@@ -570,3 +570,5 @@ h1.eyebrow { font-size: 14px; letter-spacing: .08em; line-height: 1.4; }
   .main-nav { z-index: 101; }
   .hero { padding: 36px 0 44px; }
 }
+.btn-icon { flex: none; }
+.btn-wa span { min-width: 0; }

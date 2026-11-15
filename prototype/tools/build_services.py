@@ -30,8 +30,18 @@ ICONS = {
 def icon(name):
     return f'<svg viewBox="0 0 24 24">{ICONS[name]}</svg>'
 
+WA_ICON = '<svg class="btn-icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2c-1.5 0-3-.4-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1-.7-.3-1.5-.7-2.2-1.4-.6-.5-1-1.2-1.2-1.7-.1-.2 0-.4.1-.5l.4-.5.3-.4v-.5l-.8-1.9c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.2-.9.9-.9 2.2s1 2.6 1.1 2.8c.1.2 1.9 2.9 4.6 4 .6.3 1.1.4 1.5.6.6.2 1.2.2 1.6.1.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3z"/></svg>'
+
+def wa(message):
+    """WhatsApp chat link to Niel with a message filled in."""
+    from urllib.parse import quote
+    return "https://wa.me/27728438094?text=" + quote(message)
+
 def btn(label, href=ASSESS, cls="btn btn-primary"):
     ext = ' target="_blank" rel="noopener"' if href.startswith("http") else ""
+    if href.startswith("https://wa.me/") and "Speak to a Consultant" not in label:
+        # Booking buttons open WhatsApp: show the icon so visitors know what to expect
+        return f'<a class="{cls} btn-wa" href="{href}"{ext}>{WA_ICON}<span>{label}</span></a>'
     return f'<a class="{cls}" href="{href}"{ext}>{label}</a>'
 
 SERVICES = [
@@ -114,6 +124,7 @@ def tick(items):
     return "".join(f"<li>{i}</li>" for i in items)
 
 def page(fname, d):
+    book = d["book"]
     vps = ""
     for i, vp in enumerate(d["value_props"]):
         visual = icon_visual(vp["icon"], vp["chips"])
@@ -121,7 +132,7 @@ def page(fname, d):
         <p class="eyebrow">{vp["eyebrow"]}</p>
         <h2>{vp["title"]}</h2>
         <p>{vp["body"]}</p>
-        {btn(vp["cta"])}
+        {btn(vp["cta"], book)}
       </div>'''
         rev = " reverse" if i == 1 else ""
         inner = (copy + visual) if i == 1 else (visual + copy)
@@ -178,7 +189,7 @@ def page(fname, d):
         <h1 class="eyebrow">{d["keyword"]}</h1>
         <p class="hero-title">{d["headline"]}</p>
         <p class="lead">{d["lead"]}</p>
-        {btn(d["cta"], cls="btn btn-primary btn-lg")}
+        {btn(d["cta"], book, cls="btn btn-primary btn-lg")}
         <p class="fud">{d["fud"]}</p>
         <p class="proof-line"><span class="stars" aria-hidden="true">&#9733;&#9733;&#9733;&#9733;&#9733;</span> {d["proof1"]}</p>
       </div>
@@ -195,7 +206,7 @@ def page(fname, d):
     <div class="container narrow text-center">
       <h2 class="section-title">{d["pain_title"]}</h2>
       <p class="section-lead">{d["pain_body"]}</p>
-      {btn(d["cta_short"])}
+      {btn(d["cta_short"], ASSESS if d.get("short_free") else book)}
     </div>
   </section>
 
@@ -204,7 +215,7 @@ def page(fname, d):
     <div class="container">
       <h2 class="section-title">{d["stats_title"]}</h2>
       <div class="grid-3">{stats}</div>
-      <div class="center-cta">{btn(d["cta"])}</div>
+      <div class="center-cta">{btn(d["cta"], book)}</div>
     </div>
   </section>
 
@@ -213,7 +224,7 @@ def page(fname, d):
     <div class="container">
       <h2 class="section-title">{d["industries_title"]}</h2>
       <div class="grid-3">{industries}</div>
-      <div class="center-cta">{btn(d["cta"])}</div>
+      <div class="center-cta">{btn(d["cta"], book)}</div>
     </div>
   </section>
 {vps}
@@ -227,7 +238,7 @@ def page(fname, d):
         <blockquote>&ldquo;{q}&rdquo;</blockquote>
         <figcaption><strong>{who}</strong> &middot; {where}</figcaption>
       </figure>
-      <div class="center-cta">{btn(d["cta"])}</div>
+      <div class="center-cta">{btn(d["cta"], book)}</div>
     </div>
   </section>
 
@@ -236,7 +247,7 @@ def page(fname, d):
     <div class="container">
       <h2 class="section-title">{d["diff_title"]}</h2>
       <div class="grid-3 diff-grid">{diffs}</div>
-      <div class="center-cta">{btn(d["cta"])}</div>
+      <div class="center-cta">{btn(d["cta"], book)}</div>
     </div>
   </section>
 
@@ -246,7 +257,7 @@ def page(fname, d):
       <h2 class="section-title">{d["steps_title"]}</h2>
       <p class="section-sub">{d["steps_sub"]}</p>
       <ol class="grid-3 steps">{steps}</ol>
-      <div class="center-cta">{btn(d["cta"])}</div>
+      <div class="center-cta">{btn(d["cta"], book)}</div>
     </div>
   </section>
 
@@ -296,7 +307,7 @@ def page(fname, d):
         <h2 class="recap-title">{d["recap_title"]}</h2>
         <p class="lead">{d["recap_body"]}</p>
         <ul class="tick-list">{tick(d["recap_points"])}</ul>
-        {btn(d["cta"], cls="btn btn-primary btn-lg")}
+        {btn(d["cta"], book, cls="btn btn-primary btn-lg")}
         <p class="fud">No obligation &middot; Practical findings &middot; Or email <a href="mailto:niel@vdwsafety.com">niel@vdwsafety.com</a></p>
       </div>
       {icon_visual(d["recap_icon"], d["recap_chips"])}
@@ -323,8 +334,15 @@ HERO_PHOTOS = {
     'safety-file.html': ('organised-files.jpg', 'Someone updating compliance records on a laptop in a branch warehouse'),
     'compliance-management.html': ('site-walk.jpg', 'Monthly site walk-through with a branch manager'),
 }
+BOOKING_MESSAGES = {
+    'gap-audit.html': "Hi Niel, I'd like to book a Multi-Branch Compliance Audit.",
+    'safety-file.html': "Hi Niel, I'd like to discuss onboarding our branches onto the VDW Compliance Control System.",
+    'compliance-management.html': "Hi Niel, I'd like to schedule a consultation about Managed Multi-Branch Compliance.",
+}
 for fname, d in PAGES.items():
     d['hero_photo'] = HERO_PHOTOS[fname]
+    d['book'] = wa(BOOKING_MESSAGES[fname])
+    d['short_free'] = fname == 'gap-audit.html'  # "Find My Branch Gaps" offers the free check
     with open(os.path.join(OUT, fname), "w") as f:
         f.write(page(fname, d))
     print("wrote", fname)
