@@ -72,7 +72,7 @@
     img.src = src;
   });
 
-  // "Book a Call" buttons: paste the online calendar link here (for example Calendly or
+  // "Schedule a Consultation" buttons: paste the online calendar link here (for example Calendly or
   // Microsoft Bookings). Until it is set, the buttons open a WhatsApp chat instead.
   var BOOKING_URL = '';
   if (BOOKING_URL) {

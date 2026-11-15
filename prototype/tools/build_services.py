@@ -73,7 +73,7 @@ def header(current):
         <span class="phone-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></svg></span>
         <span class="phone-number">072 843 8094</span>
       </a>
-      <a class="btn btn-outline btn-sm header-cta book-call" href="https://wa.me/27728438094?text=Hi%20Niel%2C%20I%27d%20like%20to%20book%20a%20call%20about%20our%20health%20%26%20safety%20compliance." target="_blank" rel="noopener"><svg class="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span>Book a Call</span></a>
+      <a class="btn btn-outline btn-sm header-cta book-call" href="https://wa.me/27728438094?text=Hi%20Niel%2C%20I%27d%20like%20to%20schedule%20a%20consultation%20about%20our%20health%20%26%20safety%20compliance." target="_blank" rel="noopener"><svg class="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span>Schedule a Consultation</span></a>
       <button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="main-nav" aria-label="Toggle navigation menu"><span></span><span></span><span></span></button>
     </div>
   </div>
