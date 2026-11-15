@@ -1242,3 +1242,9 @@ body.auth-mode .main { padding-top: 0; }
 .cal-card > .toolbar { border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
 
 .flt-bar .search { max-width: 280px; } .flt-bar select { max-width: 190px; }
+
+/* Notice acknowledgement: read, sign, acknowledge, submit */
+.notice-ack-form { display: grid; gap: 12px; align-items: start; }
+.notice-ack-form .btn { justify-self: start; }
+.notice-ack-form .check.invalid span { color: var(--bad); }
+.notice-ack .ack-sig { margin-left: 8px; }

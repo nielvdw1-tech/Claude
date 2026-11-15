@@ -211,6 +211,8 @@ Other pages are closed to employees. An inspection can only be started from the 
 - For incidents without an alert, **Prepare alert** on the incident page creates one.
 - **Example:** *NT-004* (from INC-2026-007) was approved by Johan and is waiting for Ayesha. Open it from **Company Notices** and use **Act as current approver**.
 
+**Acknowledging a notice.** When a notice must be acknowledged, every person (employees, the HSEQ Manager and everyone else it is sent to) follows the same steps on the notice: **1.** tick that they have read it (and its attachment), **2.** sign with a finger or mouse, **3.** tick that they understand it and will follow it, then **Submit acknowledgement**. It cannot be submitted until all three are done. The publisher's "Read and acknowledgement" list shows each person's signature next to the time they acknowledged. Acknowledgements recorded before this change show *Before signing was required*.
+
 ### Reporting for management (Reports)
 - **Monthly management report:** one page for the MD or client, for any of the last 12 months and for all branches or one branch. It shows:
   - the control score and its change on the month before, with the four areas;
@@ -370,6 +372,6 @@ prototype/
 └── README.md                     This file
 ```
 
-**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 252 workflow outcomes.
+**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 253 workflow outcomes.
 
 The earlier full HSEQ prototype, with legal, risk, people, PPE, chemicals, emergency and audits, is preserved in git history at commit `26b59bc`.

@@ -60,18 +60,42 @@ function noticeDetail(id) {
       <div class="notice-meta">From ${esc(pname(n.publishedBy))}${n.source ? ` · Safety alert approved by ${n.approvals.map(s => esc(pname(s.person))).join(' and ')}` : ''} · To ${esc(n.audience === 'ALL' ? 'all staff' : sname(n.audience) + ' staff')}${n.expires ? ` · Until ${fmt(n.expires)}` : ''}</div>
       <div class="notice-body">${esc(n.body).replace(/\n/g, '<br>')}</div>
       ${n.attachment ? `<div class="mt">${fileChip(n.attachment)}</div>` : ''}
-      ${noticeFor(n, me()) && n.ackRequired ? `<div class="notice-ack">${ack ? `<div><b>Please confirm you have read and understood this notice.</b></div><button class="btn primary" data-act="noticeAck" data-id="${n.id}">${icon('check', 'sm')} I have read and understood</button>` : `${icon('checkCircle', 'sm')}<span>You acknowledged this notice on ${fmtTs(n.acks[S.ui.user])}.</span>`}</div>` : ''}
+      ${noticeFor(n, me()) && n.ackRequired ? noticeAckHtml(n, ack) : ''}
     </div></div>
     ${pub && n.source ? `<div class="card mt"><div class="card-head"><h2>Approval</h2><a class="btn sm" href="#/incidents/${n.source.id}">Open ${esc(n.source.id)}</a></div><div class="card-body">${routeHtml({ route: n.approvals })}</div></div>` : ''}
-    ${pub ? `<div class="card mt"><div class="card-head"><h2>Read and acknowledgement</h2><div class="btn-row">${n.ackRequired && aud.some(x => !(n.acks || {})[x.id]) ? `<button class="btn sm" data-act="noticeRemind" data-id="${n.id}">${icon('bell', 'sm')} Remind outstanding</button>` : ''}${noticeLive(n) ? `<button class="btn sm danger" data-act="noticeExpire" data-id="${n.id}">Withdraw</button>` : ''}</div></div><div class="card-body flush"><table class="tbl stackable compact"><thead><tr><th>Person</th><th>Role</th><th>Read</th><th>Acknowledged</th></tr></thead><tbody>
-      ${aud.map(x => `<tr><td data-label="Person"><b>${esc(x.name)}</b><div class="t-sub">${esc(sname(x.site))}</div></td><td data-label="Role">${esc(x.sysRole)}</td><td data-label="Read">${(n.reads || {})[x.id] ? fmtTs(n.reads[x.id]) : '<span class="due amber">Not yet</span>'}</td><td data-label="Acknowledged">${!n.ackRequired ? '<span class="muted">Not required</span>' : (n.acks || {})[x.id] ? `<span class="due green">${fmtTs(n.acks[x.id])}</span>` : '<span class="due red">Outstanding</span>'}</td></tr>`).join('')}
+    ${pub ? `<div class="card mt"><div class="card-head"><h2>Read and acknowledgement</h2><div class="btn-row">${n.ackRequired && aud.some(x => !(n.acks || {})[x.id]) ? `<button class="btn sm" data-act="noticeRemind" data-id="${n.id}">${icon('bell', 'sm')} Remind outstanding</button>` : ''}${noticeLive(n) ? `<button class="btn sm danger" data-act="noticeExpire" data-id="${n.id}">Withdraw</button>` : ''}</div></div><div class="card-body flush"><table class="tbl stackable compact"><thead><tr><th>Person</th><th>Role</th><th>Read</th><th>Acknowledged</th><th>Signature</th></tr></thead><tbody>
+      ${aud.map(x => `<tr><td data-label="Person"><b>${esc(x.name)}</b><div class="t-sub">${esc(sname(x.site))}</div></td><td data-label="Role">${esc(x.sysRole)}</td><td data-label="Read">${(n.reads || {})[x.id] ? fmtTs(n.reads[x.id]) : '<span class="due amber">Not yet</span>'}</td><td data-label="Acknowledged">${!n.ackRequired ? '<span class="muted">Not required</span>' : (n.acks || {})[x.id] ? `<span class="due green">${fmtTs(n.acks[x.id])}</span>` : '<span class="due red">Outstanding</span>'}</td><td data-label="Signature">${(n.ackSigs || {})[x.id] ? `<img class="ack-sig" src="${n.ackSigs[x.id]}" alt="Signature of ${esc(x.name)}">` : (n.acks || {})[x.id] ? '<span class="muted">Before signing was required</span>' : '—'}</td></tr>`).join('')}
     </tbody></table></div></div>` : ''}
     <a class="btn mt" href="${isFieldUser() ? '#/field' : '#/notices'}">← Back</a>
   </div>`;
   return { title: n.title, nav: 'notices', crumbs: [['Company notices', '#/notices'], [n.title, '#']], html };
 }
 
-ACT.noticeAck = (el) => { const n = S.notices.find(x => x.id === el.dataset.id); n.acks = n.acks || {}; n.acks[S.ui.user] = nowTs(); n.reads = n.reads || {}; n.reads[S.ui.user] = n.reads[S.ui.user] || nowTs(); log(`${pname(S.ui.user)} acknowledged notice "${n.title}"`, '#/notices/' + n.id); save(); toast('Thank you — your acknowledgement has been recorded.'); rerender(); };
+/* Acknowledging a notice: 1. tick that you have read it, 2. sign, 3. tick that you understand and will follow it, then submit */
+const NTSIG = { sig: null };
+function noticeAckHtml(n, pending) {
+  if (!pending) { const sig = (n.ackSigs || {})[S.ui.user]; return `<div class="notice-ack">${icon('checkCircle', 'sm')}<span>You read, signed and acknowledged this notice on ${fmtTs(n.acks[S.ui.user])}.</span>${sig ? `<img class="ack-sig" src="${sig}" alt="Your signature">` : ''}</div>`; }
+  return `<div class="notice-ack notice-ack-form" data-notice="${n.id}">
+    <div><b>Please read the notice above, sign, and confirm before you submit.</b></div>
+    <label class="check"><input type="checkbox" id="ntRead"> <span><b>1.</b> I have read this notice${n.attachment ? ' and its attachment' : ''}.</span></label>
+    <div class="field" id="ntSigField"><label for="ntPad"><b>2.</b> Your signature<span class="req">*</span></label><div class="sig-wrap"><canvas id="ntPad" class="sig-pad" aria-label="Signature pad: sign with your finger or mouse"></canvas><div class="sig-foot"><span>${esc(pname(S.ui.user))} · sign with your finger or mouse</span><button type="button" class="btn sm" data-act="ntSigClear">Clear</button></div></div></div>
+    <label class="check"><input type="checkbox" id="ntAck"> <span><b>3.</b> I understand this notice and will follow it.</span></label>
+    <button class="btn primary" data-act="noticeAck" data-id="${n.id}">${icon('check', 'sm')} Submit acknowledgement</button>
+  </div>`;
+}
+ACT.ntSigClear = () => { NTSIG.sig = null; const c = document.getElementById('ntPad'); if (c) c.getContext('2d').clearRect(0, 0, c.width, c.height); };
+ACT.noticeAck = (el) => {
+  const n = S.notices.find(x => x.id === el.dataset.id); if (!n || !noticeNeedsAck(n)) { rerender(); return; }
+  const read = document.getElementById('ntRead'), ack = document.getElementById('ntAck'), bad = (e, msg) => { if (e) e.closest('label, .field').classList.add('invalid'); toast(msg, 'error'); };
+  if (!read || !read.checked) return bad(read, 'First tick that you have read the notice.');
+  if (!NTSIG.sig) return bad(document.getElementById('ntPad'), 'Please sign before you submit.');
+  if (!ack || !ack.checked) return bad(ack, 'Tick that you understand the notice and will follow it.');
+  n.acks = n.acks || {}; n.acks[S.ui.user] = nowTs(); n.ackSigs = n.ackSigs || {}; n.ackSigs[S.ui.user] = NTSIG.sig; NTSIG.sig = null;
+  n.reads = n.reads || {}; n.reads[S.ui.user] = n.reads[S.ui.user] || nowTs();
+  log(`${pname(S.ui.user)} read, signed and acknowledged notice "${n.title}"`, '#/notices/' + n.id); save(); toast('Thank you — your signed acknowledgement has been recorded.'); rerender();
+};
+const _rerenderBeforeNtSig = rerender;
+rerender = function (keepScroll) { _rerenderBeforeNtSig(keepScroll); if (document.getElementById('ntPad')) { NTSIG.sig = null; initSigPad('ntPad', NTSIG, 'sig', 'ntSigField'); } };
 ACT.noticeRemind = (el) => { const n = S.notices.find(x => x.id === el.dataset.id); const out = noticeAudience(n).filter(x => !(n.acks || {})[x.id]); addEvent('amber', 'notices', `Reminder: please acknowledge "${n.title}"`, `Please read "${n.title}" and confirm that you have read and understood it.`, '#/notices/' + n.id, n.audience, out.map(x => x.id)); log(`Reminder sent for notice "${n.title}" to ${out.length} person(s)`, '#/notices/' + n.id); save(); toast(`Reminder sent to ${out.length} person(s) (simulated — in-app only).`); };
 ACT.noticeExpire = (el) => { const n = S.notices.find(x => x.id === el.dataset.id); confirmBox('Withdraw notice', `"${esc(n.title)}" will no longer be shown to staff. It stays on record with its read and acknowledgement history.`, 'Withdraw', () => { n.expires = addDays(TODAY, -1); log(`Withdrew notice "${n.title}"`, '#/notices/' + n.id); save(); toast('Notice withdrawn.'); rerender(); }, 'danger solid'); };
 ACT.noticeNew = () => openModal({ title: 'Publish notice', sub: 'Share a memo or important information with staff. They see it in Notices and on their home screen.', size: 'wide',

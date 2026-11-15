@@ -8,7 +8,7 @@ Status key:
 - **Not implemented**
 
 "Tested" means one of the following:
-- the automated browser test (`tests/workflows.test.js`, **252/252 passing**, no JavaScript errors);
+- the automated browser test (`tests/workflows.test.js`, **253/253 passing**, no JavaScript errors);
 - the route smoke test (77 routes plus a second organisation, no errors);
 - the mobile layout check (31 routes at 390 px, no horizontal overflow).
 
@@ -89,6 +89,7 @@ Status key:
 | Reports with print and CSV | Implemented | E9 |
 | Safety Consultant has full access; Employee limited to QR inspections and incident reporting | Implemented | H1–H9 (client-side demonstration of the intended permissions) |
 | Company notices (memos) to all staff or a branch, with optional attachment and read-and-understood acknowledgement; read/acknowledgement tracking | Implemented | N1–N7; reminders are in-app only (email/SMS simulated) |
+| Notice acknowledgement: read (tick), sign, understand (tick), then submit; signatures shown to the publisher | Implemented | N4, N4b |
 | Incident safety alerts: draft notice created on each incident, published only after sequential approval by the HSEQ Manager and the Safety Consultant; approvers can edit or decline | Implemented | S1–S8 |
 | Company branding: top banner with menu button, VDW logo, search, tasks, notifications, and the person with their company name and logo; company and branch switching in the person's menu; logo in the company block of document, checklist and report headers | Implemented | L1–L5; logo kept in browser storage in the prototype |
 | Sign-in with accounts: add user with temporary password, forced password change, reset, deactivate/reactivate, lock after 5 failed attempts, sign out | Partial | AU1–AU9; checked in the browser only (the live system signs in on a server) |
