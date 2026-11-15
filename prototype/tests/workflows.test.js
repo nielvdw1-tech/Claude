@@ -348,16 +348,19 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     const home = await p.innerText('#content');
     ok('N2 employee at that branch sees an unread count and the notice on the home screen', cnt >= 1 && home.includes('Hearing protection in the workshop') && home.includes('Please acknowledge'), `${cnt} unread`);
     await p.click(`a.notice[href="#/notices/${nid}"]`); await p.waitForTimeout(150);
+    await act('[data-act=ntOpen]');
     ok('N3 opening the notice marks it read; attachment can be opened', !!(await S(`S.notices.find(n=>n.id==='${nid}').reads['P-014']`)) && await has('.notice-sheet button.file-chip'));
     const ackd = () => S(`!!(S.notices.find(n=>n.id==='${nid}').acks || {})['P-014']`);
-    const s1 = (await p.$eval('#ntAck', e => e.disabled)) && (await p.$eval('[data-act=noticeAck]', e => e.disabled)) && await has('.notice-ack-form.locked');
+    await go('#/notices'); await go('#/notices/' + nid); await p.waitForTimeout(120);
+    const s1 = (await p.$eval('#ntAck', e => e.disabled)) && (await p.$eval('[data-act=noticeAck]', e => e.disabled)) && await has('.notice-ack-form.locked') && !(await has('.notice-sheet .notice-body'));
+    await act('[data-act=ntOpen]'); const s1b = await has('.notice-ack-form.locked') && await has('.notice-sheet .notice-body');
     await act('.notice-sheet button.file-chip'); await p.waitForTimeout(400); await p.keyboard.press('Escape'); await p.waitForTimeout(150);
     await act('[data-act=noticeAck]'); const s2 = !(await ackd());
     await p.check('#ntAck'); await act('[data-act=noticeAck]'); const s3 = !(await ackd());
     { const bx = await (await p.$('#ntPad')).boundingBox(); await p.mouse.move(bx.x + 20, bx.y + 50); await p.mouse.down(); for (let k = 1; k < 12; k++) await p.mouse.move(bx.x + 20 + k * 15, bx.y + 50 + (k % 2) * 18); await p.mouse.up(); }
     await act('[data-act=noticeAck]');
     const sig = await S(`(S.notices.find(n=>n.id==='${nid}').ackSigs || {})['P-014'] || ''`);
-    ok('N4 an employee first opens the notice\'s attachment, then ticks "read and understood", signs and submits', s1 && s2 && s3 && await ackd() && /^data:image\/png/.test(sig) && (await p.innerText('#content')).includes('acknowledged and signed') && await has('.notice-ack .ack-sig'));
+    ok('N4 an employee first opens the notice and its attachment, then ticks "read and understood", signs and submits', s1 && s1b && s2 && s3 && await ackd() && /^data:image\/png/.test(sig) && (await p.innerText('#content')).includes('acknowledged and signed') && await has('.notice-ack .ack-sig'));
     await asUser('P-012'); await go('#/notices');
     ok('N5 employees at other branches do not receive branch notices', !(await p.innerText('#content')).includes('Hearing protection in the workshop'));
     await asUser('P-002'); await go('#/notices/' + nid);
@@ -1014,6 +1017,11 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await act('[data-act=docAck]');
     const ack = await S("docIssued(byId('documents', 'DOC-004')).acks.find(a => a.by === 'P-009')");
     ok('RA3 an operator sees the document on their phone and in their tasks, must open it, tick that they read and understood it, and sign', listed && task && before && noTick && noSig && ack && /^data:image\/png/.test(ack.sig) && /read and understood/.test(ack.statement) && !(await S("mustAck(byId('documents', 'DOC-004'), 'P-009')")) && await has('.alert.success .ack-sig'));
+    await go('#/field'); await S("(docIssued(byId('documents', 'DOC-001')).acks = (docIssued(byId('documents', 'DOC-001')).acks || []).filter(a => a.by !== 'P-009'), save())");
+    await go('#/read/DOC-001'); await act('.ack-banner [data-act=viewDocFile]'); await p.waitForTimeout(400); await p.keyboard.press('Escape'); await p.waitForTimeout(120);
+    const unlocked = !(await has('.ack-sign.locked')); await go('#/field'); await go('#/read/DOC-001'); await p.waitForTimeout(120);
+    ok('RA3b opening counts only for that visit: coming back later, the tick box and signature are locked again until the document is opened', unlocked && await has('.ack-sign.locked') && await p.$eval('#ackTick', e => e.disabled));
+    await go('#/read/DOC-004'); await p.waitForTimeout(120);
     await act('[data-act=crNew]'); await mfill('text', 'The emergency number on page 2 is the old switchboard number.'); await mbtn('Send request');
     const cr = await S("byId('documents', 'DOC-004').changeRequests.slice(-1)[0]");
     ok('CR1 anyone who reads a document can request a change; the owner is told', cr.by === 'P-009' && cr.status === 'Open' && await S(`S.outbox.some(m => m.subject.includes('${cr.id}') && m.to === 'P-005')`), cr.id);

@@ -1254,3 +1254,6 @@ body.auth-mode .main { padding-top: 0; }
 .ack-sign.locked > :not(.lock-note), .notice-ack-form.locked > :not(.lock-note) { opacity: .45; pointer-events: none; user-select: none; }
 .ack-sign.locked .sig-pad, .notice-ack-form.locked .sig-pad { background: repeating-linear-gradient(45deg, var(--surface-2), var(--surface-2) 8px, var(--surface-3) 8px, var(--surface-3) 16px); }
 .lock-note { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--warn); }
+
+.notice-closed { margin: 14px 0 4px; padding: 18px; border: 1px dashed var(--line-strong); border-radius: 10px; background: var(--surface-2); text-align: center; }
+.notice-closed p { margin: 0 0 10px; color: var(--muted); }

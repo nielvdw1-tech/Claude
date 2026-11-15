@@ -44,10 +44,10 @@ myTasks = function () {
 const _viewDocFileBeforeAck = ACT.viewDocFile;
 ACT.viewDocFile = (el) => {
   const d = byId('documents', el.dataset.id), issued = d && docIssued(d), openedBefore = d && openedIssued(d);
-  if (issued) { const ri = el.dataset.ri != null ? +el.dataset.ri : d.revisions.length - 1; if (d.revisions[ri] === issued) { S.ui.docOpened = S.ui.docOpened || {}; S.ui.docOpened[d.id + ':' + issued.rev] = true; save(); setTimeout(() => { const box = document.querySelector(`.ack-banner[data-doc="${d.id}"]`); if (box && !openedBefore) { box.outerHTML = ackBannerHtml(d); initAckPad(); } }, 0); } }
+  if (issued) { const ri = el.dataset.ri != null ? +el.dataset.ri : d.revisions.length - 1; if (d.revisions[ri] === issued) { ACK_OPEN['doc:' + d.id + ':' + issued.rev + ':' + S.ui.user] = ACK_VISIT; setTimeout(() => { const box = document.querySelector(`.ack-banner[data-doc="${d.id}"]`); if (box && !openedBefore) { box.outerHTML = ackBannerHtml(d); initAckPad(); } }, 0); } }
   _viewDocFileBeforeAck(el);
 };
-function openedIssued(d) { const r = docIssued(d); return !!(r && S.ui.docOpened && S.ui.docOpened[d.id + ':' + r.rev]); }
+function openedIssued(d) { const r = docIssued(d); return !!r && ACK_OPEN['doc:' + d.id + ':' + r.rev + ':' + S.ui.user] === ACK_VISIT; }
 
 // The banner on the document for the person who still has to read it
 function ackBannerHtml(d) {

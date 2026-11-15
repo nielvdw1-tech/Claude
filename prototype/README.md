@@ -110,7 +110,7 @@ Seeded examples:
 Default routes per category are set in **Administration → Approval routes**.
 
 **Read and acknowledge.** On a document, **Read and acknowledge → Set who must read it** chooses the roles (for example Employee and Supervisor) and/or named people who must read it, and within how many days of issue.
-- When a revision is issued, each person on the list gets a task and an e-mail. They **open** the revision in use first; then they **tick "I have read and understood it", sign** with a finger or mouse and **Submit**. Until they have opened it, the tick box, signature pad and Submit are shown but **locked**, so nobody can sign without opening the document. The document keeps each person's tick, signature and time.
+- When a revision is issued, each person on the list gets a task and an e-mail. They **open** the revision in use first; then they **tick "I have read and understood it", sign** with a finger or mouse and **Submit**. Until they have opened it, the tick box, signature pad and Submit are shown but **locked** (greyed out), so nobody can sign without opening the document. Opening only counts for that visit: leave the page and come back, and it is locked again until the document is opened again. The document keeps each person's tick, signature and time.
 - Operators do this on their phone: the home screen lists **Documents to read**.
 - The document shows how many have confirmed (e.g. *4 of 9*), who is still to read it (overdue in red), and **Send a reminder**. A new revision starts the list again.
 - **Example:** KIE-SWP-021 (Forklift Operation) must be read by employees and supervisors; sign in as Nomvula Sithole to confirm it.
@@ -211,7 +211,7 @@ Other pages are closed to employees. An inspection can only be started from the 
 - For incidents without an alert, **Prepare alert** on the incident page creates one.
 - **Example:** *NT-004* (from INC-2026-007) was approved by Johan and is waiting for Ayesha. Open it from **Company Notices** and use **Act as current approver**.
 
-**Acknowledging a notice.** When a notice must be acknowledged, everyone it is sent to (including the HSEQ Manager) does the same: **open** it (if it has an attachment, open the attachment first), then tick **"I have read and understood this notice"**, **sign**, and **Submit**. Until the attachment has been opened, the tick box and signature pad are locked. The publisher's "Read and acknowledgement" list shows each person's signature. Acknowledgements recorded before signing was required say so.
+**Acknowledging a notice.** When a notice must be acknowledged, everyone it is sent to (including the HSEQ Manager) does the same: **open** it (if it has an attachment, open the attachment first), then tick **"I have read and understood this notice"**, **sign**, and **Submit**. The notice text stays closed behind **Open notice** until it is opened, and the tick box, signature pad and Submit stay locked (greyed out) until the notice — and its attachment, if it has one — has been opened during that visit. The publisher's "Read and acknowledgement" list shows each person's signature. Acknowledgements recorded before signing was required say so.
 
 ### Reporting for management (Reports)
 - **Monthly management report:** one page for the MD or client, for any of the last 12 months and for all branches or one branch. It shows:
@@ -372,6 +372,6 @@ prototype/
 └── README.md                     This file
 ```
 
-**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 253 workflow outcomes.
+**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 254 workflow outcomes.
 
 The earlier full HSEQ prototype, with legal, risk, people, PPE, chemicals, emergency and audits, is preserved in git history at commit `26b59bc`.

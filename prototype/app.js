@@ -13,6 +13,7 @@ let S = null;                        // application state (demo data)
 const TODAY = (() => { const d = new Date(); d.setHours(0, 0, 0, 0); return isoDate(d); })();
 const ROUTES = {};                   // page renderers registered by module files
 const ACT = {};                      // click handlers: data-act="name"
+const ACK_OPEN = {}; let ACK_VISIT = 0, ACK_LAST = '';   // what has been opened during this visit to the page (read-and-sign locks)
 const MIGRATIONS = [];               // functions that add newer demo data to stored or freshly built demo data (each runs once)
 function runMigrations() { MIGRATIONS.forEach(f => { try { f(); } catch (e) { console.error(e); } }); }
 
@@ -613,6 +614,7 @@ ACT.goBack = () => {
   navigate(BACK_PARENT);
 };
 function rerender(keepScroll = true) {
+  { const h = location.hash.split('?')[0]; if (h !== ACK_LAST) { ACK_LAST = h; ACK_VISIT++; } }   // a new visit locks read-and-sign again
   if (S) runMigrations();
   if (!signedIn()) { const ph = parseHash(); if (ph.parts[0] === 'qr') { renderPublicQr(ph.parts[1]); return; } renderSignIn(); return; }   // not signed in: only an equipment QR page, or the sign-in page
   document.body.classList.remove('auth-mode');
