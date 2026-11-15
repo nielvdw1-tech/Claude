@@ -71,28 +71,36 @@ function noticeDetail(id) {
   return { title: n.title, nav: 'notices', crumbs: [['Company notices', '#/notices'], [n.title, '#']], html };
 }
 
-/* Acknowledging a notice: 1. tick that you have read it, 2. sign, 3. tick that you understand and will follow it, then submit */
+/* Acknowledging a notice: open it (its attachment, if it has one), then tick "read and understood", sign and submit */
 const NTSIG = { sig: null };
+function noticeOpened(n) { return !n.attachment || !!(S.ui.ntOpened && S.ui.ntOpened[n.id + ':' + S.ui.user]); }
 function noticeAckHtml(n, pending) {
-  if (!pending) { const sig = (n.ackSigs || {})[S.ui.user]; return `<div class="notice-ack">${icon('checkCircle', 'sm')}<span>You read, signed and acknowledged this notice on ${fmtTs(n.acks[S.ui.user])}.</span>${sig ? `<img class="ack-sig" src="${sig}" alt="Your signature">` : ''}</div>`; }
+  if (!pending) { const sig = (n.ackSigs || {})[S.ui.user]; return `<div class="notice-ack">${icon('checkCircle', 'sm')}<span>You acknowledged and signed this notice on ${fmtTs(n.acks[S.ui.user])}.</span>${sig ? `<img class="ack-sig" src="${sig}" alt="Your signature">` : ''}</div>`; }
+  if (!noticeOpened(n)) return `<div class="notice-ack notice-ack-form" data-notice="${n.id}"><div><b>Open the attachment above first.</b> Then you can acknowledge and sign.</div></div>`;
   return `<div class="notice-ack notice-ack-form" data-notice="${n.id}">
-    <div><b>Please read the notice above, sign, and confirm before you submit.</b></div>
-    <label class="check"><input type="checkbox" id="ntRead"> <span><b>1.</b> I have read this notice${n.attachment ? ' and its attachment' : ''}.</span></label>
-    <div class="field" id="ntSigField"><label for="ntPad"><b>2.</b> Your signature<span class="req">*</span></label><div class="sig-wrap"><canvas id="ntPad" class="sig-pad" aria-label="Signature pad: sign with your finger or mouse"></canvas><div class="sig-foot"><span>${esc(pname(S.ui.user))} · sign with your finger or mouse</span><button type="button" class="btn sm" data-act="ntSigClear">Clear</button></div></div></div>
-    <label class="check"><input type="checkbox" id="ntAck"> <span><b>3.</b> I understand this notice and will follow it.</span></label>
-    <button class="btn primary" data-act="noticeAck" data-id="${n.id}">${icon('check', 'sm')} Submit acknowledgement</button>
+    <label class="check"><input type="checkbox" id="ntAck"> <span><b>I have read and understood this notice</b> and will follow it.</span></label>
+    <div class="field" id="ntSigField"><label for="ntPad">Your signature<span class="req">*</span></label><div class="sig-wrap"><canvas id="ntPad" class="sig-pad" aria-label="Signature pad: sign with your finger or mouse"></canvas><div class="sig-foot"><span>${esc(pname(S.ui.user))} · sign with your finger or mouse</span><button type="button" class="btn sm" data-act="ntSigClear">Clear</button></div></div></div>
+    <button class="btn primary" data-act="noticeAck" data-id="${n.id}">${icon('check', 'sm')} Submit</button>
   </div>`;
 }
+// Opening the notice's attachment unlocks the acknowledgement
+document.addEventListener('click', e => {
+  const chip = e.target.closest && e.target.closest('.notice-sheet .file-chip'); if (!chip) return;
+  const box = document.querySelector('.notice-ack-form[data-notice]'); if (!box) return;
+  const id = box.dataset.notice; S.ui.ntOpened = S.ui.ntOpened || {}; if (S.ui.ntOpened[id + ':' + S.ui.user]) return;
+  S.ui.ntOpened[id + ':' + S.ui.user] = true; save();
+  const n = S.notices.find(x => x.id === id); setTimeout(() => { const b = document.querySelector(`.notice-ack-form[data-notice="${id}"]`); if (b && n) { b.outerHTML = noticeAckHtml(n, true); if (document.getElementById('ntPad')) { NTSIG.sig = null; initSigPad('ntPad', NTSIG, 'sig', 'ntSigField'); } } }, 0);
+});
 ACT.ntSigClear = () => { NTSIG.sig = null; const c = document.getElementById('ntPad'); if (c) c.getContext('2d').clearRect(0, 0, c.width, c.height); };
 ACT.noticeAck = (el) => {
   const n = S.notices.find(x => x.id === el.dataset.id); if (!n || !noticeNeedsAck(n)) { rerender(); return; }
-  const read = document.getElementById('ntRead'), ack = document.getElementById('ntAck'), bad = (e, msg) => { if (e) e.closest('label, .field').classList.add('invalid'); toast(msg, 'error'); };
-  if (!read || !read.checked) return bad(read, 'First tick that you have read the notice.');
+  if (!noticeOpened(n)) { toast('Open the attachment first.', 'error'); return; }
+  const ack = document.getElementById('ntAck'), bad = (e, msg) => { if (e) e.closest('label, .field').classList.add('invalid'); toast(msg, 'error'); };
+  if (!ack || !ack.checked) return bad(ack, 'Tick that you have read and understood the notice.');
   if (!NTSIG.sig) return bad(document.getElementById('ntPad'), 'Please sign before you submit.');
-  if (!ack || !ack.checked) return bad(ack, 'Tick that you understand the notice and will follow it.');
   n.acks = n.acks || {}; n.acks[S.ui.user] = nowTs(); n.ackSigs = n.ackSigs || {}; n.ackSigs[S.ui.user] = NTSIG.sig; NTSIG.sig = null;
   n.reads = n.reads || {}; n.reads[S.ui.user] = n.reads[S.ui.user] || nowTs();
-  log(`${pname(S.ui.user)} read, signed and acknowledged notice "${n.title}"`, '#/notices/' + n.id); save(); toast('Thank you — your signed acknowledgement has been recorded.'); rerender();
+  log(`${pname(S.ui.user)} acknowledged and signed notice "${n.title}"`, '#/notices/' + n.id); save(); toast('Thank you — your signed acknowledgement has been recorded.'); rerender();
 };
 const _rerenderBeforeNtSig = rerender;
 rerender = function (keepScroll) { _rerenderBeforeNtSig(keepScroll); if (document.getElementById('ntPad')) { NTSIG.sig = null; initSigPad('ntPad', NTSIG, 'sig', 'ntSigField'); } };

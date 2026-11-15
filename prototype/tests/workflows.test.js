@@ -350,13 +350,14 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await p.click(`a.notice[href="#/notices/${nid}"]`); await p.waitForTimeout(150);
     ok('N3 opening the notice marks it read; attachment can be opened', !!(await S(`S.notices.find(n=>n.id==='${nid}').reads['P-014']`)) && await has('.notice-sheet button.file-chip'));
     const ackd = () => S(`!!(S.notices.find(n=>n.id==='${nid}').acks || {})['P-014']`);
-    await act('[data-act=noticeAck]'); const s1 = !(await ackd());
-    await p.check('#ntRead'); await act('[data-act=noticeAck]'); const s2 = !(await ackd());
+    const s1 = !(await has('#ntAck')) && !(await has('#ntPad'));
+    await act('.notice-sheet button.file-chip'); await p.waitForTimeout(400); await p.keyboard.press('Escape'); await p.waitForTimeout(150);
+    await act('[data-act=noticeAck]'); const s2 = !(await ackd());
+    await p.check('#ntAck'); await act('[data-act=noticeAck]'); const s3 = !(await ackd());
     { const bx = await (await p.$('#ntPad')).boundingBox(); await p.mouse.move(bx.x + 20, bx.y + 50); await p.mouse.down(); for (let k = 1; k < 12; k++) await p.mouse.move(bx.x + 20 + k * 15, bx.y + 50 + (k % 2) * 18); await p.mouse.up(); }
-    await act('[data-act=noticeAck]'); const s3 = !(await ackd());
-    await p.check('#ntAck'); await act('[data-act=noticeAck]');
+    await act('[data-act=noticeAck]');
     const sig = await S(`(S.notices.find(n=>n.id==='${nid}').ackSigs || {})['P-014'] || ''`);
-    ok('N4 an employee must tick that they read the notice, sign, then tick that they understand it before the acknowledgement can be submitted', s1 && s2 && s3 && await ackd() && /^data:image\/png/.test(sig) && (await p.innerText('#content')).includes('read, signed and acknowledged') && await has('.notice-ack .ack-sig'));
+    ok('N4 an employee first opens the notice\'s attachment, then ticks "read and understood", signs and submits', s1 && s2 && s3 && await ackd() && /^data:image\/png/.test(sig) && (await p.innerText('#content')).includes('acknowledged and signed') && await has('.notice-ack .ack-sig'));
     await asUser('P-012'); await go('#/notices');
     ok('N5 employees at other branches do not receive branch notices', !(await p.innerText('#content')).includes('Hearing protection in the workshop'));
     await asUser('P-002'); await go('#/notices/' + nid);

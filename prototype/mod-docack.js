@@ -53,13 +53,13 @@ function openedIssued(d) { const r = docIssued(d); return !!(r && S.ui.docOpened
 function ackBannerHtml(d) {
   if (!mustAck(d)) return '';
   const a = ackState(d), r = a.rev, ri = d.revisions.indexOf(r), opened = openedIssued(d), late = daysTo(a.due) < 0;
-  return `<div class="alert ${late ? 'danger' : 'warn'} ack-banner" data-doc="${d.id}">${icon('docs')}<div class="ack-body"><b>Please read ${esc(d.number)} ${revLabel(r)}, then tick and sign.</b> You are on the list of people who must read this document${late ? `; it was due ${fmt(a.due)}` : ` by ${fmt(a.due)}`}.
+  return `<div class="alert ${late ? 'danger' : 'warn'} ack-banner" data-doc="${d.id}">${icon('docs')}<div class="ack-body"><b>Please open ${esc(d.number)} ${revLabel(r)}, then acknowledge and sign.</b> You are on the list of people who must read this document${late ? `; it was due ${fmt(a.due)}` : ` by ${fmt(a.due)}`}.
     <div class="btn-row mt-s"><button class="btn" data-act="viewDocFile" data-id="${d.id}" data-ri="${ri}">${icon('eye', 'sm')} ${opened ? 'Open it again' : 'Step 1: open ' + revLabel(r)}</button></div>
     ${opened ? `<div class="ack-sign">
       <label class="check"><input type="checkbox" id="ackTick" data-doc="${d.id}"> <span><b>I have read and understood ${esc(d.number)} ${esc(d.title)} (${revLabel(r)})</b> and will follow it.</span></label>
       <div class="field" id="ackSigField"><label for="ackPad">Your signature<span class="req">*</span></label><div class="sig-wrap"><canvas id="ackPad" class="sig-pad" aria-label="Signature pad: sign with your finger or mouse"></canvas><div class="sig-foot"><span>${esc(pname(S.ui.user))} · sign with your finger or mouse</span><button type="button" class="btn sm" data-act="ackSigClear">Clear</button></div></div></div>
-      <button class="btn success" data-act="docAck" data-id="${d.id}">${icon('check', 'sm')} Confirm and sign</button>
-    </div>` : `<p class="t-sub mt-s" style="margin-bottom:0">Step 2 appears once you have opened it: tick that you have read and understood it, and sign.</p>`}
+      <button class="btn success" data-act="docAck" data-id="${d.id}">${icon('check', 'sm')} Submit</button>
+    </div>` : `<p class="t-sub mt-s" style="margin-bottom:0">Once you have opened it, you can acknowledge and sign here.</p>`}
   </div></div>`;
 }
 const ACKSIG = { sig: null };

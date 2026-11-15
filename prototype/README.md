@@ -110,7 +110,7 @@ Seeded examples:
 Default routes per category are set in **Administration → Approval routes**.
 
 **Read and acknowledge.** On a document, **Read and acknowledge → Set who must read it** chooses the roles (for example Employee and Supervisor) and/or named people who must read it, and within how many days of issue.
-- When a revision is issued, each person on the list gets a task and an e-mail. They open the revision in use first; then they **tick "I have read and understood it and will follow it" and sign** with a finger or mouse. The document keeps each person's tick, signature and time.
+- When a revision is issued, each person on the list gets a task and an e-mail. They **open** the revision in use first; then they **tick "I have read and understood it", sign** with a finger or mouse and **Submit**. The document keeps each person's tick, signature and time.
 - Operators do this on their phone: the home screen lists **Documents to read**.
 - The document shows how many have confirmed (e.g. *4 of 9*), who is still to read it (overdue in red), and **Send a reminder**. A new revision starts the list again.
 - **Example:** KIE-SWP-021 (Forklift Operation) must be read by employees and supervisors; sign in as Nomvula Sithole to confirm it.
@@ -211,7 +211,7 @@ Other pages are closed to employees. An inspection can only be started from the 
 - For incidents without an alert, **Prepare alert** on the incident page creates one.
 - **Example:** *NT-004* (from INC-2026-007) was approved by Johan and is waiting for Ayesha. Open it from **Company Notices** and use **Act as current approver**.
 
-**Acknowledging a notice.** When a notice must be acknowledged, every person (employees, the HSEQ Manager and everyone else it is sent to) follows the same steps on the notice: **1.** tick that they have read it (and its attachment), **2.** sign with a finger or mouse, **3.** tick that they understand it and will follow it, then **Submit acknowledgement**. It cannot be submitted until all three are done. The publisher's "Read and acknowledgement" list shows each person's signature next to the time they acknowledged. Acknowledgements recorded before this change show *Before signing was required*.
+**Acknowledging a notice.** When a notice must be acknowledged, everyone it is sent to (including the HSEQ Manager) does the same: **open** it (if it has an attachment, open the attachment first), then tick **"I have read and understood this notice"**, **sign**, and **Submit**. The publisher's "Read and acknowledgement" list shows each person's signature. Acknowledgements recorded before signing was required say so.
 
 ### Reporting for management (Reports)
 - **Monthly management report:** one page for the MD or client, for any of the last 12 months and for all branches or one branch. It shows:
