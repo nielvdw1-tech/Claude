@@ -350,7 +350,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await p.click(`a.notice[href="#/notices/${nid}"]`); await p.waitForTimeout(150);
     ok('N3 opening the notice marks it read; attachment can be opened', !!(await S(`S.notices.find(n=>n.id==='${nid}').reads['P-014']`)) && await has('.notice-sheet button.file-chip'));
     const ackd = () => S(`!!(S.notices.find(n=>n.id==='${nid}').acks || {})['P-014']`);
-    const s1 = !(await has('#ntAck')) && !(await has('#ntPad'));
+    const s1 = (await p.$eval('#ntAck', e => e.disabled)) && (await p.$eval('[data-act=noticeAck]', e => e.disabled)) && await has('.notice-ack-form.locked');
     await act('.notice-sheet button.file-chip'); await p.waitForTimeout(400); await p.keyboard.press('Escape'); await p.waitForTimeout(150);
     await act('[data-act=noticeAck]'); const s2 = !(await ackd());
     await p.check('#ntAck'); await act('[data-act=noticeAck]'); const s3 = !(await ackd());
@@ -1005,7 +1005,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await asUser('P-009'); await go('#/field'); await p.waitForTimeout(150);
     const listed = await has('a[href="#/read/DOC-004"]'), task = await S("myTasks().some(t => /Read and acknowledge KIE-SWP-021/.test(t.title))");
     await go('#/read/DOC-004'); await p.waitForTimeout(150);
-    const before = !(await has('[data-act=docAck]')) && !(await has('#ackTick'));
+    const before = (await p.$eval('#ackTick', e => e.disabled)) && (await p.$eval('[data-act=docAck]', e => e.disabled)) && await has('.ack-sign.locked');
     await act('.ack-banner [data-act=viewDocFile]'); await p.waitForTimeout(500); await p.keyboard.press('Escape'); await p.waitForTimeout(150);
     const acked = () => S("(docIssued(byId('documents', 'DOC-004')).acks || []).some(a => a.by === 'P-009')");
     await act('[data-act=docAck]'); const noTick = !(await acked());

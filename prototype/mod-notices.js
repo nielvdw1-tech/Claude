@@ -76,11 +76,12 @@ const NTSIG = { sig: null };
 function noticeOpened(n) { return !n.attachment || !!(S.ui.ntOpened && S.ui.ntOpened[n.id + ':' + S.ui.user]); }
 function noticeAckHtml(n, pending) {
   if (!pending) { const sig = (n.ackSigs || {})[S.ui.user]; return `<div class="notice-ack">${icon('checkCircle', 'sm')}<span>You acknowledged and signed this notice on ${fmtTs(n.acks[S.ui.user])}.</span>${sig ? `<img class="ack-sig" src="${sig}" alt="Your signature">` : ''}</div>`; }
-  if (!noticeOpened(n)) return `<div class="notice-ack notice-ack-form" data-notice="${n.id}"><div><b>Open the attachment above first.</b> Then you can acknowledge and sign.</div></div>`;
-  return `<div class="notice-ack notice-ack-form" data-notice="${n.id}">
-    <label class="check"><input type="checkbox" id="ntAck"> <span><b>I have read and understood this notice</b> and will follow it.</span></label>
-    <div class="field" id="ntSigField"><label for="ntPad">Your signature<span class="req">*</span></label><div class="sig-wrap"><canvas id="ntPad" class="sig-pad" aria-label="Signature pad: sign with your finger or mouse"></canvas><div class="sig-foot"><span>${esc(pname(S.ui.user))} · sign with your finger or mouse</span><button type="button" class="btn sm" data-act="ntSigClear">Clear</button></div></div></div>
-    <button class="btn primary" data-act="noticeAck" data-id="${n.id}">${icon('check', 'sm')} Submit</button>
+  const open = noticeOpened(n);
+  return `<div class="notice-ack notice-ack-form${open ? '' : ' locked'}" data-notice="${n.id}" ${open ? '' : 'aria-disabled="true"'}>
+    ${open ? '' : `<div class="lock-note">${icon('lock', 'sm')} Locked until you have opened the attachment above.</div>`}
+    <label class="check"><input type="checkbox" id="ntAck" ${open ? '' : 'disabled'}> <span><b>I have read and understood this notice</b> and will follow it.</span></label>
+    <div class="field" id="ntSigField"><label for="ntPad">Your signature<span class="req">*</span></label><div class="sig-wrap"><canvas id="ntPad" class="sig-pad" aria-label="Signature pad: sign with your finger or mouse"></canvas><div class="sig-foot"><span>${esc(pname(S.ui.user))} · sign with your finger or mouse</span><button type="button" class="btn sm" data-act="ntSigClear" ${open ? '' : 'disabled'}>Clear</button></div></div></div>
+    <button class="btn primary" data-act="noticeAck" data-id="${n.id}" ${open ? '' : 'disabled title="Open the attachment first"'}>${icon('check', 'sm')} Submit</button>
   </div>`;
 }
 // Opening the notice's attachment unlocks the acknowledgement
@@ -89,7 +90,7 @@ document.addEventListener('click', e => {
   const box = document.querySelector('.notice-ack-form[data-notice]'); if (!box) return;
   const id = box.dataset.notice; S.ui.ntOpened = S.ui.ntOpened || {}; if (S.ui.ntOpened[id + ':' + S.ui.user]) return;
   S.ui.ntOpened[id + ':' + S.ui.user] = true; save();
-  const n = S.notices.find(x => x.id === id); setTimeout(() => { const b = document.querySelector(`.notice-ack-form[data-notice="${id}"]`); if (b && n) { b.outerHTML = noticeAckHtml(n, true); if (document.getElementById('ntPad')) { NTSIG.sig = null; initSigPad('ntPad', NTSIG, 'sig', 'ntSigField'); } } }, 0);
+  const n = S.notices.find(x => x.id === id); setTimeout(() => { const b = document.querySelector(`.notice-ack-form[data-notice="${id}"]`); if (b && n) { b.outerHTML = noticeAckHtml(n, true); const pad = document.getElementById('ntPad'); if (pad && !pad.closest('.locked')) { NTSIG.sig = null; initSigPad('ntPad', NTSIG, 'sig', 'ntSigField'); } } }, 0);
 });
 ACT.ntSigClear = () => { NTSIG.sig = null; const c = document.getElementById('ntPad'); if (c) c.getContext('2d').clearRect(0, 0, c.width, c.height); };
 ACT.noticeAck = (el) => {
@@ -103,7 +104,7 @@ ACT.noticeAck = (el) => {
   log(`${pname(S.ui.user)} acknowledged and signed notice "${n.title}"`, '#/notices/' + n.id); save(); toast('Thank you — your signed acknowledgement has been recorded.'); rerender();
 };
 const _rerenderBeforeNtSig = rerender;
-rerender = function (keepScroll) { _rerenderBeforeNtSig(keepScroll); if (document.getElementById('ntPad')) { NTSIG.sig = null; initSigPad('ntPad', NTSIG, 'sig', 'ntSigField'); } };
+rerender = function (keepScroll) { _rerenderBeforeNtSig(keepScroll); const pad = document.getElementById('ntPad'); if (pad && !pad.closest('.locked')) { NTSIG.sig = null; initSigPad('ntPad', NTSIG, 'sig', 'ntSigField'); } };
 ACT.noticeRemind = (el) => { const n = S.notices.find(x => x.id === el.dataset.id); const out = noticeAudience(n).filter(x => !(n.acks || {})[x.id]); addEvent('amber', 'notices', `Reminder: please acknowledge "${n.title}"`, `Please read "${n.title}" and confirm that you have read and understood it.`, '#/notices/' + n.id, n.audience, out.map(x => x.id)); log(`Reminder sent for notice "${n.title}" to ${out.length} person(s)`, '#/notices/' + n.id); save(); toast(`Reminder sent to ${out.length} person(s) (simulated — in-app only).`); };
 ACT.noticeExpire = (el) => { const n = S.notices.find(x => x.id === el.dataset.id); confirmBox('Withdraw notice', `"${esc(n.title)}" will no longer be shown to staff. It stays on record with its read and acknowledgement history.`, 'Withdraw', () => { n.expires = addDays(TODAY, -1); log(`Withdrew notice "${n.title}"`, '#/notices/' + n.id); save(); toast('Notice withdrawn.'); rerender(); }, 'danger solid'); };
 ACT.noticeNew = () => openModal({ title: 'Publish notice', sub: 'Share a memo or important information with staff. They see it in Notices and on their home screen.', size: 'wide',

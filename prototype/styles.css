@@ -1248,3 +1248,9 @@ body.auth-mode .main { padding-top: 0; }
 .notice-ack-form .btn { justify-self: start; }
 .notice-ack-form .check.invalid span { color: var(--bad); }
 .notice-ack .ack-sig { margin-left: 8px; }
+
+/* Acknowledgement locked until the document / attachment has been opened */
+.ack-sign.locked, .notice-ack-form.locked { position: relative; }
+.ack-sign.locked > :not(.lock-note), .notice-ack-form.locked > :not(.lock-note) { opacity: .45; pointer-events: none; user-select: none; }
+.ack-sign.locked .sig-pad, .notice-ack-form.locked .sig-pad { background: repeating-linear-gradient(45deg, var(--surface-2), var(--surface-2) 8px, var(--surface-3) 8px, var(--surface-3) 16px); }
+.lock-note { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--warn); }

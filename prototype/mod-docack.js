@@ -55,15 +55,16 @@ function ackBannerHtml(d) {
   const a = ackState(d), r = a.rev, ri = d.revisions.indexOf(r), opened = openedIssued(d), late = daysTo(a.due) < 0;
   return `<div class="alert ${late ? 'danger' : 'warn'} ack-banner" data-doc="${d.id}">${icon('docs')}<div class="ack-body"><b>Please open ${esc(d.number)} ${revLabel(r)}, then acknowledge and sign.</b> You are on the list of people who must read this document${late ? `; it was due ${fmt(a.due)}` : ` by ${fmt(a.due)}`}.
     <div class="btn-row mt-s"><button class="btn" data-act="viewDocFile" data-id="${d.id}" data-ri="${ri}">${icon('eye', 'sm')} ${opened ? 'Open it again' : 'Step 1: open ' + revLabel(r)}</button></div>
-    ${opened ? `<div class="ack-sign">
-      <label class="check"><input type="checkbox" id="ackTick" data-doc="${d.id}"> <span><b>I have read and understood ${esc(d.number)} ${esc(d.title)} (${revLabel(r)})</b> and will follow it.</span></label>
-      <div class="field" id="ackSigField"><label for="ackPad">Your signature<span class="req">*</span></label><div class="sig-wrap"><canvas id="ackPad" class="sig-pad" aria-label="Signature pad: sign with your finger or mouse"></canvas><div class="sig-foot"><span>${esc(pname(S.ui.user))} · sign with your finger or mouse</span><button type="button" class="btn sm" data-act="ackSigClear">Clear</button></div></div></div>
-      <button class="btn success" data-act="docAck" data-id="${d.id}">${icon('check', 'sm')} Submit</button>
-    </div>` : `<p class="t-sub mt-s" style="margin-bottom:0">Once you have opened it, you can acknowledge and sign here.</p>`}
+    <div class="ack-sign${opened ? '' : ' locked'}" ${opened ? '' : 'aria-disabled="true"'}>
+      ${opened ? '' : `<div class="lock-note">${icon('lock', 'sm')} Locked until you have opened the document.</div>`}
+      <label class="check"><input type="checkbox" id="ackTick" data-doc="${d.id}" ${opened ? '' : 'disabled'}> <span><b>I have read and understood ${esc(d.number)} ${esc(d.title)} (${revLabel(r)})</b> and will follow it.</span></label>
+      <div class="field" id="ackSigField"><label for="ackPad">Your signature<span class="req">*</span></label><div class="sig-wrap"><canvas id="ackPad" class="sig-pad" aria-label="Signature pad: sign with your finger or mouse"></canvas><div class="sig-foot"><span>${esc(pname(S.ui.user))} · sign with your finger or mouse</span><button type="button" class="btn sm" data-act="ackSigClear" ${opened ? '' : 'disabled'}>Clear</button></div></div></div>
+      <button class="btn success" data-act="docAck" data-id="${d.id}" ${opened ? '' : 'disabled title="Open the document first"'}>${icon('check', 'sm')} Submit</button>
+    </div>
   </div></div>`;
 }
 const ACKSIG = { sig: null };
-function initAckPad() { ACKSIG.sig = null; if (document.getElementById('ackPad')) initSigPad('ackPad', ACKSIG, 'sig', 'ackSigField'); }
+function initAckPad() { ACKSIG.sig = null; const pad = document.getElementById('ackPad'); if (pad && !pad.closest('.locked')) initSigPad('ackPad', ACKSIG, 'sig', 'ackSigField'); }
 ACT.ackSigClear = () => { ACKSIG.sig = null; const c = document.getElementById('ackPad'); if (c) c.getContext('2d').clearRect(0, 0, c.width, c.height); };
 ACT.docAck = (el) => {
   const d = byId('documents', el.dataset.id), r = docIssued(d);
@@ -79,6 +80,8 @@ ACT.docAck = (el) => {
 // The signature pad is drawn after each page render
 const _rerenderBeforeAck = rerender;
 rerender = function (keepScroll) { _rerenderBeforeAck(keepScroll); if (document.getElementById('ackPad')) initAckPad(); };
+// The signature pad only takes a signature once it is unlocked
+function initAckPadIfOpen() { const pad = document.getElementById('ackPad'); if (pad && !pad.closest('.locked')) initSigPad('ackPad', ACKSIG, 'sig', 'ackSigField'); }
 
 // The card on the document page: progress, who is outstanding, reminders and the distribution
 function ackCardHtml(d) {
