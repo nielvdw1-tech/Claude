@@ -51,6 +51,19 @@ Use this language on the site. It's how they describe it, not how a consultant w
 
 **Important:** VDW doesn't hand clients a system to maintain themselves. VDW runs the system and manages the client's compliance with it. The copy says "we manage it for you", "on our system" and "your outsourced safety department". It never implies the client's team does the upkeep.
 
+## 4b. What the VDW Compliance Control System does (use these as proof points)
+
+VDW runs the system for its clients. Branch managers and supervisors use it on their phones for inspections, defects, incidents and reading documents, and each sees only their own branch.
+
+- **Document control:** policies, procedures and risk assessments go through approval in a set order, are issued with controlled revisions, get review reminders, and are read and signed by the right people. Change requests and control-stamped prints are included.
+- **Assets and inspections:** an asset register with required certificates and inspection intervals, QR labels, and checklists completed on the phone with photos and signatures, even without signal. Failed items become defects, and critical failures take the asset out of service until the fix is verified.
+- **Incident management:** reporting on the phone with photos, "5 Whys" root-cause investigation, signed witness statements, injury classification, a record of external reporting decisions, and no closure while actions are open.
+- **Corrective actions:** one register for actions from inspections, defects, maintenance, incidents and document reviews. Each has an owner, priority and due date, is escalated when overdue, and must be verified by someone independent.
+- **Oversight:** a dashboard with a control score and 12-month trends (incidents, LTIs, LTI frequency rate, corrective actions), a branch comparison, and a monthly management report.
+- **Records:** records lock once submitted or closed, with a tamper-evident audit trail. This is strong proof for client audits.
+
+**Check before going live:** the system summary says e-mails are still written to an outbox in the prototype, not sent. The site therefore doesn't promise that reports are "e-mailed automatically". Add that once e-mail sending is live.
+
 ## 5. Website headlines (options)
 
 **Homepage hero headline:**
@@ -95,7 +108,7 @@ Use this language on the site. It's how they describe it, not how a consultant w
 
 ## 10. Decisions made
 
-- **The system:** VDW manages clients' compliance on its own system, the **VDW Compliance Control System**. Use the full name a few times per page (hero, services, about), then "our system". It isn't shown on the site, and clients aren't promised a login. Documents remain the client's and are sent on request.
+- **The system:** VDW manages clients' compliance on its own system, the **VDW Compliance Control System**. Use the full name a few times per page (hero, services, about), then "our system". It isn't shown on the site. Clients' branch managers and supervisors do use it on their phones (inspections, defects, incidents, reading documents), each seeing only their own branch. VDW does the managing. Documents remain the client's and are sent on request.
 - **Case study:** approved. The current client appears as an anonymous case study ("Equipment supplier to industrial & mining clients · Multiple branches"). **The results still need real figures**, confirmed with the client.
 - **Coverage:** nationwide. Head office in Pretoria, with on-site visits to branches across South Africa and remote support in between.
 - **Audience:** companies that supply products or equipment to industrial and mining clients. The focus is on the problem solved.
