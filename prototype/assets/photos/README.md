@@ -13,4 +13,4 @@ Use landscape photos about 1920 px wide (team photo: about 1200 px), saved as co
 | `inspection-finding.webp` | Consultant photographing a finding at a branch | Compliance Audit page hero |
 | `organised-files.webp` | Someone updating compliance records on a laptop in a branch warehouse | Compliance System page hero |
 | `site-walk.webp` | Monthly site walk-through with a branch manager | Ongoing Management page hero |
-| `team-on-site.jpg` | You or your team on site at a client's branch | About / Meet the Team sections |
+| `team-niel.webp` (in use) | Niel in a VDW shirt in a warehouse | About / Meet the Team sections |
