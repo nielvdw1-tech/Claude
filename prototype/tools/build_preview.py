@@ -7,7 +7,7 @@ shutil.copy(os.path.join(SRC, 'assets/vdw-logo.png'), site + '/assets/')
 shutil.copytree(os.path.join(SRC, 'assets/screenshots'), site + '/assets/screenshots', dirs_exist_ok=True)
 shutil.copytree(os.path.join(SRC, 'assets/photos'), site + '/assets/photos', dirs_exist_ok=True)
 for f in ['gap-audit.html', 'safety-file.html', 'compliance-management.html', 'free-assessment.html', 'assessment.html']:
-    t = open(os.path.join(SRC, f)).read().replace('href="index.html', 'href="./')
+    t = open(os.path.join(SRC, f)).read()
     open(os.path.join(site, f), 'w').write(t)
 html = open(os.path.join(SRC, 'index.html')).read(); css = open(os.path.join(SRC, 'styles.css')).read(); js = open(os.path.join(SRC, 'script.js')).read()
 logo = 'data:image/png;base64,' + base64.b64encode(open(os.path.join(SRC, 'assets/vdw-logo.png'), 'rb').read()).decode()
