@@ -79,6 +79,18 @@
     document.querySelectorAll('a.book-call').forEach(function (a) { a.href = BOOKING_URL; });
   }
 
+  // Background photos further down the page load when they come near the screen
+  var lazyBgs = document.querySelectorAll('[data-bg]');
+  function showBg(el) { el.style.setProperty('--photo', 'url("' + el.getAttribute('data-bg') + '")'); el.removeAttribute('data-bg'); }
+  if ('IntersectionObserver' in window) {
+    var bgObserver = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { if (e.isIntersecting) { showBg(e.target); bgObserver.unobserve(e.target); } });
+    }, { rootMargin: '800px 0px' });
+    lazyBgs.forEach(function (el) { bgObserver.observe(el); });
+  } else {
+    lazyBgs.forEach(showBg);
+  }
+
   // Footer year
   var yearEl = document.getElementById('year');
   if (yearEl) yearEl.textContent = new Date().getFullYear();

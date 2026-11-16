@@ -125,9 +125,9 @@ SYS_TAG = '<span class="shot-tag">Example from the <span class="tag-long">VDW Co
 def sys_img(name, alt, cls='', eager=False):
     w, h = SYS_DIMS[name]
     c = f' class="{cls}"' if cls else ''
-    ext = 'webp' if os.path.exists(os.path.join(_SYS_DIR, name + '.webp')) else 'png'
+    ext = 'webp'
     load = 'eager" fetchpriority="high' if eager else 'lazy'
-    return f'<img{c} src="assets/screenshots/system/{name}.{ext}" alt="{alt}" width="{w}" height="{h}" loading="{load}">'
+    return f'<img{c} src="assets/screenshots/system/{name}-hd.{ext}" alt="{alt}" width="{w}" height="{h}" loading="{load}">'
 
 def sys_visual(layout, items, eager=False):
     """layout: single | natural | phone | phones | combo. items: list of (name, alt)."""
@@ -236,7 +236,7 @@ def page(fname, d):
   </div>
 
   <!-- PAIN POINT -->
-  <section class="section bg-photo" style="--photo: url('assets/photos/audit-scramble.webp')">
+  <section class="section bg-photo" data-bg="assets/photos/audit-scramble-hd.webp">
     <div class="container narrow text-center">
       <h2 class="section-title">{d["pain_title"]}</h2>
       <p class="section-lead">{d["pain_body"]}</p>
@@ -334,7 +334,7 @@ def page(fname, d):
   </section>
 
   <!-- FINAL RECAP -->
-  <section class="section bg-photo" style="--photo: url('assets/photos/truck-leaving.webp')" id="contact">
+  <section class="section bg-photo" data-bg="assets/photos/truck-leaving-hd.webp" id="contact">
     <div class="container hero-grid">
       <div class="hero-copy">
         <p class="eyebrow">{d["recap_eyebrow"]}</p>
@@ -364,9 +364,9 @@ def page(fname, d):
 exec(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'pages_content.py')).read())
 
 HERO_PHOTOS = {
-    'gap-audit.html': ('inspection-finding.webp', 'Consultant photographing a finding at a branch'),
-    'safety-file.html': ('organised-files.webp', 'Someone updating compliance records on a laptop in a branch warehouse'),
-    'compliance-management.html': ('site-walk.webp', 'Monthly site walk-through with a branch manager'),
+    'gap-audit.html': ('inspection-finding-hd.webp', 'Consultant photographing a finding at a branch'),
+    'safety-file.html': ('organised-files-hd.webp', 'Someone updating compliance records on a laptop in a branch warehouse'),
+    'compliance-management.html': ('site-walk-hd.webp', 'Monthly site walk-through with a branch manager'),
 }
 BOOKING_MESSAGES = {
     'gap-audit.html': "Hi Niel, I'd like to book a Multi-Branch Compliance Audit.",
