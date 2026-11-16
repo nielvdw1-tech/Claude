@@ -178,7 +178,7 @@ async function monthlyPdf(D) {
     D.branches.forEach(x => { need(14); const c = band(x.score).cls; text(x.s.name, M, y, { size: 8.5 }); text(x.score + '%', M + 200, y, { size: 8.5, bold: true, color: tone[c === 'good' ? 'good' : c === 'warn' ? 'warn' : 'bad'] }); [x.inc, x.lti, x.actOver, x.insOver].forEach((v, n) => text(String(v), [M + 255, M + 315, M + 360, M + 440][n], y, { size: 8.5 })); y -= 13; }); }
   // Footer on every page
   pages.forEach((p, n) => { p.drawLine({ start: { x: M, y: 34 }, end: { x: W - M, y: 34 }, thickness: 0.4, color: line });
-    p.drawText(pdfSafe(`${D.org.short} · ${D.label} · Prototype — demonstration data. The control score is an indication from the records in the system; it does not guarantee legal compliance.`), { x: M, y: 22, size: 6.8, font: R, color: mute });
+    p.drawText(pdfSafe(`${D.org.short} · ${D.label} · ${S.config.reportNote == null ? 'Prototype — demonstration data. ' : S.config.reportNote}The control score is an indication from the records in the system; it does not guarantee legal compliance.`), { x: M, y: 22, size: 6.8, font: R, color: mute });
     p.drawText(`Page ${n + 1} of ${pages.length} · Powered by VDW`, { x: W - M - 95, y: 12, size: 6.8, font: R, color: mute }); });
   return new Blob([await pdf.save()], { type: 'application/pdf' });
 }
