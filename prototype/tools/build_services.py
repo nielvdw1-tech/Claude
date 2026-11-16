@@ -127,7 +127,7 @@ def sys_img(name, alt, cls='', eager=False):
     c = f' class="{cls}"' if cls else ''
     ext = 'webp'
     load = 'eager" fetchpriority="high' if eager else 'lazy'
-    return f'<img{c} src="assets/screenshots/system/{name}-hd.{ext}" alt="{alt}" width="{w}" height="{h}" loading="{load}">'
+    return f'<img{c} src="assets/screenshots/system/{name}-full.{ext}" alt="{alt}" width="{w}" height="{h}" loading="{load}">'
 
 def sys_visual(layout, items, eager=False):
     """layout: single | natural | phone | phones | combo. items: list of (name, alt)."""
