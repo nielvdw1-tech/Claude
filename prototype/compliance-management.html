@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
+<link rel="preload" as="image" href="assets/photos/site-walk.webp" fetchpriority="high">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -41,7 +42,7 @@
 <main id="main">
 
   <!-- HERO -->
-  <section class="hero bg-photo photo-slot" data-photo-src="assets/photos/site-walk.jpg" data-photo="Photo: Monthly site walk-through with a branch manager">
+  <section class="hero bg-photo" style="--photo: url('assets/photos/site-walk.webp')">
     <div class="container hero-grid">
       <div class="hero-copy">
         <h1 class="eyebrow">Managed Health &amp; Safety Compliance for Multi-Branch Companies</h1>
@@ -51,9 +52,10 @@
         <p class="fud">No obligation &middot; Monthly support &middot; Works alongside your team</p>
         <p class="proof-line"><span class="stars" aria-hidden="true">&#9733;&#9733;&#9733;&#9733;&#9733;</span> Built for suppliers to industrial &amp; mining clients</p>
       </div>
-      <div class="feature-visual icon-visual hero-visual" aria-hidden="true">
-        <span class="iv-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 15l3-3 3 2 4-5"/></svg></span><span class="iv-chip iv-chip-1">VDW Compliance Control System</span><span class="iv-chip iv-chip-2">Monthly MD report</span><span class="iv-chip iv-chip-3">Branch inspections</span>
-      </div>
+      <figure class="feature-visual shot-visual">
+        <span class="shot-tag">Example from the <span class="tag-long">VDW Compliance Control System</span><span class="tag-short">VDW system</span></span>
+        <img src="assets/screenshots/system/dashboard.webp" alt="Example dashboard: overall control score, scores for documents, assets, corrective actions and incidents, and status by branch" width="800" height="843" loading="eager" fetchpriority="high">
+      </figure>
     </div>
   </section>
 
@@ -62,7 +64,7 @@
   </div>
 
   <!-- PAIN POINT -->
-  <section class="section bg-photo photo-slot" data-photo-src="assets/photos/audit-scramble.jpg" data-photo="Photo: Binders and files piled on a branch counter, someone on the phone">
+  <section class="section bg-photo" style="--photo: url('assets/photos/audit-scramble.webp')">
     <div class="container narrow text-center">
       <h2 class="section-title">Compliance Slips the Moment No One Owns It Across Branches</h2>
       <p class="section-lead">The old way is a big clean-up before each client audit, then months of drift: appointments expire, inspections are skipped at some branches, and actions stay open. Head office only notices when the next audit comes. Hiring a full safety team for every branch is expensive. We take that ownership: we manage every branch on our system, every month, and give leadership a clear report.</p>
@@ -92,8 +94,8 @@
     <div class="container feature-grid">
       <figure class="feature-visual shot-visual shot-combo">
         <span class="shot-tag">Example from the <span class="tag-long">VDW Compliance Control System</span><span class="tag-short">VDW system</span></span>
-        <img class="shot-back-wide" src="assets/screenshots/system/action-register.png" alt="Example corrective action register with source, priority, branch, owner, due date and status" width="800" height="568" loading="lazy">
-        <img class="shot-phone shot-front-phone" src="assets/screenshots/system/inspection-checklist-phone.png" alt="Example inspection on a phone: a failed item raising a corrective action" width="462" height="1000" loading="lazy">
+        <img class="shot-back-wide" src="assets/screenshots/system/action-register.webp" alt="Example corrective action register with source, priority, branch, owner, due date and status" width="800" height="568" loading="lazy">
+        <img class="shot-phone shot-front-phone" src="assets/screenshots/system/inspection-checklist-phone.webp" alt="Example inspection on a phone: a failed item raising a corrective action" width="462" height="1000" loading="lazy">
       </figure><div class="feature-copy">
         <p class="eyebrow">Consistent oversight</p>
         <h2>Every Branch Stays Up to Standard Between Audits</h2>
@@ -224,7 +226,7 @@
   </section>
 
   <!-- FINAL RECAP -->
-  <section class="section bg-photo photo-slot" data-photo-src="assets/photos/truck-leaving.jpg" data-photo="Photo: Truck loaded with equipment leaving for a client site" id="contact">
+  <section class="section bg-photo" style="--photo: url('assets/photos/truck-leaving.webp')" id="contact">
     <div class="container hero-grid">
       <div class="hero-copy">
         <p class="eyebrow">Free consultation &middot; Monthly support</p>

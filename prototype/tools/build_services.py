@@ -122,27 +122,29 @@ _SYS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'asset
 SYS_DIMS = _json.load(open(os.path.join(_SYS_DIR, 'dims.json')))
 SYS_TAG = '<span class="shot-tag">Example from the <span class="tag-long">VDW Compliance Control System</span><span class="tag-short">VDW system</span></span>'
 
-def sys_img(name, alt, cls=''):
+def sys_img(name, alt, cls='', eager=False):
     w, h = SYS_DIMS[name]
     c = f' class="{cls}"' if cls else ''
-    return f'<img{c} src="assets/screenshots/system/{name}.png" alt="{alt}" width="{w}" height="{h}" loading="lazy">'
+    ext = 'webp' if os.path.exists(os.path.join(_SYS_DIR, name + '.webp')) else 'png'
+    load = 'eager" fetchpriority="high' if eager else 'lazy'
+    return f'<img{c} src="assets/screenshots/system/{name}.{ext}" alt="{alt}" width="{w}" height="{h}" loading="{load}">'
 
-def sys_visual(layout, items):
+def sys_visual(layout, items, eager=False):
     """layout: single | natural | phone | phones | combo. items: list of (name, alt)."""
     if layout in ('single', 'natural'):
         n, a = items[0]
         cls = 'shot-natural' if layout == 'natural' else ''
-        return f'<figure class="feature-visual shot-visual">\n        {SYS_TAG}\n        {sys_img(n, a, cls)}\n      </figure>'
+        return f'<figure class="feature-visual shot-visual">\n        {SYS_TAG}\n        {sys_img(n, a, cls, eager=eager)}\n      </figure>'
     if layout == 'phone':
         n, a = items[0]
-        return f'<figure class="feature-visual shot-visual shot-phones">\n        {SYS_TAG}\n        {sys_img(n, a, "shot-phone shot-phone-solo")}\n      </figure>'
+        return f'<figure class="feature-visual shot-visual shot-phones">\n        {SYS_TAG}\n        {sys_img(n, a, "shot-phone shot-phone-solo", eager=eager)}\n      </figure>'
     if layout == 'phones':
-        imgs = '\n        '.join(sys_img(n, a, 'shot-phone') for n, a in items)
+        imgs = '\n        '.join(sys_img(n, a, 'shot-phone', eager=eager) for n, a in items)
         return f'<figure class="feature-visual shot-visual shot-phones">\n        {SYS_TAG}\n        {imgs}\n      </figure>'
     if layout == 'combo':
         (bn, ba), (pn, pa) = items
-        return (f'<figure class="feature-visual shot-visual shot-combo">\n        {SYS_TAG}\n        {sys_img(bn, ba, "shot-back-wide")}\n'
-                f'        {sys_img(pn, pa, "shot-phone shot-front-phone")}\n      </figure>')
+        return (f'<figure class="feature-visual shot-visual shot-combo">\n        {SYS_TAG}\n        {sys_img(bn, ba, "shot-back-wide", eager=eager)}\n'
+                f'        {sys_img(pn, pa, "shot-phone shot-front-phone", eager=eager)}\n      </figure>')
     raise ValueError(layout)
 
 def icon_visual(ic, chips):
@@ -203,6 +205,7 @@ def page(fname, d):
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
+<link rel="preload" as="image" href="assets/photos/{d["hero_photo"][0]}" fetchpriority="high">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -214,7 +217,7 @@ def page(fname, d):
 <main id="main">
 
   <!-- HERO -->
-  <section class="hero bg-photo photo-slot" data-photo-src="assets/photos/{d["hero_photo"][0]}" data-photo="Photo: {d["hero_photo"][1]}">
+  <section class="hero bg-photo" style="--photo: url('assets/photos/{d["hero_photo"][0]}')">
     <div class="container hero-grid">
       <div class="hero-copy">
         <h1 class="eyebrow">{d["keyword"]}</h1>
@@ -224,7 +227,7 @@ def page(fname, d):
         <p class="fud">{d["fud"]}</p>
         <p class="proof-line"><span class="stars" aria-hidden="true">&#9733;&#9733;&#9733;&#9733;&#9733;</span> {d["proof1"]}</p>
       </div>
-      {icon_visual(d["hero_icon"], d["hero_chips"]).replace("feature-visual icon-visual", "feature-visual icon-visual hero-visual")}
+      {sys_visual(*d["hero_shot"], eager=True) if d.get("hero_shot") else icon_visual(d["hero_icon"], d["hero_chips"]).replace("feature-visual icon-visual", "feature-visual icon-visual hero-visual")}
     </div>
   </section>
 
@@ -233,7 +236,7 @@ def page(fname, d):
   </div>
 
   <!-- PAIN POINT -->
-  <section class="section bg-photo photo-slot" data-photo-src="assets/photos/audit-scramble.jpg" data-photo="Photo: Binders and files piled on a branch counter, someone on the phone">
+  <section class="section bg-photo" style="--photo: url('assets/photos/audit-scramble.webp')">
     <div class="container narrow text-center">
       <h2 class="section-title">{d["pain_title"]}</h2>
       <p class="section-lead">{d["pain_body"]}</p>
@@ -331,7 +334,7 @@ def page(fname, d):
   </section>
 
   <!-- FINAL RECAP -->
-  <section class="section bg-photo photo-slot" data-photo-src="assets/photos/truck-leaving.jpg" data-photo="Photo: Truck loaded with equipment leaving for a client site" id="contact">
+  <section class="section bg-photo" style="--photo: url('assets/photos/truck-leaving.webp')" id="contact">
     <div class="container hero-grid">
       <div class="hero-copy">
         <p class="eyebrow">{d["recap_eyebrow"]}</p>
@@ -361,9 +364,9 @@ def page(fname, d):
 exec(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'pages_content.py')).read())
 
 HERO_PHOTOS = {
-    'gap-audit.html': ('inspection-finding.jpg', 'Consultant photographing a finding at a branch'),
-    'safety-file.html': ('organised-files.jpg', 'Someone updating compliance records on a laptop in a branch warehouse'),
-    'compliance-management.html': ('site-walk.jpg', 'Monthly site walk-through with a branch manager'),
+    'gap-audit.html': ('inspection-finding.webp', 'Consultant photographing a finding at a branch'),
+    'safety-file.html': ('organised-files.webp', 'Someone updating compliance records on a laptop in a branch warehouse'),
+    'compliance-management.html': ('site-walk.webp', 'Monthly site walk-through with a branch manager'),
 }
 BOOKING_MESSAGES = {
     'gap-audit.html': "Hi Niel, I'd like to book a Multi-Branch Compliance Audit.",
@@ -371,6 +374,10 @@ BOOKING_MESSAGES = {
     'compliance-management.html': "Hi Niel, I'd like to schedule a consultation about Managed Multi-Branch Compliance.",
 }
 DOC_REG = ('document-register', 'Example document register: policies, procedures and risk assessments with their revision, approval status and next review date')
+HERO_SHOTS = {
+    'safety-file.html': ('combo', [DOC_REG, ('asset-qr-phone', 'Example asset page after scanning a QR label: forklift details and Safe to use, documents current')]),
+    'compliance-management.html': ('single', [('dashboard', 'Example dashboard: overall control score, scores for documents, assets, corrective actions and incidents, and status by branch')]),
+}
 VALUE_SHOTS = {
     'gap-audit.html': [
         ('phones', [('inspection-checklist-phone', 'Example inspection on a phone: a failed item with a comment and photo, raising a corrective action'),
@@ -395,7 +402,8 @@ for fname, d in PAGES.items():
     for vp, shot in zip(d['value_props'], VALUE_SHOTS[fname]):
         vp['shot'] = shot
     d['book'] = wa(BOOKING_MESSAGES[fname])
-    d['short_free'] = fname == 'gap-audit.html'  # "Find My Branch Gaps" offers the free check
+    d['short_free'] = fname == 'gap-audit.html'
+    d['hero_shot'] = HERO_SHOTS.get(fname)  # "Find My Branch Gaps" offers the free check
     with open(os.path.join(OUT, fname), "w") as f:
         f.write(page(fname, d))
     print("wrote", fname)
