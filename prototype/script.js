@@ -91,6 +91,21 @@
     lazyBgs.forEach(showBg);
   }
 
+  // As soon as the page has opened, fetch every remaining picture in the background,
+  // so each one is already there when the visitor scrolls to it
+  function loadAllPictures() {
+    document.querySelectorAll('img[loading="lazy"]').forEach(function (img) { img.loading = 'eager'; });
+    document.querySelectorAll('[data-bg]').forEach(function (el) {
+      var src = el.getAttribute('data-bg');
+      var pre = new Image();
+      pre.src = src;
+      el.style.setProperty('--photo', 'url("' + src + '")');
+      el.removeAttribute('data-bg');
+    });
+  }
+  if (document.readyState === 'complete') loadAllPictures();
+  else window.addEventListener('load', loadAllPictures);
+
   // Footer year
   var yearEl = document.getElementById('year');
   if (yearEl) yearEl.textContent = new Date().getFullYear();
