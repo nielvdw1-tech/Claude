@@ -58,6 +58,9 @@ export function scene(code: string, seed: number, gender: Gender): string {
     tomb: () => `<ellipse cx="200" cy="150" rx="100" ry="58" fill="#8D8A84"/><ellipse cx="190" cy="140" rx="22" ry="26" fill="#2B2622"/><circle cx="262" cy="148" r="24" fill="#A9A59E"/>`,
     tree: () => `<rect x="292" y="80" width="18" height="80" fill="#7A4B2A"/><circle cx="300" cy="72" r="46" fill="#3E8E4F"/><circle cx="270" cy="88" r="26" fill="#4A9C5A"/><circle cx="330" cy="88" r="26" fill="#4A9C5A"/>`,
     rock: () => `<polygon points="30,180 50,132 90,122 130,134 150,180" fill="#7C7A74"/>`,
+    well: () => `<ellipse cx="200" cy="150" rx="46" ry="12" fill="#6E6A63"/><rect x="154" y="122" width="92" height="28" fill="#8D8A84"/><ellipse cx="200" cy="122" rx="46" ry="12" fill="#A9A59E"/><ellipse cx="200" cy="122" rx="34" ry="7" fill="#2B4B6B"/><rect x="160" y="78" width="6" height="46" fill="#7A4B2A"/><rect x="234" y="78" width="6" height="46" fill="#7A4B2A"/><rect x="156" y="74" width="88" height="7" fill="#5B3A29"/>`,
+    ladder: () => `<rect x="182" y="20" width="6" height="150" fill="#FFE9A8" opacity=".8"/><rect x="212" y="20" width="6" height="150" fill="#FFE9A8" opacity=".8"/>` + Array.from({ length: 9 }, (_, i) => `<rect x="182" y="${30 + i * 16}" width="36" height="4" fill="#FFE9A8" opacity=".8"/>`).join("") + `<circle cx="200" cy="20" r="34" fill="#FFF3C4" opacity=".25"/>`,
+    bars: () => `<rect x="0" y="0" width="400" height="180" fill="#2B2622" opacity=".35"/>` + Array.from({ length: 9 }, (_, i) => `<rect x="${30 + i * 44}" y="0" width="8" height="180" fill="#4A4540"/>`).join("") + `<rect x="0" y="40" width="400" height="8" fill="#4A4540"/>`,
     flakes: () => Array.from({ length: 40 }, () => `<circle cx="${(r() * 400).toFixed(0)}" cy="${(r() * 44 + 134).toFixed(0)}" r="2" fill="#FFFFFF"/>`).join(""),
   };
   ex.forEach(k => { s += X[k]?.() ?? ""; });

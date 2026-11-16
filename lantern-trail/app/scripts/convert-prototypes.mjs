@@ -131,16 +131,40 @@ const christmas = {
 
 /* ---- merge hand-written band content from content-src/*.mjs ---- */
 const srcDir = path.resolve(here, "../content-src");
-const allNights = new Map([journey, christmas].flatMap(t => t.expeditions.flatMap(e => e.nights)).map(n => [n.id, n]));
+// Native trails (Trail 2 onward) are defined in content-src/trails/*.mjs: structure, scenes and treasures.
+const trailDir = path.join(srcDir, "trails");
+const native = [];
+for (const f of fs.existsSync(trailDir) ? fs.readdirSync(trailDir).filter(f => f.endsWith(".mjs")).sort() : []) {
+  const t = (await import(path.join(trailDir, f))).default;
+  t.expeditions.forEach(e => e.nights.forEach(n => { n.bands ??= {}; }));
+  native.push(t);
+}
+const allNights = new Map([journey, christmas, ...native].flatMap(t => t.expeditions.flatMap(e => e.nights)).map(n => [n.id, n]));
+const CAMP_JOURNAL = {
+  en: "Draw your favourite treasure from this expedition, and write why it is special to you.",
+  af: "Teken jou gunstelingskat van hierdie ekspedisie, en skryf hoekom dit vir jou spesiaal is.",
+};
+/** Ages 6–7 reuse the 4–5 story with extras: x67 = [did you know, think deeper, journal]. */
+function derive67(t, lang, kind) {
+  const { x67, ...base } = t;
+  const out = { ...base, prayerStyle: "together" };
+  if (kind === "story") {
+    if (!x67 || x67.length !== 3) throw new Error(`missing x67 extras for 6-7 (${lang}, ${t.title})`);
+    [out.fact, out.deeper, out.journal] = x67;
+  } else out.journal = (x67 && x67[2]) || CAMP_JOURNAL[lang];
+  return { base, out };
+}
 let merged = 0;
 // Quality gate for hand-written band content (docs/CONTENT-GUIDE.md section 4).
-const WORDS = { "2-3": [25, 140], "8-9": [250, 650], "10-12": [300, 750] };
+const WORDS = { "2-3": [25, 140], "4-5": [150, 460], "8-9": [250, 650], "10-12": [300, 750] };
 function check(f, id, band, lang, t, kind) {
   const where = `${f} ${id} ${band}/${lang}`;
   const need = ["title", "story", "lessons", "questions", "prayer", "prayerStyle"];
   if (kind === "story") need.push("verse");
   if (kind === "story" && band === "2-3") need.push("action");
   if (band === "8-9" || band === "10-12") need.push("mission", "journal", ...(kind === "story" ? ["readPassage", "listen"] : []));
+  if (band === "4-5") need.push("mission", ...(kind === "campfire" ? ["game"] : []));
+  if (kind === "story" && band === "4-5" && (t.lessons.length !== 3 || t.questions.length < 2)) throw new Error(`${where}: 4-5 needs 3 lessons and 2+ questions`);
   for (const k of need) if (t[k] === undefined || t[k] === "") throw new Error(`${where}: missing ${k}`);
   if (kind === "campfire" && band === "10-12" && !t.parentCheckIn) throw new Error(`${where}: 10-12 campfire needs parentCheckIn`);
   if (kind === "story" && band === "2-3" && t.lessons.length !== 1) throw new Error(`${where}: 2-3 has exactly one truth`);
@@ -150,13 +174,21 @@ function check(f, id, band, lang, t, kind) {
   if (kind === "story" && (words < lo || words > hi)) throw new Error(`${where}: story is ${words} words, expected ${lo}-${hi}`);
   if (/\b(Day|Dag) \d+/.test(JSON.stringify(t))) throw new Error(`${where}: refers to a day number`);
 }
-for (const f of fs.existsSync(srcDir) ? fs.readdirSync(srcDir).filter(f => f.endsWith(".mjs")).sort() : []) {
+for (const f of fs.existsSync(srcDir) ? fs.readdirSync(srcDir).filter(f => f.endsWith(".mjs") && fs.statSync(path.join(srcDir, f)).isFile()).sort() : []) {
   const mod = (await import(path.join(srcDir, f))).default;
   for (const [id, bands] of Object.entries(mod)) {
     const n = allNights.get(id);
     if (!n) throw new Error(`${f}: unknown night ${id}`);
     for (const [band, langs] of Object.entries(bands))
-      for (const [lang, t] of Object.entries(langs)) { check(f, id, band, lang, t, n.kind); (n.bands[band] ??= {})[lang] = t; merged++; }
+      for (const [lang, t] of Object.entries(langs)) {
+        if (band === "4-5" && !bands["6-7"]) {
+          const { base, out: t67 } = derive67(t, lang, n.kind);
+          check(f, id, "4-5", lang, base, n.kind); (n.bands["4-5"] ??= {})[lang] = base;
+          check(f, id, "6-7", lang, t67, n.kind); (n.bands["6-7"] ??= {})[lang] = t67; merged += 2;
+          continue;
+        }
+        check(f, id, band, lang, t, n.kind); (n.bands[band] ??= {})[lang] = t; merged++;
+      }
     for (const band of Object.keys(bands))
       for (const lang of ["en", "af"]) if (!bands[band][lang]) throw new Error(`${f} ${id} ${band}: missing ${lang}`);
   }
@@ -167,6 +199,7 @@ FIXES.en.forEach((_, i) => { if (!used.en.has(i)) throw new Error("English fix n
 FIXES.af.forEach((_, i) => { if (!used.af.has(i)) throw new Error("Afrikaans fix not applied: " + FIXES.af[i][0]); });
 
 const count = t => t.expeditions.reduce((s, e) => s + e.nights.length, 0);
+const isComplete = t => t.expeditions.every(e => e.nights.every(n => ["2-3", "4-5", "6-7", "8-9", "10-12"].every(b => n.bands[b]?.en && n.bands[b]?.af)));
 fs.mkdirSync(out, { recursive: true });
 fs.writeFileSync(path.join(out, "journey-01.json"), JSON.stringify(journey));
 fs.writeFileSync(path.join(out, "christmas.json"), JSON.stringify(christmas));
@@ -175,7 +208,19 @@ fs.writeFileSync(path.join(out, "index.json"), JSON.stringify({
   trails: [
     { id: journey.id, kind: "journey", order: 1, file: "journey-01.json", nights: count(journey) },
     { id: christmas.id, kind: "seasonal", season: "christmas", order: 0, file: "christmas.json", nights: count(christmas) },
+    // A native trail is published only when every night has every band in both languages (or with DRAFT=1 for testing).
+    ...native.filter(t => process.env.DRAFT === "1" || isComplete(t))
+      .map(t => ({ id: t.id, kind: "journey", order: t.order, file: `journey-${String(t.order).padStart(2, "0")}.json`, nights: count(t) })),
   ],
 }, null, 2));
+for (const t of native) {
+  fs.writeFileSync(path.join(out, `journey-${String(t.order).padStart(2, "0")}.json`), JSON.stringify(t));
+  const missing = {};
+  t.expeditions.forEach(e => e.nights.forEach(n => ["2-3", "4-5", "6-7", "8-9", "10-12"].forEach(b => ["en", "af"].forEach(l => {
+    if (!n.bands[b]?.[l]) { const k = `${b}/${l}`; missing[k] = (missing[k] || 0) + 1; }
+  }))));
+  const total = count(t);
+  console.log(`${t.id}: ${total} nights; ${isComplete(t) ? "complete, published" : `NOT published yet (DRAFT=1 to preview); missing texts: ${JSON.stringify(missing)}`}`);
+}
 const left = JSON.stringify([journey, christmas]).match(/\b(Day|Dag) \d+/g);
 console.log(`journey: ${count(journey)} nights, christmas: ${count(christmas)} nights; leftover day refs: ${left ? left.join(", ") : "none"}`);
