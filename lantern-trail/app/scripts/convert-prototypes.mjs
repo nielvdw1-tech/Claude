@@ -142,6 +142,7 @@ function check(f, id, band, lang, t, kind) {
   if (kind === "story" && band === "2-3") need.push("action");
   if (band === "8-9" || band === "10-12") need.push("mission", "journal", ...(kind === "story" ? ["readPassage", "listen"] : []));
   for (const k of need) if (t[k] === undefined || t[k] === "") throw new Error(`${where}: missing ${k}`);
+  if (kind === "campfire" && band === "10-12" && !t.parentCheckIn) throw new Error(`${where}: 10-12 campfire needs parentCheckIn`);
   if (kind === "story" && band === "2-3" && t.lessons.length !== 1) throw new Error(`${where}: 2-3 has exactly one truth`);
   if (kind === "story" && (band === "8-9" || band === "10-12") && t.lessons.length !== 3) throw new Error(`${where}: needs 3 lessons`);
   const words = t.story.join(" ").split(/\s+/).length;

@@ -108,6 +108,7 @@ export function NightView({ id }: { id: string }) {
           <section className="step"><Sign n={st()}>{s.stepPray}</Sign>{t.prayerStyle === "own" && <p className="tip">{s.prayOwn}</p>}<Prayer lines={t.prayer} /></section>
           {t.mission && <section className="step"><Sign n={st()}>{s.stepMissionCamp}</Sign><Mission c={t.mission.compass} text={p(t.mission.text)} /></section>}
           {t.journal && <section className="step"><Sign n={st()}>{s.stepJournal}</Sign><div className="journal"><p>{p(t.journal)}</p></div></section>}
+          {t.parentCheckIn && <section className="step"><Sign n={st()}>{s.stepCheckIn}</Sign><p className="tip">{s.checkInTip}</p><div className="card listen"><p>{p(t.parentCheckIn)}</p></div></section>}
           {n.special === "finale" && <>
             <section className="step"><Sign n="★">{p(s.inviteTitle)}</Sign>
               <div className="card invite"><p>{p(s.invite)}</p><Prayer lines={s.invitePrayer} /><p>{p(s.inviteAfter)}</p></div></section>

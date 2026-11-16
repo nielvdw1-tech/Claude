@@ -3,7 +3,7 @@ import type { Lang } from "../lib/model";
 
 type Copy = Record<Lang, {
   guideTitle: string; guideIntro: string[]; rhythmTitle: string; rhythmYoung: [string, string][]; rhythmOlder: [string, string][];
-  seasonsTitle: string; seasons: string[]; tipsTitle: string; tips: string[]; tipsOlder: string[]; storage: string;
+  seasonsTitle: string; seasons: string[]; tipsTitle: string; tips: string[]; tipsOlder: string[]; tipsTeen: string[]; storage: string;
   compassTitle: string; compassIntro: string; points: [string, string][]; becomeTitle: string; becomeIntro: string; become: [string, string][]; becomeEnd: string;
 }>;
 
@@ -46,6 +46,11 @@ const COPY: Copy = {
       "Keep it warm and short rather than complete. Missing a part is better than a tired, grumpy end to the day.",
       "Children learn most from watching your own walk with God. Share a short “God helped me today when…” story now and then.",
       "The verses are given in simple wording for children, with the reference so you can look them up in your own Bible.",
+    ],
+    tipsTeen: [
+      "From 10, {name} can walk the trail alone: reading the passage in {poss} own Bible, reflecting, listening and journaling.",
+      "Each Campfire Night ends with a ‘Check in with a parent’ question. Make time for that conversation: it keeps you connected to {poss} journey with God.",
+      "Ask now and then what {subj} has been sensing in {poss} ‘Listen to God’ times, and help {obj} test it against the Bible.",
     ],
     tipsOlder: [
       "Give {obj} a special notebook for the Explorer's Journal. A drawing or a sentence both count.",
@@ -108,6 +113,11 @@ const COPY: Copy = {
       "Kinders leer die meeste deur jou eie wandel met God te sien. Vertel nou en dan ’n kort “God het my vandag gehelp toe…”-storie.",
       "Die verse word in eenvoudige woorde vir kinders gegee, met die verwysing sodat jy dit in jou eie Bybel kan opsoek.",
     ],
+    tipsTeen: [
+      "Vanaf 10 kan {name} die pad alleen stap: die gedeelte in {poss} eie Bybel lees, nadink, luister en joernaal skryf.",
+      "Elke Kampvuuraand eindig met ’n ‘Gesels met ’n ouer’-vraag. Maak tyd vir daardie gesprek: dit hou jou verbind met {poss} reis saam met God.",
+      "Vra nou en dan wat {subj} in {poss} ‘Luister na God’-tye aangevoel het, en help {obj} om dit aan die Bybel te toets.",
+    ],
     tipsOlder: [
       "Gee {obj} ’n spesiale notaboek vir die Ontdekkersjoernaal. ’n Tekening of ’n sin tel albei.",
       "Verwag groot vrae. Dit is reg om te sê “Ek weet nie, kom ons vra vir God en vind saam uit.”",
@@ -145,7 +155,7 @@ export function GuidePage() {
       <h2>{c.seasonsTitle}</h2>
       {c.seasons.map((x, i) => <p key={i}>{x}</p>)}
       <h2>{c.tipsTitle}</h2>
-      <ul className="tips">{[...(older ? c.tipsOlder : []), ...c.tips].map((x, i) => <li key={i}>{p(x)}</li>)}</ul>
+      <ul className="tips">{[...(band === "10-12" ? c.tipsTeen : []), ...(older ? c.tipsOlder : []), ...c.tips].map((x, i) => <li key={i}>{p(x)}</li>)}</ul>
       <p className="tip">{c.storage}</p>
     </div></section>
   );
