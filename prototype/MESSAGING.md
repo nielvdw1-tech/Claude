@@ -62,7 +62,7 @@ VDW runs the system for its clients. Branch managers and supervisors use it on t
 - **Oversight:** a dashboard with a control score and 12-month trends (incidents, LTIs, LTI frequency rate, corrective actions), a branch comparison, and a monthly management report.
 - **Records:** records lock once submitted or closed, with a tamper-evident audit trail. This is strong proof for client audits.
 
-- **Client compliance portals:** as part of managing a client's safety, VDW also manages the contractor and supplier compliance platforms their own clients require, such as HSEC Online, Passport 360 and ComplyWorks. Many industrial and mining clients require suppliers to keep documents current on these platforms before working at their premises. VDW uploads and updates the documents there, so the client stays approved. This is a strong differentiator: name the platforms where it fits.
+- **Client compliance portals:** as part of managing a client's safety, VDW also manages the contractor and supplier compliance platforms their own clients require, such as HSEC Online, Passport360 and ComplyWorks. Many industrial and mining clients require suppliers to keep documents current on these platforms before working at their premises. VDW uploads and updates the documents there, so the client stays approved. This is a strong differentiator: name the platforms where it fits.
 
 **Check before going live:** the system summary says e-mails are still written to an outbox in the prototype, not sent. The site therefore doesn't promise that reports are "e-mailed automatically". Add that once e-mail sending is live.
 
