@@ -330,7 +330,7 @@ function assetChecks(a) {
   S.defects.filter(d => d.asset === a.id && d.status === 'Awaiting Review').forEach(d => checks.push(daysTo(d.reviewDue) >= 0));   // defects reviewed in time
   return checks;
 }
-function rules() { return Object.assign({ defectReviewDays: 2, assignInvestigatorDays: 3, effectivenessDays: 30 }, S.config.reviewRules || {}); }
+function rules() { return Object.assign({ defectReviewDays: 2, assignInvestigatorDays: 3, effectivenessDays: 30, actionFollowUpDays: 60 }, S.config.reviewRules || {}); }
 function effOverdue(i) { return i.status === 'Closed' && i.effectiveness && !i.effectiveness.done && daysTo(i.effectiveness.due) < 0; }
 function incidentOnTrack(i) { return !(i.status === 'Reported' && daysTo(i.date) < -rules().assignInvestigatorDays) && !(i.status === 'Under Investigation' && i.invDue && daysTo(i.invDue) < 0) && !effOverdue(i); }
 // Who reviews a defect reported by an operator: the asset's responsible person (if they may raise actions) and the branch manager.

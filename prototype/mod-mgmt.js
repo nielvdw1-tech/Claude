@@ -51,7 +51,8 @@ function mgmtData(sid, ym) {
   return {
     org: orgOf(org), sid, scope: sid === 'ALL' ? 'All branches' : site(sid).name, ym, label: new Date(ym + '-01T00:00:00').toLocaleDateString('en-ZA', { month: 'long', year: 'numeric' }),
     score, parts, prevScore: prevSnap ? prevSnap.overall : null, fromHistory: !!snap,
-    inc: { n: incM.length, byType: INC_TYPES.map(t => [t, incM.filter(i => i.type === t).length]).filter(x => x[1]), lti: incM.filter(i => injClass(i) === 'Lost Time Injury').length, hipo: incM.filter(i => i.potentialSev >= 4).length, open: incs.filter(i => i.status !== 'Closed').length, daysSinceLti: lastLti ? Math.round((new Date(monthEnd) - new Date(lastLti.date)) / 864e5) : null, months, perMonth, list: incM },
+    inc: { n: incM.length, byType: INC_TYPES.map(t => [t, incM.filter(i => i.type === t).length]).filter(x => x[1]), lti: incM.filter(i => injClass(i) === 'Lost Time Injury').length, hipo: incM.filter(i => i.potentialSev >= 4).length, open: incs.filter(i => i.status !== 'Closed').length, daysSinceLti: lastLti ? Math.round((new Date(monthEnd) - new Date(lastLti.date)) / 864e5) : null, months, perMonth, list: incM,
+      cost: typeof incCost === 'function' ? incM.reduce((t, i) => t + incCost(i), 0) : 0, cost12: typeof incCost === 'function' ? incs.filter(i => i.date.slice(0, 7) >= months[0] && i.date <= monthEnd).reduce((t, i) => t + incCost(i), 0) : 0 },
     ltifr: f, ltifrPrev: fPrev,
     act: { raised: acts.filter(a => inM(a.created)).length, done: acts.filter(a => inM(actionDoneDate(a))).length, open: acts.filter(actionOpen).length, overdue: overdue.length, top: overdue.slice(0, 8) },
     insp: { done: insM.length, failed: insM.reduce((n, i) => n + i.results.filter(r => r.result === 'Fail').length, 0), overdue: schOver.length, oos: oos.length },
@@ -78,7 +79,7 @@ function monthlyReportBuild() {
     <div class="mr-score"><div class="mr-big st-${b.cls}"><b>${D.score}%</b><span>${b.label}</span></div><div><h3>Control score — ${esc(D.label)}</h3><p class="muted">${esc(D.org.short)} · ${esc(D.scope)}${change ? ' · ' + change : ''}${D.fromHistory ? '' : ' · live figure'}</p>
       <div class="mr-parts">${Object.keys(D.parts).map(k => `<div><span>${esc(PART_TITLE[k])}</span><div class="mr-track"><i style="width:${D.parts[k]}%;background:var(--st-${band(D.parts[k]).cls})"></i></div><b>${D.parts[k]}%</b></div>`).join('')}</div></div></div>
     <div class="mr-figs">
-      ${fig('Incidents in the month', D.inc.n, D.inc.byType.map(x => `${x[1]} ${x[0]}`).join(', ') || 'None')}
+      ${fig('Incidents in the month', D.inc.n, `${D.inc.byType.map(x => `${x[1]} ${x[0]}`).join(', ') || 'None'} · cost ${money(D.inc.cost)} (12 months ${money(D.inc.cost12)})`)}
       ${fig('Lost time injuries', D.inc.lti, D.inc.daysSinceLti == null ? 'No LTI recorded' : `${D.inc.daysSinceLti} days since the last LTI`, D.inc.lti ? 'red' : '')}
       ${fig('LTIFR (rolling 12 months)', fmtRate(D.ltifr), D.ltifr.value == null ? 'hours worked missing' : `was ${fmtRate(D.ltifrPrev)} the month before · per ${fmtNum(ltifrBase())} h`)}
       ${fig('High-potential incidents', D.inc.hipo, 'Could have been major or worse', D.inc.hipo ? 'amber' : '')}
@@ -143,7 +144,7 @@ async function monthlyPdf(D) {
   // Key figures: two columns
   heading('Key figures for the month');
   const figs = [
-    ['Incidents', String(D.inc.n), D.inc.byType.map(x => `${x[1]} ${x[0]}`).join(', ') || 'None'],
+    ['Incidents', String(D.inc.n), `${D.inc.byType.map(x => `${x[1]} ${x[0]}`).join(', ') || 'None'} · cost ${money(D.inc.cost)} (12 months ${money(D.inc.cost12)})`],
     ['Lost time injuries', String(D.inc.lti), D.inc.daysSinceLti == null ? 'No LTI recorded' : `${D.inc.daysSinceLti} days since the last LTI`],
     ['LTIFR (rolling 12 months)', fmtRate(D.ltifr), D.ltifr.value == null ? 'Hours worked missing' : `Was ${fmtRate(D.ltifrPrev)} · per ${fmtNum(ltifrBase())} hours`],
     ['High-potential incidents', String(D.inc.hipo), 'Could have been major or worse'],

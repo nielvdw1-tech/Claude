@@ -57,6 +57,7 @@ function ackBannerHtml(d) {
     <div class="btn-row mt-s"><button class="btn" data-act="viewDocFile" data-id="${d.id}" data-ri="${ri}">${icon('eye', 'sm')} ${opened ? 'Open it again' : 'Step 1: open ' + revLabel(r)}</button></div>
     <div class="ack-sign${opened ? '' : ' locked'}" ${opened ? '' : 'aria-disabled="true"'}>
       ${opened ? '' : `<div class="lock-note">${icon('lock', 'sm')} Locked until you have opened the document.</div>`}
+      ${typeof quizHtml === 'function' ? quizHtml(d).replace(/<input type="radio"/g, opened ? '<input type="radio"' : '<input type="radio" disabled') : ''}
       <label class="check"><input type="checkbox" id="ackTick" data-doc="${d.id}" ${opened ? '' : 'disabled'}> <span><b>I have read and understood ${esc(d.number)} ${esc(d.title)} (${revLabel(r)})</b> and will follow it.</span></label>
       <div class="field" id="ackSigField"><label for="ackPad">Your signature<span class="req">*</span></label><div class="sig-wrap"><canvas id="ackPad" class="sig-pad" aria-label="Signature pad: sign with your finger or mouse"></canvas><div class="sig-foot"><span>${esc(pname(S.ui.user))} · sign with your finger or mouse</span><button type="button" class="btn sm" data-act="ackSigClear" ${opened ? '' : 'disabled'}>Clear</button></div></div></div>
       <button class="btn success" data-act="docAck" data-id="${d.id}" ${opened ? '' : 'disabled title="Open the document first"'}>${icon('check', 'sm')} Submit</button>
@@ -70,10 +71,11 @@ ACT.docAck = (el) => {
   const d = byId('documents', el.dataset.id), r = docIssued(d);
   if (!r || !mustAck(d)) { rerender(); return; }
   if (!openedIssued(d)) { toast('Open the document first.', 'error'); return; }
+  if ((d.quiz || []).length && typeof quizPassed === 'function' && !quizPassed(d)) { r.quizFails = r.quizFails || {}; r.quizFails[S.ui.user] = (r.quizFails[S.ui.user] || 0) + 1; save(); toast('One or more answers are not right. Open the document, read it again and try again.', 'error'); delete ACK_OPEN['doc:' + d.id + ':' + r.rev + ':' + S.ui.user]; rerender(); return; }
   const tick = document.getElementById('ackTick');
   if (!tick || !tick.checked) { toast('Tick that you have read and understood the document.', 'error'); if (tick) tick.closest('label').classList.add('invalid'); return; }
   if (!ACKSIG.sig) { toast('Please sign to confirm.', 'error'); const f = document.getElementById('ackSigField'); if (f) f.classList.add('invalid'); return; }
-  r.acks = r.acks || []; r.acks.push({ by: S.ui.user, ts: nowTs(), sig: ACKSIG.sig, statement: `I have read and understood ${d.number} ${d.title} (${revLabel(r)}) and will follow it.` });
+  r.acks = r.acks || []; r.acks.push({ by: S.ui.user, ts: nowTs(), quiz: (d.quiz || []).length ? 'passed' : undefined, sig: ACKSIG.sig, statement: `I have read and understood ${d.number} ${d.title} (${revLabel(r)}) and will follow it.` });
   ACKSIG.sig = null;
   log(`Read, understood and signed ${d.number} ${revLabel(r)}`, '#/documents/' + d.id); save(); toast(`Thank you — your signed confirmation for ${esc(d.number)} is recorded.`); rerender();
 };
@@ -109,12 +111,14 @@ ACT.docReaders = (el) => {
       <div class="field full"><label>Roles</label><div class="check-grid">${roleNames.map(n => `<label class="check"><input type="checkbox" name="rdRole" value="${esc(n)}" ${(R.roles || []).includes(n) ? 'checked' : ''}> <span>${esc(n)}</span></label>`).join('')}</div><div class="hint">Everyone in these roles at ${d.site === 'ALL' ? 'all branches' : esc(sname(d.site))}.</div></div>
       <div class="field full"><label>Named people (in addition)</label><div class="check-grid">${ppl.map(p => `<label class="check"><input type="checkbox" name="rdPerson" value="${p.id}" ${(R.people || []).includes(p.id) ? 'checked' : ''}> <span>${esc(p.name)} <small class="muted">${esc(p.jobTitle)}</small></span></label>`).join('')}</div></div>
       ${fld({ name: 'days', label: 'Days to read it after issue', type: 'number', min: 1, max: 90, value: ackDays(d), required: true })}
+      ${typeof quizEditorHtml === 'function' ? quizEditorHtml(d) : ''}
     </div>`,
     buttons: [{ label: 'Save', cls: 'primary', onClick: m => {
       if (!validateForm(m)) return false;
       const roles = [...m.querySelectorAll('[name=rdRole]:checked')].map(x => x.value), people = [...m.querySelectorAll('[name=rdPerson]:checked')].map(x => x.value);
       const was = requiredReaders(d);
       d.readers = { roles, people, days: Math.max(1, Math.round(+m.querySelector('[name=days]').value || 14)) };
+      if (typeof readQuiz === 'function') d.quiz = readQuiz(m);
       const r = docIssued(d);
       if (r && !r.ackFrom && !was.length) r.ackFrom = TODAY;   // the clock starts now for a document already in use
       const added = requiredReaders(d).filter(u => !was.includes(u) && r && !(r.acks || []).some(a => a.by === u));

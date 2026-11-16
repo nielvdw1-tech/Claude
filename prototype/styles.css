@@ -1266,3 +1266,13 @@ body.auth-mode .main { padding-top: 0; }
   .fab-stack .fab span { display: none; }
   .fab-stack .fab svg { width: 20px; height: 20px; margin: 0; }
 }
+
+/* Hour meter, reading check */
+.meter-big { font-family: var(--font-display); font-size: 26px; font-weight: 700; }
+.meter-big span { font-size: 14px; font-weight: 500; color: var(--muted); }
+.quiz-ed { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; padding: 10px; border: 1px solid var(--line); border-radius: 8px; margin-top: 8px; }
+.quiz-ed input[type=text] { width: 100%; border: 1px solid var(--line-strong); border-radius: 7px; padding: 7px 9px; font: inherit; font-size: 13px; }
+.quiz-opt { display: flex; align-items: center; gap: 8px; }
+.quiz { display: grid; gap: 10px; }
+.quiz-q { border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px 10px; margin: 0; }
+.quiz-q legend { font-weight: 600; font-size: 13.5px; padding: 0 4px; }

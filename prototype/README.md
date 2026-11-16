@@ -115,6 +115,10 @@ Default routes per category are set in **Administration → Approval routes**.
 - The document shows how many have confirmed (e.g. *4 of 9*), who is still to read it (overdue in red), and **Send a reminder**. A new revision starts the list again.
 - **Example:** KIE-SWP-021 (Forklift Operation) must be read by employees and supervisors; sign in as Nomvula Sithole to confirm it.
 
+**Reading check (optional).** For critical procedures, **Read and acknowledge → Change** can add up to three questions with the correct answer. Readers must answer them correctly before they can tick and sign. A wrong answer locks the form again until they reopen the document. **Example:** add a question to the HSEQ Policy and sign in as Bongani Zulu.
+
+**External documents.** Supplier safety data sheets, manufacturer manuals and standards are controlled too: the document records the **publisher**, the **edition held** and **when to check for a newer edition**. The owner gets a task when the check is due and records the result; "a newer edition exists" starts a new revision. **Example:** KIE-SDS-014.
+
 **Change requests.** Anyone who can see an issued document can click **Request a change** and say what is wrong. The document owner gets a task and accepts it (a new draft revision starts, with the request as its reason) or declines it with a reason. The person who asked is told either way. **Example:** CR-001 on KIE-SWP-021.
 
 ### B. Inspect an asset → failure → corrective action → verification
@@ -124,7 +128,8 @@ Default routes per category are set in **Administration → Approval routes**.
 4. **Return to service** is blocked until the action is verified.
 5. Open the action. Use **Act as owner** to work it: **Acknowledge → Start work → Upload evidence → Submit for verification**.
 6. Switch back to Johan and choose **Review evidence & verify**. **Verification must be independent:** the owner of an action can never verify it, even if their role allows verifying. The owner sees who can verify instead. You can **return it** for further work (Rejected), or **accept** it and tick **Authorise return to service**. Then **Close action**. Completing an action never closes it on its own.
-7. The asset's **history** shows the whole story. **Controlled report / print** produces the inspection report with "Page X of Y" on every page.
+7. **Follow-up check:** a set number of days after closing (default 60, Administration → Review periods), the verifier or HSEQ Manager gets a task to check on site that the fix worked. *It worked* completes the action; *it did not work* reopens it with the owner.
+8. The asset's **history** shows the whole story. **Controlled report / print** produces the inspection report with "Page X of Y" on every page.
 
 Defects can also be reported directly from the asset page or its **QR page** (e.g. `#/qr/AS-012`).
 
@@ -146,6 +151,10 @@ Defects can also be reported directly from the asset page or its **QR page** (e.
 **Filters.** Above **Inspections → Inspection schedule, Calendar and Inspection records** and **Maintenance & defects → Planned maintenance, Maintenance records and Defects**, the same filters as the asset register: **search**, **All asset types**, **All statuses**, **All sites** and **Any compliance state**. Asset type and compliance state (certificate expired / missing, inspection overdue) are those of the record's asset; the statuses fit each list (e.g. overdue / due soon / due later for schedules and planned maintenance, passed / failed items for inspection records, the defect statuses for defects, on time / late for maintenance records). The count shows how many records match, and **Clear filters** shows everything again. The filter is kept in the page address, so Back returns to the filtered list. **Corrective actions** can also be filtered by asset (the asset the action came from), next to the existing site, status, source, priority and owner filters.
 
 **Inspection calendar.** **Inspections → Calendar** shows the month: overdue (red), due (blue; later repeats in grey) and done (green), per branch, with a filter per inspector. Click an item to open it. On a phone it becomes a list by day.
+
+**Maintenance by hours or kilometres.** An asset can have an **hour meter or odometer** (asset page → *Hour meter / odometer*). Maintenance can be due at a reading, e.g. the 500-hour service at 1 500 hours, as well as by date — whichever comes first. A new reading past the due point makes it due (red in the list, a task for the responsible person). **Examples:** FL-01 (hours), LDV-03 (km).
+
+**Lifting equipment register.** **Reports → Lifting equipment register** lists every lifting machine and piece of lifting tackle with its safe working load, load test or examination certificate status, last and next inspection and status.
 
 **Inspection defaults per equipment type.** **Administration → Asset types → Inspection default → Change** sets the checklist and how often each type of equipment is inspected, with the **basis** for the interval (who set it and why). It can create schedules for assets of that type that have none, and change the interval on existing ones. The system does not supply legal intervals: a competent person sets them. Types without a recorded basis say so.
 
@@ -180,6 +189,10 @@ Defects can also be reported directly from the asset page or its **QR page** (e.
 **5 Whys.** **Record investigation** starts from what happened and asks *Why?* up to five times. Each answer is a fact, and the last one fills in the root cause (which can be changed). A root cause that only blames a person (e.g. "careless") is queried once: ask why the system allowed it. The incident shows the chain from what happened to the root cause. **Example:** INC-2026-001.
 
 **Witness statements.** **Take statement** records a witness's account in their own words on the phone. It is read back to them, and they sign it with a finger. A signed statement cannot be changed. **Example:** INC-2026-004.
+
+**Costs.** Each incident can record its costs (lost time, medical, repairs, other) as they become known. The monthly management report shows the cost of the month's incidents and of the last 12 months. **Example:** INC-2026-003.
+
+**Lessons learned.** When an incident is closed, the investigator can write what everyone should learn from it (or add it later). **Share with staff** turns it into a company notice that people must open, acknowledge and sign. **Example:** INC-2026-003.
 
 **External reporting.** A competent person records **whether the incident must be reported, by when, and why** (*Record decision*). Each report made is logged: to whom, date, how, the reference number and a copy of the form. A lost time injury or fatality without a decision, and reports not yet made, appear in the investigator's and HSEQ Manager's tasks. The system records; it does not decide what is reportable. **Example:** INC-2026-005.
 
@@ -372,6 +385,6 @@ prototype/
 └── README.md                     This file
 ```
 
-**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 254 workflow outcomes.
+**For developers:** `npm install playwright`, then run `node tests/workflows.test.js`. It drives the real interface in a headless browser and checks 260 workflow outcomes.
 
 The earlier full HSEQ prototype, with legal, risk, people, PPE, chemicals, emergency and audits, is preserved in git history at commit `26b59bc`.

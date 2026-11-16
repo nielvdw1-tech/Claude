@@ -8,7 +8,7 @@ Status key:
 - **Not implemented**
 
 "Tested" means one of the following:
-- the automated browser test (`tests/workflows.test.js`, **254/254 passing**, no JavaScript errors);
+- the automated browser test (`tests/workflows.test.js`, **260/260 passing**, no JavaScript errors);
 - the route smoke test (77 routes plus a second organisation, no errors);
 - the mobile layout check (31 routes at 390 px, no horizontal overflow).
 
@@ -31,6 +31,8 @@ Status key:
 | Periodic review reminders, record review, obsolete, archive | Implemented | |
 | Read and acknowledge: roles / people who must read a document within N days of issue; tasks, e-mails, phone page for operators; must open it, tick "read and understood" and sign; progress, outstanding list, reminders; restarts on a new revision | Implemented | RA1–RA4 |
 | Change requests on issued documents: owner accepts (starts a new draft revision with the request as reason) or declines with reason; requester told | Implemented | CR1–CR2 |
+| Reading check: optional questions answered correctly before signing; a wrong answer locks the form again | Implemented | SG4 |
+| External documents: publisher, edition held, check-for-newer-edition date with task and recorded result | Implemented | SG3 |
 
 ## Assets, inspections and corrective actions
 | Requirement | Status | Notes |
@@ -58,6 +60,9 @@ Status key:
 | Most failed checks report: fail rate per checklist item by period, asset type and branch | Implemented | MF1 |
 | Inspection calendar: month view of overdue, due, repeating and done inspections, per branch and inspector; list view on a phone | Implemented | CA1–CA2 |
 | Inspection default per equipment type: checklist and interval set by a competent person with the recorded basis; create schedules for assets without one; change existing intervals | Implemented | TD1; no legal intervals supplied by the system |
+| Hour meter / odometer readings; maintenance due at a reading or a date, whichever comes first | Implemented | SG1 |
+| Lifting equipment register: SWL, certificate status, last and next inspection | Implemented | SG2 |
+| Corrective action follow-up check after closing; "did not work" reopens the action | Implemented | SG6 |
 
 ## Incident management
 | Requirement | Status | Notes |
@@ -75,6 +80,7 @@ Status key:
 | Injury classification (first aid, medical treatment, restricted work, lost time, fatality) set by the HSEQ team from recorded facts; system suggestion, override with reason, reclassification history; required before closure; company-defined definitions | Implemented | J1–J8 |
 | Guided root cause (5 Whys): chain from what happened to the root cause; last answer fills the root cause; blame-only root causes queried | Implemented | WY1 |
 | Witness statements taken on the phone, read back and signed by the witness; cannot be changed once signed | Implemented | WS1 |
+| Incident costs (lost time, medical, repairs, other) and in the monthly report; lessons learned shared with staff as a notice | Implemented | SG5 |
 | External reporting: competent person records whether reportable, by when and why; each report logged (to whom, date, method, reference, copy of form); tasks for decisions and reports due | Implemented | ER1; the system does not decide what is reportable |
 
 ## Supporting features

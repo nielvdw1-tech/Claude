@@ -159,6 +159,7 @@ function docDetail(id) {
       </ul></div></div>
     </div>
     <div class="stack">
+      ${typeof extHtml === 'function' ? extHtml(d) : ''}
       ${typeof ackCardHtml === 'function' ? ackCardHtml(d) + crCardHtml(d) : ''}
       <div class="card"><div class="card-head"><h2>Related records</h2></div><div class="card-body">${rel.length ? `<ul class="link-list">${rel.map(r => `<li><div class="ll-main"><a href="${r[3]}">${esc(r[1])}</a><div>${esc(r[0])} · ${esc(r[2])}</div></div>${r[4] ? sbadge(r[4]) : ''}</li>`).join('')}</ul>` : '<p class="muted">No linked records.</p>'}</div></div>
       <div class="card"><div class="card-head"><h2>Review reminders</h2></div><div class="card-body">
