@@ -106,6 +106,15 @@
   if (document.readyState === 'complete') loadAllPictures();
   else window.addEventListener('load', loadAllPictures);
 
+  // Logo on the homepage: scroll smoothly all the way back to the top
+  document.querySelectorAll('a[href="#top"]').forEach(function (link) {
+    link.addEventListener('click', function (e) {
+      e.preventDefault();
+      var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      window.scrollTo({ top: 0, left: 0, behavior: reduce ? 'auto' : 'smooth' });
+    });
+  });
+
   // Footer year
   var yearEl = document.getElementById('year');
   if (yearEl) yearEl.textContent = new Date().getFullYear();
