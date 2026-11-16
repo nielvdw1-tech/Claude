@@ -344,7 +344,7 @@ def page(fname, d):
         {btn(d["cta"], book, cls="btn btn-primary btn-lg")}
         <p class="fud">No obligation &middot; Practical findings &middot; Or email <a href="mailto:niel@vdwsafety.com">niel@vdwsafety.com</a></p>
       </div>
-      {icon_visual(d["recap_icon"], d["recap_chips"])}
+      {sys_visual(*d["recap_shot"]) if d.get("recap_shot") else icon_visual(d["recap_icon"], d["recap_chips"])}
     </div>
   </section>
 
@@ -378,6 +378,9 @@ HERO_SHOTS = {
     'safety-file.html': ('combo', [DOC_REG, ('asset-qr-phone', 'Example asset page after scanning a QR label: forklift details and Safe to use, documents current')]),
     'compliance-management.html': ('single', [('dashboard', 'Example dashboard: overall control score, scores for documents, assets, corrective actions and incidents, and status by branch')]),
 }
+RECAP_SHOTS = {
+    'safety-file.html': ('single', [('dashboard', 'Example dashboard after onboarding: overall control score, scores for documents, assets, corrective actions and incidents, and status by branch')]),
+}
 VALUE_SHOTS = {
     'gap-audit.html': [
         ('phones', [('inspection-checklist-phone', 'Example inspection on a phone: a failed item with a comment and photo, raising a corrective action'),
@@ -403,7 +406,8 @@ for fname, d in PAGES.items():
         vp['shot'] = shot
     d['book'] = wa(BOOKING_MESSAGES[fname])
     d['short_free'] = fname == 'gap-audit.html'
-    d['hero_shot'] = HERO_SHOTS.get(fname)  # "Find My Branch Gaps" offers the free check
+    d['hero_shot'] = HERO_SHOTS.get(fname)
+    d['recap_shot'] = RECAP_SHOTS.get(fname)  # "Find My Branch Gaps" offers the free check
     with open(os.path.join(OUT, fname), "w") as f:
         f.write(page(fname, d))
     print("wrote", fname)
