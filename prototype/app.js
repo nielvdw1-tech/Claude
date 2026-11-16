@@ -659,7 +659,7 @@ function fabStack(items) {
   items = items.filter(Boolean); if (!items.length) return '';
   const pos = S.ui.fabPos && S.ui.fabPos.t != null ? S.ui.fabPos : null, at = pos ? ` style="right:${pos.r}px;top:${pos.t}px"` : '';
   return `<div class="fab-stack${pos ? ' moved' : ''}"${at}>${items.map(i => { const inner = `${icon(i.icon || 'plus', 'sm')}<span>${esc(i.label)}</span>`, cls = `btn ${i.cls || 'primary'} fab`;
-    return i.href ? `<a class="${cls}" href="${i.href}" title="${esc(i.label)}">${inner}</a>` : `<button type="button" class="${cls}" data-act="${i.act}" ${i.attrs || ''} title="${esc(i.label)}">${inner}</button>`; }).join('')}</div>`;
+    return i.href ? `<a class="${cls}" href="${i.href}" title="${esc(i.label)}" aria-label="${esc(i.label)}">${inner}</a>` : `<button type="button" class="${cls}" data-act="${i.act}" ${i.attrs || ''} title="${esc(i.label)}" aria-label="${esc(i.label)}">${inner}</button>`; }).join('')}</div>`;
 }
 function fabBtn(act, label, attrs = '') { return fabStack([{ act, label, attrs }]); }
 /* Moving the floating buttons: drag any of them (a click is still a click), or hold Alt and use the arrow keys

@@ -139,7 +139,7 @@ function userOpenWork(uid) {
 function usersAdminHtml(ro) {
   const list = S.people.filter(x => x.sysRole && x.org === S.ui.org);
   return `${ro ? '' : fabBtn('userNew', 'Add user')}
-  <div class="card"><div class="card-body flush"><table class="tbl stackable"><thead><tr><th>User</th><th>Branch</th><th>System role</th><th>Status</th><th>Last sign-in</th><th></th></tr></thead><tbody>${list.map(u => { const a = account(u), act = isActive(u);
+  <div class="card">${searchBar('#/admin/users', list.length, 'Search name, e-mail, branch or role…')}<div class="card-body flush"><table class="tbl stackable"><thead><tr><th>User</th><th>Branch</th><th>System role</th><th>Status</th><th>Last sign-in</th><th></th></tr></thead><tbody>${list.map(u => { const a = account(u), act = isActive(u);
     return `<tr class="${act ? '' : 'row-muted'}"><td data-label="User"><b>${esc(u.name)}</b><div class="t-sub">${esc(u.email)}</div></td><td data-label="Branch">${esc(sname(u.site))}</td>
     <td data-label="Role">${ro || !act ? esc(u.sysRole) : `<select data-act-role="${u.id}" style="padding:5px;border:1px solid var(--line-strong);border-radius:6px">${opts(S.roles.map(r => r.name), u.sysRole)}</select>`}</td>
     <td data-label="Status">${act ? (a.lockedUntil && a.lockedUntil > Date.now() ? badge('Locked', 'amber') : a.mustChange ? badge('Must change password', 'blue') : badge('Active', 'green')) : badge('Deactivated', 'grey')}</td>

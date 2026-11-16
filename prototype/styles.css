@@ -1257,3 +1257,12 @@ body.auth-mode .main { padding-top: 0; }
 
 .notice-closed { margin: 14px 0 4px; padding: 18px; border: 1px dashed var(--line-strong); border-radius: 10px; background: var(--surface-2); text-align: center; }
 .notice-closed p { margin: 0 0 10px; color: var(--muted); }
+.card > .card-head + .toolbar { border-radius: 0; }
+
+/* Phones: the floating buttons become round icon buttons so they do not cover the page title */
+@media (max-width: 600px) {
+  .fab-stack { gap: 8px; }
+  .fab-stack .fab { width: 48px; height: 48px; padding: 0; justify-content: center; border-radius: 50%; }
+  .fab-stack .fab span { display: none; }
+  .fab-stack .fab svg { width: 20px; height: 20px; margin: 0; }
+}

@@ -45,7 +45,7 @@ function outboxAdminHtml() {
   (S.outbox || []).forEach(e => { byCat[e.cat] = (byCat[e.cat] || 0) + 1; });
   return `<div class="alert info">${icon('info')}<div>Every e-mail the live system would send is recorded here, with its recipient and full text. <b>Nothing is sent from the prototype.</b> People choose which e-mails they receive under their own Notification settings.</div></div>
     <div class="kpis mini">${Object.keys(MAIL_CATS).map(k => `<div class="kpi t-blue" style="cursor:default"><div class="k-label">${esc(MAIL_CATS[k])}</div><div class="k-value">${byCat[k] || 0}</div><div class="k-sub">e-mails</div></div>`).join('')}</div>
-    <div class="card mt"><div class="card-head"><h2>Outbox</h2><span class="ch-sub">${(S.outbox || []).length} e-mails · latest first</span></div><div class="card-body flush">${mailTable(list, true, 'No e-mails yet. They appear here as people approve documents, raise actions, report incidents and so on.')}</div></div>`;
+    <div class="card mt"><div class="card-head"><h2>Outbox</h2><span class="ch-sub">${(S.outbox || []).length} e-mails · latest first</span></div>${searchBar('#/admin/outbox', list.length, 'Search recipient or subject…')}<div class="card-body flush">${mailTable(list, true, 'No e-mails yet. They appear here as people approve documents, raise actions, report incidents and so on.')}</div></div>`;
 }
 ACT.mailOpen = (el) => {
   const e = (S.outbox || []).find(x => x.id === el.dataset.id); if (!e) return;

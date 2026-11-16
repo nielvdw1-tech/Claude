@@ -132,12 +132,19 @@ function recFilterBar(base, q, items, c, shown, placeholder) {
     <div class="search">${icon('search', 'sm')}<input type="search" data-fq="${base}" placeholder="${esc(placeholder || 'Search…')}" value="${esc(FLT_Q[base] || '')}" aria-label="Search list"></div>
     ${sel('ftype', 'All asset types', S.assetTypes.map(t => ({ value: t.id, label: t.name })))}
     ${sel('fstatus', 'All statuses', c.status || [])}
-    ${sites.length > 1 || q.fsite ? sel('fsite', 'All sites', sites.map(x => ({ value: x.id, label: x.short || x.name }))) : ''}
+    ${orgSites().length > 1 ? sel('fsite', 'All sites', orgSites().map(x => ({ value: x.id, label: x.short || x.name }))) : ''}
     ${sel('fcomp', 'Any compliance state', COMP)}
     ${q.ftype || q.fstatus || q.fsite || q.fcomp ? `<button type="button" class="link-btn" data-act="fltClear">Clear filters</button>` : ''}
     <span class="tb-count">${shown} of ${items.length} records</span>
   </div>`;
 }
+// Search only: the same toolbar for lists without filters (notices, users, outbox, audit trail)
+function searchBar(base, total, placeholder) {
+  setTimeout(() => fltSearch(base), 0);
+  return `<div class="toolbar flt-bar" data-base="${base}" data-total="${total}" data-shown="${total}"><div class="search">${icon('search', 'sm')}<input type="search" data-fq="${base}" placeholder="${esc(placeholder || 'Search…')}" value="${esc(FLT_Q[base] || '')}" aria-label="Search list"></div><span class="tb-count">${total} of ${total} records</span></div>`;
+}
+// One "nothing to show" message for every filtered list, the same as the asset register's
+function emptyList(text) { return `<div class="empty">${icon('search')}<div>${esc(text)}</div></div>`; }
 // Older name kept for any caller that filters by site only
 function siteAssetFilter(items, q, siteOf, assetOf) { return recFilter(items, q, { siteOf, assetOf, status: [] }); }
 const FLT_Q = {};
