@@ -30,8 +30,8 @@ Hand-written band content lives in `content-src/*.mjs` and is merged by `npm run
 
 | Band | English | Afrikaans |
 |---|---|---|
-| 2–3 | Expedition 1 (7 nights, draft) | Expedition 1 (7 nights, draft) |
+| 2–3 | 56 nights (draft) | 56 nights (draft) |
 | 4–5 | 56 nights | 56 nights |
 | 6–7 | 56 nights | 56 nights |
-| 8–9 | Expedition 1 (7 nights, draft) | Expedition 1 (7 nights, draft) |
+| 8–9 | 56 nights (draft) | 56 nights (draft) |
 | 10–12 | – (shows 6–7) | – (shows 4–5) |
