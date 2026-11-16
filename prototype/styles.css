@@ -591,3 +591,30 @@ h1.eyebrow { font-size: 14px; letter-spacing: .08em; line-height: 1.4; }
 @media (min-width: 641px) and (max-width: 1100px) { .hero-actions { flex-wrap: wrap; } }
 /* Tall screenshots: show the top part so the panel stays in proportion with the text beside it */
 .shot-visual:not(.shot-stack) img { width: 100%; max-height: 600px; object-fit: cover; object-position: top; }
+
+/* ---------- VDW Compliance Control System screenshots ---------- */
+.shot-visual img.shot-natural { width: auto; max-width: 100%; }
+.shot-phones { display: flex; justify-content: center; align-items: flex-start; gap: 16px; }
+.shot-visual img.shot-phone {
+  width: 46%; max-width: 250px; max-height: none; aspect-ratio: 9 / 15;
+  object-fit: cover; object-position: top;
+  border: 6px solid var(--charcoal); border-radius: 26px; background: #fff;
+}
+.shot-visual img.shot-phone-solo { width: 62%; max-width: 290px; }
+.shot-combo { display: block; }
+.shot-visual.shot-combo img.shot-back-wide { width: 100%; max-height: 460px; object-fit: cover; object-position: top left; }
+.shot-visual.shot-combo img.shot-front-phone {
+  position: absolute; right: 22px; bottom: 22px; width: 36%; max-width: 190px;
+  box-shadow: 0 14px 34px rgba(20, 24, 28, .35);
+}
+@media (max-width: 640px) {
+  .shot-phones { gap: 10px; }
+  .shot-visual img.shot-phone { border-width: 4px; border-radius: 18px; }
+  .shot-visual.shot-combo img.shot-front-phone { right: 12px; bottom: 12px; width: 40%; }
+}
+.shot-tag .tag-short { display: none; }
+@media (max-width: 640px) {
+  .shot-tag .tag-long { display: none; }
+  .shot-tag .tag-short { display: inline; }
+  .shot-tag { font-size: 12px; }
+}

@@ -115,6 +115,36 @@ FOOTER = '''<footer class="site-footer">
   </div>
 </footer>'''
 
+
+# ---------- Screenshots of the VDW Compliance Control System ----------
+import json as _json
+_SYS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'assets', 'screenshots', 'system')
+SYS_DIMS = _json.load(open(os.path.join(_SYS_DIR, 'dims.json')))
+SYS_TAG = '<span class="shot-tag">Example from the <span class="tag-long">VDW Compliance Control System</span><span class="tag-short">VDW system</span></span>'
+
+def sys_img(name, alt, cls=''):
+    w, h = SYS_DIMS[name]
+    c = f' class="{cls}"' if cls else ''
+    return f'<img{c} src="assets/screenshots/system/{name}.png" alt="{alt}" width="{w}" height="{h}" loading="lazy">'
+
+def sys_visual(layout, items):
+    """layout: single | natural | phone | phones | combo. items: list of (name, alt)."""
+    if layout in ('single', 'natural'):
+        n, a = items[0]
+        cls = 'shot-natural' if layout == 'natural' else ''
+        return f'<figure class="feature-visual shot-visual">\n        {SYS_TAG}\n        {sys_img(n, a, cls)}\n      </figure>'
+    if layout == 'phone':
+        n, a = items[0]
+        return f'<figure class="feature-visual shot-visual shot-phones">\n        {SYS_TAG}\n        {sys_img(n, a, "shot-phone shot-phone-solo")}\n      </figure>'
+    if layout == 'phones':
+        imgs = '\n        '.join(sys_img(n, a, 'shot-phone') for n, a in items)
+        return f'<figure class="feature-visual shot-visual shot-phones">\n        {SYS_TAG}\n        {imgs}\n      </figure>'
+    if layout == 'combo':
+        (bn, ba), (pn, pa) = items
+        return (f'<figure class="feature-visual shot-visual shot-combo">\n        {SYS_TAG}\n        {sys_img(bn, ba, "shot-back-wide")}\n'
+                f'        {sys_img(pn, pa, "shot-phone shot-front-phone")}\n      </figure>')
+    raise ValueError(layout)
+
 def icon_visual(ic, chips):
     chip_html = "".join(f'<span class="iv-chip iv-chip-{i+1}">{c}</span>' for i, c in enumerate(chips))
     return f'''<div class="feature-visual icon-visual" aria-hidden="true">
@@ -128,7 +158,7 @@ def page(fname, d):
     book = d["book"]
     vps = ""
     for i, vp in enumerate(d["value_props"]):
-        visual = icon_visual(vp["icon"], vp["chips"])
+        visual = sys_visual(*vp["shot"]) if vp.get("shot") else icon_visual(vp["icon"], vp["chips"])
         copy = f'''<div class="feature-copy">
         <p class="eyebrow">{vp["eyebrow"]}</p>
         <h2>{vp["title"]}</h2>
@@ -340,8 +370,30 @@ BOOKING_MESSAGES = {
     'safety-file.html': "Hi Niel, I'd like to discuss onboarding our branches onto the VDW Compliance Control System.",
     'compliance-management.html': "Hi Niel, I'd like to schedule a consultation about Managed Multi-Branch Compliance.",
 }
+DOC_REG = ('document-register', 'Example document register: policies, procedures and risk assessments with their revision, approval status and next review date')
+VALUE_SHOTS = {
+    'gap-audit.html': [
+        ('phones', [('inspection-checklist-phone', 'Example inspection on a phone: a failed item with a comment and photo, raising a corrective action'),
+                    ('inspection-signature-phone', 'Example inspection on a phone: general findings, reviewer and the inspector signature')]),
+        ('single', [DOC_REG]),
+        ('single', [('branch-comparison', 'Example branch comparison: overall score per branch with documents, assets, corrective actions and incidents')]),
+    ],
+    'safety-file.html': [
+        ('single', [DOC_REG]),
+        ('phone', [('asset-documents-phone', 'Example asset page on a phone: last inspection and the valid certificates and documents for a forklift')]),
+        ('natural', [('read-acknowledge', 'Example read and acknowledge tracker: 6 of 9 people have confirmed revision 4, with the outstanding names')]),
+    ],
+    'compliance-management.html': [
+        ('combo', [('action-register', 'Example corrective action register with source, priority, branch, owner, due date and status'),
+                   ('inspection-checklist-phone', 'Example inspection on a phone: a failed item raising a corrective action')]),
+        ('single', [('monthly-report', 'Example monthly HSEQ management report: control score, key figures, incidents per month and items needing attention')]),
+        ('single', [('root-cause', 'Example incident investigation: the 5 Whys leading to the root cause')]),
+    ],
+}
 for fname, d in PAGES.items():
     d['hero_photo'] = HERO_PHOTOS[fname]
+    for vp, shot in zip(d['value_props'], VALUE_SHOTS[fname]):
+        vp['shot'] = shot
     d['book'] = wa(BOOKING_MESSAGES[fname])
     d['short_free'] = fname == 'gap-audit.html'  # "Find My Branch Gaps" offers the free check
     with open(os.path.join(OUT, fname), "w") as f:
