@@ -192,3 +192,12 @@ MIGRATIONS.push(() => {
   if (i3 && !i3.costs) i3.costs = { lostTime: 0, medical: 0, repairs: 1800, other: 6500, note: 'Spill kit, absorbent and waste removal (demo figures)', by: 'P-002', on: addDays(TODAY, -60) };
   if (i3 && !i3.lessons && i3.status === 'Closed') i3.lessons = { text: 'Check hoses and couplings on mobile plant before work near drains, and keep a spill kit at the wash bay. A small leak becomes a large spill if the machine keeps running.', by: 'P-002', on: addDays(TODAY, -60) };
 });
+
+/* Demo data tidy-up: every asset type gets a demo basis for its inspection interval (to be confirmed by a
+   competent person), and read confirmations from before signing was required are removed. */
+MIGRATIONS.push(() => {
+  if (S.migr && S.migr.tidy1) return; S.migr = S.migr || {}; S.migr.tidy1 = true;
+  (S.assetTypes || []).forEach(t => { if (!t.basis) t.basis = { text: 'Demo value — manufacturer\'s instructions and risk assessment; legal requirement to be confirmed by the competent person.', by: 'P-006', on: addDays(TODAY, -40) }; });
+  (S.documents || []).forEach(d => (d.revisions || []).forEach(r => { if (r.acks) r.acks = r.acks.filter(a => a.sig); }));
+  (S.notices || []).forEach(n => { if (n.acks) Object.keys(n.acks).forEach(u => { if (!(n.ackSigs || {})[u]) delete n.acks[u]; }); });
+});

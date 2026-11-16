@@ -1004,9 +1004,9 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     const card = await p.innerText('#ackCard');
     ok('RA1 a document lists who must read it, who has confirmed and who is still to read it', st.req > 0 && card.includes(`${st.done} of ${st.req}`) && card.includes('Nomvula Sithole'), `${st.done} of ${st.req}`);
     await act('[data-act=docAckRemind]');
-    ok('RA2 the owner can send a reminder to everyone still to read it', (await S(`S.outbox.filter(m => /Reminder: please read KIE-SWP-021/.test(m.subject)).length`)) === st.out);
+    ok('RA2 the owner can send a reminder to everyone still to read it', (await S(`S.outbox.filter(m => /Reminder: please read and sign: Forklift Operation Safe Work Procedure/.test(m.subject)).length`)) === st.out);
     await asUser('P-009'); await go('#/field'); await p.waitForTimeout(150);
-    const listed = await has('a[href="#/read/DOC-004"]'), task = await S("myTasks().some(t => /Read and acknowledge KIE-SWP-021/.test(t.title))");
+    const listed = await has('a[href="#/read/DOC-004"]'), task = await S("myTasks().some(t => t.title === 'Read and sign: Forklift Operation Safe Work Procedure')");
     await go('#/read/DOC-004'); await p.waitForTimeout(150);
     const before = (await p.$eval('#ackTick', e => e.disabled)) && (await p.$eval('[data-act=docAck]', e => e.disabled)) && await has('.ack-sign.locked');
     await act('.ack-banner [data-act=viewDocFile]'); await p.waitForTimeout(500); await p.keyboard.press('Escape'); await p.waitForTimeout(150);
@@ -1072,7 +1072,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await act('.cal-nav a[aria-label="Next month"]');
     ok('CA2 it filters per inspector and moves month by month', mine.length > 0 && okMine && (await p.evaluate(() => location.hash)).includes('who=P-007') && !(await p.evaluate(() => location.hash)).includes(`m=${new Date().toISOString().slice(0, 7)}`));
     await go('#/admin/assettypes'); await p.waitForTimeout(150);
-    const noBasis = (await p.innerText('#content')).includes('Basis not recorded');
+    const noBasis = (await p.innerText('#content')).includes('to be confirmed by the competent person');
     await S("(S.assets.push({ id: 'AS-T01', tag: 'LDV-T1', name: 'Test bakkie', type: 'AT-LDV', site: 'S-JHB', org: 'ORG-1', responsible: 'P-007', status: 'In Service', certs: [], history: [] }), save(), rerender())"); await p.waitForTimeout(150);
     await act('[data-act=typeDefaultEdit][data-id="AT-LDV"]');
     await mfill('inspDays', '14'); await mfill('basis', 'Fleet policy FP-02 and manufacturer service schedule.');

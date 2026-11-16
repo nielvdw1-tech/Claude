@@ -35,7 +35,7 @@ function docsToRead(uid = S.ui.user) { return S.documents.filter(d => mustAck(d,
 const _myTasksBeforeAck = myTasks;
 myTasks = function () {
   const out = _myTasksBeforeAck();
-  docsToRead().forEach(d => { const a = ackState(d), late = daysTo(a.due) < 0; out.push({ title: `Read and acknowledge ${d.number}: ${d.title}`, sub: `${revLabel(a.rev)} · ${late ? 'overdue since' : 'by'} ${fmt(a.due)}`, link: (isFieldUser() ? '#/read/' : '#/documents/') + d.id, sev: late ? 'red' : 'amber' }); });
+  docsToRead().forEach(d => { const a = ackState(d), late = daysTo(a.due) < 0; out.push({ title: `Read and sign: ${d.title}`, sub: `${d.number} ${revLabel(a.rev)} · ${late ? 'overdue since' : 'by'} ${fmt(a.due)}`, link: (isFieldUser() ? '#/read/' : '#/documents/') + d.id, sev: late ? 'red' : 'amber' }); });
   S.documents.filter(d => inSite(d, S.ui.site) || involvedIn(d, S.ui.user)).forEach(d => (d.changeRequests || []).filter(c => c.status === 'Open' && canDecideCR(d)).forEach(c => out.push({ title: `Change request on ${d.number}`, sub: `${pname(c.by)}: ${c.text.slice(0, 80)}`, link: '#/documents/' + d.id, sev: 'blue' })));
   return out;
 };
@@ -53,12 +53,12 @@ function openedIssued(d) { const r = docIssued(d); return !!r && ACK_OPEN['doc:'
 function ackBannerHtml(d) {
   if (!mustAck(d)) return '';
   const a = ackState(d), r = a.rev, ri = d.revisions.indexOf(r), opened = openedIssued(d), late = daysTo(a.due) < 0;
-  return `<div class="alert ${late ? 'danger' : 'warn'} ack-banner" data-doc="${d.id}">${icon('docs')}<div class="ack-body"><b>Please open ${esc(d.number)} ${revLabel(r)}, then acknowledge and sign.</b> You are on the list of people who must read this document${late ? `; it was due ${fmt(a.due)}` : ` by ${fmt(a.due)}`}.
-    <div class="btn-row mt-s"><button class="btn" data-act="viewDocFile" data-id="${d.id}" data-ri="${ri}">${icon('eye', 'sm')} ${opened ? 'Open it again' : 'Step 1: open ' + revLabel(r)}</button></div>
+  return `<div class="alert ${late ? 'danger' : 'warn'} ack-banner" data-doc="${d.id}">${icon('docs')}<div class="ack-body"><b>Please open the ${esc(d.title)}, then acknowledge and sign.</b> <span class="t-sub">(${esc(d.number)} ${revLabel(r)})</span> You are on the list of people who must read this document${late ? `; it was due ${fmt(a.due)}` : ` by ${fmt(a.due)}`}.
+    <div class="btn-row mt-s"><button class="btn" data-act="viewDocFile" data-id="${d.id}" data-ri="${ri}">${icon('eye', 'sm')} ${opened ? 'Open it again' : 'Step 1: open the ' + esc(d.title)}</button></div>
     <div class="ack-sign${opened ? '' : ' locked'}" ${opened ? '' : 'aria-disabled="true"'}>
       ${opened ? '' : `<div class="lock-note">${icon('lock', 'sm')} Locked until you have opened the document.</div>`}
       ${typeof quizHtml === 'function' ? quizHtml(d).replace(/<input type="radio"/g, opened ? '<input type="radio"' : '<input type="radio" disabled') : ''}
-      <label class="check"><input type="checkbox" id="ackTick" data-doc="${d.id}" ${opened ? '' : 'disabled'}> <span><b>I have read and understood ${esc(d.number)} ${esc(d.title)} (${revLabel(r)})</b> and will follow it.</span></label>
+      <label class="check"><input type="checkbox" id="ackTick" data-doc="${d.id}" ${opened ? '' : 'disabled'}> <span><b>I have read and understood the ${esc(d.title)}</b> (${revLabel(r)}) and will follow it.</span></label>
       <div class="field" id="ackSigField"><label for="ackPad">Your signature<span class="req">*</span></label><div class="sig-wrap"><canvas id="ackPad" class="sig-pad" aria-label="Signature pad: sign with your finger or mouse"></canvas><div class="sig-foot"><span>${esc(pname(S.ui.user))} · sign with your finger or mouse</span><button type="button" class="btn sm" data-act="ackSigClear" ${opened ? '' : 'disabled'}>Clear</button></div></div></div>
       <button class="btn success" data-act="docAck" data-id="${d.id}" ${opened ? '' : 'disabled title="Open the document first"'}>${icon('check', 'sm')} Submit</button>
     </div>
@@ -75,9 +75,9 @@ ACT.docAck = (el) => {
   const tick = document.getElementById('ackTick');
   if (!tick || !tick.checked) { toast('Tick that you have read and understood the document.', 'error'); if (tick) tick.closest('label').classList.add('invalid'); return; }
   if (!ACKSIG.sig) { toast('Please sign to confirm.', 'error'); const f = document.getElementById('ackSigField'); if (f) f.classList.add('invalid'); return; }
-  r.acks = r.acks || []; r.acks.push({ by: S.ui.user, ts: nowTs(), quiz: (d.quiz || []).length ? 'passed' : undefined, sig: ACKSIG.sig, statement: `I have read and understood ${d.number} ${d.title} (${revLabel(r)}) and will follow it.` });
+  r.acks = r.acks || []; r.acks.push({ by: S.ui.user, ts: nowTs(), quiz: (d.quiz || []).length ? 'passed' : undefined, sig: ACKSIG.sig, statement: `I have read and understood the ${d.title} (${d.number} ${revLabel(r)}) and will follow it.` });
   ACKSIG.sig = null;
-  log(`Read, understood and signed ${d.number} ${revLabel(r)}`, '#/documents/' + d.id); save(); toast(`Thank you — your signed confirmation for ${esc(d.number)} is recorded.`); rerender();
+  log(`Read, understood and signed ${d.number} ${revLabel(r)}`, '#/documents/' + d.id); save(); toast(`Thank you — your signed confirmation for the ${esc(d.title)} is recorded.`); rerender();
 };
 // The signature pad is drawn after each page render
 const _rerenderBeforeAck = rerender;
@@ -122,20 +122,20 @@ ACT.docReaders = (el) => {
       const r = docIssued(d);
       if (r && !r.ackFrom && !was.length) r.ackFrom = TODAY;   // the clock starts now for a document already in use
       const added = requiredReaders(d).filter(u => !was.includes(u) && r && !(r.acks || []).some(a => a.by === u));
-      if (r && added.length) queueEmail(added, 'documents', `Please read ${d.number}: ${d.title}`, `You are on the list of people who must read ${d.number} ${revLabel(r)} and confirm that you have read and understood it, by ${fmt(addDays(r.ackFrom || r.effective, ackDays(d)))}.`, '#/documents/' + d.id);
+      if (r && added.length) queueEmail(added, 'documents', `Please read and sign: ${d.title}`, `You are on the list of people who must read the ${d.title} (${d.number} ${revLabel(r)}) and confirm that you have read and understood it, by ${fmt(addDays(r.ackFrom || r.effective, ackDays(d)))}.`, '#/documents/' + d.id);
       docLatest(d).history.push({ ts: nowTs(), by: S.ui.user, action: 'Read-and-acknowledge list changed', comment: [roles.join(', '), people.map(pname).join(', ')].filter(Boolean).join(' · ') || 'Nobody' });
       log(`Set who must read ${d.number}`, '#/documents/' + d.id); save(); toast('Saved.'); rerender();
     } }] });
 };
 ACT.docAckRemind = (el) => {
   const d = byId('documents', el.dataset.id), a = ackState(d); if (!a || !a.outstanding.length) return;
-  queueEmail(a.outstanding, 'documents', `Reminder: please read ${d.number}: ${d.title}`, `Please open ${d.number} ${revLabel(a.rev)}, read it and confirm that you have read and understood it. It is due ${fmt(a.due)}.`, '#/documents/' + d.id);
+  queueEmail(a.outstanding, 'documents', `Reminder: please read and sign: ${d.title}`, `Please open the ${d.title} (${d.number} ${revLabel(a.rev)}), read it and confirm that you have read and understood it. It is due ${fmt(a.due)}.`, '#/documents/' + d.id);
   log(`Sent a read reminder for ${d.number} to ${a.outstanding.length} person(s)`, '#/documents/' + d.id); save(); toast(`Reminder sent to ${a.outstanding.length} person(s) (written to the outbox).`);
 };
 // On issue: everyone on the list is told; the period starts on the effective date
 function ackOnIssue(d, r) {
   const req = requiredReaders(d); if (!req.length) return;
-  queueEmail(req, 'documents', `New revision to read: ${d.number} ${revLabel(r)}`, `${d.number} ${d.title} ${revLabel(r)} is issued for use from ${fmt(r.effective)}. Please read it and confirm that you have read and understood it by ${fmt(addDays(r.effective, ackDays(d)))}.`, '#/documents/' + d.id);
+  queueEmail(req, 'documents', `New revision to read and sign: ${d.title}`, `The ${d.title} (${d.number} ${revLabel(r)}) is issued for use from ${fmt(r.effective)}. Please read it and confirm that you have read and understood it by ${fmt(addDays(r.effective, ackDays(d)))}.`, '#/documents/' + d.id);
 }
 
 /* Field users (e.g. operators) read and confirm on a simple phone page */
