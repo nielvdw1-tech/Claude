@@ -589,3 +589,5 @@ h1.eyebrow { font-size: 14px; letter-spacing: .08em; line-height: 1.4; }
   .hero-actions .btn-lg { padding: 18px 24px; font-size: 15px; white-space: nowrap; }
 }
 @media (min-width: 641px) and (max-width: 1100px) { .hero-actions { flex-wrap: wrap; } }
+/* Tall screenshots: show the top part so the panel stays in proportion with the text beside it */
+.shot-visual:not(.shot-stack) img { width: 100%; max-height: 600px; object-fit: cover; object-position: top; }
