@@ -1243,7 +1243,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await go('#/actions'); await p.waitForTimeout(120); await p.selectOption('[data-lvf=asset]', '');
   }
 
-  /* ---------------- SG. Smaller gaps: meters, lifting register, external documents, reading check, costs, lessons, follow-up ---------------- */
+  /* ---------------- GP. Smaller gaps: meters, lifting register, external documents, reading check, costs, lessons, follow-up ---------------- */
   {
     await asUser('P-002');
     // Hour meter: a reading past the due point makes the maintenance due
@@ -1254,37 +1254,37 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     const due = await S("meterDue(byId('maintenance', 'MT-201'))");
     await go('#/maintenance/planned'); await p.selectOption('.flt-bar [data-flt=fstatus]', 'overdue'); await p.waitForTimeout(150);
     const ov = await p.$$eval('#content table.tbl tbody tr td.mono', e => e.map(x => x.textContent));
-    ok('SG1 maintenance can be due at an hour-meter or odometer reading; a new reading makes it due', m0.includes('Hour meter') && lower && due && ov.includes('MT-201'), ov.join(', '));
+    ok('GP1 maintenance can be due at an hour-meter or odometer reading; a new reading makes it due', m0.includes('Hour meter') && lower && due && ov.includes('MT-201'), ov.join(', '));
     await act('[data-act=fltClear]');
     // Lifting equipment register
     await go('#/reports/lifting'); await p.waitForTimeout(150);
     const lift = await p.innerText('#content'), nLift = await S("liftingAssets(S.ui.site).length");
-    ok('SG2 the lifting equipment register lists lifting machines and tackle with their safe working load and certificate', nLift > 0 && (await p.$$eval('#content table.tbl tbody tr', e => e.length)) === nLift && /2000 kg|2 000 kg/.test(lift), `${nLift} item(s)`);
+    ok('GP2 the lifting equipment register lists lifting machines and tackle with their safe working load and certificate', nLift > 0 && (await p.$$eval('#content table.tbl tbody tr', e => e.length)) === nLift && /2\s?000 kg/.test(lift) && /expires/.test(lift), `${nLift} item(s)`);
     // External document
     await go('#/documents/DOC-018'); await p.waitForTimeout(150);
     const ext = await p.innerText('#extCard');
     await act('[data-act=extChecked]'); await mbtn('Save'); await p.waitForTimeout(120);
-    ok('SG3 external documents record publisher, edition and when to check for a newer one; the check is recorded', ext.includes('Publisher') && (await S("byId('documents', 'DOC-018').ext.checked.by")) === 'P-002');
+    ok('GP3 external documents record publisher, edition and when to check for a newer one; the check is recorded', ext.includes('Publisher') && (await S("byId('documents', 'DOC-018').ext.checked.by")) === 'P-002');
     // Reading check questions
     await go('#/documents/DOC-001'); await p.waitForTimeout(120);
     await act('[data-act=docReaders][data-id="DOC-001"]');
     await mfill('qq0', 'Who must follow this policy?'); await mfill('qo0_0', 'Only managers'); await mfill('qo0_1', 'Everyone'); await mfill('qo0_2', 'Only contractors');
     await p.check('.modal [name=qc0][value="1"]'); await mbtn('Save'); await p.waitForTimeout(120);
-    await asUser('P-007'); await go('#/documents/DOC-001'); await p.waitForTimeout(150);
-    const needs = await S("mustAck(byId('documents', 'DOC-001'), 'P-007')");
+    await asUser('P-008'); await go('#/documents/DOC-001'); await p.waitForTimeout(150);
+    const needs = await S("mustAck(byId('documents', 'DOC-001'), 'P-008')");
     if (needs) {
       await act('.ack-banner [data-act=viewDocFile]'); await p.waitForTimeout(400); await p.keyboard.press('Escape'); await p.waitForTimeout(120);
       await p.check('.ack-sign [name=qa0][value="0"]'); await p.check('#ackTick');
       { const bx = await (await p.$('#ackPad')).boundingBox(); await p.mouse.move(bx.x + 20, bx.y + 50); await p.mouse.down(); for (let k = 1; k < 12; k++) await p.mouse.move(bx.x + 20 + k * 15, bx.y + 50 + (k % 2) * 18); await p.mouse.up(); }
       await act('[data-act=docAck]');
-      const wrong = !(await S("(docIssued(byId('documents', 'DOC-001')).acks || []).some(a => a.by === 'P-007')")) && await has('.ack-sign.locked');
+      const wrong = !(await S("(docIssued(byId('documents', 'DOC-001')).acks || []).some(a => a.by === 'P-008')")) && await has('.ack-sign.locked');
       await act('.ack-banner [data-act=viewDocFile]'); await p.waitForTimeout(400); await p.keyboard.press('Escape'); await p.waitForTimeout(120);
       await p.check('.ack-sign [name=qa0][value="1"]'); await p.check('#ackTick');
       { const bx = await (await p.$('#ackPad')).boundingBox(); await p.mouse.move(bx.x + 20, bx.y + 50); await p.mouse.down(); for (let k = 1; k < 12; k++) await p.mouse.move(bx.x + 20 + k * 15, bx.y + 50 + (k % 2) * 18); await p.mouse.up(); }
       await act('[data-act=docAck]');
-      const right = await S("(docIssued(byId('documents', 'DOC-001')).acks || []).some(a => a.by === 'P-007' && a.quiz === 'passed')");
-      ok('SG4 a reading check question must be answered correctly before signing; a wrong answer locks it again until the document is reopened', wrong && right);
-    } else ok('SG4 a reading check question must be answered correctly before signing; a wrong answer locks it again until the document is reopened', false, 'P-007 not on the list');
+      const right = await S("(docIssued(byId('documents', 'DOC-001')).acks || []).some(a => a.by === 'P-008' && a.quiz === 'passed')");
+      ok('GP4 a reading check question must be answered correctly before signing; a wrong answer locks it again until the document is reopened', wrong && right);
+    } else ok('GP4 a reading check question must be answered correctly before signing; a wrong answer locks it again until the document is reopened', false, 'P-008 not on the list');
     await asUser('P-002');
     // Costs and lessons learned
     await go('#/incidents/INC-2026-003'); await p.waitForTimeout(150);
@@ -1293,13 +1293,13 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     const pre = await p.$eval('.modal [name=title]', e => e.value);
     await mbtn('Publish notice'); await p.waitForTimeout(200);
     const shared = await S("(byId('incidents', 'INC-2026-003').lessonsShared || {}).notice || ''");
-    ok('SG5 incidents record costs, and lessons learned can be shared with staff as a company notice', /R\s?8\D?300/.test(costTxt.replace(/[  ]/g, ' ')) && lessonsTxt.includes('spill kit') && pre.startsWith('Lessons learned') && /^NT-/.test(shared), shared);
+    ok('GP5 incidents record costs, and lessons learned can be shared with staff as a company notice', /R\s?8\D?300/.test(costTxt.replace(/[  ]/g, ' ')) && lessonsTxt.includes('spill kit') && pre.startsWith('Lessons learned') && /^NT-/.test(shared), shared);
     // Follow-up check after closing an action
     const aid = await S("(S.actions.find(a => a.followUp && !a.followUp.done) || {}).id");
     await go('#/actions/' + aid); await p.waitForTimeout(150);
     await act('[data-act=fuRecord]'); await msel('result', 'Not effective'); await mfill('comment', 'Same leak found again at the coupling.'); await mbtn('Save'); await p.waitForTimeout(150);
     const a = await S(`byId('actions', '${aid}')`);
-    ok('SG6 a closed corrective action gets a follow-up check; "did not work" reopens it with the owner', a.followUp.done.result === 'Not effective' && a.status === 'Reopened', aid);
+    ok('GP6 a closed corrective action gets a follow-up check; "did not work" reopens it with the owner', a.followUp.done.result === 'Not effective' && a.status === 'Reopened', aid);
   }
 
   /* ---------------- L. Company logo ---------------- */

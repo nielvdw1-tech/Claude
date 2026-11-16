@@ -132,7 +132,7 @@ ACT.meterRead = (el) => {
 /* ---------------- Lifting equipment register (Reports) ---------------- */
 const LIFT_TYPES = ['AT-FL', 'AT-CRANE', 'AT-TACKLE'];
 function liftingAssets(sid) { return S.assets.filter(a => inSite(a, sid) && a.status !== 'Decommissioned' && (LIFT_TYPES.includes(a.type) || /chain block|hoist|crane|sling|lift/i.test(a.name))); }
-function liftCert(a) { return assetDocStatus(a).find(d => /load test|lifting/i.test(d.name)) || null; }
+function liftCert(a) { const d = assetDocStatus(a).find(x => /load test|lifting|examination/i.test(x.req.name)); return d ? { name: d.req.name, status: d.status, expires: d.cert ? d.cert.expiry : null } : null; }
 function liftingBuild() {
   const rows = liftingAssets(S.ui.site);
   const cap = a => { const c = a.custom || {}; return c['SWL (t)'] ? c['SWL (t)'] + ' t' : c['Capacity (kg)'] ? fmtNum(c['Capacity (kg)']) + ' kg' : '—'; };
