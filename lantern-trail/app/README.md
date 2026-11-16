@@ -34,4 +34,4 @@ Hand-written band content lives in `content-src/*.mjs` and is merged by `npm run
 | 4–5 | 56 nights | 56 nights |
 | 6–7 | 56 nights | 56 nights |
 | 8–9 | 56 nights (draft) | 56 nights (draft) |
-| 10–12 | – (shows 6–7) | – (shows 4–5) |
+| 10–12 | 56 nights (draft, self-guided) | 56 nights (draft, self-guided) |
