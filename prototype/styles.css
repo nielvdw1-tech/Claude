@@ -1276,3 +1276,4 @@ body.auth-mode .main { padding-top: 0; }
 .quiz { display: grid; gap: 10px; }
 .quiz-q { border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px 10px; margin: 0; }
 .quiz-q legend { font-weight: 600; font-size: 13.5px; padding: 0 4px; }
+.ack-banner .btn-row .btn { white-space: normal; height: auto; text-align: left; line-height: 1.3; padding-top: 8px; padding-bottom: 8px; }
