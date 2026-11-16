@@ -15,6 +15,13 @@
       "order": 0,
       "file": "christmas.json",
       "nights": 8
+    },
+    {
+      "id": "j02",
+      "kind": "journey",
+      "order": 2,
+      "file": "journey-02.json",
+      "nights": 48
     }
   ]
 }

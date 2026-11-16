@@ -51,7 +51,11 @@ discover who God is and grow in relationship with Him: child of God, friend of J
 2. **Content engine:** one app that renders any night from data; the existing 56 nights converted; Adventure and Starlight looks *(done 12 November 2026)*
 3. **Accounts:** sign-up, family and child profiles, onboarding, progress synced across devices
 4. **Subscriptions:** trial, paywall, Paddle checkout and webhooks, entitlement checks
-5. **Content scale-up:** Year 1 story plan, all five bands, both languages, review workflow
+5. **Content scale-up:** Year 1 story plan, all five bands, both languages, review workflow.
+   *Progress (16 November 2026):* Journey Trail 1 (48 nights), Christmas (8 nights) and Journey Trail 2,
+   "Trail of the Living Water" (48 nights, `app/content-src/trails/j02.mjs` + `j02-e*-young/older.mjs`),
+   are complete in all five bands and both languages, about 15 weeks of journey content. All drafts await review.
+   Next: Easter trail (8 nights), then Trail 3.
 6. **App stores:** Capacitor build, RevenueCat, store listings and review
 7. **Growth:** audio narration, bedtime reminders, parent dashboard, gift subscriptions
 
