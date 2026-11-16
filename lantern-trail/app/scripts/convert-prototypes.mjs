@@ -133,13 +133,31 @@ const christmas = {
 const srcDir = path.resolve(here, "../content-src");
 const allNights = new Map([journey, christmas].flatMap(t => t.expeditions.flatMap(e => e.nights)).map(n => [n.id, n]));
 let merged = 0;
+// Quality gate for hand-written band content (docs/CONTENT-GUIDE.md section 4).
+const WORDS = { "2-3": [25, 140], "8-9": [250, 650], "10-12": [300, 750] };
+function check(f, id, band, lang, t, kind) {
+  const where = `${f} ${id} ${band}/${lang}`;
+  const need = ["title", "story", "lessons", "questions", "prayer", "prayerStyle"];
+  if (kind === "story") need.push("verse");
+  if (kind === "story" && band === "2-3") need.push("action");
+  if (band === "8-9" || band === "10-12") need.push("mission", "journal", ...(kind === "story" ? ["readPassage", "listen"] : []));
+  for (const k of need) if (t[k] === undefined || t[k] === "") throw new Error(`${where}: missing ${k}`);
+  if (kind === "story" && band === "2-3" && t.lessons.length !== 1) throw new Error(`${where}: 2-3 has exactly one truth`);
+  if (kind === "story" && (band === "8-9" || band === "10-12") && t.lessons.length !== 3) throw new Error(`${where}: needs 3 lessons`);
+  const words = t.story.join(" ").split(/\s+/).length;
+  const [lo, hi] = WORDS[band] ?? [0, 1e9];
+  if (kind === "story" && (words < lo || words > hi)) throw new Error(`${where}: story is ${words} words, expected ${lo}-${hi}`);
+  if (/\b(Day|Dag) \d+/.test(JSON.stringify(t))) throw new Error(`${where}: refers to a day number`);
+}
 for (const f of fs.existsSync(srcDir) ? fs.readdirSync(srcDir).filter(f => f.endsWith(".mjs")).sort() : []) {
   const mod = (await import(path.join(srcDir, f))).default;
   for (const [id, bands] of Object.entries(mod)) {
     const n = allNights.get(id);
     if (!n) throw new Error(`${f}: unknown night ${id}`);
     for (const [band, langs] of Object.entries(bands))
-      for (const [lang, t] of Object.entries(langs)) { (n.bands[band] ??= {})[lang] = t; merged++; }
+      for (const [lang, t] of Object.entries(langs)) { check(f, id, band, lang, t, n.kind); (n.bands[band] ??= {})[lang] = t; merged++; }
+    for (const band of Object.keys(bands))
+      for (const lang of ["en", "af"]) if (!bands[band][lang]) throw new Error(`${f} ${id} ${band}: missing ${lang}`);
   }
 }
 console.log(`merged ${merged} night texts from content-src`);
