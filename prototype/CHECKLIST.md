@@ -64,6 +64,16 @@ Status key:
 | Lifting equipment register: SWL, certificate status, last and next inspection | Implemented | GP2 |
 | Corrective action follow-up check after closing; "did not work" reopens the action | Implemented | GP6 |
 
+## Audits
+| Requirement | Status | Notes |
+|---|---|---|
+| Pre-built audit checklists: legal compliance, housekeeping, fire safety, hazardous chemical substances, stacking and storage, emergency preparedness and first aid, PPE | Implemented | AD2; starter checklists to adapt; the legal compliance checklist quotes no legislation (AD3) |
+| Users build their own audit checklists (sections, items, guidance, reference, weight, critical item); draft until approved by someone other than the author | Implemented | AD14–AD17 |
+| Audit programme per branch with frequency, auditor tasks and overdue audits | Implemented | AD1, AD18 |
+| Conduct an audit: Compliant / Partially / Not compliant / N/A, notes, photos, saved as you go, auditor and auditee signatures | Implemented | AD5–AD8 |
+| Weighted score per section and overall; critical item not met = "Not acceptable"; repeat findings flagged | Implemented | AD4, AD10 |
+| Findings graded and turned into corrective actions (source "Audit") linked back to the audit; PDF audit report | Implemented | AD9, AD11–AD13 |
+
 ## Incident management
 | Requirement | Status | Notes |
 |---|---|---|

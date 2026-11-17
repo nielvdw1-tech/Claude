@@ -212,7 +212,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await asUser('P-007'); await go('#/notifications/tasks');
     ok('E3 overdue inspection appears in the assignee task centre', (await p.innerText('#content')).includes('Inspect: Germiston warehouse & workshop'));
     await go('#/legal'); ok('E4 removed modules are no longer reachable', (await p.innerText('#content')).includes('Page not found'));
-    ok('E5 navigation shows only the focused modules', (await p.$$eval('.nav-item span:not(.count)', e => e.map(x => x.textContent))).join('|') === 'Dashboard|Notifications & Tasks|Company Notices|Document Manager|Assets & Equipment|Inspections|Maintenance & Defects|Incident Management|Corrective Actions|Reports|Administration');
+    ok('E5 navigation shows only the focused modules', (await p.$$eval('.nav-item span:not(.count)', e => e.map(x => x.textContent))).join('|') === 'Dashboard|Notifications & Tasks|Company Notices|Document Manager|Assets & Equipment|Inspections|Maintenance & Defects|Audits|Incident Management|Corrective Actions|Reports|Administration');
     await asUser('P-002'); await go('#/incidents'); await go('#/actions'); await btn('New action'); await mbtn('Continue'); await p.waitForTimeout(100); await mbtn('Raise action');
     ok('E6 form validation blocks empty required fields', await modalOpen() && (await p.$$('.modal .field.invalid')).length > 0); await p.keyboard.press('Escape');
     await asUser('P-009'); await go('#/documents/DOC-007');
@@ -1319,6 +1319,56 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     ok('L4 the logo appears on inspection reports', await has('.print-logo .org-logo img'));
     await go('#/admin/orgs'); await act('[data-act=orgLogoRemove][data-id="ORG-1"]'); await p.click('.modal-foot button:has-text("Remove")'); await p.waitForTimeout(150);
     ok('L5 removing the logo falls back to the company initials', !(await S("S.orgs.find(o=>o.id==='ORG-1').logo")) && (await p.innerText('.topbar .user-menu-btn .org-initials')) === 'KI');
+  }
+
+  /* ---------------- AD. Audits ---------------- */
+  {
+    await asUser('P-002'); await pickScope('#siteSel', 'ALL'); await go('#/audits');
+    const nav = await p.$$eval('#sidebar .nav-item', x => x.map(e => e.textContent.trim()));
+    ok('AD1 Audits has its own menu item and opens on the audit programme', nav.some(t => t.startsWith('Audits')) && (await p.innerText('#content')).includes('Audit programme'));
+    const starters = await S(() => auditTemplates().filter(t => t.starter).map(t => t.category));
+    ok('AD2 pre-built checklists: legal compliance, housekeeping, fire safety, hazardous chemical substances, stacking and storage, emergency, PPE', ['Legal compliance', 'Housekeeping', 'Fire safety', 'Hazardous chemical substances', 'Stacking and storage', 'Emergency preparedness and first aid', 'Personal protective equipment'].every(c => starters.includes(c)), starters.join(', '));
+    ok('AD3 the legal compliance checklist quotes no legislation (references left for a competent person)', await S(() => audItems(atCurrent(byId('auditTemplates', 'ATPL-LEG'))).every(i => !i.ref && !/\b(section|regulation|act)\s+\d/i.test(i.text))));
+    ok('AD4 a repeat finding is flagged when the same item was not met at the previous audit of that branch', await S(() => byId('audits', 'AUD-102').findingsList.some(f => f.repeat)));
+    // conduct an audit
+    await go('#/audits/programme'); await p.click('.fab-stack .fab:has-text("Start audit")'); await p.waitForTimeout(150);
+    await msel('template', 'ATPL-STK'); await msel('site', 'S-CPT'); await mbtn('Start audit'); await p.waitForTimeout(150);
+    const aid = await S(() => location.hash.split('/')[2]);
+    ok('AD5 starting an audit opens the checklist, with the controlled document number and revision', /^AUD-/.test(aid) && (await p.innerText('#content')).includes('VDW-AUD-005'));
+    const n = await p.$$eval('.au-item', x => x.length);
+    for (let k = 0; k < n; k++) await p.locator('.au-item').nth(k).locator(`button[data-v=${k === 0 ? 'N' : k === 3 ? 'P' : k === 5 ? 'NA' : 'C'}]`).click();
+    ok('AD6 answers are saved as you go', await S(`Object.keys(byId('audits','${aid}').answers).length`) === n);
+    await p.click('.au-foot button:has-text("Complete audit")'); await p.waitForTimeout(150);
+    ok('AD7 a partial or non-compliant item must say what was found', !(await modalOpen()) && await S(`byId('audits','${aid}').status`) === 'In progress');
+    await p.locator('.au-item').nth(0).locator('.au-note').fill('Upright bent at bay 4'); await p.locator('.au-item').nth(3).locator('.au-note').fill('Last racking inspection over 12 months ago');
+    await p.click('.au-foot button:has-text("Complete audit")'); await p.waitForTimeout(150);
+    ok('AD8 the auditor must sign before completing', !(await modalOpen()));
+    await p.locator('#audSig').scrollIntoViewIfNeeded(); const bb = await (await p.$('#audSig')).boundingBox(); await p.mouse.move(bb.x + 20, bb.y + 40); await p.mouse.down(); for (let k = 1; k < 12; k++) await p.mouse.move(bb.x + 20 + k * 15, bb.y + 40 + (k % 2) * 10); await p.mouse.up(); await p.waitForTimeout(100);
+    await p.click('.au-foot button:has-text("Complete audit")'); await p.waitForTimeout(150);
+    ok('AD9 completing lists the findings to turn into corrective actions', await modalOpen() && (await p.innerText('.modal')).includes('Racking uprights and beams are undamaged'));
+    await mbtn('Complete audit'); await p.waitForTimeout(200);
+    const a = await S(`(() => { const a = byId('audits','${aid}'); return { st: a.status, pct: a.score.pct, crit: a.score.critical, acts: a.findingsList.map(f => f.action).filter(Boolean), sig: !!(a.sigAuditor && a.sigAuditor.image) }; })()`);
+    ok('AD10 the score is weighted (partial = half, N/A left out) and a critical item not met makes it "Not acceptable"', a.st === 'Completed' && a.pct === 81 && a.crit === 1 && (await p.innerText('#content')).includes('Not acceptable'), JSON.stringify(a));
+    const src = await S(`S.actions.filter(x => x.source === 'Audit' && x.sourceId === '${aid}').map(x => x.priority)`);
+    ok('AD11 findings become corrective actions with source "Audit" (major = high priority), linked back to the audit', a.acts.length === 2 && src.includes('High') && a.sig);
+    await go('#/actions/' + a.acts[0]); ok('AD12 the corrective action links back to the audit', await has(`a[href="#/audits/${aid}"]`));
+    await go('#/audits/' + aid); const [dl] = await Promise.all([p.waitForEvent('download'), p.click('[data-act=audPdf]')]);
+    ok('AD13 a PDF audit report can be downloaded', /^Audit_AUD-.*\.pdf$/.test(dl.suggestedFilename()), dl.suggestedFilename());
+    // build own checklist
+    await go('#/audits/templates'); await p.click('.fab-stack .fab:has-text("New audit checklist")'); await p.waitForTimeout(150);
+    await p.fill('#abHead [name=title]', 'Canteen hygiene audit'); await p.fill('#abHead [name=docNumber]', 'KIE-AUD-020');
+    await p.fill('.ab-sec-title', 'Food area'); await p.fill('.ab-in[data-k=text]', 'Surfaces are clean'); await p.click('[data-act=abAddItem]'); await p.waitForTimeout(100);
+    await p.locator('.ab-in[data-k=text]').nth(1).fill('Fridge temperature is recorded daily'); await p.locator('.ab-in[data-k=critical]').nth(1).check();
+    await p.click('[data-act=abSave]'); await p.waitForTimeout(150);
+    const t = await S(() => { const t = S.auditTemplates.find(x => x.docNumber === 'KIE-AUD-020'); return t && { st: t.revisions[0].status, n: t.revisions[0].sections[0].items.length, crit: t.revisions[0].sections[0].items[1].critical, id: t.id }; });
+    ok('AD14 a user can build their own audit checklist (sections, items, weight, critical); it is saved as a draft', t && t.st === 'Draft' && t.n === 2 && t.crit);
+    ok('AD15 a draft checklist cannot be used for audits until approved', await S(`!auditTemplates().filter(atCurrent).some(x => x.id === '${t.id}')`));
+    await p.click(`[data-act=audTplApprove][data-id="${t.id}"]`); await p.waitForTimeout(100);
+    ok('AD16 the author cannot approve their own checklist', !(await modalOpen()) && await S(`byId('auditTemplates','${t.id}').revisions[0].status`) === 'Draft');
+    await asUser('P-001'); await go('#/audits/templates'); await p.click(`[data-act=audTplApprove][data-id="${t.id}"]`); await p.waitForTimeout(100); await p.click('.modal-foot button:has-text("Approve")'); await p.waitForTimeout(150);
+    ok('AD17 once someone else approves it, the checklist can be used', await S(`!!atCurrent(byId('auditTemplates','${t.id}'))`));
+    await asUser('P-007'); ok('AD18 the planned auditor gets a task when an audit is due', await S(() => myTasks().some(x => /^Audit: Housekeeping/.test(x.title))));
+    await asUser('P-002');
   }
 
   /* ---------------- Print output ---------------- */

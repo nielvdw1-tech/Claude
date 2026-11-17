@@ -12,6 +12,7 @@ Build only these parts for now. They are the owner's biggest need:
 1. **Document control:** upload documents; approval by several people **in sequence** (an ordered route, each approver in turn); then issue, revisions and periodic review.
 2. **Assets and inspections:** load assets, inspect them against checklists, turn failed items into defects and **corrective actions** with independent verification. A critical failure puts the asset out of service until the fix is verified.
 3. **Incident management:** report, investigate, find the root cause, raise corrective actions and close.
+4. **Audits** (added by the owner): pre-built audit checklists (legal compliance, housekeeping, fire safety, hazardous chemical substances, stacking and storage, etc.) and audit checklists users build themselves, with scoring, findings and corrective actions.
 
 The legal-library flow below is the longer-term vision and is **not** in the current build. The full HSEQ prototype with legal, risk, people, PPE, chemicals, emergency and audits is preserved in git history at commit `26b59bc`.
 

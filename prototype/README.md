@@ -237,6 +237,16 @@ Other pages are closed to employees. An inspection can only be started from the 
 - **Hours worked reminder:** on the 1st, if last month's hours worked are missing for a branch, the HSEQ Manager and the System Administrator get an e-mail (the LTI frequency rate needs them).
 - In the prototype, e-mails are written to the outbox (Administration → E-mail outbox); they are not sent.
 
+### Audits
+- **Audits** (menu → Audits) has three tabs: **Audit programme**, **Audits** and **Audit checklists**.
+- **Pre-built checklists (VDW starter checklists):** legal compliance (general), housekeeping, fire safety, hazardous chemical substances, stacking and storage, emergency preparedness and first aid, and PPE. They are suggestions to adapt to each site. **The legal compliance checklist does not quote legislation:** a competent person adds the references from the official text before relying on it.
+- **Your own checklists:** **New audit checklist** opens the builder: sections, items, guidance for the auditor, a reference, a weight (1–3) and a "critical item" tick. Like inspection templates, a new checklist or a change is a **draft** until someone other than the author approves it; completed audits keep the revision they used.
+- **Programme:** **Plan audit** sets which checklist, which branch or area, the auditor and how often. The auditor gets a task 14 days before it is due; overdue audits show in red.
+- **Conducting:** each item is Compliant, Partially, Not compliant or N/A, with a note and photos. Answers are saved as you go. A partial or non-compliant item must say what was found and is graded Major, Minor or Observation. The auditor signs; the auditee can sign to accept the findings.
+- **Score:** Compliant counts in full, Partially half, Not compliant nothing, and N/A is left out, weighted per item, per section and overall. 85% and above is Good, 70–84% Acceptable, below 70% Poor. **A critical item not met makes the result "Not acceptable" whatever the score.** A finding on an item that was also not met at the previous audit of that branch is flagged as a **repeat finding**.
+- **Close-out:** on completion, major and minor findings become corrective actions (source "Audit") with an owner and due date. The audit page shows the score, section bars, findings with their actions, the trend at that branch, and **Audit report (PDF)**.
+- **Example:** *AUD-101* and *AUD-102* are housekeeping audits at Germiston one month apart (the returns pallet in the walkway is a repeat finding); the fire safety audit at Pinetown is overdue.
+
 ### D. Branches and tasks
 - Use the **Branch / site** selector (click your name and company in the top banner) to scope everything to one branch. **Reports → Branch comparison** shows them side by side.
 - **Notifications & Tasks → My tasks** shows each person their own work: documents awaiting their approval, actions to complete or verify, inspections due and investigations.
@@ -376,6 +386,7 @@ prototype/
 ├── mod-actions-reports-admin.js  Corrective actions, reports, administration
 ├── mod-files.js                  File storage (browser) and in-app file viewer
 ├── mod-notices.js                Company notices: publish, read, acknowledge, track
+├── mod-auditing.js              Audits: starter and own checklists, programme, scoring, findings, PDF report
 ├── mod-dashboard.js              Dashboard: compliance status, 12-month trends, detail
 ├── vendor/pdfjs/                 PDF.js 3.11.174 (Apache-2.0) for viewing PDFs, works offline
 ├── vendor/qr/                    QR code generator (MIT) and reader jsQR (Apache-2.0)
