@@ -1,0 +1,16 @@
+# Site photos
+
+Save photos here with these exact file names. Each one appears automatically on the pages listed, under a dark overlay so the text stays readable. Until a file exists, its section shows a dark placeholder naming the photo it needs.
+
+Use landscape photos about 1920 px wide (team photo: about 1200 px), saved as compressed WebP (or JPG) under about 200 KB.
+
+| File name | Photo | Used on |
+|---|---|---|
+| `hero-branch-depot.webp` | Branch depot or yard: racking, forklift, delivery truck | Homepage hero |
+| `audit-scramble.webp` | Binders and files piled on a branch counter, someone on the phone | Pain-point section on every page |
+| `truck-leaving.webp` | Truck loaded with equipment leaving for a client site | Final recap: homepage, landing page, service pages |
+| `audit-checklist.webp` | Close-up of an audit checklist and clipboard in a warehouse | Free assessment landing page hero |
+| `inspection-finding.webp` | Consultant photographing a finding at a branch | Compliance Audit page hero |
+| `organised-files.webp` | Someone updating compliance records on a laptop in a branch warehouse | Compliance System page hero |
+| `site-walk.webp` | Monthly site walk-through with a branch manager | Ongoing Management page hero |
+| `team-niel.webp` (in use) | Niel in a VDW shirt in a warehouse | About / Meet the Team sections |
