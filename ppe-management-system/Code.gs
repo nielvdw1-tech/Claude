@@ -2475,7 +2475,7 @@ function handlePPEBulkApprovalRequest_(
   if (!tokenJson) {
     return createPPEApprovalResultPage(
       "Link Expired",
-      "This bulk approval link is invalid, expired or has already been used.",
+      "This bulk approval link is invalid, expired or every line has already been reviewed.",
       false
     );
   }
@@ -2491,7 +2491,7 @@ function handlePPEBulkApprovalRequest_(
     );
   }
 
-  // First opening: show the line-by-line review page.
+  // Opening the link: show the lines that are still waiting.
   if (!action) {
     return createPPEBulkApprovalReviewPage_(bulkRequestID, bulkToken);
   }
@@ -2521,65 +2521,102 @@ function handlePPEBulkApprovalRequest_(
     const lineDecision = cleanPPEKey_(params["decision_" + i]);
     const rejectionReason = cleanPPEText_(params["rejectionReason_" + i]);
 
+    // Older review pages have no quantity box: approve the full quantity.
+    const approveQuantity =
+      params["approveQty_" + i] === undefined
+        ? null
+        : toPPENumber_(params["approveQty_" + i]);
+
     let error = "";
 
     if (!lineRequestID) {
       error = "One of the PPE request lines is missing its Request ID.";
-    } else if (lineDecision !== "approve" && lineDecision !== "reject") {
-      error = "Please select Approve or Reject for every PPE request line.";
+    } else if (!["approve", "hold", "reject"].includes(lineDecision)) {
+      error = "Please choose Approve, Keep waiting or Reject for every line.";
+    } else if (
+      lineDecision === "approve" &&
+      approveQuantity !== null &&
+      !(Number.isInteger(approveQuantity) && approveQuantity >= 1)
+    ) {
+      error = "Enter a whole quantity of at least 1 for every line you approve.";
     } else if (lineDecision === "reject" && !rejectionReason) {
       error = "Please enter a rejection reason for every rejected PPE item.";
     }
 
     if (error) {
-      return createPPEBulkApprovalReviewPage_(
-        bulkRequestID,
-        bulkToken,
-        error
-      );
+      return createPPEBulkApprovalReviewPage_(bulkRequestID, bulkToken, error);
     }
 
     decisions.push({
       requestID: lineRequestID,
       decision: lineDecision,
+      approveQuantity: approveQuantity,
       rejectionReason: rejectionReason
     });
   }
 
-  const result =
-    processPPEBulkEmailApproval_(bulkRequestID, decisions);
+  let result;
 
+  try {
+    result = processPPEBulkEmailApproval_(bulkRequestID, decisions);
+  } catch (error) {
+    result = { success: false, message: error.message };
+  }
+
+  // Show problems on the review page so Stores can adjust and resubmit.
   if (!result.success) {
-    return createPPEApprovalResultPage(
-      "Bulk Request Not Updated",
-      result.message || "The bulk PPE request could not be updated.",
-      false
+    return createPPEBulkApprovalReviewPage_(
+      bulkRequestID,
+      bulkToken,
+      result.message || "The bulk PPE request could not be updated."
     );
   }
 
-  // Only consume the token after successful processing.
-  properties.deleteProperty(tokenKey);
-
-  let heading = "Bulk Request Updated";
-  let message = "The bulk PPE request was processed successfully.";
-
-  if (result.status === "Approved") {
-    heading = "Bulk Request Approved";
-    message = "All PPE request lines were approved successfully.";
-  } else if (result.status === "Rejected") {
-    heading = "Bulk Request Rejected";
-    message = "All PPE request lines were rejected.";
-  } else if (result.status === "Partially Approved") {
-    heading = "Bulk Request Partially Approved";
-    message =
-      result.approvedCount +
-      " PPE request line(s) were approved and " +
-      result.rejectedCount +
-      " line(s) were rejected.";
+  // Keep the link working while lines are still waiting.
+  if (result.waitingCount === 0) {
+    properties.deleteProperty(tokenKey);
   }
 
-  return createPPEApprovalResultPage(heading, message, true);
+  const parts = [];
+
+  if (result.approvedCount) {
+    parts.push(
+      result.approvedCount + " line(s) approved" +
+      (result.partialCount
+        ? " (" + result.partialCount + " for a lower quantity)"
+        : "") +
+      "."
+    );
+  }
+
+  if (result.rejectedCount) {
+    parts.push(result.rejectedCount + " line(s) rejected.");
+  }
+
+  if (result.waitingCount) {
+    parts.push(
+      result.waitingCount + " line(s) still waiting. " +
+      "Open the same link from the email again to review them once stock arrives."
+    );
+  } else {
+    parts.push("Every line of this bulk request has now been reviewed.");
+  }
+
+  const headings = {
+    "Approved": "Bulk Request Approved",
+    "Rejected": "Bulk Request Rejected",
+    "Partially Approved": "Bulk Request Partially Approved",
+    "Partly Reviewed": "Bulk Request Partly Reviewed",
+    "No Change": "No Changes Made"
+  };
+
+  return createPPEApprovalResultPage(
+    headings[result.status] || "Bulk Request Updated",
+    parts.join(" "),
+    true
+  );
 }
+
 
 /**
  * Wraps page content in the shared web-page layout.
@@ -2795,39 +2832,82 @@ function createPPEBulkApprovalReviewPage_(
   token,
   errorMessage
 ) {
-  const rows = getPPERequestsByBulkID_(bulkRequestID);
+  const allRows = getPPERequestsByBulkID_(bulkRequestID);
 
-  if (rows.length === 0) {
+  if (allRows.length === 0) {
     throw new Error(
       "No PPE request lines were found for " + bulkRequestID + "."
     );
   }
 
+  const rows = allRows.filter(function(row) {
+    return row.status === "Awaiting Approval";
+  });
+
+  const decidedRows = allRows.filter(function(row) {
+    return row.status !== "Awaiting Approval";
+  });
+
+  if (rows.length === 0) {
+    return createPPEApprovalResultPage(
+      "Nothing Left to Review",
+      "Every line of bulk request " + bulkRequestID +
+        " has already been approved or rejected.",
+      true
+    );
+  }
+
   const stockMap = getPPEStockMap_(getPPESheet_("Current Stock"));
   const cell = 'padding:10px;border:1px solid #ddd;vertical-align:top;';
+  const header = 'padding:10px;border:1px solid #ddd;';
   const inputStyle =
     'width:100%;box-sizing:border-box;padding:7px;' +
-    'border:1px solid #ccc;border-radius:4px;';
+    'border:1px solid #ccc;border-radius:4px;margin-bottom:6px;';
 
+  // Stock still free for each item, so two lines for the same
+  // item are not both suggested against the same stock.
+  const freeStock = {};
   let tableRows = "";
 
   rows.forEach(function(row, index) {
-    const stock = stockMap[row.ppeID.toLowerCase()];
-    const currentStock = stock ? stock.currentStock : 0;
-    const stockEnough = currentStock >= row.quantity;
+    const key = row.ppeID.toLowerCase();
 
-    let stockStyle = "color:#188038;font-weight:bold;";
-    let defaultReason = "";
-
-    if (currentStock === 0) {
-      stockStyle = "color:#d93025;font-weight:bold;";
-      defaultReason = "Out of stock";
-    } else if (!stockEnough) {
-      stockStyle = "color:#b45309;font-weight:bold;";
-      defaultReason = "Insufficient stock";
+    if (freeStock[key] === undefined) {
+      freeStock[key] = Math.max(
+        0,
+        stockMap[key] ? stockMap[key].currentStock : 0
+      );
     }
 
-    // Enough stock → Approve by default, otherwise Reject.
+    const currentStock = stockMap[key] ? stockMap[key].currentStock : 0;
+    const suggested = Math.min(row.quantity, freeStock[key]);
+    freeStock[key] -= suggested;
+
+    // Suggest: approve what is in stock; keep the rest waiting.
+    const decision = suggested > 0 ? "approve" : "hold";
+
+    let stockStyle = "color:#188038;font-weight:bold;";
+    let hint = "";
+
+    if (suggested === 0) {
+      stockStyle = "color:#d93025;font-weight:bold;";
+      hint = "No stock – suggested: keep waiting";
+    } else if (suggested < row.quantity) {
+      stockStyle = "color:#b45309;font-weight:bold;";
+      hint =
+        "Only " + suggested + " available – suggested: approve " +
+        suggested + ", the other " + (row.quantity - suggested) +
+        " keep waiting";
+    }
+
+    function option(value, label) {
+      return (
+        '<option value="' + value + '"' +
+        (decision === value ? ' selected' : '') + '>' +
+        label + '</option>'
+      );
+    }
+
     tableRows +=
       '<tr>' +
         '<td style="' + cell + '">' + escapePPEApprovalHtml(row.employeeName) + '</td>' +
@@ -2837,32 +2917,79 @@ function createPPEBulkApprovalReviewPage_(
         '<td style="' + cell + 'text-align:center;"><span style="' +
           stockStyle + '">' + currentStock + '</span></td>' +
         '<td style="' + cell + '">' + escapePPEApprovalHtml(row.reason) + '</td>' +
-        '<td style="' + cell + 'min-width:180px;">' +
+        '<td style="' + cell + 'min-width:210px;">' +
           '<input type="hidden" name="requestID_' + index + '" value="' +
             escapePPEApprovalHtml(row.requestID) + '">' +
-          '<select name="decision_' + index + '" style="' + inputStyle +
-            'padding:8px;margin-bottom:8px;">' +
-            '<option value="approve"' + (stockEnough ? ' selected' : '') + '>Approve</option>' +
-            '<option value="reject"' + (!stockEnough ? ' selected' : '') + '>Reject</option>' +
+          '<select name="decision_' + index + '" style="' + inputStyle + 'padding:8px;">' +
+            option("approve", "Approve") +
+            option("hold", "Keep waiting (approve later)") +
+            option("reject", "Reject") +
           '</select>' +
-          '<input type="text" name="rejectionReason_' + index + '" value="' +
-            escapePPEApprovalHtml(defaultReason) +
-            '" placeholder="Rejection reason" style="' + inputStyle + '">' +
+          '<label style="font-size:12px;color:#475569;">Quantity to approve' +
+            '<input type="number" name="approveQty_' + index + '" min="1" max="' +
+              row.quantity + '" step="1" value="' + (suggested || row.quantity) +
+              '" style="' + inputStyle + '">' +
+          '</label>' +
+          '<input type="text" name="rejectionReason_' + index + '" value="" ' +
+            'placeholder="Reason (required to reject)" style="' + inputStyle + '">' +
+          (hint
+            ? '<div style="font-size:12px;color:#b45309;">' +
+                escapePPEApprovalHtml(hint) + '</div>'
+            : '') +
         '</td>' +
       '</tr>';
   });
 
-  const header = 'padding:10px;border:1px solid #ddd;';
+  let decidedHtml = "";
+
+  if (decidedRows.length > 0) {
+    decidedHtml =
+      '<h3 style="color:#17365d;margin-top:30px;">Already reviewed</h3>' +
+      '<table style="border-collapse:collapse;width:100%;font-size:13px;color:#475569;">' +
+        '<tr style="background:#eef2f7;">' +
+          '<th style="' + header + '">Employee</th>' +
+          '<th style="' + header + '">PPE</th>' +
+          '<th style="' + header + '">Size</th>' +
+          '<th style="' + header + '">Qty</th>' +
+          '<th style="' + header + '">Decision</th>' +
+        '</tr>' +
+        decidedRows.map(function(row) {
+          return (
+            '<tr>' +
+              '<td style="' + cell + '">' + escapePPEApprovalHtml(row.employeeName) + '</td>' +
+              '<td style="' + cell + '">' + escapePPEApprovalHtml(row.ppeDescription) + '</td>' +
+              '<td style="' + cell + '">' + escapePPEApprovalHtml(row.size || "Standard") + '</td>' +
+              '<td style="' + cell + 'text-align:center;">' + row.quantity + '</td>' +
+              '<td style="' + cell + 'font-weight:bold;color:' +
+                (row.status === "Approved" ? '#188038' : '#d93025') + ';">' +
+                escapePPEApprovalHtml(row.status) + '</td>' +
+            '</tr>'
+          );
+        }).join("") +
+      '</table>';
+  }
 
   return buildPPEWebPage_(
     "PPE Request Review",
-    1100,
+    1150,
     '<h2 style="color:#17365d;margin-top:0;">PPE REQUEST REVIEW</h2>' +
     '<p><strong>Bulk Request ID:</strong> ' +
       escapePPEApprovalHtml(bulkRequestID) + '</p>' +
-    '<p><strong>Request Lines:</strong> ' + rows.length + '</p>' +
-    '<p style="color:#475569;font-size:14px;">Review each PPE item individually. ' +
-      'You can approve available items and reject unavailable items.</p>' +
+    '<p><strong>Lines waiting for a decision:</strong> ' + rows.length +
+      (decidedRows.length
+        ? ' &nbsp;|&nbsp; <strong>Already reviewed:</strong> ' + decidedRows.length
+        : '') +
+    '</p>' +
+    '<div style="background:#eff6ff;padding:12px;border-radius:6px;' +
+      'font-size:13px;color:#1e3a8a;margin:15px 0;line-height:1.6;">' +
+      '<strong>For each line choose:</strong><br>' +
+      '<strong>Approve</strong> – you can lower the quantity. The rest of the ' +
+        'line stays waiting as a new line for later.<br>' +
+      '<strong>Keep waiting</strong> – nothing changes; approve it later with ' +
+        'this same link, e.g. when stock arrives.<br>' +
+      '<strong>Reject</strong> – a reason is required.<br>' +
+      'Suggestions are already filled in from current stock. You can change any of them.' +
+    '</div>' +
     buildPPEErrorBox_(errorMessage) +
     '<form method="get" target="_top" action="' +
       escapePPEApprovalHtml(getPPEApprovalWebAppUrl()) + '">' +
@@ -2872,7 +2999,7 @@ function createPPEBulkApprovalReviewPage_(
         escapePPEApprovalHtml(token) + '">' +
       '<input type="hidden" name="lineCount" value="' + rows.length + '">' +
       '<div style="overflow-x:auto;">' +
-        '<table style="border-collapse:collapse;width:100%;margin:20px 0;font-size:14px;">' +
+        '<table style="border-collapse:collapse;width:100%;margin:10px 0 20px;font-size:14px;">' +
           '<tr style="background:#1f4e78;color:white;">' +
             '<th style="' + header + '">Employee</th>' +
             '<th style="' + header + '">PPE</th>' +
@@ -2885,22 +3012,27 @@ function createPPEBulkApprovalReviewPage_(
           tableRows +
         '</table>' +
       '</div>' +
-      '<div style="background:#eff6ff;padding:12px;border-radius:6px;' +
-        'font-size:13px;color:#1e3a8a;margin-bottom:20px;">' +
-        '<strong>Stock guidance:</strong> Items with sufficient stock are ' +
-        'pre-selected for approval. Items with insufficient stock are ' +
-        'pre-selected for rejection. You can change any decision before submitting.' +
-      '</div>' +
       '<button type="submit" name="action" value="submitBulkDecision" ' +
         'style="width:100%;background:#17365d;color:white;border:none;' +
         'border-radius:6px;padding:15px;font-size:16px;font-weight:bold;' +
-        'cursor:pointer;">SUBMIT DECISION</button>' +
-    '</form>'
+        'cursor:pointer;">SUBMIT DECISIONS</button>' +
+    '</form>' +
+    decidedHtml
   );
 }
 
+
 /**
- * Applies line-by-line Stores decisions for a bulk request.
+ * Applies Stores' line-by-line decisions for a bulk request.
+ *
+ * approve – full or lower quantity. With a lower quantity the
+ *           line is split: the approved part keeps the original
+ *           Request ID, the rest becomes a new waiting line.
+ * hold    – stays "Awaiting Approval" for a later review.
+ * reject  – needs a reason.
+ *
+ * Problems are returned as { success: false, message } so the
+ * review page can show them and Stores can adjust.
  */
 function processPPEBulkEmailApproval_(bulkRequestID, decisions) {
   const sheet = getPPESheet_("PPE Requests");
@@ -2912,159 +3044,260 @@ function processPPEBulkEmailApproval_(bulkRequestID, decisions) {
     };
   }
 
-  const bulkRows = {};
+  const waitingRows = {};
 
   getPPERequestsByBulkID_(bulkRequestID).forEach(function(request) {
-    bulkRows[request.requestID] = request;
+    if (request.status === "Awaiting Approval") {
+      waitingRows[request.requestID] = request;
+    }
   });
 
-  const bulkRequestIDs = Object.keys(bulkRows);
+  const waitingIDs = Object.keys(waitingRows);
 
-  if (bulkRequestIDs.length === 0) {
+  if (waitingIDs.length === 0) {
     return {
       success: false,
       message:
-        "No PPE request lines were found for " + bulkRequestID + "."
+        "Every line of " + bulkRequestID + " has already been reviewed."
     };
   }
 
-  if (decisions.length !== bulkRequestIDs.length) {
-    return {
-      success: false,
-      message:
-        "Every PPE request line must be reviewed before the decision can be submitted."
-    };
-  }
-
-  const seenRequestIDs = {};
+  const seen = {};
   const approvedLines = [];
   const rejectedLines = [];
+  const heldLines = [];
 
-  decisions.forEach(function(decision) {
+  for (let i = 0; i < decisions.length; i++) {
+    const decision = decisions[i];
     const requestID = cleanPPEText_(decision.requestID);
     const action = cleanPPEKey_(decision.decision);
-    const rejectionReason = cleanPPEText_(decision.rejectionReason);
-
-    if (seenRequestIDs[requestID]) {
-      throw new Error(
-        "Duplicate PPE request decision received for " + requestID + "."
-      );
-    }
-
-    seenRequestIDs[requestID] = true;
-
-    const request = bulkRows[requestID];
+    const request = waitingRows[requestID];
 
     if (!request) {
-      throw new Error(
-        "Request " +
-        requestID +
-        " does not belong to bulk request " +
-        bulkRequestID +
-        "."
-      );
+      return {
+        success: false,
+        message:
+          "Request " + requestID + " is no longer waiting for approval " +
+          "(it may already have been reviewed). The page has been reloaded."
+      };
     }
 
-    if (request.status !== "Awaiting Approval") {
-      throw new Error(
-        "Request " +
-        requestID +
-        " has already been processed. Current status: " +
-        request.status
-      );
+    if (seen[requestID]) {
+      return {
+        success: false,
+        message: "Request " + requestID + " was submitted twice."
+      };
     }
+
+    seen[requestID] = true;
+
+    const label =
+      request.ppeDescription + " – " + (request.size || "Standard") +
+      " for " + request.employeeName;
 
     if (action === "approve") {
-      approvedLines.push(request);
-    } else if (action === "reject") {
-      if (!rejectionReason) {
-        throw new Error(
-          "A rejection reason is required for request " + requestID + "."
-        );
+      const quantity =
+        decision.approveQuantity === null ||
+        decision.approveQuantity === undefined
+          ? request.quantity
+          : decision.approveQuantity;
+
+      if (
+        !Number.isInteger(quantity) ||
+        quantity < 1 ||
+        quantity > request.quantity
+      ) {
+        return {
+          success: false,
+          message:
+            "The quantity to approve for " + label +
+            " must be between 1 and " + request.quantity + "."
+        };
       }
 
-      request.rejectionReason = rejectionReason;
-      rejectedLines.push(request);
-    } else {
-      throw new Error("Invalid decision for request " + requestID + ".");
-    }
-  });
+      approvedLines.push({ request: request, quantity: quantity });
 
-  /*
-   * If the same PPE item appears more than once, compare
-   * the TOTAL approved quantity with current stock.
-   */
-  const stockMap = getPPEStockMap_(getPPESheet_("Current Stock"));
-  const approvedQuantityByPPE = {};
+    } else if (action === "reject") {
+      if (!cleanPPEText_(decision.rejectionReason)) {
+        return {
+          success: false,
+          message: "Please enter a rejection reason for " + label + "."
+        };
+      }
 
-  approvedLines.forEach(function(request) {
-    const key = request.ppeID.toLowerCase();
-    approvedQuantityByPPE[key] =
-      Number(approvedQuantityByPPE[key] || 0) + request.quantity;
-  });
-
-  Object.keys(approvedQuantityByPPE).forEach(function(key) {
-    const requestedQuantity = approvedQuantityByPPE[key];
-    const availableStock = stockMap[key] ? stockMap[key].currentStock : 0;
-
-    if (requestedQuantity <= availableStock) {
-      return;
-    }
-
-    const example =
-      approvedLines.find(function(request) {
-        return request.ppeID.toLowerCase() === key;
+      rejectedLines.push({
+        request: request,
+        reason: cleanPPEText_(decision.rejectionReason)
       });
 
-    throw new Error(
-      "Insufficient stock to approve all selected lines for " +
-      (example
-        ? example.ppeDescription + " – " + (example.size || "Standard")
-        : key) +
-      ". Available stock: " +
-      availableStock +
-      ". Total selected for approval: " +
-      requestedQuantity +
-      ". Please reject enough lines to match available stock."
-    );
+    } else if (action === "hold") {
+      heldLines.push(request);
+
+    } else {
+      return {
+        success: false,
+        message: "Invalid decision for " + label + "."
+      };
+    }
+  }
+
+  if (Object.keys(seen).length !== waitingIDs.length) {
+    return {
+      success: false,
+      message:
+        "A decision is needed for every waiting line. The page has been reloaded."
+    };
+  }
+
+  /*
+   * Stock check on the quantities being approved, added up
+   * per item in case the same item appears on several lines.
+   */
+  const stockMap = getPPEStockMap_(getPPESheet_("Current Stock"));
+  const approvedByItem = {};
+
+  approvedLines.forEach(function(line) {
+    const key = line.request.ppeID.toLowerCase();
+    approvedByItem[key] = (approvedByItem[key] || 0) + line.quantity;
   });
+
+  const stockKeys = Object.keys(approvedByItem);
+
+  for (let i = 0; i < stockKeys.length; i++) {
+    const key = stockKeys[i];
+    const available = stockMap[key] ? stockMap[key].currentStock : 0;
+
+    if (approvedByItem[key] > available) {
+      const example =
+        approvedLines.find(function(line) {
+          return line.request.ppeID.toLowerCase() === key;
+        }).request;
+
+      return {
+        success: false,
+        message:
+          "Not enough stock of " + example.ppeDescription + " – " +
+          (example.size || "Standard") + ". Available: " + available +
+          ", selected to approve: " + approvedByItem[key] +
+          ". Lower the quantity, or choose Keep waiting for some lines."
+      };
+    }
+  }
+
+  if (approvedLines.length === 0 && rejectedLines.length === 0) {
+    return {
+      success: true,
+      bulkRequestID: bulkRequestID,
+      status: "No Change",
+      approvedCount: 0,
+      partialCount: 0,
+      rejectedCount: 0,
+      heldCount: heldLines.length,
+      waitingCount: waitingIDs.length
+    };
+  }
 
   const approvedBy =
     Session.getActiveUser().getEmail() || "Stores Approval";
 
-  approvedLines.forEach(function(request) {
-    reserveBudgetForPPERequest_(request);
-  });
+  /*
+   * Reserve budget for the approved quantities first, so a
+   * budget problem stops everything before the sheet changes.
+   */
+  try {
+    approvedLines.forEach(function(line) {
+      reserveBudgetForPPERequest_(
+        Object.assign({}, line.request, { quantity: line.quantity })
+      );
+    });
+  } catch (budgetError) {
+    return { success: false, message: budgetError.message };
+  }
 
-  approvedLines.forEach(function(request) {
+  let partialCount = 0;
+
+  approvedLines.forEach(function(line) {
+    const request = line.request;
+    let comment = "Approved through Stores bulk review.";
+
+    if (line.quantity < request.quantity) {
+      partialCount++;
+
+      const remainder = request.quantity - line.quantity;
+
+      const remainderID =
+        generatePPEReferenceID("Next PPE Request Number", "PPE-REQ-", 5);
+
+      // New waiting line for the rest (same employee, item and bulk).
+      const copy =
+        sheet.getRange(request.rowNumber, 1, 1, 22).getValues()[0].slice();
+
+      copy[0] = remainderID;          // A Request ID
+      copy[1] = new Date();           // B Request Date
+      copy[9] = remainder;            // J Quantity
+      copy[13] = "Awaiting Approval"; // N Status
+      copy[14] = "";                  // O Approved By
+      copy[15] = "";                  // P Approval Date
+      copy[16] = "";                  // Q Issue ID
+      copy[17] =
+        "Remaining " + remainder + " of " + request.requestID +
+        " – kept waiting during bulk review.";
+
+      sheet.appendRow(copy);
+
+      // Approved part keeps the original Request ID.
+      sheet.getRange(request.rowNumber, 10).setValue(line.quantity);
+
+      comment =
+        "Partly approved through Stores bulk review: " + line.quantity +
+        " of " + request.quantity + ". Remaining " + remainder +
+        " moved to " + remainderID + " (waiting).";
+    }
+
     setPPERequestDecision_(
       sheet,
       request.rowNumber,
       "Approved",
       approvedBy,
-      "Approved through Stores bulk review."
+      comment
     );
   });
 
-  rejectedLines.forEach(function(request) {
+  rejectedLines.forEach(function(line) {
     setPPERequestDecision_(
       sheet,
-      request.rowNumber,
+      line.request.rowNumber,
       "Rejected",
       approvedBy,
-      request.rejectionReason
+      line.reason
     );
   });
 
   SpreadsheetApp.flush();
 
-  // Overall result (column N keeps the per-line status).
-  let overallStatus = "Partially Approved";
+  /*
+   * Overall result across every line of the bulk request
+   * (column N keeps each line's own status).
+   */
+  const allRows = getPPERequestsByBulkID_(bulkRequestID);
 
-  if (approvedLines.length === bulkRequestIDs.length) {
-    overallStatus = "Approved";
-  } else if (rejectedLines.length === bulkRequestIDs.length) {
-    overallStatus = "Rejected";
+  const count = function(status) {
+    return allRows.filter(function(row) {
+      return row.status === status;
+    }).length;
+  };
+
+  const approvedTotal = count("Approved");
+  const rejectedTotal = count("Rejected");
+  const waitingTotal = count("Awaiting Approval");
+
+  let overallStatus = "Partly Reviewed";
+
+  if (waitingTotal === 0) {
+    overallStatus =
+      rejectedTotal === 0 ? "Approved" :
+      approvedTotal === 0 ? "Rejected" :
+      "Partially Approved";
   }
 
   try {
@@ -3083,12 +3316,11 @@ function processPPEBulkEmailApproval_(bulkRequestID, decisions) {
     approvedBy,
     "Bulk PPE Request Reviewed",
     bulkRequestID,
-    "Result: " +
-      overallStatus +
-      " | Approved lines: " +
-      approvedLines.length +
-      " | Rejected lines: " +
-      rejectedLines.length
+    "Result: " + overallStatus +
+      " | Approved now: " + approvedLines.length +
+      " (partly: " + partialCount + ")" +
+      " | Rejected now: " + rejectedLines.length +
+      " | Still waiting: " + waitingTotal
   );
 
   return {
@@ -3096,8 +3328,10 @@ function processPPEBulkEmailApproval_(bulkRequestID, decisions) {
     bulkRequestID: bulkRequestID,
     status: overallStatus,
     approvedCount: approvedLines.length,
+    partialCount: partialCount,
     rejectedCount: rejectedLines.length,
-    requestsUpdated: bulkRequestIDs.length
+    heldCount: heldLines.length,
+    waitingCount: waitingTotal
   };
 }
 
@@ -3582,10 +3816,14 @@ function sendPPEBulkManagerDecisionNotification_(
   const rejectedCount =
     rows.filter(function(row) { return row.status === "Rejected"; }).length;
 
+  const waitingCount =
+    rows.filter(function(row) { return row.status === "Awaiting Approval"; }).length;
+
   const summaryRows = [
     ["Overall Result", overallStatus],
     ["Approved Lines", approvedCount],
     ["Rejected Lines", rejectedCount],
+    ["Still Waiting", waitingCount],
     ["Decision By", decisionBy]
   ];
 
@@ -3602,7 +3840,8 @@ function sendPPEBulkManagerDecisionNotification_(
           style: function(r) {
             return (
               "font-weight:bold;color:" +
-              (r.status === "Approved" ? "#188038" : "#d93025") +
+              (r.status === "Approved" ? "#188038" :
+               r.status === "Rejected" ? "#d93025" : "#b45309") +
               ";"
             );
           }
@@ -3622,7 +3861,10 @@ function sendPPEBulkManagerDecisionNotification_(
       buildPPEEmailDetailTable_(summaryRows) +
       lineTable +
       '<p>Approved PPE items are now available for issue through the PPE Management System.</p>' +
-      '<p>Rejected PPE items have not reserved budget and will not appear as approved requests for issue.</p>',
+      '<p>Rejected PPE items have not reserved budget and will not appear as approved requests for issue.</p>' +
+      (waitingCount
+        ? '<p>Lines marked Awaiting Approval are still waiting for Stores (for example until stock arrives). You will receive another update when they are reviewed.</p>'
+        : ''),
       850
     );
 
