@@ -665,3 +665,9 @@ h1.eyebrow { font-size: 14px; letter-spacing: .08em; line-height: 1.4; }
 .policy-updated { color: var(--muted) !important; font-size: 14px; }
 .policy-back { margin-top: 40px; }
 .footer-bottom a { color: var(--muted); }
+
+/* ---------- Testimonials ---------- */
+.testimonial-grid { max-width: 1000px; margin: 0 auto; }
+.testimonial-grid .testimonial blockquote { font-size: 17px; line-height: 1.65; }
+.testimonial-grid .testimonial blockquote::before { content: none; }
+@media (max-width: 900px) { .testimonial-grid { grid-template-columns: 1fr; max-width: 620px; } }

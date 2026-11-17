@@ -267,9 +267,8 @@ def page(fname, d):
   <!-- SOCIAL PROOF: FEATURED TESTIMONIAL -->
   <section class="section section-grey">
     <div class="container">
-      <h2 class="section-title">What Clients Say</h2>
+      <h2 class="section-title">What Our Clients Say</h2>
       <figure class="card featured-quote">
-        <div class="stars" aria-label="5 out of 5">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
         <blockquote>&ldquo;{q}&rdquo;</blockquote>
         <figcaption><strong>{who}</strong> &middot; {where}</figcaption>
       </figure>
