@@ -220,6 +220,7 @@ def page(fname, d):
   <section class="hero bg-photo" style="--photo: url('assets/photos/{d["hero_photo"][0]}')">
     <div class="container hero-grid">
       <div class="hero-copy">
+        <a class="back-services" href="index.html#services" data-back-services><span aria-hidden="true">&larr;</span> Back to all services</a>
         <h1 class="eyebrow">{d["keyword"]}</h1>
         <p class="hero-title">{d["headline"]}</p>
         <p class="lead">{d["lead"]}</p>
@@ -346,6 +347,8 @@ def page(fname, d):
   </section>
 
 </main>
+
+<div class="back-services-bar"><div class="container"><a class="back-services" href="index.html#services" data-back-services><span aria-hidden="true">&larr;</span> Back to all services</a></div></div>
 
 {FOOTER}
 

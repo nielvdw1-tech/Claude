@@ -42,7 +42,7 @@
   // Always open a page at the top (unless a link points to a section)
   if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
   function toTop() {
-    if (location.hash && location.hash.length > 1) return;
+    if (window.vdwKeepPosition || (location.hash && location.hash.length > 1)) return;
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   }
   toTop();
@@ -114,6 +114,27 @@
       window.scrollTo({ top: 0, left: 0, behavior: reduce ? 'auto' : 'smooth' });
     });
   });
+
+  // "Back to all services": open the homepage at the Services section
+  document.querySelectorAll('[data-back-services]').forEach(function (link) {
+    link.addEventListener('click', function () {
+      try { sessionStorage.setItem('vdwScrollTo', 'services'); } catch (e) {}
+    });
+  });
+  var scrollTarget = (location.hash || '').slice(1);
+  try { scrollTarget = scrollTarget || sessionStorage.getItem('vdwScrollTo') || ''; sessionStorage.removeItem('vdwScrollTo'); } catch (e) {}
+  if (scrollTarget && document.getElementById(scrollTarget)) {
+    window.vdwKeepPosition = true;
+    var goToTarget = function () {
+      var el = document.getElementById(scrollTarget);
+      var header = document.querySelector('.site-header');
+      var offset = header ? header.getBoundingClientRect().height + 12 : 0;
+      window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - offset, behavior: 'instant' });
+    };
+    goToTarget();
+    window.addEventListener('load', goToTarget);
+    setTimeout(goToTarget, 300);
+  }
 
   // Footer year
   var yearEl = document.getElementById('year');

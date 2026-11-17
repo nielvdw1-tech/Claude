@@ -637,3 +637,12 @@ h1.eyebrow { font-size: 14px; letter-spacing: .08em; line-height: 1.4; }
   .about-card .team-photo, .team-grid .team-photo { aspect-ratio: auto; }
   .about-card .team-photo img, .team-grid .team-photo img { height: auto; object-fit: contain; }
 }
+
+/* ---------- Back to all services ---------- */
+.back-services { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 15px; text-decoration: none; color: var(--blue-dark); margin-bottom: 18px; }
+.back-services:hover { text-decoration: underline; }
+.bg-photo .back-services { color: #9fdcf6; }
+.back-services-bar { background: #fff; border-top: 1px solid var(--border); padding: 22px 0; }
+.back-services-bar .back-services { margin: 0; }
+.back-services { padding: 9px 16px; border: 1.5px solid currentColor; border-radius: 999px; line-height: 1.2; }
+.back-services:hover { text-decoration: none; background: rgba(34, 169, 225, .12); }
