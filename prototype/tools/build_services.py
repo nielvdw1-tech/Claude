@@ -111,7 +111,7 @@ FOOTER = '''<footer class="site-footer">
     </div>
   </div>
   <div class="container footer-bottom">
-    <p>&copy; <span id="year"></span> VDW Health &amp; Safety Solutions. All rights reserved.</p>
+    <p>&copy; <span id="year"></span> VDW Health &amp; Safety Solutions. All rights reserved. &middot; <a href="privacy.html">Privacy Policy</a></p>
   </div>
 </footer>'''
 

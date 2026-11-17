@@ -209,22 +209,72 @@
   }
 
   // ---------- Sending results ----------
-  // TODO: connect this to VDW's lead system (for example a Supabase table or an email service)
-  // so that VDW receives each completed check and the visitor gets their results by email.
+  // Each completed check is posted to Netlify Forms (form name "compliance-check"), which stores it
+  // and emails it to VDW. If sending fails (for example on a preview link, or offline), the visitor
+  // gets buttons to send the same summary to Niel on WhatsApp or by email, so no lead is lost.
+  var VDW_WHATSAPP = '27728438094';
+  var VDW_EMAIL = 'niel@vdwsafety.com';
+
+  function pctText(n) { return n === null ? 'N/A' : n + '%'; }
+
+  function summaryText(r) {
+    var lines = [
+      'Multi-Branch Compliance Check results',
+      'Name: ' + contact.fullName + (contact.role ? ' (' + contact.role + ')' : ''),
+      'Company: ' + contact.company,
+      'Phone: ' + contact.phone + ' | Email: ' + contact.email,
+      'Branches: ' + company.branches + ' | Employees: ' + company.employees + ' | Type: ' + company.industry,
+      'Client audits: ' + company.clientAudits,
+      'Score: ' + r.overall + '% (' + r.band.label + ') | Audit readiness ' + pctText(r.audit) + ' | Legal compliance ' + pctText(r.legal),
+      'Gaps (' + r.gaps.length + '):'
+    ];
+    r.gaps.forEach(function (q) { lines.push('- ' + q.missing + ' [' + q.reference + ']'); });
+    return lines.join('\n');
+  }
+
+  function encodeForm(data) {
+    return Object.keys(data).map(function (k) {
+      return encodeURIComponent(k) + '=' + encodeURIComponent(data[k] == null ? '' : data[k]);
+    }).join('&');
+  }
+
+  function showFallback(r) {
+    var text = summaryText(r);
+    document.getElementById('sendWhatsApp').href = 'https://wa.me/' + VDW_WHATSAPP + '?text=' + encodeURIComponent(text);
+    document.getElementById('sendEmail').href = 'mailto:' + VDW_EMAIL + '?subject=' +
+      encodeURIComponent('Compliance check results: ' + contact.company) + '&body=' + encodeURIComponent(text);
+    document.getElementById('sendStatus').hidden = false;
+  }
+
   function submitResults(r) {
-    var payload = {
-      submittedAt: new Date().toISOString(),
-      contact: contact,
-      company: company,
-      score: r.overall,
-      riskLevel: r.band.label,
-      auditReadiness: r.audit,
-      legalCompliance: r.legal,
-      gaps: r.gaps.map(function (q) { return { id: q.id, gap: q.missing, reference: q.reference }; }),
-      answers: answers
+    var data = {
+      'form-name': 'compliance-check',
+      submitted_at: new Date().toISOString(),
+      full_name: contact.fullName,
+      role: contact.role,
+      company: contact.company,
+      phone: contact.phone,
+      email: contact.email,
+      branches: company.branches,
+      employees: company.employees,
+      industry: company.industry,
+      client_audits: company.clientAudits,
+      score: r.overall + '%',
+      risk_level: r.band.label,
+      audit_readiness: pctText(r.audit),
+      legal_compliance: pctText(r.legal),
+      gaps: r.gaps.map(function (q) { return '- ' + q.missing + ' [' + q.reference + ']'; }).join('\n') || 'None',
+      answers: DATA.questions.map(function (q) { return q.id + ': ' + (answers[q.id] || '-'); }).join(', '),
+      consent: 'yes'
     };
-    if (window.console) console.info('Compliance check completed (not sent yet: no backend connected)', payload);
-    return payload;
+    if (location.protocol === 'file:' || !window.fetch) { showFallback(r); return; }
+    fetch('/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: encodeForm(data)
+    }).then(function (res) {
+      if (!res.ok) throw new Error('Status ' + res.status);
+    }).catch(function () { showFallback(r); });
   }
 
   // The check opens at the first step; its Back button returns to the landing page

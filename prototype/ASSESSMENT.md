@@ -42,7 +42,8 @@
 
 ## 3. Before it can replace Zite
 
-- [ ] **Connect a backend (most important).** Right now results show on screen but are **not sent anywhere**: VDW isn't notified and the visitor isn't emailed. The `submitResults` function in `assessment.js` already builds everything needed (contact details, company details, score, gaps and answers). It needs connecting to something that stores the lead and sends emails. The repo already uses Supabase for the Compliance Portal, which is one option.
+- [x] **Backend connected (Netlify Forms).** Each completed check is posted to the Netlify form `compliance-check` (defined in `assessment.html`). After the site is live on Netlify: open **Site configuration > Forms**, enable form detection, then under **Form notifications** add an email notification to niel@vdwsafety.com. Netlify's free tier includes 100 submissions a month. If sending ever fails, the visitor sees buttons to send their results to Niel on WhatsApp or by email.
+- [ ] **Send the visitor their copy.** Netlify emails VDW, not the visitor. The check promises "we'll send you a copy", so reply to each submission with the results (or automate this later with an email service).
 - [ ] **Booking link.** The "Book My Discovery Call" button opens an email. A calendar booking link (such as Calendly or Microsoft Bookings) would convert better.
 - [ ] **Check the legal wording** of the 18 original questions after the "every branch" edits.
 - [ ] **Credentials.** The landing page now mentions your SAMTRAC, ISO 9001 Lead Auditor and ISO 31000 credentials, taken from the Zite intro. Confirm they're current.

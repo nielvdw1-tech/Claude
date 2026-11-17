@@ -646,3 +646,22 @@ h1.eyebrow { font-size: 14px; letter-spacing: .08em; line-height: 1.4; }
 .back-services-bar .back-services { margin: 0; }
 .back-services { padding: 9px 16px; border: 1.5px solid currentColor; border-radius: 999px; line-height: 1.2; }
 .back-services:hover { text-decoration: none; background: rgba(34, 169, 225, .12); }
+
+/* ---------- Results: sending fallback ---------- */
+.send-status { border: 2px solid var(--orange); background: #fffaf2; }
+.send-status h2 { font-size: 20px; }
+.send-status p { color: var(--muted); }
+.send-status-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; }
+@media (max-width: 640px) { .send-status-actions .btn { width: 100%; } }
+.consent a { color: var(--blue-dark); }
+
+/* ---------- Privacy policy ---------- */
+.policy-wrap { max-width: 780px; }
+.policy h1 { font-size: clamp(32px, 4vw, 44px); }
+.policy h2 { font-size: 22px; margin-top: 36px; }
+.policy p, .policy li { color: var(--text); }
+.policy ul { padding-left: 22px; margin: 0 0 1em; }
+.policy li { margin-bottom: 6px; }
+.policy-updated { color: var(--muted) !important; font-size: 14px; }
+.policy-back { margin-top: 40px; }
+.footer-bottom a { color: var(--muted); }
