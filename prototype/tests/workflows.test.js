@@ -1413,6 +1413,27 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
       await p.click('[data-act=audPlanEdit][data-id="APL-005"]'); await p.waitForTimeout(120); await mbtn('Remove from programme'); await p.waitForTimeout(120); await mbtn('Remove'); await p.waitForTimeout(120);
       ok('AP10 a planned audit can be removed from the programme', await S(() => !byId('auditPlans', 'APL-005')));
     }
+    // filters on the list of audits
+    {
+      await go('#/audits/records');
+      const rows = async () => p.$$eval('.flt-bar[data-base="#/audits/records"] ~ .card-body tbody tr', r => r.filter(x => x.style.display !== 'none').map(x => x.querySelector('.mono').textContent));
+      const bar = await p.$$eval('.flt-bar[data-base="#/audits/records"] select', s => s.map(x => x.options[0].text));
+      ok('AF1 the audit list has search, kind of audit, status, branch, result and date filters', ['All kinds of audit', 'All statuses', 'All branches', 'Any result', 'Any date'].every(t => bar.includes(t)) && await has('.flt-bar input[data-fq="#/audits/records"]'), bar.join());
+      await p.selectOption('[data-flt=fkind]', 'Housekeeping'); await p.waitForTimeout(150);
+      let r = await rows(); ok('AF2 filter by kind of audit', r.length >= 2 && r.includes('AUD-101') && !r.includes('AUD-103'), r.join());
+      await p.selectOption('[data-flt=fresult]', 'repeat'); await p.waitForTimeout(150);
+      r = await rows(); ok('AF3 filters combine (housekeeping + has repeat findings)', r.join() === 'AUD-102', r.join());
+      await p.click('[data-act=audFltClear]'); await p.waitForTimeout(150);
+      await p.selectOption('[data-flt=fsite]', 'S-DBN'); await p.waitForTimeout(150);
+      r = await rows(); ok('AF4 filter by branch', r.length >= 1 && r.every(x => x === 'AUD-103'), r.join());
+      await p.click('[data-act=audFltClear]'); await p.waitForTimeout(150);
+      await p.fill('input[data-fq="#/audits/records"]', 'evacuation drill'); await p.waitForTimeout(100);
+      r = await rows(); ok('AF5 the search also finds words in the findings', r.join() === 'AUD-103', r.join());
+      await p.fill('input[data-fq="#/audits/records"]', ''); await p.waitForTimeout(80);
+      await p.selectOption('[data-flt=fresult]', 'critical'); await p.selectOption('[data-flt=fstatus]', 'In progress'); await p.waitForTimeout(150);
+      ok('AF6 when nothing matches the list says so and offers "Clear filters"', (await p.innerText('#content')).includes('No audits match these filters') && await has('[data-act=audFltClear]'));
+      await p.click('[data-act=audFltClear]'); await p.waitForTimeout(150);
+    }
     await asUser('P-007'); ok('AD18 the planned auditor gets a task when an audit is due', await S(() => myTasks().some(x => /^Audit: Housekeeping/.test(x.title))));
     await asUser('P-002');
   }

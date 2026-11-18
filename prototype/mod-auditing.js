@@ -73,7 +73,7 @@ ROUTES.audits = (p, q = {}) => {
   const tabs = [['programme', 'Audit programme', late.length || '', 'red'], ['records', 'Audits', audits.length], ['templates', 'Audit checklists', auditTemplates().length]];
   let body = '';
   if (tab === 'programme') body = auditProgrammeHtml(plans);
-  if (tab === 'records') body = auditRecordsHtml(audits);
+  if (tab === 'records') body = auditRecordsHtml(audits, q);
   if (tab === 'templates') body = auditTemplatesHtml();
   const fab = tab === 'templates' ? (canManageAudits() ? fabBtn('audTplNew', 'New audit checklist') : '') : fabStack([canConduct() && { act: 'audStart', label: 'Start audit' }, canManageAudits() && tab === 'programme' && { act: 'audPlanNew', label: 'Plan audit', icon: 'clock', cls: 'ghost' }]);
   const html = `${pageHead('Audits', 'Planned audits of each branch against controlled checklists. Findings become corrective actions, and every audit has a signed report.', '', scopePill())}${fab}
@@ -95,11 +95,33 @@ function auditProgrammeHtml(plans) {
         <td><div class="btn-row nowrap">${x.paused ? '' : open ? `<a class="btn sm" href="#/audits/${open.id}">Continue</a>` : canConduct() ? `<button class="btn sm primary" data-act="audStart" data-plan="${x.id}">Start</button>` : ''}${canManageAudits() ? `<button class="btn sm" data-act="audPlanEdit" data-id="${x.id}" title="Edit, pause or remove" aria-label="Edit, pause or remove this planned audit">${icon('edit', 'sm')} Edit</button>` : ''}</div></td></tr>`; }).join('')}
   </tbody></table></div></div></div>`;
 }
-function auditRecordsHtml(audits) {
-  if (!audits.length) return `<div class="card">${emptyList('No audits yet.')}</div>`;
-  return `<div class="card">${searchBar('#/audits/records', audits.length, 'Search ID, checklist, branch or auditor…')}<div class="card-body flush"><div class="table-wrap"><table class="tbl stackable"><thead><tr><th>Audit</th><th>Branch / area</th><th>Date</th><th>Auditor</th><th>Score</th><th>Findings</th><th>Status</th></tr></thead><tbody>
+/* Filters on the list of audits: search, kind of audit, status, branch, result, period (the same toolbar as the other registers) */
+const AUD_FLT = {
+  fkind: { all: 'All kinds of audit', list: () => AUD_CATS.map(c => ({ value: c, label: c })), test: (a, v) => a.template.category === v },
+  fstatus: { all: 'All statuses', list: () => [{ value: 'In progress', label: 'In progress' }, { value: 'Completed', label: 'Completed' }], test: (a, v) => a.status === v },
+  fsite: { all: 'All branches', list: () => orgSites().map(x => ({ value: x.id, label: x.short || x.name })), test: (a, v) => a.site === v, show: () => orgSites().length > 1 },
+  fresult: { all: 'Any result', list: () => [{ value: 'good', label: 'Good (85% and above)' }, { value: 'ok', label: 'Acceptable (70–84%)' }, { value: 'poor', label: 'Poor (below 70%)' }, { value: 'critical', label: 'Not acceptable (critical item)' }, { value: 'repeat', label: 'Has repeat findings' }, { value: 'open', label: 'Has open corrective actions' }],
+    test: (a, v) => { if (a.status !== 'Completed') return false; const sc = a.score, r = auditRating(sc).tone;
+      return v === 'critical' ? !!sc.critical : v === 'good' ? !sc.critical && r === 'green' : v === 'ok' ? !sc.critical && r === 'amber' : v === 'poor' ? !sc.critical && r === 'red'
+        : v === 'repeat' ? (a.findingsList || []).some(f => f.repeat) : (a.findingsList || []).some(f => f.action && actionOpen(byId('actions', f.action) || {})); } },
+  fperiod: { all: 'Any date', list: () => [{ value: '3', label: 'Last 3 months' }, { value: '6', label: 'Last 6 months' }, { value: '12', label: 'Last 12 months' }, { value: 'year', label: 'This year' }],
+    test: (a, v) => v === 'year' ? a.date.slice(0, 4) === TODAY.slice(0, 4) : daysTo(a.date) >= -Math.round(+v * 30.44) }
+};
+function auditRecordsHtml(all, q = {}) {
+  if (!all.length) return `<div class="card">${emptyList('No audits yet.')}</div>`;
+  const base = '#/audits/records', on = Object.keys(AUD_FLT).filter(k => q[k]);
+  const audits = all.filter(a => on.every(k => AUD_FLT[k].test(a, q[k])));
+  const sel = k => { const f = AUD_FLT[k]; if (f.show && !f.show()) return ''; return `<select data-flt="${k}" aria-label="${esc(f.all)}"><option value="">${esc(f.all)}</option>${f.list().map(o => `<option value="${esc(o.value)}" ${q[k] === o.value ? 'selected' : ''}>${esc(o.label)}</option>`).join('')}</select>`; };
+  setTimeout(() => fltSearch(base), 0);
+  const bar = `<div class="toolbar flt-bar" data-base="${base}" data-total="${all.length}" data-shown="${audits.length}">
+    <div class="search">${icon('search', 'sm')}<input type="search" data-fq="${base}" placeholder="Search audits and findings…" value="${esc(FLT_Q[base] || '')}" aria-label="Search audits"></div>
+    ${Object.keys(AUD_FLT).map(sel).join('')}
+    ${on.length ? `<button type="button" class="link-btn" data-act="audFltClear">Clear filters</button>` : ''}
+    <span class="tb-count">${audits.length} of ${all.length} records</span></div>`;
+  if (!audits.length) return `<div class="card">${bar}${emptyList('No audits match these filters.')}</div>`;
+  return `<div class="card">${bar}<div class="card-body flush"><div class="table-wrap"><table class="tbl stackable"><thead><tr><th>Audit</th><th>Branch / area</th><th>Date</th><th>Auditor</th><th>Score</th><th>Findings</th><th>Status</th></tr></thead><tbody>
     ${audits.map(a => { const r = auditRating(a.score || {}), f = auditFindings(a);
-      return `<tr class="rowlink" data-href="#/audits/${a.id}"><td data-label="Audit"><span class="mono">${a.id}</span><div class="t-title">${esc(a.template.title)}</div></td><td data-label="Branch">${esc(sname(a.site))}${a.area ? `<div class="t-sub">${esc(a.area)}</div>` : ''}</td><td data-label="Date">${fmt(a.date)}</td><td data-label="Auditor">${esc(pname(a.auditor))}</td><td data-label="Score">${a.status === 'Completed' ? `<b class="due ${r.tone}">${a.score.pct}%</b><div class="t-sub">${esc(r.label)}</div>` : '—'}</td><td data-label="Findings">${f.length ? `${f.filter(x => x.g === 'Major').length} major · ${f.filter(x => x.g === 'Minor').length} minor · ${f.filter(x => x.g === 'Observation').length} obs.` : a.status === 'Completed' ? 'None' : '—'}</td><td data-label="Status">${badge(a.status, a.status === 'Completed' ? 'green' : 'blue')}</td></tr>`; }).join('')}
+      return `<tr class="rowlink" data-href="#/audits/${a.id}"><td data-label="Audit"><span class="mono">${a.id}</span><div class="t-title">${esc(a.template.title)}</div><span hidden>${esc(a.template.category)} ${f.map(x => esc(x.text + " " + (x.note || ""))).join(" ")}</span></td><td data-label="Branch">${esc(sname(a.site))}${a.area ? `<div class="t-sub">${esc(a.area)}</div>` : ''}</td><td data-label="Date">${fmt(a.date)}</td><td data-label="Auditor">${esc(pname(a.auditor))}</td><td data-label="Score">${a.status === 'Completed' ? `<b class="due ${r.tone}">${a.score.pct}%</b><div class="t-sub">${esc(r.label)}</div>` : '—'}</td><td data-label="Findings">${f.length ? `${f.filter(x => x.g === 'Major').length} major · ${f.filter(x => x.g === 'Minor').length} minor · ${f.filter(x => x.g === 'Observation').length} obs.` : a.status === 'Completed' ? 'None' : '—'}</td><td data-label="Status">${badge(a.status, a.status === 'Completed' ? 'green' : 'blue')}</td></tr>`; }).join('')}
   </tbody></table></div></div></div>`;
 }
 function auditTemplatesHtml() {
@@ -113,6 +135,7 @@ function auditTemplatesHtml() {
 }
 
 /* ---------------- Plan and start ---------------- */
+ACT.audFltClear = (el) => { FLT_Q['#/audits/records'] = ''; fltGo(el.closest('.flt-bar'), Object.fromEntries(Object.keys(AUD_FLT).map(k => [k, '']))); };
 ACT.audPlanNew = () => openModal({ title: 'Plan an audit', sub: 'Adds a recurring audit to the programme. The auditor gets a task when it is due.', body: `<div class="form-grid">
     ${fld({ name: 'template', label: 'Audit checklist', type: 'select', options: opts(auditTemplates().filter(atCurrent).map(t => ({ value: t.id, label: `${t.title}` })), '', '— Select —'), required: true, full: true })}
     ${fld({ name: 'site', label: 'Branch', type: 'select', options: siteOptions(defaultSite(), false), required: true })}
