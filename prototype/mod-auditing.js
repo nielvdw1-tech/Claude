@@ -31,7 +31,10 @@ const AUD_GRADES = ['Major', 'Minor', 'Observation'];
 const AUD_CATS = ['Legal compliance', 'Housekeeping', 'Fire safety', 'Hazardous chemical substances', 'Stacking and storage', 'Emergency preparedness and first aid', 'Personal protective equipment', 'Other'];
 const atCurrent = t => (t.revisions || []).filter(r => r.status === 'Approved').slice(-1)[0] || null;
 const atDraft = t => (t.revisions || []).find(r => r.status === 'Draft') || null;
-const auditTemplates = () => (S.auditTemplates || []).filter(t => !t.org || t.org === S.ui.org);
+const auditTemplates = () => (S.auditTemplates || []).filter(t => (!t.org || t.org === S.ui.org) && !(t.org == null && (S.auditTemplates || []).some(x => x.org === S.ui.org && x.replaces === t.id)));
+// One "family" id per checklist, so a company's edited copy of a starter keeps the starter's audit history (trend, repeat findings)
+const atFamily = id => { const t = byId('auditTemplates', id); return t && t.replaces ? t.replaces : id; };
+if (!ICON_PATHS.edit) ICON_PATHS.edit = '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>';
 const audItems = snap => snap.sections.flatMap(s => s.items.map(i => Object.assign({ section: s.title }, i)));
 function canConduct() { return can('inspect'); }
 function canManageAudits() { return can('doc.create'); }
@@ -50,7 +53,7 @@ function auditRating(sc) {
 }
 function auditFindings(a) { return audItems(a.template).filter(i => a.answers[i.id] && ['P', 'N'].includes(a.answers[i.id].r)).map(i => Object.assign({}, i, a.answers[i.id])); }
 // The previous completed audit with the same checklist at the same branch
-function prevAudit(a) { return (S.audits || []).filter(x => x.id !== a.id && x.status === 'Completed' && x.template.templateId === a.template.templateId && x.site === a.site && x.date < a.date).sort((x, y) => y.date.localeCompare(x.date))[0] || null; }
+function prevAudit(a) { return (S.audits || []).filter(x => x.id !== a.id && x.status === 'Completed' && atFamily(x.template.templateId) === atFamily(a.template.templateId) && x.site === a.site && x.date < a.date).sort((x, y) => y.date.localeCompare(x.date))[0] || null; }
 function isRepeat(a, itemId) { const p = prevAudit(a); return !!(p && p.answers[itemId] && ['P', 'N'].includes(p.answers[itemId].r)); }
 
 /* ---------------- Route: Audits ---------------- */
@@ -93,10 +96,10 @@ function auditRecordsHtml(audits) {
 function auditTemplatesHtml() {
   return `<div class="alert info">${icon('lock')}<div>Audit checklists are <b>controlled</b>: a new checklist or a change is a draft until it is approved, and completed audits keep the revision used at the time. The VDW starter checklists are suggestions to adapt to each site. <b>The legal compliance checklist does not quote legislation</b>: add the references from the official text before relying on it.</div></div>
   <div class="grid g2">${auditTemplates().map(t => { const cur = atCurrent(t), dr = atDraft(t), shown = cur || dr, n = audItems(shown).length;
-    return `<div class="card at-card"><div class="card-head"><div><h2>${esc(t.title)}</h2><span class="ch-sub">${esc(t.category)} · <span class="mono">${esc(t.docNumber)}</span>${t.starter ? ' · VDW starter checklist' : ''}</span></div>${cur ? badge('Rev ' + cur.rev, 'green', true) : badge('Draft — not yet approved', 'amber')}</div><div class="card-body">
+    return `<div class="card at-card"><div class="card-head"><div><h2>${can('doc.create') ? `<a href="#/audits/builder/${t.id}" class="at-link">${esc(t.title)}</a>` : esc(t.title)}</h2><span class="ch-sub">${esc(t.category)} · <span class="mono">${esc(t.docNumber)}</span>${t.starter ? ' · VDW starter checklist' : t.replaces ? ' · your version of the VDW starter' : ''}</span></div>${cur ? badge('Rev ' + cur.rev, 'green', true) : badge('Draft — not yet approved', 'amber')}</div><div class="card-body">
       <p class="t-sub">${shown.sections.length} section(s) · ${n} item(s) · ${audItems(shown).filter(i => i.critical).length} critical</p>
       <ul class="at-sections">${shown.sections.map(s => `<li>${esc(s.title)} <span class="t-sub">(${s.items.length})</span></li>`).join('')}</ul>
-      <div class="btn-row mt-s">${dr ? permBtn('doc.approve', `<button class="btn sm success" data-act="audTplApprove" data-id="${t.id}">Approve Rev ${dr.rev}</button>`) + permBtn('doc.create', `<a class="btn sm" href="#/audits/builder/${t.id}">Edit draft</a>`) : permBtn('doc.create', `<a class="btn sm" href="#/audits/builder/${t.id}">Change (new revision)</a>`)}${permBtn('doc.create', `<a class="btn sm ghost" href="#/audits/builder/new?copy=${t.id}">Copy as new checklist</a>`)}</div>
+      <div class="btn-row mt-s">${dr ? permBtn('doc.approve', `<button class="btn sm success" data-act="audTplApprove" data-id="${t.id}">Approve Rev ${dr.rev}</button>`) + permBtn('doc.create', `<a class="btn sm" href="#/audits/builder/${t.id}">${icon('edit', 'sm')} Edit draft</a>`) : permBtn('doc.create', `<a class="btn sm primary" href="#/audits/builder/${t.id}">${icon('edit', 'sm')} Edit checklist</a>`)}${permBtn('doc.create', `<a class="btn sm ghost" href="#/audits/builder/new?copy=${t.id}">Copy as new checklist</a>`)}</div>
     </div></div>`; }).join('')}</div>`;
 }
 
@@ -200,7 +203,7 @@ ACT.audFinish = (el) => {
 /* ---------------- The completed audit (and its report) ---------------- */
 function auditDetail(a) {
   const sc = a.status === 'Completed' ? a.score : auditScore(a.template, a.answers), r = auditRating(sc), F = auditFindings(a), prev = prevAudit(a);
-  const hist = (S.audits || []).filter(x => x.status === 'Completed' && x.template.templateId === a.template.templateId && x.site === a.site).sort((x, y) => x.date.localeCompare(y.date)).slice(-6);
+  const hist = (S.audits || []).filter(x => x.status === 'Completed' && atFamily(x.template.templateId) === atFamily(a.template.templateId) && x.site === a.site).sort((x, y) => x.date.localeCompare(y.date)).slice(-6);
   let k = 0;
   const html = `<div class="status-hero"><div><div class="sh-id">${a.id} · ${esc(a.template.category)} · ${esc(sname(a.site))}</div><h1 style="margin:2px 0 6px">${esc(a.template.title)}</h1><div class="btn-row">${badge(a.status, a.status === 'Completed' ? 'green' : 'blue')} <span class="tag">${esc(a.template.docNumber)} Rev ${a.template.rev}</span> ${a.status === 'Completed' ? badge(r.label, r.tone) : ''}</div></div>
     <div class="sh-actions">${a.status === 'Completed' ? `<button class="btn primary" data-act="audPdf" data-id="${a.id}">${icon('download', 'sm')} Audit report (PDF)</button>` : a.auditor === S.ui.user ? `<a class="btn primary" href="#/audits/${a.id}">Continue</a>` : `<span class="muted">In progress — ${esc(pname(a.auditor))} is auditing</span>`}</div></div>
@@ -272,12 +275,13 @@ ACT.audPdf = async (el) => {
 let AB = null;   // the checklist being edited
 function abNewItem() { return { id: 'i' + Math.random().toString(36).slice(2, 8), text: '', guidance: '', ref: '', weight: 1, critical: false }; }
 function auditBuilder(id, q) {
+  const mine = id && (S.auditTemplates || []).find(x => x.org === S.ui.org && x.replaces === id); if (mine) id = mine.id;   // the company already has its own version of this starter
   if (!AB || AB.key !== (id || 'new') + (q.copy || '')) {
     const src = id && id !== 'new' ? byId('auditTemplates', id) : q.copy ? byId('auditTemplates', q.copy) : null, base = src ? (atDraft(src) || atCurrent(src)) : null;
     AB = { key: (id || 'new') + (q.copy || ''), id: id && id !== 'new' ? id : null, title: src ? (q.copy ? src.title + ' (copy)' : src.title) : '', category: src ? src.category : 'Other', docNumber: src && !q.copy ? src.docNumber : '', note: '', sections: base ? JSON.parse(JSON.stringify(base.sections)) : [{ title: '', items: [abNewItem()] }] };
   }
   const t = AB.id && byId('auditTemplates', AB.id), cur = t && atCurrent(t);
-  const html = `${pageHead(AB.id ? `Change checklist: ${esc(t.title)}` : 'New audit checklist', AB.id ? `Saved as Rev ${cur ? cur.rev + 1 : 1} (draft). ${cur ? `Rev ${cur.rev} stays in use until the draft is approved.` : ''}` : 'Build a checklist the same way as an inspection template. It is saved as a draft and must be approved before audits can use it.')}
+  const html = `${pageHead(AB.id ? `Edit checklist: ${esc(t.title)}` : 'New audit checklist', AB.id ? `Change, add, remove or reorder sections and items. Your changes are saved as Rev ${atDraft(t) ? atDraft(t).rev : cur ? cur.rev + 1 : 1} (draft). ${cur ? `Rev ${cur.rev} stays in use until the draft is approved by someone other than you.` : ''}${t.org == null ? ' This is a VDW starter checklist: your changes become your company\'s own version; other companies keep the starter.' : ''}` : 'Build a checklist the same way as an inspection template. It is saved as a draft and must be approved before audits can use it.')}
   <div class="card mb"><div class="card-body" style="padding-top:14px"><div class="form-grid" id="abHead">
     ${fld({ name: 'title', label: 'Checklist title', value: AB.title, required: true, full: true, placeholder: 'e.g. Workshop housekeeping audit' })}
     ${fld({ name: 'category', label: 'Kind of audit', type: 'select', options: opts(AUD_CATS, AB.category), required: true })}
@@ -319,7 +323,14 @@ ACT.abSave = () => {
   if (!secs.length) { toast('Add at least one item.', 'error'); return; }
   if (secs.some(s => !s.title)) { toast('Give every section a title.', 'error'); return; }
   S.auditTemplates = S.auditTemplates || [];
-  if (S.auditTemplates.some(t => t.id !== AB.id && t.docNumber.toLowerCase() === AB.docNumber.trim().toLowerCase())) { toast('This document number is already used.', 'error'); return; }
+  if (S.auditTemplates.some(t => t.id !== AB.id && t.replaces !== AB.id && t.docNumber.toLowerCase() === AB.docNumber.trim().toLowerCase())) { toast('This document number is already used.', 'error'); return; }
+  if (AB.id && byId('auditTemplates', AB.id).org == null) {   // a VDW starter: make the company's own copy, keeping the approved starter revision in use until the change is approved
+    const st = byId('auditTemplates', AB.id), stCur = atCurrent(st), id = nextId('ATPL-', 'auditTemplates', 3);
+    S.auditTemplates.push({ id, org: S.ui.org, replaces: st.id, title: st.title, category: st.category, docNumber: st.docNumber, owner: S.ui.user, revisions: stCur ? [JSON.parse(JSON.stringify(stCur))] : [] });
+    (S.auditPlans || []).filter(x => x.template === st.id && x.org === S.ui.org).forEach(x => { x.template = id; });
+    log(`Made ${S.ui.org ? orgOf(S.ui.org).short + '\'s' : 'a'} own version of the VDW starter checklist ${st.docNumber}`, '#/audits/templates');
+    AB.id = id;
+  }
   if (AB.id) { const t = byId('auditTemplates', AB.id), cur = atCurrent(t), dr = atDraft(t); Object.assign(t, { title: AB.title.trim(), category: AB.category, docNumber: AB.docNumber.trim() });
     if (dr) Object.assign(dr, { sections: secs, changeNote: AB.note, revDate: TODAY }); else t.revisions.push({ rev: cur ? cur.rev + 1 : 1, status: 'Draft', revDate: TODAY, changeNote: AB.note, author: S.ui.user, sections: secs });
     log(`Saved a draft revision of audit checklist ${t.docNumber}`, '#/audits/templates'); }

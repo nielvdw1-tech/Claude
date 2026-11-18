@@ -69,6 +69,7 @@ Status key:
 |---|---|---|
 | Pre-built audit checklists: legal compliance, housekeeping, fire safety, hazardous chemical substances, stacking and storage, emergency preparedness and first aid, PPE | Implemented | AD2; starter checklists to adapt; the legal compliance checklist quotes no legislation (AD3) |
 | Users build their own audit checklists (sections, items, guidance, reference, weight, critical item); draft until approved by someone other than the author | Implemented | AD14–AD17 |
+| Edit existing audit checklists (incl. the VDW starters): change, add, remove, reorder; change note; new revision approved by someone else; a starter becomes the company's own version | Implemented | AD19–AD24 |
 | Audit programme per branch with frequency, auditor tasks and overdue audits | Implemented | AD1, AD18 |
 | Conduct an audit: Compliant / Partially / Not compliant / N/A, notes, photos, saved as you go, auditor and auditee signatures | Implemented | AD5–AD8 |
 | Weighted score per section and overall; critical item not met = "Not acceptable"; repeat findings flagged | Implemented | AD4, AD10 |

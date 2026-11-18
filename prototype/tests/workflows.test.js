@@ -1367,6 +1367,23 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     ok('AD16 the author cannot approve their own checklist', !(await modalOpen()) && await S(`byId('auditTemplates','${t.id}').revisions[0].status`) === 'Draft');
     await asUser('P-001'); await go('#/audits/templates'); await p.click(`[data-act=audTplApprove][data-id="${t.id}"]`); await p.waitForTimeout(100); await p.click('.modal-foot button:has-text("Approve")'); await p.waitForTimeout(150);
     ok('AD17 once someone else approves it, the checklist can be used', await S(`!!atCurrent(byId('auditTemplates','${t.id}'))`));
+    // edit an existing (starter) checklist
+    await asUser('P-002'); await go('#/audits/templates');
+    ok('AD19 every checklist has an "Edit checklist" button', (await p.$$('a.btn:has-text("Edit checklist")')).length >= 7);
+    await p.click('a[href="#/audits/builder/ATPL-HK"].btn'); await p.waitForTimeout(150);
+    ok('AD20 the editor opens with the checklist\'s current sections and items', (await p.$$('.ab-in[data-k=text]')).length === 12 && (await p.inputValue('.ab-sec-title')) === 'Walkways and access');
+    await p.locator('.ab-in[data-k=text]').nth(0).fill('Walkways are marked, clear and lit');
+    await p.click('[data-act=abAddItem][data-s="0"]'); await p.waitForTimeout(100);
+    await p.locator('.ab-in[data-s="0"][data-k=text]').nth(3).fill('Forklift routes are marked');
+    await p.click('[data-act=abSave]'); await p.waitForTimeout(100);
+    ok('AD21 a change needs a change note', await S(() => !S.auditTemplates.some(x => x.replaces === 'ATPL-HK')));
+    await p.fill('#abHead [name=note]', 'Added forklift routes; walkway lighting'); await p.click('[data-act=abSave]'); await p.waitForTimeout(150);
+    const hk = await S(() => { const t = S.auditTemplates.find(x => x.replaces === 'ATPL-HK' && x.org === S.ui.org); return t && { id: t.id, revs: t.revisions.map(r => r.rev + ':' + r.status), items: t.revisions[1].sections[0].items.map(i => i.text), starter: byId('auditTemplates', 'ATPL-HK').revisions.length, plan: byId('auditPlans', 'APL-001').template, shown: auditTemplates().filter(x => x.category === 'Housekeeping').length }; });
+    ok('AD22 editing a VDW starter makes the company\'s own version (Rev 2 draft; Rev 1 stays in use); the starter itself is unchanged for other companies', hk && hk.revs.join() === '1:Approved,2:Draft' && hk.items[0] === 'Walkways are marked, clear and lit' && hk.items.includes('Forklift routes are marked') && hk.starter === 1 && hk.shown === 1, JSON.stringify(hk));
+    ok('AD23 the audit programme moves to the company\'s version', hk && hk.plan === hk.id);
+    await asUser('P-001'); await go('#/audits/templates'); await p.click(`[data-act=audTplApprove][data-id="${hk.id}"]`); await p.waitForTimeout(100); await p.click('.modal-foot button:has-text("Approve")'); await p.waitForTimeout(150);
+    ok('AD24 once approved, new audits use the edited checklist and keep the branch\'s history (repeat findings, trend)', await S(`atCurrent(byId('auditTemplates','${hk.id}')).rev === 2 && atFamily('${hk.id}') === 'ATPL-HK' && prevAudit({ id: 'X', template: { templateId: '${hk.id}' }, site: 'S-JHB', date: TODAY }).id === 'AUD-102'`));
+    await asUser('P-002');
     await asUser('P-007'); ok('AD18 the planned auditor gets a task when an audit is due', await S(() => myTasks().some(x => /^Audit: Housekeeping/.test(x.title))));
     await asUser('P-002');
   }
