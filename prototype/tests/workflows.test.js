@@ -1384,6 +1384,35 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await asUser('P-001'); await go('#/audits/templates'); await p.click(`[data-act=audTplApprove][data-id="${hk.id}"]`); await p.waitForTimeout(100); await p.click('.modal-foot button:has-text("Approve")'); await p.waitForTimeout(150);
     ok('AD24 once approved, new audits use the edited checklist and keep the branch\'s history (repeat findings, trend)', await S(`atCurrent(byId('auditTemplates','${hk.id}')).rev === 2 && atFamily('${hk.id}') === 'ATPL-HK' && prevAudit({ id: 'X', template: { templateId: '${hk.id}' }, site: 'S-JHB', date: TODAY }).id === 'AUD-102'`));
     await asUser('P-002');
+    // the audit programme: reminders, escalation, edit, pause, remove
+    {
+      const mails = (subj) => S(`S.outbox.filter(m => m.subject.includes(${JSON.stringify(subj)})).map(m => m.to)`);
+      const fire = await mails('Audit overdue: Fire safety audit');
+      ok('AP1 an overdue audit e-mails the auditor and the branch manager (once)', fire.includes('P-003') && fire.includes(await S(() => site('S-DBN').manager)) && fire.length === new Set(fire).size, fire.join());
+      ok('AP2 an audit due within 14 days e-mails the auditor', (await mails('Audit due')).includes('P-007') && !(await mails('Audit due')).includes('P-004'));
+      await S(() => { byId('auditPlans', 'APL-002').nextDue = addDays(TODAY, -20); save(); rerender(); });
+      const esc = await mails('Escalated: audit 20 days overdue');
+      ok('AP3 an audit 14+ days overdue is escalated to the HSEQ Manager by e-mail and task', esc.includes('P-002') && await S(() => myTasks().some(t => /^Escalated: audit overdue/.test(t.title))), esc.join());
+      await go('#/audits/programme');
+      ok('AP4 the programme shows the escalation', (await p.innerText('tr[data-plan="APL-002"]')).includes('Escalated'));
+      // edit: change auditor and due date
+      await p.click('[data-act=audPlanEdit][data-id="APL-002"]'); await p.waitForTimeout(120);
+      await msel('auditor', 'P-006'); await mfill('nextDue', await S(() => addDays(TODAY, 10))); await mbtn('Save changes'); await p.waitForTimeout(120);
+      const pl = await S(() => { const x = byId('auditPlans', 'APL-002'); return { a: x.auditor, d: daysTo(x.nextDue), h: (x.history || []).length }; });
+      ok('AP5 a planned audit can be edited (auditor, due date); the change is recorded and the new auditor is told', pl.a === 'P-006' && pl.d === 10 && pl.h === 1 && (await mails('You are the auditor: Fire safety audit')).includes('P-006'));
+      ok('AP6 after moving the due date it is no longer overdue or escalated', !(await S(() => myTasks().some(t => /^Escalated: audit overdue/.test(t.title)))) && !(await p.innerText('tr[data-plan="APL-002"]')).includes('Escalated'));
+      // pause needs a reason
+      await p.click('[data-act=audPlanEdit][data-id="APL-004"]'); await p.waitForTimeout(120); await msel('status', 'Paused'); await mbtn('Save changes');
+      ok('AP7 pausing needs a reason', await modalOpen() && !(await S(() => byId('auditPlans', 'APL-004').paused)));
+      await mfill('pauseReason', 'Workshop closed for renovation'); await mbtn('Save changes'); await p.waitForTimeout(120);
+      await S(() => { byId('auditPlans', 'APL-004').nextDue = addDays(TODAY, -30); save(); rerender(); });
+      ok('AP8 a paused audit shows as paused, has no Start button, no reminders and does not count as overdue', (await p.innerText('tr[data-plan="APL-004"]')).includes('Paused') && !(await has('tr[data-plan="APL-004"] [data-act=audStart]')) && (await mails('Hazardous chemical substances audit')).filter(x => x).length === 0 && await S(() => !planOverdue(byId('auditPlans', 'APL-004'))));
+      await p.click('[data-act=audPlanEdit][data-id="APL-004"]'); await p.waitForTimeout(120); await msel('status', 'Active'); await mfill('nextDue', await S(() => addDays(TODAY, 30))); await mbtn('Save changes'); await p.waitForTimeout(120);
+      ok('AP9 a paused audit can be resumed', await S(() => !byId('auditPlans', 'APL-004').paused) && await has('tr[data-plan="APL-004"] [data-act=audStart]'));
+      // remove
+      await p.click('[data-act=audPlanEdit][data-id="APL-005"]'); await p.waitForTimeout(120); await mbtn('Remove from programme'); await p.waitForTimeout(120); await mbtn('Remove'); await p.waitForTimeout(120);
+      ok('AP10 a planned audit can be removed from the programme', await S(() => !byId('auditPlans', 'APL-005')));
+    }
     await asUser('P-007'); ok('AD18 the planned auditor gets a task when an audit is due', await S(() => myTasks().some(x => /^Audit: Housekeeping/.test(x.title))));
     await asUser('P-002');
   }

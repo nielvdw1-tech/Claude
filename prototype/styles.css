@@ -1313,3 +1313,5 @@ body.auth-mode .main { padding-top: 0; }
 @media (max-width: 640px) { .ab-row { grid-template-columns: 1fr; } .au-secs > div:not(.alert) { grid-template-columns: minmax(0, 1fr) 80px 40px; } }
 .au-foot { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; padding: 14px 18px; border-top: 1px solid var(--line); background: var(--surface-2, var(--surface)); border-radius: 0 0 12px 12px; }
 .at-link { color: inherit; text-decoration: none; } .at-link:hover { color: var(--brand); text-decoration: underline; }
+.row-paused td { color: var(--muted); } .row-paused td b { color: var(--muted); }
+.tbl .btn-row.nowrap { flex-wrap: nowrap; }

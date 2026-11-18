@@ -34,7 +34,11 @@ const atDraft = t => (t.revisions || []).find(r => r.status === 'Draft') || null
 const auditTemplates = () => (S.auditTemplates || []).filter(t => (!t.org || t.org === S.ui.org) && !(t.org == null && (S.auditTemplates || []).some(x => x.org === S.ui.org && x.replaces === t.id)));
 // One "family" id per checklist, so a company's edited copy of a starter keeps the starter's audit history (trend, repeat findings)
 const atFamily = id => { const t = byId('auditTemplates', id); return t && t.replaces ? t.replaces : id; };
-if (!ICON_PATHS.edit) ICON_PATHS.edit = '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>';
+// A planned audit is overdue after its due date, and escalated to the HSEQ Manager once it is this many days overdue (paused plans are neither)
+const AUD_ESC_DAYS = 14;
+const planOverdue = x => !x.paused && daysTo(x.nextDue) < 0;
+const planEscalated = x => !x.paused && daysTo(x.nextDue) <= -AUD_ESC_DAYS;
+if (!ICON_PATHS.edit)ICON_PATHS.edit = '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>';
 const audItems = snap => snap.sections.flatMap(s => s.items.map(i => Object.assign({ section: s.title }, i)));
 function canConduct() { return can('inspect'); }
 function canManageAudits() { return can('doc.create'); }
@@ -65,15 +69,16 @@ ROUTES.audits = (p, q = {}) => {
   const done = audits.filter(a => a.status === 'Completed'), last12 = done.filter(a => daysTo(a.date) > -365);
   const avg = last12.length ? Math.round(last12.reduce((t, a) => t + (a.score.pct || 0), 0) / last12.length) : null;
   const openF = done.reduce((n, a) => n + (a.findingsList || []).filter(f => f.action && actionOpen(byId('actions', f.action) || {})).length, 0);
-  const tabs = [['programme', 'Audit programme', plans.filter(x => daysTo(x.nextDue) < 0).length || '', 'red'], ['records', 'Audits', audits.length], ['templates', 'Audit checklists', auditTemplates().length]];
+  const active = plans.filter(x => !x.paused), late = active.filter(planOverdue);
+  const tabs = [['programme', 'Audit programme', late.length || '', 'red'], ['records', 'Audits', audits.length], ['templates', 'Audit checklists', auditTemplates().length]];
   let body = '';
   if (tab === 'programme') body = auditProgrammeHtml(plans);
   if (tab === 'records') body = auditRecordsHtml(audits);
   if (tab === 'templates') body = auditTemplatesHtml();
   const fab = tab === 'templates' ? (canManageAudits() ? fabBtn('audTplNew', 'New audit checklist') : '') : fabStack([canConduct() && { act: 'audStart', label: 'Start audit' }, canManageAudits() && tab === 'programme' && { act: 'audPlanNew', label: 'Plan audit', icon: 'clock', cls: 'ghost' }]);
   const html = `${pageHead('Audits', 'Planned audits of each branch against controlled checklists. Findings become corrective actions, and every audit has a signed report.', '', scopePill())}${fab}
-    <div class="kpis">${kpi('Audits overdue', plans.filter(x => daysTo(x.nextDue) < 0).length, `${plans.length} in the programme`, plans.some(x => daysTo(x.nextDue) < 0) ? 'red' : 'green', '#/audits/programme', 'clock')}
-      ${kpi('Due in 30 days', plans.filter(x => daysTo(x.nextDue) >= 0 && daysTo(x.nextDue) <= 30).length, 'Planned audits', 'blue', '#/audits/programme', 'calendar')}
+    <div class="kpis">${kpi('Audits overdue', late.length, `${late.filter(planEscalated).length} escalated · ${active.length} active in the programme${plans.length > active.length ? ` · ${plans.length - active.length} paused` : ''}`, late.length ? 'red' : 'green', '#/audits/programme', 'clock')}
+      ${kpi('Due in 30 days', active.filter(x => daysTo(x.nextDue) >= 0 && daysTo(x.nextDue) <= 30).length, 'Planned audits', 'blue', '#/audits/programme', 'calendar')}
       ${kpi('Average score (12 months)', avg == null ? '—' : avg + '%', `${last12.length} audit(s) completed`, avg == null ? 'blue' : avg >= 85 ? 'green' : avg >= 70 ? 'amber' : 'red', '#/audits/records', 'chart')}
       ${kpi('Audit findings open', openF, 'Corrective actions not yet verified', openF ? 'amber' : 'green', '#/actions?source=Audit', 'target')}</div>
     ${tabsHtml('#/audits', tabs, tab)}${body}`;
@@ -81,9 +86,13 @@ ROUTES.audits = (p, q = {}) => {
 };
 function auditProgrammeHtml(plans) {
   if (!plans.length) return `<div class="card">${emptyList('No audits planned yet. Use "Plan audit" to add audits to the programme.')}</div>`;
+  // active audits first (soonest due first), paused ones at the bottom
+  plans = plans.slice().sort((a, b) => (!!a.paused - !!b.paused) || a.nextDue.localeCompare(b.nextDue));
   return `<div class="card">${searchBar('#/audits/programme', plans.length, 'Search checklist, branch or auditor…')}<div class="card-body flush"><div class="table-wrap"><table class="tbl stackable"><thead><tr><th>Audit</th><th>Branch / area</th><th>Auditor</th><th>Every</th><th>Last audit</th><th>Next due</th><th></th></tr></thead><tbody>
     ${plans.map(x => { const t = byId('auditTemplates', x.template), last = (S.audits || []).filter(a => a.plan === x.id && a.status === 'Completed').sort((a, b) => b.date.localeCompare(a.date))[0], open = (S.audits || []).find(a => a.plan === x.id && a.status === 'In progress');
-      return `<tr class="${daysTo(x.nextDue) < 0 ? 'row-red' : ''}"><td data-label="Audit"><b>${esc(t ? t.title : x.template)}</b><div class="t-sub">${esc(t ? t.category : '')}</div></td><td data-label="Branch">${esc(sname(x.site))}${x.area ? `<div class="t-sub">${esc(x.area)}</div>` : ''}</td><td data-label="Auditor">${esc(pname(x.auditor))}</td><td data-label="Every">${x.months} month${x.months > 1 ? 's' : ''}</td><td data-label="Last audit">${last ? `<a href="#/audits/${last.id}">${fmt(last.date)}</a> · <b class="due ${last.score.critical ? 'red' : scoreColour(last.score.pct)}">${last.score.pct}%</b>` : '—'}</td><td data-label="Next due">${dueText(x.nextDue)}</td><td>${open ? `<a class="btn sm" href="#/audits/${open.id}">Continue</a>` : canConduct() ? `<button class="btn sm primary" data-act="audStart" data-plan="${x.id}">Start</button>` : ''}</td></tr>`; }).join('')}
+      return `<tr class="${x.paused ? 'row-paused' : planOverdue(x) ? 'row-red' : ''}" data-plan="${x.id}"><td data-label="Audit"><b>${esc(t ? t.title : x.template)}</b><div class="t-sub">${esc(t ? t.category : '')}</div></td><td data-label="Branch">${esc(sname(x.site))}${x.area ? `<div class="t-sub">${esc(x.area)}</div>` : ''}</td><td data-label="Auditor">${esc(pname(x.auditor))}</td><td data-label="Every">${x.months} month${x.months > 1 ? 's' : ''}</td><td data-label="Last audit">${last ? `<a href="#/audits/${last.id}">${fmt(last.date)}</a> · <b class="due ${last.score.critical ? 'red' : scoreColour(last.score.pct)}">${last.score.pct}%</b>` : '—'}</td>
+        <td data-label="Next due">${x.paused ? `${badge('Paused', 'grey')}<div class="t-sub">${esc(x.pauseReason || '')}</div>` : dueText(x.nextDue) + (planEscalated(x) && !open ? `<div>${badge('Escalated to HSEQ', 'red', true)}</div>` : '')}</td>
+        <td><div class="btn-row nowrap">${x.paused ? '' : open ? `<a class="btn sm" href="#/audits/${open.id}">Continue</a>` : canConduct() ? `<button class="btn sm primary" data-act="audStart" data-plan="${x.id}">Start</button>` : ''}${canManageAudits() ? `<button class="btn sm" data-act="audPlanEdit" data-id="${x.id}" title="Edit, pause or remove" aria-label="Edit, pause or remove this planned audit">${icon('edit', 'sm')} Edit</button>` : ''}</div></td></tr>`; }).join('')}
   </tbody></table></div></div></div>`;
 }
 function auditRecordsHtml(audits) {
@@ -114,6 +123,45 @@ ACT.audPlanNew = () => openModal({ title: 'Plan an audit', sub: 'Adds a recurrin
   buttons: [{ label: 'Add to programme', cls: 'primary', onClick: m => { if (!validateForm(m)) return false; const v = readForm(m); S.auditPlans = S.auditPlans || []; const id = nextId('APL-', 'auditPlans');
     S.auditPlans.push({ id, template: v.template, site: v.site, org: siteOrgOf(v.site), area: v.area, auditor: v.auditor, months: Math.max(1, Math.round(+v.months)), nextDue: v.nextDue });
     log(`Planned audit ${id}: ${byId('auditTemplates', v.template).title} at ${sname(v.site)}`, '#/audits/programme'); save(); toast('Added to the audit programme.'); rerender(); } }] });
+// Edit, pause / resume or remove a planned audit
+ACT.audPlanEdit = (el) => {
+  const x = byId('auditPlans', el.dataset.id), open = (S.audits || []).find(a => a.plan === x.id && a.status === 'In progress');
+  const tpls = auditTemplates().filter(t => atCurrent(t) || t.id === x.template);
+  openModal({ title: 'Edit planned audit', sub: 'Change the checklist, branch, auditor, interval or due date, or pause the audit for a while (e.g. a branch closed for renovation).', body: `<div class="form-grid">
+    ${fld({ name: 'template', label: 'Audit checklist', type: 'select', options: opts(tpls.map(t => ({ value: t.id, label: t.title })), x.template), required: true, full: true })}
+    ${fld({ name: 'site', label: 'Branch', type: 'select', options: siteOptions(x.site, false), required: true })}
+    ${fld({ name: 'area', label: 'Area (optional)', value: x.area || '' })}
+    ${fld({ name: 'auditor', label: 'Auditor', type: 'select', options: personOptions(x.auditor, p => !!p.sysRole), required: true })}
+    ${fld({ name: 'months', label: 'Every (months)', type: 'number', min: 1, max: 36, value: x.months, required: true })}
+    ${fld({ name: 'nextDue', label: 'Next audit due', type: 'date', value: x.nextDue, required: true })}
+    ${fld({ name: 'status', label: 'Status', type: 'select', options: opts(['Active', 'Paused'], x.paused ? 'Paused' : 'Active') })}
+    ${fld({ name: 'pauseReason', label: 'Reason for pausing (required when paused)', value: x.pauseReason || '', full: true, placeholder: 'e.g. Branch closed for renovation until March' })}
+    </div>${open ? `<div class="alert info mt-s" style="margin-bottom:0">${icon('info')}<div>Audit <b>${open.id}</b> is in progress for this plan. It cannot be removed until that audit is completed or discarded.</div></div>` : ''}`,
+    size: 'wide',
+    buttons: [
+      { label: 'Remove from programme', cls: 'danger', onClick: () => { if (open) { toast(`Finish or discard audit ${open.id} first.`, 'error'); return false; }
+        setTimeout(() => confirmBox('Remove this planned audit?', `${esc((byId('auditTemplates', x.template) || {}).title || '')} at ${esc(sname(x.site))} is removed from the programme. Completed audits stay on record.`, 'Remove', () => { S.auditPlans = S.auditPlans.filter(y => y.id !== x.id); log(`Removed planned audit ${x.id} (${(byId('auditTemplates', x.template) || {}).title || x.template}, ${sname(x.site)}) from the programme`, '#/audits/programme'); save(); toast('Removed from the audit programme.'); rerender(); }, 'danger solid'), 30); } },
+      { label: 'Save changes', cls: 'primary', onClick: m => {
+        if (!validateForm(m)) return false; const v = readForm(m);
+        if (v.status === 'Paused' && !(v.pauseReason || '').trim()) { toast('Give a reason for pausing.', 'error'); const f = m.querySelector('[name=pauseReason]'); if (f) f.focus(); return false; }
+        const before = JSON.stringify([x.template, x.site, x.area, x.auditor, x.months, x.nextDue, !!x.paused]);
+        const changes = [];
+        if (v.template !== x.template) changes.push(`checklist → ${byId('auditTemplates', v.template).title}`);
+        if (v.site !== x.site) changes.push(`branch → ${sname(v.site)}`);
+        if ((v.area || '') !== (x.area || '')) changes.push(`area → ${v.area || '—'}`);
+        if (v.auditor !== x.auditor) changes.push(`auditor → ${pname(v.auditor)}`);
+        if (+v.months !== x.months) changes.push(`every ${v.months} month(s)`);
+        if (v.nextDue !== x.nextDue) changes.push(`next due → ${fmt(v.nextDue)}`);
+        if ((v.status === 'Paused') !== !!x.paused) changes.push(v.status === 'Paused' ? `paused: ${v.pauseReason.trim()}` : 'resumed');
+        const newAuditor = v.auditor !== x.auditor, dueMoved = v.nextDue !== x.nextDue;
+        Object.assign(x, { template: v.template, site: v.site, org: siteOrgOf(v.site), area: v.area, auditor: v.auditor, months: Math.max(1, Math.round(+v.months)), nextDue: v.nextDue, paused: v.status === 'Paused', pauseReason: v.status === 'Paused' ? v.pauseReason.trim() : '' });
+        if (dueMoved || newAuditor) x.sent = {};   // reminders start again for the new date or auditor
+        if (JSON.stringify([x.template, x.site, x.area, x.auditor, x.months, x.nextDue, !!x.paused]) === before) return;
+        (x.history = x.history || []).push({ ts: nowTs(), by: S.ui.user, text: changes.join('; ') });
+        if (newAuditor && !x.paused) queueEmail([x.auditor], 'audits', `You are the auditor: ${byId('auditTemplates', x.template).title} at ${sname(x.site)}`, `${pname(S.ui.user)} made you the auditor for the ${byId('auditTemplates', x.template).title} at ${sname(x.site)}${x.area ? ' (' + x.area + ')' : ''}, every ${x.months} month(s). Next audit due ${fmt(x.nextDue)}.`, '#/audits/programme');
+        log(`Changed planned audit ${x.id}: ${changes.join('; ')}`, '#/audits/programme'); save(); toast('Planned audit updated.'); rerender();
+      } }] });
+};
 ACT.audStart = (el) => {
   const plan = el && el.dataset && el.dataset.plan && byId('auditPlans', el.dataset.plan);
   openModal({ title: 'Start an audit', sub: 'Progress is saved as you go; you can stop and continue later.', body: `<div class="form-grid">
@@ -355,11 +403,39 @@ needsBack = function (parts) { if (parts[0] === 'audits' && ['programme', 'recor
 const _myTasksBeforeAudits = myTasks;
 myTasks = function () {
   const out = _myTasksBeforeAudits();
-  (S.auditPlans || []).filter(x => inSite(x, 'ALL') && x.auditor === S.ui.user && daysTo(x.nextDue) <= 14 && !(S.audits || []).some(a => a.plan === x.id && a.status === 'In progress')).forEach(x => { const t = byId('auditTemplates', x.template); out.push({ title: `Audit: ${t ? t.title : x.template} — ${sname(x.site)}`, sub: `Due ${fmt(x.nextDue)}`, link: '#/audits/programme', sev: daysTo(x.nextDue) < 0 ? 'red' : 'amber' }); });
+  // the HSEQ Manager gets a task for every audit that is escalated (long overdue) in their company
+  if (hseqManagers(S.ui.org).includes(S.ui.user)) (S.auditPlans || []).filter(x => inSite(x, S.ui.site) && planEscalated(x) && !(S.audits || []).some(a => a.plan === x.id && a.status === 'In progress')).forEach(x => { const t = byId('auditTemplates', x.template); out.push({ title: `Escalated: audit overdue — ${t ? t.title : x.template}, ${sname(x.site)}`, sub: `Due ${fmt(x.nextDue)} (${-daysTo(x.nextDue)} days overdue) · auditor ${pname(x.auditor)}`, link: '#/audits/programme', sev: 'red' }); });
+  (S.auditPlans || []).filter(x => !x.paused && inSite(x, 'ALL') && x.auditor === S.ui.user && daysTo(x.nextDue) <= 14 && !(S.audits || []).some(a => a.plan === x.id && a.status === 'In progress')).forEach(x => { const t = byId('auditTemplates', x.template); out.push({ title: `Audit: ${t ? t.title : x.template} — ${sname(x.site)}`, sub: `Due ${fmt(x.nextDue)}`, link: '#/audits/programme', sev: daysTo(x.nextDue) < 0 ? 'red' : 'amber' }); });
   (S.audits || []).filter(a => a.status === 'In progress' && a.auditor === S.ui.user).forEach(a => out.push({ title: `Finish audit ${a.id}: ${a.template.title}`, sub: `${sname(a.site)} · started ${fmt(a.date)}`, link: '#/audits/' + a.id, sev: 'blue' }));
   if (can('doc.approve')) auditTemplates().filter(t => { const d = atDraft(t); return d && d.author !== S.ui.user; }).forEach(t => out.push({ title: `Approve audit checklist ${t.docNumber}`, sub: t.title, link: '#/audits/templates', sev: 'blue' }));
   return out;
 };
+
+/* ---------------- Reminders and escalation by e-mail ----------------
+   Checked whenever the system is opened (a daily server job in production). Each e-mail goes once per due date:
+   - 14 days before:            the auditor
+   - overdue (day after due):   the auditor and the branch manager
+   - 14 days overdue:           escalated to the HSEQ Manager(s), copying the auditor
+   Paused plans and plans with an audit in progress get none. */
+MAIL_CATS.audits = 'Audits: due, overdue and escalated';
+const _mailPrefsBeforeAudits = mailPrefs;
+mailPrefs = function (p) { return Object.assign({ audits: true }, _mailPrefsBeforeAudits(p)); };
+function sendAsSystem(fn) { const u = S.ui.user; S.ui.user = null; try { fn(); } finally { S.ui.user = u; } }   // scheduled e-mails also reach the person who happens to be signed in
+function runAuditReminders() {
+  if (!S || !S.ui || !S.ui.org || !S.auditPlans) return;
+  let changed = false;
+  S.auditPlans.filter(x => x.org === S.ui.org && !x.paused && !(S.audits || []).some(a => a.plan === x.id && a.status === 'In progress')).forEach(x => {
+    const t = byId('auditTemplates', x.template), title = t ? t.title : x.template, d = daysTo(x.nextDue), what = `the ${title} at ${sname(x.site)}${x.area ? ' (' + x.area + ')' : ''}`;
+    x.sent = x.sent || {};
+    const once = (stage, to, subject, text) => { if (x.sent[stage] === x.nextDue) return; sendAsSystem(() => queueEmail(to, 'audits', subject, text, '#/audits/programme')); x.sent[stage] = x.nextDue; changed = true; };
+    if (d <= 14 && d >= 0) once('due', [x.auditor], `Audit due ${fmt(x.nextDue)}: ${title} — ${sname(x.site)}`, `You are planned to do ${what}. It is due on ${fmt(x.nextDue)}. Start it from the audit programme.`);
+    if (d < 0) once('overdue', [x.auditor, (site(x.site) || {}).manager], `Audit overdue: ${title} — ${sname(x.site)}`, `${what[0].toUpperCase() + what.slice(1)} was due on ${fmt(x.nextDue)} and has not been done. Auditor: ${pname(x.auditor)}. If it cannot be done soon, agree a new date and change it in the audit programme. It is escalated to the HSEQ Manager after ${AUD_ESC_DAYS} days.`);
+    if (d <= -AUD_ESC_DAYS) once('escalated', hseqManagers(x.org).concat([x.auditor]), `Escalated: audit ${-d} days overdue — ${title}, ${sname(x.site)}`, `${what[0].toUpperCase() + what.slice(1)} was due on ${fmt(x.nextDue)} and is now ${-d} days overdue. Auditor: ${pname(x.auditor)}. Please make sure it is done, or reassign, reschedule or pause it in the audit programme.`);
+  });
+  if (changed) save();
+}
+const _rerenderBeforeAudits = rerender;
+rerender = function (keepScroll) { if (S && typeof signedIn === 'function' && signedIn() && S.ui.user) { try { runAuditReminders(); } catch (e) { console.error(e); } } _rerenderBeforeAudits(keepScroll); };
 
 /* ---------------- Starter checklists and demo data ---------------- */
 function starterAudits() {
