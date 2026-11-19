@@ -94,7 +94,7 @@ function buildReport({ f, sections, gaps, site, forVdw, hasPdf }) {
 
   const nextStep = forVdw
     ? `<p style="${FONT}font-size:12px;color:${C.muted};margin:0">Answers: ${esc(f.answers)}</p>`
-    : `<p style="${FONT}font-size:15px;color:${C.charcoal};margin:0 0 8px"><strong>What next?</strong> Book a free 15-minute consultation and we'll walk you through these gaps and what they mean for your next client audit.</p>
+    : `<p style="${FONT}font-size:15px;color:${C.charcoal};margin:0 0 8px"><strong>What next?</strong> Book a free 30-minute consultation and we'll walk you through these gaps and what they mean for your next client audit.</p>
        <p style="margin:14px 0"><a href="${site}/book.html" style="${FONT}display:inline-block;background:${C.orange};color:${C.charcoal};font-weight:bold;font-size:15px;text-decoration:none;padding:12px 22px;border-radius:6px">Book a consultation</a></p>
        <p style="${FONT}font-size:14px;color:${C.muted};margin:0">Or reply to this email, or call Niel on <strong>072 843 8094</strong>.</p>`;
 

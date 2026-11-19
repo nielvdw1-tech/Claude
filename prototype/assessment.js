@@ -319,7 +319,7 @@
     }
     var foot = document.createElement('div');
     foot.className = 'pdf-foot';
-    foot.innerHTML = '<p><strong>Next step:</strong> book a free 15-minute consultation to go through these gaps and what they mean for your next client audit: <strong>' + location.host + '/book.html</strong></p>' +
+    foot.innerHTML = '<p><strong>Next step:</strong> book a free 30-minute consultation to go through these gaps and what they mean for your next client audit: <strong>' + location.host + '/book.html</strong></p>' +
       '<p>VDW Health &amp; Safety Solutions &middot; niel@vdwsafety.com &middot; 072 843 8094</p>' +
       '<p class="pdf-small">This report is a screening based on the answers given. It doesn&rsquo;t confirm full legal compliance; hidden gaps often only show up in a formal on-site audit.</p>';
     wrap.appendChild(foot);

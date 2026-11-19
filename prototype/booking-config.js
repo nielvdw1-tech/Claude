@@ -4,4 +4,4 @@
      Microsoft Bookings:  'https://outlook.office365.com/book/YourPage@vdwsafety.com/'
      Google Calendar:     your appointment schedule's booking page link
    While it's empty, the page shows your email and phone number instead. */
-window.VDW_BOOKING_URL = '';
+window.VDW_BOOKING_URL = 'https://calendly.com/niel-vdwsafety/30min';
