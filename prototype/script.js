@@ -129,6 +129,22 @@
     setTimeout(goToTarget, 300);
   }
 
+  // Booking buttons: warm up the connection to the calendar as soon as someone heads for one,
+  // so the booking page's calendar loads faster
+  var warmed = false;
+  function warmCalendar() {
+    if (warmed) return; warmed = true;
+    ['https://calendly.com', 'https://assets.calendly.com'].forEach(function (href) {
+      var l = document.createElement('link'); l.rel = 'preconnect'; l.href = href; l.crossOrigin = ''; document.head.appendChild(l);
+    });
+    var p = document.createElement('link'); p.rel = 'prefetch'; p.href = 'book.html'; document.head.appendChild(p);
+  }
+  document.querySelectorAll('a[href="book.html"]').forEach(function (a) {
+    a.addEventListener('pointerenter', warmCalendar, { passive: true });
+    a.addEventListener('touchstart', warmCalendar, { passive: true });
+    a.addEventListener('focus', warmCalendar);
+  });
+
   // Footer year
   var yearEl = document.getElementById('year');
   if (yearEl) yearEl.textContent = new Date().getFullYear();

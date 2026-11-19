@@ -16,8 +16,11 @@
   frame.title = 'Choose a date and time for your consultation';
   frame.setAttribute('width', '100%');
   frame.style.cssText = 'display:block;width:100%;min-width:100%;border:0;height:' + frameHeight() + 'px;';
-  box.innerHTML = '';
+  box.innerHTML = '<div class="book-loading" aria-live="polite"><span class="book-spinner" aria-hidden="true"></span><strong>Loading available times&hellip;</strong><span>Your calendar will appear here in a moment.</span></div>';
   box.style.padding = '0';
+  box.classList.add('is-loading');
+  frame.addEventListener('load', function () { box.classList.remove('is-loading'); });
+  setTimeout(function () { box.classList.remove('is-loading'); }, 8000);
   box.appendChild(frame);
   var help = document.createElement('p');
   help.className = 'book-open';
