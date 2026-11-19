@@ -17,7 +17,7 @@ const widths = [320,360,375,390,414,480,600,768,820,900,960,1024,1100,1180,1280,
       const label = e => (e.tagName.toLowerCase() + (e.id ? '#' + e.id : '') + (e.className && typeof e.className === 'string' ? '.' + e.className.trim().split(/\s+/).slice(0,2).join('.') : '') + ' "' + (e.innerText || e.alt || '').trim().slice(0, 30) + '"');
       document.querySelectorAll('body *').forEach(e => {
         const cs = getComputedStyle(e); if (cs.display === 'none' || cs.visibility === 'hidden') return;
-        if (e.closest('[hidden]') || e.classList.contains('skip-link') || e.closest('.whatsapp-float')) return;
+        if (e.closest('[hidden]') || e.classList.contains('skip-link') || false) return;
         const rc = e.getBoundingClientRect(); if (!rc.width) return;
         if (cs.position !== 'fixed' && (rc.right > vw + 1 || rc.left < -1)) {
           // ignore children of an element already reported
