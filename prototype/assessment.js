@@ -209,8 +209,8 @@
   }
 
   // ---------- Sending results ----------
-  // Each completed check is posted to Netlify Forms (form name "compliance-check"), which stores it
-  // and emails it to VDW. If sending fails (for example on a preview link, or offline), the visitor
+  // Each completed check is posted to the Vercel function /api/compliance-check, which emails it
+  // to VDW and sends the visitor a copy. If sending fails (for example on a preview link, or offline), the visitor
   // gets buttons to send the same summary to Niel on WhatsApp or by email, so no lead is lost.
   var VDW_WHATSAPP = '27728438094';
   var VDW_EMAIL = 'niel@vdwsafety.com';
@@ -232,12 +232,6 @@
     return lines.join('\n');
   }
 
-  function encodeForm(data) {
-    return Object.keys(data).map(function (k) {
-      return encodeURIComponent(k) + '=' + encodeURIComponent(data[k] == null ? '' : data[k]);
-    }).join('&');
-  }
-
   function showFallback(r) {
     var text = summaryText(r);
     document.getElementById('sendWhatsApp').href = 'https://wa.me/' + VDW_WHATSAPP + '?text=' + encodeURIComponent(text);
@@ -248,7 +242,7 @@
 
   function submitResults(r) {
     var data = {
-      'form-name': 'compliance-check',
+      bot_field: (document.querySelector('#contactForm [name="bot_field"]') || {}).value || '',
       submitted_at: new Date().toISOString(),
       full_name: contact.fullName,
       role: contact.role,
@@ -268,10 +262,10 @@
       consent: 'yes'
     };
     if (location.protocol === 'file:' || !window.fetch) { showFallback(r); return; }
-    fetch('/', {
+    fetch('/api/compliance-check', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: encodeForm(data)
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
     }).then(function (res) {
       if (!res.ok) throw new Error('Status ' + res.status);
     }).catch(function () { showFallback(r); });
