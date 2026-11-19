@@ -707,3 +707,27 @@ body:has(.pdf-holder) { overflow-x: hidden; }
 .book-spinner { width: 40px; height: 40px; border-radius: 50%; border: 4px solid var(--blue-tint); border-top-color: var(--blue); animation: book-spin .8s linear infinite; margin-bottom: 6px; }
 @keyframes book-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .book-spinner { animation: none; } }
+
+/* ---------- Booking page (two columns: story + calendar card) ---------- */
+.book-section { padding: 56px 0 80px; background: linear-gradient(160deg, var(--blue-tint) 0%, #f7fbfd 45%, #ffffff 100%); }
+.book-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start; max-width: 1180px; }
+.book-story { min-width: 0; }
+.book-title { font-family: var(--font-head); font-weight: 800; font-size: clamp(30px, 3.4vw, 42px); line-height: 1.12; letter-spacing: -.02em; text-transform: uppercase; color: var(--charcoal); margin-bottom: 24px; text-wrap: balance; }
+.book-title span { color: var(--blue-dark); }
+.book-photo { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; border-radius: 10px; box-shadow: var(--shadow); }
+.book-rule { width: 160px; height: 3px; border: 0; background: var(--charcoal); margin: 28px 0 24px; }
+.book-story p { font-size: 17px; color: var(--text); }
+.book-points { margin: 0 0 18px; padding-left: 22px; }
+.book-points li { margin-bottom: 8px; font-size: 17px; }
+.book-points li::marker { color: var(--orange); }
+.book-story .book-direct { font-size: 15px; color: var(--muted); margin-top: 22px; }
+.book-card { background: #fff; border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); overflow: hidden; position: sticky; top: 100px; }
+.book-card-title { font-family: var(--font-head); font-size: 22px; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; color: var(--charcoal); margin: 0; padding: 24px 24px 12px; border-bottom: 3px solid var(--orange); }
+.book-card .book-calendar { border: 0; border-radius: 0; box-shadow: none; min-height: 420px; }
+.book-card .book-pending { padding: 32px 24px; }
+.book-card .book-pending h3 { font-size: 20px; }
+@media (max-width: 960px) {
+  .book-grid { grid-template-columns: 1fr; gap: 32px; }
+  .book-card { position: static; }
+}
+@media (max-width: 640px) { .book-section { padding: 32px 0 56px; } .book-card-title { font-size: 19px; padding: 18px 18px 10px; } }

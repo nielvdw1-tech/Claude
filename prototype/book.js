@@ -9,7 +9,7 @@
     src += (url.indexOf('?') < 0 ? '?' : '&') + 'hide_gdpr_banner=1&embed_type=Inline&embed_domain=' + encodeURIComponent(location.hostname || 'vdwsafety.com');
   }
   // Calendly shows the calendar and time slots side by side when it has room, and stacks them on phones
-  function frameHeight() { return window.innerWidth < 700 ? 1100 : 760; }
+  function frameHeight() { return window.innerWidth < 700 ? 1050 : 980; }
   var frame = document.createElement('iframe');
   frame.className = 'book-frame';
   frame.src = src;
