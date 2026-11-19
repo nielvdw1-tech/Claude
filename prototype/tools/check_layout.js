@@ -3,7 +3,7 @@
 // Run from the prototype folder: node tools/check_layout.js "$PWD"
 const { chromium } = require('playwright');
 const DIR = process.argv[2];
-const pages = ['index.html','gap-audit.html','safety-file.html','compliance-management.html','free-assessment.html','assessment.html','privacy.html'];
+const pages = ['index.html','gap-audit.html','safety-file.html','compliance-management.html','free-assessment.html','assessment.html','privacy.html','book.html'];
 const widths = [320,360,375,390,414,480,600,768,820,900,960,1024,1100,1180,1280,1366,1440,1600,1920,2560];
 (async () => {
   const b = await chromium.launch();

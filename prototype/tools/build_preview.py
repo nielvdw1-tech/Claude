@@ -2,11 +2,11 @@
 import re, base64, sys, shutil, os
 SRC, S = sys.argv[1], sys.argv[2]
 site = os.path.join(S, 'site'); os.makedirs(site + '/assets', exist_ok=True)
-for f in ['styles.css', 'script.js', 'assessment.js', 'assessment-data.js']: shutil.copy(os.path.join(SRC, f), site)
+for f in ['styles.css', 'script.js', 'assessment.js', 'assessment-data.js', 'booking-config.js', 'book.js']: shutil.copy(os.path.join(SRC, f), site)
 shutil.copy(os.path.join(SRC, 'assets/vdw-logo.png'), site + '/assets/')
 shutil.copytree(os.path.join(SRC, 'assets/screenshots'), site + '/assets/screenshots', dirs_exist_ok=True)
 shutil.copytree(os.path.join(SRC, 'assets/photos'), site + '/assets/photos', dirs_exist_ok=True)
-for f in ['gap-audit.html', 'safety-file.html', 'compliance-management.html', 'free-assessment.html', 'assessment.html', 'privacy.html']:
+for f in ['gap-audit.html', 'safety-file.html', 'compliance-management.html', 'free-assessment.html', 'assessment.html', 'privacy.html', 'book.html']:
     t = open(os.path.join(SRC, f)).read()
     open(os.path.join(site, f), 'w').write(t)
 html = open(os.path.join(SRC, 'index.html')).read(); css = open(os.path.join(SRC, 'styles.css')).read(); js = open(os.path.join(SRC, 'script.js')).read()

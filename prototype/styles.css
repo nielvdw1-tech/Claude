@@ -672,3 +672,40 @@ h1.eyebrow { font-size: 14px; letter-spacing: .08em; line-height: 1.4; }
 .testimonial-grid .testimonial blockquote::before { content: none; }
 @media (max-width: 900px) { .testimonial-grid { grid-template-columns: 1fr; max-width: 620px; } }
 .hp-field { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+/* ---------- PDF report (built off-screen, then turned into a PDF) ---------- */
+.pdf-holder { position: absolute; left: 0; top: 0; width: 794px; background: #fff; z-index: -1; pointer-events: none; }
+body:has(.pdf-holder) { overflow-x: hidden; }
+.pdf-report { width: 100%; padding: 8px 4px; background: #fff; font-size: 15px; display: grid; gap: 18px; }
+.pdf-report .card { padding: 22px; box-shadow: none; }
+.pdf-head { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding-bottom: 14px; border-bottom: 4px solid var(--orange); }
+.pdf-head img { height: 64px; width: auto; }
+.pdf-head div { text-align: right; display: flex; flex-direction: column; gap: 4px; }
+.pdf-head strong { font-family: var(--font-head); font-size: 20px; color: var(--charcoal); }
+.pdf-head span, .pdf-meta { color: var(--muted); font-size: 14px; }
+.pdf-report .results-head { grid-template-columns: auto 1fr; text-align: left; justify-items: start; }
+.pdf-report .results-head .assess-title { font-size: 26px; }
+.pdf-report .grid-2 { grid-template-columns: 1fr 1fr; }
+.pdf-report .section-bars li { grid-template-columns: 230px 1fr 48px; }
+.pdf-report .section-bars li .branch-bar { grid-column: auto; grid-row: auto; }
+.pdf-ring { background: #fff !important; border: 16px solid; width: 150px; height: 150px; }
+.pdf-ring::before { content: none; }
+.pdf-foot { border-top: 1px solid var(--border); padding-top: 14px; }
+.pdf-foot p { margin: 0 0 6px; color: var(--text); font-size: 14px; }
+.pdf-foot .pdf-small { color: var(--muted); font-size: 12px; }
+.pdf-report .pdf-gaps { border: 0; padding: 0; }
+.pdf-report .pdf-gaps .results-h2 { margin-bottom: 4px; }
+.pdf-report .pdf-keep .gap-group { margin-top: 18px; }
+.pdf-report .card { max-width: 100%; }
+
+/* ---------- Book a consultation ---------- */
+.book-wrap { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 48px; align-items: start; }
+.book-intro h1 { font-size: clamp(32px, 4vw, 48px); font-weight: 800; letter-spacing: -.03em; }
+.book-direct { color: var(--muted); font-size: 15px; }
+.book-calendar { padding: 0; overflow: hidden; min-height: 420px; display: flex; flex-direction: column; }
+.book-frame { width: 100%; height: 720px; border: 0; display: block; }
+.book-open { margin: 0; padding: 12px 18px; font-size: 14px; color: var(--muted); border-top: 1px solid var(--border); }
+.book-pending { padding: 40px 32px; margin: auto 0; }
+.book-pending h2 { font-size: 24px; }
+.book-pending p { color: var(--muted); }
+@media (max-width: 960px) { .book-wrap { grid-template-columns: 1fr; gap: 28px; } }

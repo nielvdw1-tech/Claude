@@ -209,36 +209,10 @@
   }
 
   // ---------- Sending results ----------
-  // Each completed check is posted to the Vercel function /api/compliance-check, which emails it
-  // to VDW and sends the visitor a copy. If sending fails (for example on a preview link, or offline), the visitor
-  // gets buttons to send the same summary to Niel on WhatsApp or by email, so no lead is lost.
-  var VDW_WHATSAPP = '27728438094';
-  var VDW_EMAIL = 'niel@vdwsafety.com';
-
+  // Each completed check is posted to the Vercel function /api/compliance-check, which emails a full
+  // report to VDW and a copy to the visitor. Sending happens in the background: the visitor only sees
+  // their results. A failed attempt is retried a few times.
   function pctText(n) { return n === null ? 'N/A' : n + '%'; }
-
-  function summaryText(r) {
-    var lines = [
-      'Multi-Branch Compliance Check results',
-      'Name: ' + contact.fullName + (contact.role ? ' (' + contact.role + ')' : ''),
-      'Company: ' + contact.company,
-      'Phone: ' + contact.phone + ' | Email: ' + contact.email,
-      'Branches: ' + company.branches + ' | Employees: ' + company.employees + ' | Type: ' + company.industry,
-      'Client audits: ' + company.clientAudits,
-      'Score: ' + r.overall + '% (' + r.band.label + ') | Audit readiness ' + pctText(r.audit) + ' | Legal compliance ' + pctText(r.legal),
-      'Gaps (' + r.gaps.length + '):'
-    ];
-    r.gaps.forEach(function (q) { lines.push('- ' + q.missing + ' [' + q.reference + ']'); });
-    return lines.join('\n');
-  }
-
-  function showFallback(r) {
-    var text = summaryText(r);
-    document.getElementById('sendWhatsApp').href = 'https://wa.me/' + VDW_WHATSAPP + '?text=' + encodeURIComponent(text);
-    document.getElementById('sendEmail').href = 'mailto:' + VDW_EMAIL + '?subject=' +
-      encodeURIComponent('Compliance check results: ' + contact.company) + '&body=' + encodeURIComponent(text);
-    document.getElementById('sendStatus').hidden = false;
-  }
 
   function submitResults(r) {
     var data = {
@@ -253,22 +227,124 @@
       employees: company.employees,
       industry: company.industry,
       client_audits: company.clientAudits,
-      score: r.overall + '%',
+      score: r.overall,
       risk_level: r.band.label,
+      risk_sub: r.band.sub,
+      risk_summary: r.band.summary,
       audit_readiness: pctText(r.audit),
       legal_compliance: pctText(r.legal),
-      gaps: r.gaps.map(function (q) { return '- ' + q.missing + ' [' + q.reference + ']'; }).join('\n') || 'None',
+      sections: r.sections.map(function (s) { return { title: s.section.title, score: s.score }; }),
+      gap_list: r.gaps.map(function (q) {
+        var sec = DATA.sections.filter(function (s) { return s.id === q.section; })[0];
+        return { area: sec ? sec.gap : '', gap: q.missing, reference: q.reference, why: q.why, fix: q.fix };
+      }),
       answers: DATA.questions.map(function (q) { return q.id + ': ' + (answers[q.id] || '-'); }).join(', '),
       consent: 'yes'
     };
-    if (location.protocol === 'file:' || !window.fetch) { showFallback(r); return; }
-    fetch('/api/compliance-check', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    }).then(function (res) {
-      if (!res.ok) throw new Error('Status ' + res.status);
-    }).catch(function () { showFallback(r); });
+    if (!window.fetch || location.protocol === 'file:') return;
+    // Build the PDF report first (it looks like the results page), then send everything.
+    makePdf(r).then(function (pdf) {
+      if (pdf) data.pdf_base64 = pdf;
+    }).catch(function () {}).then(function () { post(data); });
+  }
+
+  function post(data) {
+    var attempt = 0;
+    (function send() {
+      attempt++;
+      fetch('/api/compliance-check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      }).then(function (res) {
+        if (res.status >= 500 && attempt < 3) setTimeout(send, attempt * 2000);
+      }).catch(function () {
+        if (attempt < 3) setTimeout(send, attempt * 2000);
+      });
+    })();
+  }
+
+  // ---------- PDF report ----------
+  // Turns a copy of the results page into an A4 PDF in the browser (html2pdf.js, in /vendor).
+  function loadPdfLibrary() {
+    return new Promise(function (resolve, reject) {
+      if (window.html2pdf) return resolve(window.html2pdf);
+      var s = document.createElement('script');
+      s.src = 'vendor/html2pdf.bundle.min.js';
+      s.onload = function () { resolve(window.html2pdf); };
+      s.onerror = reject;
+      document.head.appendChild(s);
+    });
+  }
+
+  function buildPdfElement(r) {
+    var results = document.querySelector('[data-step="results"]');
+    var wrap = document.createElement('div');
+    wrap.className = 'pdf-report';
+    var date = new Date().toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric' });
+    wrap.innerHTML =
+      '<div class="pdf-head"><img src="assets/vdw-logo.png" alt="VDW Health and Safety Solutions">' +
+      '<div><strong>Multi-Branch Compliance Check report</strong><span>' + esc(contact.company) + ' &middot; ' + esc(date) + '</span></div></div>' +
+      '<div class="pdf-meta">Prepared for ' + esc(contact.fullName) + (contact.role ? ', ' + esc(contact.role) : '') +
+      ' &middot; ' + esc(company.branches) + (company.branches === '1' ? ' branch' : ' branches') + ' &middot; ' + esc(company.employees) + ' employees</div>';
+    ['.results-head', '.results-scores', '.card:has(#sectionBars)', '.card:has(#gapList)'].forEach(function (sel) {
+      var el = results.querySelector(sel);
+      if (el) wrap.appendChild(el.cloneNode(true));
+    });
+    // Gap list starts on its own page; keep each area heading together with its first gap
+    var gapsCard = wrap.querySelector('#gapList') && wrap.querySelector('#gapList').closest('.card');
+    if (gapsCard) {
+      gapsCard.classList.add('pdf-gaps');
+      var brk = document.createElement('div');
+      brk.className = 'html2pdf__page-break';
+      gapsCard.parentNode.insertBefore(brk, gapsCard);
+      gapsCard.querySelectorAll('.gap-group').forEach(function (h) {
+        var next = h.nextElementSibling;
+        var keep = document.createElement('div');
+        keep.className = 'pdf-keep';
+        h.parentNode.insertBefore(keep, h);
+        keep.appendChild(h);
+        if (next && next.classList.contains('gap')) keep.appendChild(next);
+      });
+      var title = gapsCard.querySelector('#gapsTitle');
+      var firstKeep = gapsCard.querySelector('.pdf-keep');
+      if (title && firstKeep) firstKeep.insertBefore(title, firstKeep.firstChild);
+    }
+    // html2canvas can't draw the conic-gradient score ring, so use a plain ring of the same colour
+    var ring = wrap.querySelector('.score-big');
+    if (ring) {
+      ring.removeAttribute('style');
+      ring.classList.add('pdf-ring');
+      ring.style.borderColor = r.overall < 50 ? '#d64545' : r.overall < 80 ? '#f39219' : '#1f9d55';
+    }
+    var foot = document.createElement('div');
+    foot.className = 'pdf-foot';
+    foot.innerHTML = '<p><strong>Next step:</strong> book a free 15-minute consultation to go through these gaps and what they mean for your next client audit: <strong>' + location.host + '/book.html</strong></p>' +
+      '<p>VDW Health &amp; Safety Solutions &middot; niel@vdwsafety.com &middot; 072 843 8094</p>' +
+      '<p class="pdf-small">This report is a screening based on the answers given. It doesn&rsquo;t confirm full legal compliance; hidden gaps often only show up in a formal on-site audit.</p>';
+    wrap.appendChild(foot);
+    var holder = document.createElement('div');
+    holder.className = 'pdf-holder';
+    holder.appendChild(wrap);
+    document.body.appendChild(holder);
+    return holder;
+  }
+
+  function makePdf(r) {
+    return loadPdfLibrary().then(function (html2pdf) {
+      var holder = buildPdfElement(r);
+      var opts = {
+        margin: [10, 10, 12, 10],
+        image: { type: 'jpeg', quality: 0.9 },
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollX: 0, scrollY: 0 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['css', 'legacy'], avoid: ['.pdf-keep', '.gap', '.results-head', '.sub-score', '.section-bars li', '.pdf-foot'] }
+      };
+      return html2pdf().set(opts).from(holder.firstChild).outputPdf('datauristring').then(function (uri) {
+        holder.remove();
+        return uri.split(',')[1];
+      }, function (err) { holder.remove(); throw err; });
+    });
   }
 
   // The check opens at the first step; its Back button returns to the landing page

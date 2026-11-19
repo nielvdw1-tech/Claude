@@ -1,8 +1,12 @@
 # VDW website: test locally, then deploy to Vercel
 
-The website is the `prototype/` folder. The free compliance check sends results through
-`api/compliance-check.js`, a Vercel function that emails each lead (and a copy to the visitor)
-using [Resend](https://resend.com).
+The website is the `prototype/` folder. When someone completes the free compliance check, their
+browser turns the results page into a PDF report, and `api/compliance-check.js` (a Vercel function)
+emails it, with [Resend](https://resend.com), to you (with their contact details) and to the client.
+
+**Booking calendar:** "Book a Consultation" buttons open `book.html`. Paste your Calendly,
+Microsoft Bookings or Google Calendar booking link into `prototype/booking-config.js`, and the
+calendar appears on that page.
 
 ## 1. Get the files on your computer
 
@@ -25,8 +29,7 @@ npx serve prototype
 ```
 
 Open the address it prints (usually http://localhost:3000). All pages work, but the free check
-can't send emails this way: you'll see the WhatsApp / email backup buttons on the results screen.
-That's expected.
+can't send emails this way (the email function only runs with `vercel dev`, below).
 
 ## 3. Full test, including the free check emails
 
@@ -53,7 +56,7 @@ vercel dev
 
 When it asks to set up the project, accept the defaults. It reads `vercel.json`, so it serves
 the `prototype` folder and the email function. Open http://localhost:3000, complete the free
-check and confirm the lead email arrives.
+check and confirm both emails arrive with the PDF report attached.
 
 ## 4. Deploy
 

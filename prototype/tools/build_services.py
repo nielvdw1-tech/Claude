@@ -31,6 +31,7 @@ ICONS = {
 def icon(name):
     return f'<svg viewBox="0 0 24 24">{ICONS[name]}</svg>'
 
+CAL_ICON = '<svg class="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>'
 WA_ICON = '<svg class="btn-icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2c-1.5 0-3-.4-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1-.7-.3-1.5-.7-2.2-1.4-.6-.5-1-1.2-1.2-1.7-.1-.2 0-.4.1-.5l.4-.5.3-.4v-.5l-.8-1.9c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.2-.9.9-.9 2.2s1 2.6 1.1 2.8c.1.2 1.9 2.9 4.6 4 .6.3 1.1.4 1.5.6.6.2 1.2.2 1.6.1.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3z"/></svg>'
 
 def wa(message):
@@ -40,9 +41,9 @@ def wa(message):
 
 def btn(label, href=ASSESS, cls="btn btn-primary"):
     ext = ' target="_blank" rel="noopener"' if href.startswith("http") else ""
-    if href.startswith("https://wa.me/") and "Speak to a Consultant" not in label:
-        # Booking buttons open WhatsApp: show the icon so visitors know what to expect
-        return f'<a class="{cls} btn-wa" href="{href}"{ext}>{WA_ICON}<span>{label}</span></a>'
+    if href == "book.html":
+        # Booking buttons open the consultation calendar: show a calendar icon
+        return f'<a class="{cls} btn-wa" href="{href}">{CAL_ICON}<span>{label}</span></a>'
     return f'<a class="{cls}" href="{href}"{ext}>{label}</a>'
 
 SERVICES = [
@@ -73,7 +74,7 @@ def header(current):
         <span class="phone-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></svg></span>
         <span class="phone-number">072 843 8094</span>
       </a>
-      <a class="btn btn-outline btn-sm header-cta book-call" href="https://wa.me/27728438094?text=Hi%20Niel%2C%20I%27d%20like%20to%20schedule%20a%20consultation%20about%20our%20health%20%26%20safety%20compliance." target="_blank" rel="noopener"><svg class="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span>Schedule a Consultation</span></a>
+      <a class="btn btn-outline btn-sm header-cta book-call" href="book.html"><svg class="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span>Schedule a Consultation</span></a>
       <button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="main-nav" aria-label="Toggle navigation menu"><span></span><span></span><span></span></button>
     </div>
   </div>
@@ -307,7 +308,7 @@ def page(fname, d):
         
         <div class="team-photo"><img src="assets/photos/team-niel.webp" alt="Niel of VDW Health and Safety Solutions, in a VDW shirt in a warehouse" width="570" height="690" loading="lazy"></div>
       </div>
-      <div class="center-cta">{btn("Speak to a Consultant on WhatsApp", "https://wa.me/27728438094?text=Hi%20Niel%2C%20I%27d%20like%20to%20speak%20to%20a%20consultant%20about%20our%20health%20%26%20safety%20compliance.")}</div>
+      <div class="center-cta">{btn("Book a Consultation", "book.html")}</div>
     </div>
   </section>
 
@@ -403,7 +404,7 @@ for fname, d in PAGES.items():
     d['hero_photo'] = HERO_PHOTOS[fname]
     for vp, shot in zip(d['value_props'], VALUE_SHOTS[fname]):
         vp['shot'] = shot
-    d['book'] = wa(BOOKING_MESSAGES[fname])
+    d['book'] = 'book.html'
     d['short_free'] = fname == 'gap-audit.html'
     d['hero_shot'] = HERO_SHOTS.get(fname)
     d['recap_shot'] = RECAP_SHOTS.get(fname)  # "Find My Branch Gaps" offers the free check

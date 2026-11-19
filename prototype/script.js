@@ -72,13 +72,6 @@
     img.src = src;
   });
 
-  // "Schedule a Consultation" buttons: paste the online calendar link here (for example Calendly or
-  // Microsoft Bookings). Until it is set, the buttons open a WhatsApp chat instead.
-  var BOOKING_URL = '';
-  if (BOOKING_URL) {
-    document.querySelectorAll('a.book-call').forEach(function (a) { a.href = BOOKING_URL; });
-  }
-
   // Background photos further down the page load when they come near the screen
   var lazyBgs = document.querySelectorAll('[data-bg]');
   function showBg(el) { el.style.setProperty('--photo', 'url("' + el.getAttribute('data-bg') + '")'); el.removeAttribute('data-bg'); }
