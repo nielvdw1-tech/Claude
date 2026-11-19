@@ -731,3 +731,5 @@ body:has(.pdf-holder) { overflow-x: hidden; }
   .book-card { position: static; }
 }
 @media (max-width: 640px) { .book-section { padding: 32px 0 56px; } .book-card-title { font-size: 19px; padding: 18px 18px 10px; } }
+.main-nav a { white-space: nowrap; display: inline-block; padding: 6px 0; }
+@media (min-width: 961px) and (max-width: 1180px) { .main-nav ul { gap: 16px; } .main-nav a { font-size: 14px; } }
