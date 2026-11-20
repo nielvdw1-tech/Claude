@@ -17,6 +17,14 @@
       "nights": 8
     },
     {
+      "id": "easter",
+      "kind": "seasonal",
+      "season": "easter",
+      "order": 0,
+      "file": "easter.json",
+      "nights": 8
+    },
+    {
       "id": "j02",
       "kind": "journey",
       "order": 2,

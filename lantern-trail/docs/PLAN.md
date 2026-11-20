@@ -54,8 +54,9 @@ discover who God is and grow in relationship with Him: child of God, friend of J
 5. **Content scale-up:** Year 1 story plan, all five bands, both languages, review workflow.
    *Progress (16 November 2026):* Journey Trail 1 (48 nights), Christmas (8 nights) and Journey Trail 2,
    "Trail of the Living Water" (48 nights, `app/content-src/trails/j02.mjs` + `j02-e*-young/older.mjs`),
-   are complete in all five bands and both languages, about 15 weeks of journey content. All drafts await review.
-   Next: Easter trail (8 nights), then Trail 3.
+   are complete in all five bands and both languages, about 15 weeks of journey content. The Easter trail
+   (8 nights, Palm Sunday to Easter Sunday, `app/content-src/trails/easter.mjs` + `easter-young/older.mjs`)
+   is complete too (20 November 2026). All drafts await review. Next: Trail 3.
 6. **App stores:** Capacitor build, RevenueCat, store listings and review
 7. **Growth:** audio narration, bedtime reminders, parent dashboard, gift subscriptions
 
