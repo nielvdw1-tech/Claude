@@ -70,13 +70,12 @@ ROUTES.audits = (p, q = {}) => {
   const avg = last12.length ? Math.round(last12.reduce((t, a) => t + (a.score.pct || 0), 0) / last12.length) : null;
   const openF = done.reduce((n, a) => n + (a.findingsList || []).filter(f => f.action && actionOpen(byId('actions', f.action) || {})).length, 0);
   const active = plans.filter(x => !x.paused), late = active.filter(planOverdue);
-  const tabs = [['programme', 'Audit programme', late.length || '', 'red'], ['records', 'Audits', audits.length], ['templates', 'Audit checklists', auditTemplates().length]];
+  const tabs = [['programme', 'Audit programme', late.length || '', 'red'], ['records', 'Audits', audits.length]];
   let body = '';
   if (tab === 'programme') body = auditProgrammeHtml(plans);
   if (tab === 'records') body = auditRecordsHtml(audits, q);
-  if (tab === 'templates') body = auditTemplatesHtml();
-  const fab = tab === 'templates' ? (canManageAudits() ? fabBtn('audTplNew', 'New audit checklist') : '') : fabStack([canConduct() && { act: 'audStart', label: 'Start audit' }, canManageAudits() && tab === 'programme' && { act: 'audPlanNew', label: 'Plan audit', icon: 'clock', cls: 'ghost' }]);
-  const html = `${pageHead('Audits', 'Planned audits of each branch against controlled checklists. Findings become corrective actions, and every audit has a signed report.', '', scopePill())}${fab}
+  const fab = fabStack([canConduct() && { act: 'audStart', label: 'Start audit' }, canManageAudits() && tab === 'programme' && { act: 'audPlanNew', label: 'Plan audit', icon: 'clock', cls: 'ghost' }]);
+  const html = `${pageHead('Audits', 'Planned audits of each branch against controlled checklists. Findings become corrective actions, and every audit has a signed report.' + (canArea('admin') ? ` The checklists are set up under <a href="#/admin/audittemplates">Administration → Audit checklists</a>.` : ''), '', scopePill())}${fab}
     <div class="kpis">${kpi('Audits overdue', late.length, `${late.filter(planEscalated).length} escalated · ${active.length} active in the programme${plans.length > active.length ? ` · ${plans.length - active.length} paused` : ''}`, late.length ? 'red' : 'green', '#/audits/programme', 'clock')}
       ${kpi('Due in 30 days', active.filter(x => daysTo(x.nextDue) >= 0 && daysTo(x.nextDue) <= 30).length, 'Planned audits', 'blue', '#/audits/programme', 'calendar')}
       ${kpi('Average score (12 months)', avg == null ? '—' : avg + '%', `${last12.length} audit(s) completed`, avg == null ? 'blue' : avg >= 85 ? 'green' : avg >= 70 ? 'amber' : 'red', '#/audits/records', 'chart')}
@@ -369,8 +368,8 @@ function auditBuilder(id, q) {
     <button class="btn sm" data-act="abAddItem" data-s="${si}">${icon('plus', 'sm')} Add item</button></div></div>`).join('')}</div>
   <button class="btn" data-act="abAddSec">${icon('plus', 'sm')} Add section</button>
   <p class="muted mt-s" style="font-size:12px">Weight sets how much an item counts towards the score (1–3). A critical item that is not met makes the audit "Not acceptable" whatever the score.</p>
-  <div class="btn-row mt"><a class="btn" href="#/audits/templates" data-act="abCancel">Cancel</a><button class="btn primary" data-act="abSave">Save as draft</button></div>`;
-  return { title: 'Audit checklist', nav: 'audits', crumbs: [['Audits', '#/audits/templates'], ['Checklist builder', '#']], html };
+  <div class="btn-row mt"><a class="btn" href="#/admin/audittemplates" data-act="abCancel">Cancel</a><button class="btn primary" data-act="abSave">Save as draft</button></div>`;
+  return { title: 'Audit checklist', nav: 'admin', crumbs: [['Administration', '#/admin'], ['Audit checklists', '#/admin/audittemplates'], [AB.id ? 'Edit checklist' : 'New checklist', '#']], html };
 }
 document.addEventListener('input', e => { const t = e.target; if (!AB || !/^#\/audits\/builder/.test(location.hash)) return;
   if (t.classList.contains('ab-sec-title')) AB.sections[+t.dataset.s].title = t.value;
@@ -399,22 +398,27 @@ ACT.abSave = () => {
     const st = byId('auditTemplates', AB.id), stCur = atCurrent(st), id = nextId('ATPL-', 'auditTemplates', 3);
     S.auditTemplates.push({ id, org: S.ui.org, replaces: st.id, title: st.title, category: st.category, docNumber: st.docNumber, owner: S.ui.user, revisions: stCur ? [JSON.parse(JSON.stringify(stCur))] : [] });
     (S.auditPlans || []).filter(x => x.template === st.id && x.org === S.ui.org).forEach(x => { x.template = id; });
-    log(`Made ${S.ui.org ? orgOf(S.ui.org).short + '\'s' : 'a'} own version of the VDW starter checklist ${st.docNumber}`, '#/audits/templates');
+    log(`Made ${S.ui.org ? orgOf(S.ui.org).short + '\'s' : 'a'} own version of the VDW starter checklist ${st.docNumber}`, '#/admin/audittemplates');
     AB.id = id;
   }
   if (AB.id) { const t = byId('auditTemplates', AB.id), cur = atCurrent(t), dr = atDraft(t); Object.assign(t, { title: AB.title.trim(), category: AB.category, docNumber: AB.docNumber.trim() });
     if (dr) Object.assign(dr, { sections: secs, changeNote: AB.note, revDate: TODAY }); else t.revisions.push({ rev: cur ? cur.rev + 1 : 1, status: 'Draft', revDate: TODAY, changeNote: AB.note, author: S.ui.user, sections: secs });
-    log(`Saved a draft revision of audit checklist ${t.docNumber}`, '#/audits/templates'); }
+    log(`Saved a draft revision of audit checklist ${t.docNumber}`, '#/admin/audittemplates'); }
   else { const id = nextId('ATPL-', 'auditTemplates', 3); S.auditTemplates.push({ id, org: S.ui.org, title: AB.title.trim(), category: AB.category, docNumber: AB.docNumber.trim(), owner: S.ui.user, revisions: [{ rev: 1, status: 'Draft', revDate: TODAY, changeNote: 'First issue', author: S.ui.user, sections: secs }] });
-    log(`Created audit checklist ${AB.docNumber.trim()} (Rev 1 draft)`, '#/audits/templates'); }
-  AB = null; save(); toast('Saved as a draft — approve it before audits can use it.'); navigate('#/audits/templates');
+    log(`Created audit checklist ${AB.docNumber.trim()} (Rev 1 draft)`, '#/admin/audittemplates'); }
+  AB = null; save(); toast('Saved as a draft — approve it before audits can use it.'); navigate('#/admin/audittemplates');
 };
 ACT.audTplNew = () => { AB = null; navigate('#/audits/builder/new'); };
 ACT.audTplApprove = (el) => { const t = byId('auditTemplates', el.dataset.id), d = atDraft(t);
   if (d.author === S.ui.user) { toast('Someone other than the author must approve the checklist.', 'error'); return; }
-  confirmBox('Approve audit checklist', `Approve ${esc(t.docNumber)} Rev ${d.rev}? New audits will use this revision; completed audits keep the revision they used.`, 'Approve', () => { t.revisions.forEach(r => { if (r.status === 'Approved') r.status = 'Superseded'; }); Object.assign(d, { status: 'Approved', approvedBy: S.ui.user, approvedOn: TODAY }); log(`Approved audit checklist ${t.docNumber} Rev ${d.rev}`, '#/audits/templates'); save(); toast(`Rev ${d.rev} approved.`); rerender(); }, 'success'); };
+  confirmBox('Approve audit checklist', `Approve ${esc(t.docNumber)} Rev ${d.rev}? New audits will use this revision; completed audits keep the revision they used.`, 'Approve', () => { t.revisions.forEach(r => { if (r.status === 'Approved') r.status = 'Superseded'; }); Object.assign(d, { status: 'Approved', approvedBy: S.ui.user, approvedOn: TODAY }); log(`Approved audit checklist ${t.docNumber} Rev ${d.rev}`, '#/admin/audittemplates'); save(); toast(`Rev ${d.rev} approved.`); rerender(); }, 'success'); };
 
 /* ---------------- Wiring: menu, areas, actions, tasks, search ---------------- */
+// Checklists live in Administration; old links to the former checklist tabs open them there
+const _auditsRoute = ROUTES.audits, _inspectionsRoute = ROUTES.inspections;
+function checklistRedirect(tab) { history.replaceState(null, '', '#/admin/' + tab); return ROUTES.admin([tab], {}); }
+ROUTES.audits = (p, q) => p[0] === 'templates' ? checklistRedirect('audittemplates') : _auditsRoute(p, q);
+ROUTES.inspections = (p, q) => p[0] === 'templates' ? checklistRedirect('templates') : _inspectionsRoute(p, q);
 (() => { const g = NAV.find(x => x.group === 'Assets & inspections'); if (!NAV.some(x => x.items.some(i => i[0] === 'audits'))) NAV.splice(NAV.indexOf(g) + 1, 0, { group: 'Audits', items: [['audits', 'Audits', 'shield']] }); })();
 AREA_OF.audits = 'area.audits';
 if (!TOP_ROUTES.includes('audits')) TOP_ROUTES.push('audits');
@@ -422,7 +426,7 @@ if (!SOURCE_MODULES.includes('Audit')) SOURCE_MODULES.splice(SOURCE_MODULES.leng
 const _sourceLinkBeforeAudit = sourceLink;
 sourceLink = function (a) { return a.source === 'Audit' && byId('audits', a.sourceId) ? `<a href="#/audits/${a.sourceId}">${esc(a.sourceId)}</a>` : _sourceLinkBeforeAudit(a); };
 const _needsBackBeforeAudit = needsBack;
-needsBack = function (parts) { if (parts[0] === 'audits' && ['programme', 'records', 'templates'].includes(parts[1])) return false; return _needsBackBeforeAudit(parts); };
+needsBack = function (parts) { if (parts[0] === 'audits' && ['programme', 'records'].includes(parts[1])) return false; return _needsBackBeforeAudit(parts); };
 const _myTasksBeforeAudits = myTasks;
 myTasks = function () {
   const out = _myTasksBeforeAudits();
@@ -430,7 +434,7 @@ myTasks = function () {
   if (hseqManagers(S.ui.org).includes(S.ui.user)) (S.auditPlans || []).filter(x => inSite(x, S.ui.site) && planEscalated(x) && !(S.audits || []).some(a => a.plan === x.id && a.status === 'In progress')).forEach(x => { const t = byId('auditTemplates', x.template); out.push({ title: `Escalated: audit overdue — ${t ? t.title : x.template}, ${sname(x.site)}`, sub: `Due ${fmt(x.nextDue)} (${-daysTo(x.nextDue)} days overdue) · auditor ${pname(x.auditor)}`, link: '#/audits/programme', sev: 'red' }); });
   (S.auditPlans || []).filter(x => !x.paused && inSite(x, 'ALL') && x.auditor === S.ui.user && daysTo(x.nextDue) <= 14 && !(S.audits || []).some(a => a.plan === x.id && a.status === 'In progress')).forEach(x => { const t = byId('auditTemplates', x.template); out.push({ title: `Audit: ${t ? t.title : x.template} — ${sname(x.site)}`, sub: `Due ${fmt(x.nextDue)}`, link: '#/audits/programme', sev: daysTo(x.nextDue) < 0 ? 'red' : 'amber' }); });
   (S.audits || []).filter(a => a.status === 'In progress' && a.auditor === S.ui.user).forEach(a => out.push({ title: `Finish audit ${a.id}: ${a.template.title}`, sub: `${sname(a.site)} · started ${fmt(a.date)}`, link: '#/audits/' + a.id, sev: 'blue' }));
-  if (can('doc.approve')) auditTemplates().filter(t => { const d = atDraft(t); return d && d.author !== S.ui.user; }).forEach(t => out.push({ title: `Approve audit checklist ${t.docNumber}`, sub: t.title, link: '#/audits/templates', sev: 'blue' }));
+  if (can('doc.approve')) auditTemplates().filter(t => { const d = atDraft(t); return d && d.author !== S.ui.user; }).forEach(t => out.push({ title: `Approve audit checklist ${t.docNumber}`, sub: t.title, link: '#/admin/audittemplates', sev: 'blue' }));
   return out;
 };
 

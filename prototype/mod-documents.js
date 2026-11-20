@@ -26,7 +26,7 @@ function defaultRoute(cat, author) {
 }
 function docRelated(d) {
   const rel = [];
-  S.templates.filter(t => t.procedure === d.id).forEach(t => rel.push(['Inspection checklist', t.docNumber, t.title, '#/inspections/templates', '']));
+  S.templates.filter(t => t.procedure === d.id).forEach(t => rel.push(['Inspection checklist', t.docNumber, t.title, '#/admin/templates', '']));
   S.incidents.filter(i => i.links.docs.includes(d.id)).forEach(i => rel.push(['Incident', i.id, i.title, '#/incidents/' + i.id, i.status]));
   S.actions.filter(a => a.source === 'Document Review' && a.sourceId === d.id).forEach(a => rel.push(['Corrective action', a.id, a.title, '#/actions/' + a.id, a.status]));
   (d.related || []).forEach(x => rel.push(x));

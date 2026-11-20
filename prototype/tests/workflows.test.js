@@ -1355,7 +1355,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await go('#/audits/' + aid); const [dl] = await Promise.all([p.waitForEvent('download'), p.click('[data-act=audPdf]')]);
     ok('AD13 a PDF audit report can be downloaded', /^Audit_AUD-.*\.pdf$/.test(dl.suggestedFilename()), dl.suggestedFilename());
     // build own checklist
-    await go('#/audits/templates'); await p.click('.fab-stack .fab:has-text("New audit checklist")'); await p.waitForTimeout(150);
+    await go('#/admin/audittemplates'); await p.click('.fab-stack .fab:has-text("New audit checklist")'); await p.waitForTimeout(150);
     await p.fill('#abHead [name=title]', 'Canteen hygiene audit'); await p.fill('#abHead [name=docNumber]', 'KIE-AUD-020');
     await p.fill('.ab-sec-title', 'Food area'); await p.fill('.ab-in[data-k=text]', 'Surfaces are clean'); await p.click('[data-act=abAddItem]'); await p.waitForTimeout(100);
     await p.locator('.ab-in[data-k=text]').nth(1).fill('Fridge temperature is recorded daily'); await p.locator('.ab-in[data-k=critical]').nth(1).check();
@@ -1365,10 +1365,21 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     ok('AD15 a draft checklist cannot be used for audits until approved', await S(`!auditTemplates().filter(atCurrent).some(x => x.id === '${t.id}')`));
     await p.click(`[data-act=audTplApprove][data-id="${t.id}"]`); await p.waitForTimeout(100);
     ok('AD16 the author cannot approve their own checklist', !(await modalOpen()) && await S(`byId('auditTemplates','${t.id}').revisions[0].status`) === 'Draft');
-    await asUser('P-001'); await go('#/audits/templates'); await p.click(`[data-act=audTplApprove][data-id="${t.id}"]`); await p.waitForTimeout(100); await p.click('.modal-foot button:has-text("Approve")'); await p.waitForTimeout(150);
+    await asUser('P-001'); await go('#/admin/audittemplates'); await p.click(`[data-act=audTplApprove][data-id="${t.id}"]`); await p.waitForTimeout(100); await p.click('.modal-foot button:has-text("Approve")'); await p.waitForTimeout(150);
     ok('AD17 once someone else approves it, the checklist can be used', await S(`!!atCurrent(byId('auditTemplates','${t.id}'))`));
+    // checklists are set up in Administration
+    await go('#/admin');
+    const atabs = await p.$$eval('.tabs [role=tab]', t => t.map(x => x.textContent.trim()));
+    ok('CL1 Administration has "Inspection checklists" and "Audit checklists" tabs', atabs.some(t => t.startsWith('Inspection checklists')) && atabs.some(t => t.startsWith('Audit checklists')), atabs.join('|'));
+    await go('#/inspections'); const itabs = await p.$$eval('.tabs [role=tab]', t => t.map(x => x.textContent.trim()));
+    await go('#/audits'); const utabs = await p.$$eval('.tabs [role=tab]', t => t.map(x => x.textContent.trim()));
+    ok('CL2 Inspections and Audits are working modules only (no checklist tabs), with a link to the checklists in Administration', !itabs.some(t => /checklist|template/i.test(t)) && !utabs.some(t => /checklist/i.test(t)) && await has('.lead a[href="#/admin/audittemplates"]'), itabs.join('|') + ' / ' + utabs.join('|'));
+    await go('#/inspections/templates'); const r1 = await S(() => location.hash);
+    await go('#/audits/templates'); const r2 = await S(() => location.hash);
+    ok('CL3 old links to the checklist tabs open them in Administration', r1 === '#/admin/templates' && r2 === '#/admin/audittemplates' && (await p.innerText('#content')).includes('VDW starter checklist'), r1 + ' ' + r2);
+    await go('#/audits/builder/ATPL-FIRE'); ok('CL4 the checklist editor sits under Administration', (await p.innerText('.crumbs, nav[aria-label=Breadcrumb], #content')).includes('Administration') && await S(() => !!document.querySelector('.nav-item.active[href="#/admin"], .nav-item.active[data-href="#/admin"]') || document.querySelector('.nav-item.active') && document.querySelector('.nav-item.active').textContent.includes('Administration')));
     // edit an existing (starter) checklist
-    await asUser('P-002'); await go('#/audits/templates');
+    await asUser('P-002'); await go('#/admin/audittemplates');
     ok('AD19 every checklist has an "Edit checklist" button', (await p.$$('a.btn:has-text("Edit checklist")')).length >= 7);
     await p.click('a[href="#/audits/builder/ATPL-HK"].btn'); await p.waitForTimeout(150);
     ok('AD20 the editor opens with the checklist\'s current sections and items', (await p.$$('.ab-in[data-k=text]')).length === 12 && (await p.inputValue('.ab-sec-title')) === 'Walkways and access');
@@ -1381,7 +1392,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     const hk = await S(() => { const t = S.auditTemplates.find(x => x.replaces === 'ATPL-HK' && x.org === S.ui.org); return t && { id: t.id, revs: t.revisions.map(r => r.rev + ':' + r.status), items: t.revisions[1].sections[0].items.map(i => i.text), starter: byId('auditTemplates', 'ATPL-HK').revisions.length, plan: byId('auditPlans', 'APL-001').template, shown: auditTemplates().filter(x => x.category === 'Housekeeping').length }; });
     ok('AD22 editing a VDW starter makes the company\'s own version (Rev 2 draft; Rev 1 stays in use); the starter itself is unchanged for other companies', hk && hk.revs.join() === '1:Approved,2:Draft' && hk.items[0] === 'Walkways are marked, clear and lit' && hk.items.includes('Forklift routes are marked') && hk.starter === 1 && hk.shown === 1, JSON.stringify(hk));
     ok('AD23 the audit programme moves to the company\'s version', hk && hk.plan === hk.id);
-    await asUser('P-001'); await go('#/audits/templates'); await p.click(`[data-act=audTplApprove][data-id="${hk.id}"]`); await p.waitForTimeout(100); await p.click('.modal-foot button:has-text("Approve")'); await p.waitForTimeout(150);
+    await asUser('P-001'); await go('#/admin/audittemplates'); await p.click(`[data-act=audTplApprove][data-id="${hk.id}"]`); await p.waitForTimeout(100); await p.click('.modal-foot button:has-text("Approve")'); await p.waitForTimeout(150);
     ok('AD24 once approved, new audits use the edited checklist and keep the branch\'s history (repeat findings, trend)', await S(`atCurrent(byId('auditTemplates','${hk.id}')).rev === 2 && atFamily('${hk.id}') === 'ATPL-HK' && prevAudit({ id: 'X', template: { templateId: '${hk.id}' }, site: 'S-JHB', date: TODAY }).id === 'AUD-102'`));
     await asUser('P-002');
     // the audit programme: reminders, escalation, edit, pause, remove
