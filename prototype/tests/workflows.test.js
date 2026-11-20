@@ -212,7 +212,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await asUser('P-007'); await go('#/notifications/tasks');
     ok('E3 overdue inspection appears in the assignee task centre', (await p.innerText('#content')).includes('Inspect: Germiston warehouse & workshop'));
     await go('#/no-such-module'); ok('E4 an unknown page shows "Page not found"', (await p.innerText('#content')).includes('Page not found'));
-    ok('E5 navigation shows only the focused modules', (await p.$$eval('.nav-item span:not(.count)', e => e.map(x => x.textContent))).join('|') === 'Dashboard|Notifications & Tasks|My appointments|Company Notices|Legal Requirements|People Management|Training Management|Document Manager|Assets & Equipment|Inspections|Maintenance & Defects|Audits|Incident Management|Corrective Actions|Reports|Administration');
+    ok('E5 navigation shows only the focused modules', (await p.$$eval('.nav-item span:not(.count)', e => e.map(x => x.textContent))).join('|') === 'Dashboard|Notifications & Tasks|My appointments|Company Notices|Legal Requirements|Risk Management|People Management|Training Management|Document Manager|Assets & Equipment|Inspections|Maintenance & Defects|Audits|Incident Management|Corrective Actions|Reports|Administration');
     await asUser('P-002'); await go('#/incidents'); await go('#/actions'); await btn('New action'); await mbtn('Continue'); await p.waitForTimeout(100); await mbtn('Raise action');
     ok('E6 form validation blocks empty required fields', await modalOpen() && (await p.$$('.modal .field.invalid')).length > 0); await p.keyboard.press('Escape');
     await asUser('P-009'); await go('#/documents/DOC-007');
@@ -1589,6 +1589,49 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await go('#/people/P-013'); ok('TR11 the employee profile shows their required training and status', (await p.innerText('#content')).includes('First aid level 1') && (await p.innerText('#content')).includes('Missing'));
     await go('#/training/matrix'); const [dl] = await Promise.all([p.waitForEvent('download'), p.click('[data-act=trCsv]')]);
     ok('TR12 the training matrix exports to Excel (CSV)', /^Training_matrix_.*\.csv$/.test(dl.suggestedFilename()), dl.suggestedFilename());
+  }
+
+  /* ---------------- RK. Risk management ---------------- */
+  {
+    await asUser('P-002'); await pickScope('#siteSel', 'ALL'); await go('#/risk');
+    const k = await p.$$eval('.kpis .kpi .k-label', x => x.map(e => e.textContent.trim()));
+    ok('RK1 the risk dashboard shows hazards, current assessments, high and critical risks, outstanding controls, overdue reviews and risks by branch', ['Hazards recorded', 'Current assessments', 'High and critical risks', 'Outstanding controls', 'Overdue reviews', 'Germiston'].every(t => k.includes(t)), k.join('|'));
+    // record a hazard (any office user), then assess it
+    await go('#/risk/hazards'); await p.click('.fab-stack .fab:has-text("Record a hazard")'); await p.waitForTimeout(120); await mbtn('Record');
+    ok('RK2 a hazard needs a title and category', await modalOpen());
+    await mfill('title', 'Slippery floor at the wash bay'); await msel('category', 'Physical'); await msel('site', 'S-JHB'); await mfill('location', 'Wash bay'); await mbtn('Record'); await p.waitForTimeout(150);
+    const hz = await S(() => location.hash.split('/')[2]);
+    ok('RK3 the hazard is recorded as open and the HSEQ Manager and branch manager are told', /^HZ-/.test(hz) && await S(`byId('hazards','${hz}').status`) === 'Open' && await S(`S.outbox.some(m => m.subject.startsWith('Hazard recorded: Slippery floor'))`));
+    await go('#/risk/assessments'); await p.click('.fab-stack .fab'); await p.waitForTimeout(120); await mfill('title', 'Wash bay cleaning'); await msel('type', 'Task-specific'); await msel('site', 'S-JHB'); await mbtn('Create'); await p.waitForTimeout(120);
+    const ra = await S(() => location.hash.split('/')[2]);
+    await btn('Approve'); ok('RK4 an assessment cannot be approved without hazards', !(await modalOpen()) && await S(`byId('riskAssessments','${ra}').status`) === 'Draft');
+    await btn('Add hazard'); await msel('hazard', hz); await p.waitForTimeout(60); await mbtn('Save');
+    ok('RK5 the initial risk must be rated', await modalOpen());
+    await msel('il', '4'); await msel('is', '4'); await mfill('consequences', 'Slip and fracture'); await mbtn('Save'); await p.waitForTimeout(120);
+    const r1 = await S(`(() => { const a = byId('riskAssessments','${ra}'), r = a.rows[0]; return { score: rScore(r.initial), band: rBand(r.initial).name, hz: byId('hazards', r.hazard).status, linked: byId('hazards', r.hazard).assessments.includes(a.id) }; })()`);
+    ok('RK6 initial risk = likelihood × severity on the configured matrix; the hazard is linked to the assessment', r1.score === 16 && r1.band === 'High' && r1.hz === 'Assessed' && r1.linked, JSON.stringify(r1));
+    ok('RK7 a high risk is escalated to the HSEQ Manager and Managing Director', await S(`S.outbox.some(m => m.subject.startsWith('High risk: Slippery floor') && m.to === 'P-001')`));
+    await p.click(`[data-act=raCtrl][data-id="${ra}"]`); await p.waitForTimeout(100); await mfill('desc', 'Install anti-slip flooring'); await msel('category', 'Engineering controls'); await msel('owner', 'P-005'); await mbtn('Add control'); await p.waitForTimeout(120);
+    const ctl = await S(`byId('riskAssessments','${ra}').rows[0].controls[0]`);
+    ok('RK8 additional controls follow the hierarchy of controls and can be tracked as corrective actions', ctl.category === 'Engineering controls' && /^ACT-/.test(ctl.action) && await S(`byId('actions','${ctl.action}').source`) === 'Risk assessment');
+    // residual risk recorded separately and not accepted automatically
+    await p.click(`[data-act=raRow][data-id="${ra}"][data-k="0"]`); await p.waitForTimeout(100); await msel('rl', '1'); await msel('rs', '2'); await mbtn('Save'); await p.waitForTimeout(120);
+    ok('RK9 residual risk is recorded separately from the initial risk; a low score is not accepted automatically', await S(`(() => { const r = byId('riskAssessments','${ra}').rows[0]; return rScore(r.initial) === 16 && rScore(r.residual) === 2 && !r.accepted; })()`) && (await p.innerText('#content')).includes('Residual risk not yet accepted'));
+    await p.click(`[data-act=raAccept][data-id="${ra}"]`); await p.waitForTimeout(100); await mbtn('Accept risk');
+    ok('RK10 accepting the residual risk needs a named person and a reason', await modalOpen());
+    await mfill('reason', 'Anti-slip flooring and squeegee routine'); await mbtn('Accept risk');
+    await btn('Approve'); await mbtn('Approve');
+    ok('RK11 the assessment is approved with a review date', await S(`(() => { const a = byId('riskAssessments','${ra}'); return a.status === 'Approved' && !!a.reviewDate && a.rows[0].accepted.by === 'P-002'; })()`));
+    // review after an incident keeps the previous version
+    await btn('Record review'); await msel('reason', 'After an incident'); await mfill('outcome', 'Controls to be strengthened'); await p.check('.modal [name=newVersion]'); await mbtn('Save review'); await p.waitForTimeout(150);
+    const nv = await S(() => location.hash.split('/')[2]);
+    ok('RK12 a review that needs changes creates version 2; version 1 is kept as superseded', nv !== ra && await S(`byId('riskAssessments','${nv}').version === 2 && byId('riskAssessments','${ra}').status === 'Superseded' && byId('riskAssessments','${nv}').supersedes === '${ra}'`));
+    ok('RK13 overdue reviews give the assessor a task', await S(() => myTasks().some(t => t.title.startsWith('Review risk assessment RA-002'))));
+    await go('#/risk/assessments?fflag=overdue'); const od = await p.$$eval('tbody .mono', x => x.map(e => e.textContent));
+    ok('RK14 the list filters to overdue reviews', od.join() === 'RA-002', od.join());
+    // matrix configuration
+    await go('#/admin/riskmatrix'); await p.fill('#rmForm [name=bm1]', '10'); await p.click('[data-act=rmSave]'); await p.waitForTimeout(120);
+    ok('RK15 an administrator can configure the risk matrix bands', await S(() => S.config.riskMatrix.bands[1].max === 10 && rBand({ l: 2, s: 5 }).name === 'Medium'));
   }
 
   /* ---------------- Print output ---------------- */

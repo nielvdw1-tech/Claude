@@ -246,6 +246,14 @@ Other pages are closed to employees. An inspection can only be started from the 
 - Allocating a requirement to a person is operational; **the employer's statutory duties stay with the employer**. The compliance figures show what the assessor recorded; they do not guarantee legal compliance.
 - Permission "Maintain the legal library and assess legal requirements" (HSEQ Manager, Safety Consultant, System Administrator). Others can view.
 
+### Risk Management (menu → Compliance → Risk Management)
+- **Hazard register:** anyone can record a hazard (title, category, branch, location, activity, exposed persons, description, photo, related incident or inspection); the HSEQ Manager and branch manager are told. Statuses: Open, Assessed, Controlled, Closed. Investigators can record a hazard straight from an incident.
+- **Risk assessments:** baseline, issue-based, task-specific, activity-based, equipment-related or hazardous substance; branch, department, activity, date, assessor, participants, equipment, evidence. Each assessment lists several hazards with consequences, exposed persons, existing controls and the **initial risk**, then **additional controls** (hierarchy of controls: elimination, substitution, engineering, administrative, PPE; responsible person, target date, status, evidence; optionally tracked as a corrective action), then the **residual risk**, recorded separately.
+- **Professional judgement:** a score never decides on its own that a risk is acceptable. A named person must **accept the residual risk with a reason**. High and critical risks (from the configured escalation band) are e-mailed to the HSEQ Manager and Managing Director.
+- **Reviews:** scheduled, after an incident, after an operational change or when a control is ineffective. A review that needs changes creates a new version and keeps the previous one (Superseded). Overdue reviews give the assessor a task.
+- **Risk matrix:** 5 × 5 (likelihood × severity), shown with the number of current risks per cell. Administration → Risk matrix: likelihood and severity descriptions, the bands (highest score and required action) and the band from which risks are escalated.
+- Figures: hazards, current assessments, high and critical risks, outstanding controls, overdue reviews, high/critical risks per branch. Filters: type, branch, status, high/critical, outstanding controls, overdue review. Permission "Manage risk assessments" (HSEQ Manager, Safety Consultant, Branch Manager, System Administrator).
+
 ### People Management (menu → People → People Management) and My appointments
 - **Employees:** everyone in the company, **with or without a system login**: employee number, job title, branch, department, reports-to, start date, e-mail and mobile (optional). **Transfer** (branch, department, job title) and **Leaving** (deactivates the person, ends active appointments and withdraws open ones) are kept in the person's history. The profile shows appointments, competency records (qualifications, certificates, experience, registrations, competency assessments, with documents and validity), responsibilities and history. Filters: branch, department, employees / contractors, current / left.
 - **Legal appointments: two methods, one register.**
@@ -425,6 +433,7 @@ prototype/
 ├── mod-legal.js                 Legal requirements: library, register, assessments, evidence, changes
 ├── mod-people.js                Employees, legal appointments (digital and uploaded), responsibilities, competency
 ├── mod-training.js              Training: courses, requirements, matrix, records, sessions, reminders
+├── mod-risk.js                  Risk: hazard register, assessments, controls, reviews, configurable matrix
 ├── mod-auditing.js              Audits: starter and own checklists, programme, scoring, findings, PDF report
 ├── mod-dashboard.js              Dashboard: compliance status, 12-month trends, detail
 ├── vendor/pdfjs/                 PDF.js 3.11.174 (Apache-2.0) for viewing PDFs, works offline

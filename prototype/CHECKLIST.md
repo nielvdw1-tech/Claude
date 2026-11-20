@@ -75,6 +75,17 @@ Status key:
 | Legal compliance figures and filters (legislation, branch, responsible person, status) | Implemented | LG1, LG11 |
 | Legal compliance on the main dashboard; audit items linked to requirements | Not yet | Planned with the gaps in existing modules |
 
+## Risk management
+| Requirement | Status | Notes |
+|---|---|---|
+| Hazard register with categories (configurable), location, activity, exposed persons, identified by/date, photos, links to incidents, inspections and assessments | Implemented | RK2, RK3, RK6 |
+| Risk assessments of six types with several hazards, consequences, existing controls, initial and residual risk recorded separately | Implemented | RK4–RK6, RK9 |
+| Configurable risk matrix (descriptions, bands, escalation) | Implemented | RK15 |
+| Controls by hierarchy with owner, target date, status, evidence; optionally corrective actions | Implemented | RK8 |
+| Score never decides acceptance: named person and reason | Implemented | RK9, RK10 |
+| Reviews (scheduled, after incident or change, ineffective control) with previous versions kept; overdue reviews | Implemented | RK11–RK14 |
+| Risk dashboard figures and risks by branch | Implemented | RK1 |
+
 ## People management and legal appointments
 | Requirement | Status | Notes |
 |---|---|---|

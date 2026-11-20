@@ -1344,3 +1344,17 @@ body.auth-mode .main { padding-top: 0; }
 .mx-legend { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; padding: 10px 16px; border-top: 1px solid var(--line); font-size: 12px; }
 .mx-legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 5px; vertical-align: -2px; }
 .mx-legend .btn { margin-left: auto; }
+/* Risk */
+.risk-chip { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+.rc-green { background: #DDF3E6; color: #0B6B3A; } .rc-amber { background: #FDF0CC; color: #8A5A00; } .rc-orange { background: #FDE2CF; color: #9A3D06; } .rc-red { background: #F9D6D6; color: #A11F1F; }
+.ra-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; } .ra-grid .full { grid-column: 1 / -1; }
+.ra-risks { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin-top: 12px; padding: 10px 12px; background: var(--surface-2, #F6F8FB); border-radius: 10px; }
+.ra-risks > div { display: grid; gap: 4px; justify-items: start; } .ra-arrow { font-size: 18px; color: var(--muted); } .ra-accept { margin-left: auto; font-size: 13px; }
+.ra-h3 { font-size: 14px; margin: 14px 0 6px; }
+.rm-wrap { display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start; }
+.rm { border-collapse: separate; border-spacing: 3px; font-size: 12px; }
+.rm th { padding: 4px 6px; font-weight: 600; text-align: center; min-width: 74px; } .rm .rm-corner { font-size: 11px; color: var(--muted); text-align: left; }
+.rm td { width: 74px; height: 46px; text-align: center; border-radius: 6px; font-weight: 700; position: relative; }
+.rm .rm-n { position: absolute; top: 3px; right: 5px; background: #fff; color: #111; border-radius: 999px; font-size: 11px; padding: 0 6px; box-shadow: 0 1px 2px rgba(0,0,0,.2); }
+.rm-bands { display: grid; gap: 8px; max-width: 420px; font-size: 13px; }
+@media (max-width: 640px) { .ra-grid { grid-template-columns: 1fr; } .rm th, .rm td { min-width: 0; width: auto; } }
