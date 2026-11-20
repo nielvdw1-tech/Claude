@@ -1335,3 +1335,12 @@ body.auth-mode .main { padding-top: 0; }
 .apt-respond { border: 2px solid var(--brand); }
 .apt-callout { display: flex; gap: 10px; text-decoration: none; color: inherit; }
 .mb-s { margin-bottom: 10px; }
+/* Training matrix */
+.tbl.matrix th.mx-h { text-align: center; white-space: normal; min-width: 84px; font-size: 11px; line-height: 1.25; }
+.tbl.matrix td.mx-c, .tbl.matrix td.mx-na { text-align: center; padding: 6px; }
+.tbl.matrix td.mx-na { color: var(--muted); }
+.mx-cell { border: 0; border-radius: 6px; padding: 5px 8px; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; min-width: 64px; }
+.mx-green { background: var(--ok-bg); color: var(--ok); } .mx-amber { background: var(--warn-bg); color: var(--warn); } .mx-red { background: var(--bad-bg); color: var(--bad); } .mx-blue { background: var(--info-bg); color: var(--info); }
+.mx-legend { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; padding: 10px 16px; border-top: 1px solid var(--line); font-size: 12px; }
+.mx-legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 5px; vertical-align: -2px; }
+.mx-legend .btn { margin-left: auto; }

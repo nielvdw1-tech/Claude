@@ -47,3 +47,6 @@ function readSites(m, name) { if (m.querySelector(`[name=${name}_ALL]`).checked)
 // One coloured status badge per compliance status, used by every new register
 const COMPLIANCE_TONE = { 'Compliant': 'green', 'Partially compliant': 'amber', 'Non-compliant': 'red', 'Not assessed': 'grey', 'Not applicable': 'grey', 'Pending assessment': 'blue' };
 const cbadge = s => badge(s, COMPLIANCE_TONE[s] || 'grey');
+// Export rows (first row = headings) as a CSV that opens in Excel
+function csvDownload(name, rows) { const csv = rows.map(r => r.map(c => `"${String(c == null ? '' : c).replace(/"/g, '""')}"`).join(',')).join('\r\n');
+  return saveFile(`${name}_${TODAY}.csv`, new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' })).then(ok => { if (ok) toast(`Exported ${rows.length - 1} row(s) — opens in Excel.`); return ok; }); }

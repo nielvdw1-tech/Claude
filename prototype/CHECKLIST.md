@@ -87,6 +87,15 @@ Status key:
 | Employees only see their own appointments | Implemented | PM21 (on screen; server-side in production) |
 | Departments within each branch | Not yet | Departments are company-wide; planned with the gaps |
 
+## Training management
+| Requirement | Status | Notes |
+|---|---|---|
+| Courses, providers, categories, validity; requirements by job title, appointment type, activity or everyone | Implemented | TR1, TR10 |
+| Training records with attendance, certificates, validity; competency assessments recorded separately | Implemented | TR7–TR9 |
+| Training matrix with missing / expired / expiring / booked; filters; Excel (CSV) export | Implemented | TR2, TR3, TR12 |
+| Scheduled and refresher training with invitations and attendance | Implemented | TR5–TR7 |
+| Reminders to employees and managers before and after expiry | Implemented | TR4 |
+
 ## Audits
 | Requirement | Status | Notes |
 |---|---|---|

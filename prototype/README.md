@@ -259,6 +259,15 @@ Other pages are closed to employees. An inspection can only be started from the 
 - **My appointments** (menu, and on the employee's phone screens): waiting for a response, active, declined and previous appointments, and my responsibilities to acknowledge.
 - Permission "Manage employees and issue appointments" (HSEQ Manager, Safety Consultant, Branch Manager, System Administrator). Others see only their own appointments. Appointments assign operational duties; **the employer's statutory duties remain with the employer**.
 
+### Training Management (menu → People → Training Management)
+- **Courses:** name, category, usual provider, how long the certificate is valid (empty = it does not expire) and whether a **competency assessment** is needed after attendance.
+- **Requirements:** who needs which course: **everyone**, a **job title**, an **appointment type** (e.g. every first aider needs first aid) or an **activity** (named people). A new employee or a new appointment shows its training needs straight away.
+- **Training matrix:** required courses per person: Valid, Expiring (within 60 days), Expired, Missing, Booked, or Assessment outstanding / Not yet competent. Click a cell for the details or to record training. Filters: branch, department, job title, course, status (incl. "any gap"). **Export to Excel (CSV).**
+- **Records:** attendance with date, provider, certificate and validity (filled from the course); the competency result is recorded separately (Competent / Not yet competent) and can be added later.
+- **Sessions:** schedule a course (e.g. a refresher); the people who need it are ticked for you; they and their supervisors are told. Afterwards **record attendance** for the group (and each person's competency result).
+- **Reminders:** 60 days before a required certificate expires the employee and supervisor are e-mailed; when it has expired the HSEQ Manager too (once each, not if training is already booked). Tasks for gaps and for sessions whose attendance has not been recorded.
+- The employee profile (People) shows the person's required training and status. Permission "Manage training" (HSEQ Manager, Safety Consultant, Branch Manager, System Administrator).
+
 ### Audits
 - **Audits** (menu → Audits) has two tabs: **Audit programme** and **Audits**. The checklists themselves are set up under **Administration → Audit checklists** (inspection checklists under **Administration → Inspection checklists**), so the modules are the day-to-day working areas.
 - **Pre-built checklists (VDW starter checklists):** legal compliance (general), housekeeping, fire safety, hazardous chemical substances, stacking and storage, emergency preparedness and first aid, and PPE. They are suggestions to adapt to each site. **The legal compliance checklist does not quote legislation:** a competent person adds the references from the official text before relying on it.
@@ -415,6 +424,7 @@ prototype/
 ├── mod-registers.js             Shared filter bar and set-up helpers for the new registers
 ├── mod-legal.js                 Legal requirements: library, register, assessments, evidence, changes
 ├── mod-people.js                Employees, legal appointments (digital and uploaded), responsibilities, competency
+├── mod-training.js              Training: courses, requirements, matrix, records, sessions, reminders
 ├── mod-auditing.js              Audits: starter and own checklists, programme, scoring, findings, PDF report
 ├── mod-dashboard.js              Dashboard: compliance status, 12-month trends, detail
 ├── vendor/pdfjs/                 PDF.js 3.11.174 (Apache-2.0) for viewing PDFs, works offline

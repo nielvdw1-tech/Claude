@@ -212,7 +212,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await asUser('P-007'); await go('#/notifications/tasks');
     ok('E3 overdue inspection appears in the assignee task centre', (await p.innerText('#content')).includes('Inspect: Germiston warehouse & workshop'));
     await go('#/no-such-module'); ok('E4 an unknown page shows "Page not found"', (await p.innerText('#content')).includes('Page not found'));
-    ok('E5 navigation shows only the focused modules', (await p.$$eval('.nav-item span:not(.count)', e => e.map(x => x.textContent))).join('|') === 'Dashboard|Notifications & Tasks|My appointments|Company Notices|Legal Requirements|People Management|Document Manager|Assets & Equipment|Inspections|Maintenance & Defects|Audits|Incident Management|Corrective Actions|Reports|Administration');
+    ok('E5 navigation shows only the focused modules', (await p.$$eval('.nav-item span:not(.count)', e => e.map(x => x.textContent))).join('|') === 'Dashboard|Notifications & Tasks|My appointments|Company Notices|Legal Requirements|People Management|Training Management|Document Manager|Assets & Equipment|Inspections|Maintenance & Defects|Audits|Incident Management|Corrective Actions|Reports|Administration');
     await asUser('P-002'); await go('#/incidents'); await go('#/actions'); await btn('New action'); await mbtn('Continue'); await p.waitForTimeout(100); await mbtn('Raise action');
     ok('E6 form validation blocks empty required fields', await modalOpen() && (await p.$$('.modal .field.invalid')).length > 0); await p.keyboard.press('Escape');
     await asUser('P-009'); await go('#/documents/DOC-007');
@@ -1556,6 +1556,39 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await asUser('P-008'); await go('#/people');
     ok('PM21 a supervisor without the people permission sees only their own appointments, not the employee register', (await p.innerText('#content')).includes('My appointments') && !(await has('.tabs a[href="#/people/employees"]')));
     await asUser('P-002');
+  }
+
+  /* ---------------- TR. Training management ---------------- */
+  {
+    await asUser('P-002'); await pickScope('#siteSel', 'ALL');
+    await S(() => { const a = byId('appointments', 'APT-002'); if (a) { a.status = 'Accepted'; a.end = ''; } save(); });
+    ok('TR1 training needs follow job titles, appointments and activities', await S(() => { const nom = requiredFor(person('P-009')).map(r => r.course), ruan = requiredFor(person('P-008')).map(r => r.course); return nom.includes('CRS-001') && nom.includes('CRS-002') && ruan.includes('CRS-006'); }));
+    await go('#/training');
+    const st = await S(() => ({ grace: trStatus('P-013', 'CRS-001'), marco: trStatus('P-012', 'CRS-002'), sizwe: trStatus('P-020', 'CRS-001') }));
+    ok('TR2 the matrix shows missing, expired and booked training', st.grace === 'Missing' && st.marco === 'Expired' && st.sizwe === 'Booked' && await has('.mx-cell.mx-red'), JSON.stringify(st));
+    await go('#/training/matrix?fstatus=gaps'); const gp = await p.$$eval('.tbl.matrix tbody tr td:first-child b', x => x.map(e => e.textContent));
+    ok('TR3 the matrix filters to people with gaps', gp.includes('Grace Adams') && gp.includes('Marco Fernandes') && !gp.includes('Thandi Mokoena'), gp.join());
+    ok('TR4 an expired certificate e-mails the employee, supervisor and HSEQ Manager', await S(() => { const m = S.outbox.filter(x => x.subject.startsWith('Expired: Lift truck operator') && x.subject.includes('Marco')).map(x => x.to); return m.includes('P-012') && m.includes('P-004') && m.includes('P-002'); }));
+    // schedule a refresher: the people who need it are ticked
+    await go('#/training/sessions'); await p.click('.fab-stack .fab:has-text("Schedule training")'); await p.waitForTimeout(120); await msel('course', 'CRS-002'); await p.waitForTimeout(80);
+    const ticked = await p.$$eval('#trPeople input:checked', x => x.map(e => e.name));
+    ok('TR5 scheduling training ticks the people who need it', ticked.includes('tp_P-012') && !ticked.includes('tp_P-009'), ticked.join());
+    await mbtn('Schedule'); await p.waitForTimeout(120);
+    ok('TR6 booked people show as "Booked" and are told', await S(() => trStatus('P-012', 'CRS-002') === 'Booked' && S.outbox.some(m => m.to === 'P-012' && m.subject.startsWith('Training booked'))));
+    const sid = await S(() => S.trainingSessions.slice(-1)[0].id);
+    await S(`ACT.trAttend({ dataset: { id: '${sid}' } })`); await p.waitForTimeout(120);
+    ok('TR7 recording attendance asks for each person\'s competency result when the course needs an assessment', await has('.modal select[name=res_P-012]'));
+    await p.selectOption('.modal select[name=res_P-012]', 'Not yet competent'); await mbtn('Save attendance'); await p.waitForTimeout(120);
+    ok('TR8 a "not yet competent" result keeps the gap open even though the person attended', await S(() => trStatus('P-012', 'CRS-002') === 'Not yet competent'));
+    const rid = await S(() => S.trainingRecs.filter(r => r.person === 'P-012' && r.course === 'CRS-002').slice(-1)[0].id);
+    await S(`ACT.trAssess({ dataset: { id: '${rid}' } })`); await p.waitForTimeout(100); await msel('result', 'Competent'); await mbtn('Save');
+    ok('TR9 a later competency assessment closes the gap; the certificate validity follows the course', await S(`(() => { const r = byId('trainingRecs','${rid}'); return trStatus('P-012','CRS-002') === 'Valid' && r.expires === addMonths(r.date, 12) && r.assessedBy === 'P-002'; })()`));
+    // a new appointment creates a training need
+    await S(() => { S.appointments.push({ id: 'APT-T1', org: 'ORG-1', person: 'P-013', type: 'AT-FIRST', site: 'S-CPT', method: 'Uploaded', status: 'Uploaded', effective: addDays(TODAY, -1), file: { name: 'x.pdf', seeded: true }, compDocs: [{ name: 'c.pdf', seeded: true }], history: [], versions: [], version: 1, created: TODAY }); save(); });
+    ok('TR10 a new first-aider appointment immediately shows first aid training as required', await S(() => trStatus('P-013', 'CRS-003') === 'Missing'));
+    await go('#/people/P-013'); ok('TR11 the employee profile shows their required training and status', (await p.innerText('#content')).includes('First aid level 1') && (await p.innerText('#content')).includes('Missing'));
+    await go('#/training/matrix'); const [dl] = await Promise.all([p.waitForEvent('download'), p.click('[data-act=trCsv]')]);
+    ok('TR12 the training matrix exports to Excel (CSV)', /^Training_matrix_.*\.csv$/.test(dl.suggestedFilename()), dl.suggestedFilename());
   }
 
   /* ---------------- Print output ---------------- */
