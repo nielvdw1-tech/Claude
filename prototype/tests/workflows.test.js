@@ -1520,13 +1520,12 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     ok('PM6 the employee sees the appointment waiting for their response in "My appointments"', (await p.innerText('#content')).includes('Waiting for your response') && (await p.innerText('#content')).includes('Lift truck operator'));
     await go('#/me/APT-003');
     ok('PM7 opening it records that the employee opened it and shows the full appointment with its duties', await S(`byId('appointments','APT-003').status`) === 'Awaiting acknowledgement' && !!(await S(`byId('appointments','APT-003').opened`)) && (await p.innerText('.apt-duties')).includes('pre-use check'));
-    await p.click('[data-act=aptAck]'); await p.waitForTimeout(100);
-    ok('PM8 the employee must tick "read and understood" before acknowledging', await S(`byId('appointments','APT-003').status`) === 'Awaiting acknowledgement');
-    await p.check('#aptAck'); await p.click('[data-act=aptAck]'); await p.waitForTimeout(150);
-    ok('PM9 acknowledgement is recorded with its time; the appointment is not yet accepted', await S(`(() => { const a = byId('appointments','APT-003'); return a.status === 'Awaiting acceptance' && !!a.ack.ts && !a.accept; })()`));
-    await p.click('[data-act=aptAccept]'); await p.waitForTimeout(100);
-    ok('PM10 accepting needs a signature', await S(`byId('appointments','APT-003').status`) === 'Awaiting acceptance');
+    await signOn('#aptSig'); await p.click('[data-act=aptAccept]'); await p.waitForTimeout(100);
+    ok('PM8 accepting needs the tick "I have read and understood" (a signature alone is not enough)', await S(`byId('appointments','APT-003').status`) === 'Awaiting acknowledgement');
+    await p.click('[data-act=aptSigClear]'); await p.check('#aptAck'); await p.click('[data-act=aptAccept]'); await p.waitForTimeout(100);
+    ok('PM9 accepting needs a signature (the tick alone is not enough)', await S(`byId('appointments','APT-003').status`) === 'Awaiting acknowledgement' && !(await S(`byId('appointments','APT-003').accept`)));
     await signOn('#aptSig'); await p.click('[data-act=aptAccept]'); await p.waitForTimeout(150);
+    ok('PM10 "read and understood" and the signature are given together in one step', await S(`(() => { const a = byId('appointments','APT-003'); return !!a.ack && !!a.accept && a.accept.read === true; })()`));
     const acc = await S(() => { const a = byId('appointments', 'APT-003'); return { st: a.status, by: a.accept.user, ts: !!a.accept.ts, sig: /^data:image/.test(a.accept.sig || '') }; });
     ok('PM11 acceptance records who accepted, when, and their signature; the appointment becomes active', acc.by === 'P-009' && acc.ts && acc.sig && await S(`aptStatus(byId('appointments','APT-003'))`) === 'Active', JSON.stringify(acc));
     ok('PM12 the manager is told the appointment was accepted', await S(`S.outbox.some(m => m.subject.startsWith('Appointment accepted: Nomvula'))`));

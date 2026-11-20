@@ -237,7 +237,7 @@ function aptDetail(id) {
     </div></div></div>
     <div class="card"><div class="card-head"><h2>History</h2></div><div class="card-body"><ul class="timeline">${(a.history || []).slice().reverse().map(h => `<li><b>${esc(h.action)}</b>${h.comment ? ` — ${esc(h.comment)}` : ''}<div class="t-sub">${fmtTs(h.ts)} · ${esc(pname(h.by))}</div></li>`).join('')}</ul></div></div>
   </div></div>`;
-  return { title: a.id, nav: mine && !mgr ? 'me' : 'people', crumbs: mine && !mgr ? [['My appointments', '#/me'], [a.id, '#']] : [['People', '#/people/appointments'], [a.id, '#']], html, after: respond && a.status === 'Awaiting acceptance' ? () => { APTSIG.sig = null; initSigPad('aptSig', APTSIG, 'sig', 'aptSigField'); } : null };
+  return { title: a.id, nav: mine && !mgr ? 'me' : 'people', crumbs: mine && !mgr ? [['My appointments', '#/me'], [a.id, '#']] : [['People', '#/people/appointments'], [a.id, '#']], html, after: respond && a.status !== 'Clarification requested' ? () => { APTSIG.sig = null; initSigPad('aptSig', APTSIG, 'sig', 'aptSigField'); } : null };
 }
 function aptMgrButtons(a) { const s = aptStatus(a), b = [];
   if (a.method === 'Digital' && a.status === 'Draft') b.push(`<button class="btn" data-act="aptEdit" data-id="${a.id}">${icon('edit', 'sm')} Edit</button>`, `<button class="btn primary" data-act="aptIssue" data-id="${a.id}">Issue to employee</button>`);
@@ -249,12 +249,10 @@ function aptMgrButtons(a) { const s = aptStatus(a), b = [];
   return b.join(''); }
 function aptRespondHtml(a) {
   if (a.status === 'Clarification requested') return `<div class="alert info">${icon('info')}<div>You asked for clarification. You can respond once your question has been answered.</div></div>`;
-  if (a.status === 'Awaiting acknowledgement') return `<div class="card apt-respond"><div class="card-head"><h2>Your response</h2></div><div class="card-body">
-    <label class="check"><input type="checkbox" id="aptAck"> <span><b>I have read and understood this appointment</b>, including the duties and responsibilities.</span></label>
-    <div class="btn-row mt-s"><button class="btn primary" data-act="aptAck" data-id="${a.id}">Confirm I have read it</button><button class="btn" data-act="aptClarify" data-id="${a.id}">Ask for clarification</button><button class="btn danger" data-act="aptDecline" data-id="${a.id}">Decline</button></div></div></div>`;
-  return `<div class="card apt-respond"><div class="card-head"><h2>Accept the appointment</h2><span class="ch-sub">Read and understood ${fmtTs(a.ack.ts)}</span></div><div class="card-body">
-    <div class="field full" id="aptSigField"><label for="aptSig">Your signature<span class="req">*</span></label><div class="sig-wrap"><canvas id="aptSig" class="sig-pad"></canvas><div class="sig-foot"><span>${esc(pname(a.person))}</span><button type="button" class="btn sm" data-act="aptSigClear">Clear</button></div></div></div>
-    <div class="btn-row mt-s"><button class="btn success" data-act="aptAccept" data-id="${a.id}">${icon('check', 'sm')} Accept appointment</button><button class="btn" data-act="aptClarify" data-id="${a.id}">Ask for clarification</button><button class="btn danger" data-act="aptDecline" data-id="${a.id}">Decline</button></div></div></div>`;
+  return `<div class="card apt-respond"><div class="card-head"><h2>Accept the appointment</h2><span class="ch-sub">Read it in full first</span></div><div class="card-body">
+    <label class="check"><input type="checkbox" id="aptAck"> <span><b>I have read and understood this appointment</b>, including the duties and responsibilities, and I accept it.</span></label>
+    <div class="field full mt-s" id="aptSigField"><label for="aptSig">Your signature<span class="req">*</span></label><div class="sig-wrap"><canvas id="aptSig" class="sig-pad"></canvas><div class="sig-foot"><span>${esc(pname(a.person))} · ${fmt(TODAY)}</span><button type="button" class="btn sm" data-act="aptSigClear">Clear</button></div></div></div>
+    <div class="btn-row mt-s"><button class="btn success" data-act="aptAccept" data-id="${a.id}">${icon('check', 'sm')} Sign and accept</button><button class="btn" data-act="aptClarify" data-id="${a.id}">Ask for clarification</button><button class="btn danger" data-act="aptDecline" data-id="${a.id}">Decline</button></div></div></div>`;
 }
 const aptNotifyMgr = (a, subject, text) => { const to = [...new Set([a.issuedBy, a.createdBy, a.authority].filter(Boolean))]; queueEmail(to, 'people', subject, text, '#/people/' + a.id); addEvent('blue', 'people', subject, text, '#/people/' + a.id, a.site, to); };
 ACT.aptIssue = (el) => { const a = byId('appointments', el.dataset.id); confirmBox('Issue this appointment?', `${esc(pname(a.person))} is notified and can read, acknowledge and accept it in their app. You cannot change it afterwards without issuing a new version.`, 'Issue', () => {
@@ -268,8 +266,8 @@ ACT.aptEdit = (el) => { const a = byId('appointments', el.dataset.id); openModal
 ACT.aptAck = (el) => { const a = byId('appointments', el.dataset.id); if (!document.getElementById('aptAck').checked) { toast('Tick that you have read and understood the appointment.', 'error'); return; }
   a.ack = { ts: nowTs(), user: S.ui.user }; a.status = 'Awaiting acceptance'; aptHist(a, 'Acknowledged: read and understood'); log(`${pname(S.ui.user)} acknowledged appointment ${a.id}`, '#/people/' + a.id); save(); rerender(); };
 ACT.aptSigClear = () => { APTSIG.sig = null; const c = document.getElementById('aptSig'); if (c) c.getContext('2d').clearRect(0, 0, c.width, c.height); };
-ACT.aptAccept = (el) => { const a = byId('appointments', el.dataset.id); if (!APTSIG.sig) { toast('Sign to accept the appointment.', 'error'); document.getElementById('aptSigField').classList.add('invalid'); return; }
-  a.accept = { ts: nowTs(), user: S.ui.user, name: pname(S.ui.user), sig: APTSIG.sig }; a.status = 'Accepted'; aptHist(a, 'Accepted and signed by the employee');
+ACT.aptAccept = (el) => { const a = byId('appointments', el.dataset.id); if (!document.getElementById('aptAck').checked) { toast('Tick that you have read and understood the appointment.', 'error'); return; } if (!APTSIG.sig) { toast('Sign to accept the appointment.', 'error'); document.getElementById('aptSigField').classList.add('invalid'); return; }
+  const ts = nowTs(); if (!a.ack) a.ack = { ts, user: S.ui.user }; a.accept = { ts, user: S.ui.user, name: pname(S.ui.user), sig: APTSIG.sig, read: true }; a.status = 'Accepted'; aptHist(a, 'Read and understood, signed and accepted by the employee');
   aptNotifyMgr(a, `Appointment accepted: ${pname(a.person)} — ${aptType(a).name}`, `${pname(a.person)} accepted the appointment ${a.id} on ${fmtTs(a.accept.ts)}.`);
   log(`${pname(S.ui.user)} accepted appointment ${a.id}`, '#/people/' + a.id); save(); toast('Appointment accepted. Thank you.'); rerender(); };
 ACT.aptDecline = (el) => { const a = byId('appointments', el.dataset.id); openModal({ title: 'Decline the appointment', body: fld({ name: 'reason', label: 'Why are you declining?', type: 'textarea', required: true, full: true }), buttons: [{ label: 'Decline', cls: 'danger', onClick: m => { if (!validateForm(m)) return false; const v = readForm(m);
