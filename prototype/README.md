@@ -286,6 +286,15 @@ Other pages are closed to employees. An inspection can only be started from the 
 - **Required documents depend on the kind of work** (Administration → Contractor requirements; demonstration list — set your own with your competent person). Each document is submitted, then **approved or rejected with a reason**; expiry is tracked. A contractor is **Compliant** only when every required document is approved and current; an approved contractor with documents out of order is flagged.
 - Contractor employees with competency and **induction**; audit findings become corrective actions (source "Contractor"). History of every decision. Filters: branch, kind of work, status, compliance / documents to review.
 
+### Connections added across the existing modules
+- **Dashboard → Compliance management:** legal compliance (% and compliant / partial / non-compliant / not assessed), training up to date, appointments awaiting acceptance, high and critical risks, upcoming and overdue audits, contractors not compliant, emergency preparedness, documents expiring, hazardous substances with gaps and PPE outstanding. Each tile opens the filtered records, and only the tiles for areas the role may open are shown.
+- **Reports:** Legal compliance register, Risk register, Training matrix, Legal appointments & digital acceptance, PPE issue report, Hazardous substances register, Contractor compliance and a **Management review summary** (key figures from every module). All export to CSV (opens in Excel) and print.
+- **Documents:** an optional **expiry date**, separate from the review date (e.g. certificates); the owner gets a task 30 days before and after expiry.
+- **Assets:** department and a photo of the asset.
+- **Company notices:** can go to selected **departments** or **named people**, not only all staff or one branch.
+- **Incidents:** direct causes, underlying causes and contributing factors (next to the 5 Whys root cause).
+- **Audits ↔ legal requirements:** each audit checklist item can be linked to a legal requirement; the requirement shows the latest audit results of its linked items.
+
 ### Audits
 - **Audits** (menu → Audits) has two tabs: **Audit programme** and **Audits**. The checklists themselves are set up under **Administration → Audit checklists** (inspection checklists under **Administration → Inspection checklists**), so the modules are the day-to-day working areas.
 - **Pre-built checklists (VDW starter checklists):** legal compliance (general), housekeeping, fire safety, hazardous chemical substances, stacking and storage, emergency preparedness and first aid, and PPE. They are suggestions to adapt to each site. **The legal compliance checklist does not quote legislation:** a competent person adds the references from the official text before relying on it.
@@ -448,6 +457,7 @@ prototype/
 ├── mod-substances.js            Hazardous substances register, SDS, controls, monitoring
 ├── mod-emergency.js             Emergency arrangements per branch, team, equipment, drills
 ├── mod-contractors.js           Contractors, required documents and review, inductions
+├── mod-gaps.js                  Dashboard compliance section, new reports, incident causes, audit–legal links, document expiry
 ├── mod-auditing.js              Audits: starter and own checklists, programme, scoring, findings, PDF report
 ├── mod-dashboard.js              Dashboard: compliance status, 12-month trends, detail
 ├── vendor/pdfjs/                 PDF.js 3.11.174 (Apache-2.0) for viewing PDFs, works offline

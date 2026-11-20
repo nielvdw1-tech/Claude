@@ -148,6 +148,7 @@ function docDetail(id) {
         <div>Effective date</div><div>${issued ? fmt(issued.effective) : '—'}</div>
         <div>Review frequency</div><div>${d.reviewMonths ? d.reviewMonths + ' months' : 'Not subject to periodic review'}</div>
         <div>Next review date</div><div>${docActive(d) && issued ? dueText(d.nextReview) : '—'}</div>
+        <div>Expiry date</div><div>${d.expires ? dueText(d.expires) : '<span class="muted">Does not expire</span>'}</div>
         <div>Access classification</div><div>${esc(d.access)}</div>
         <div>File (${revLabel(latest)})</div><div>${fileChip(latest.file, { doc: d.id, ri: d.revisions.length - 1 })}</div>
       </div></div></div>
@@ -224,6 +225,7 @@ function docForm(d) {
     ${fld({ name: 'dept', label: 'Department', type: 'select', options: opts(S.departments, d ? d.dept : 'HSEQ'), required: true })}
     ${fld({ name: 'owner', label: 'Document owner', type: 'select', options: personOptions(d ? d.owner : S.ui.user), required: true })}
     ${fld({ name: 'reviewMonths', label: 'Review frequency (months)', type: 'number', value: d ? d.reviewMonths : 24, min: 0, max: 60, hint: '0 = no periodic review (e.g. certificates, reports).' })}
+    ${fld({ name: 'expires', label: 'Expiry date (only if the document expires — e.g. a certificate)', type: 'date', value: d ? d.expires || '' : '', hint: 'Different from the review date. Leave empty for documents that do not expire.' })}
     ${fld({ name: 'access', label: 'Access classification', type: 'select', options: opts(['Public', 'Internal', 'Confidential', 'Restricted'], d ? d.access : 'Internal') })}
   </div>`;
 }
@@ -246,7 +248,7 @@ ACT.newDoc = () => {
       const v = readForm(m); const id = nextId('DOC-', 'documents');
       const rev = { rev: Math.max(1, Math.round(+v.startRev || 1)), draft: 1, status: 'Draft', date: TODAY, effective: null, file: v.file, notes: v.notes, author: S.ui.user, route: [], history: [{ ts: nowTs(), by: S.ui.user, action: 'Document uploaded (draft)', comment: '' }] };
       headerHistory(m._hc, rev);
-      const d = { id, number: v.number, title: v.title, category: v.category, type: v.type, org: siteOrgOf(v.site), site: v.site, dept: v.dept, owner: v.owner, reviewMonths: Number(v.reviewMonths || 0), nextReview: null, access: v.access, revisions: [rev], related: [] };
+      const d = { id, number: v.number, title: v.title, category: v.category, type: v.type, org: siteOrgOf(v.site), site: v.site, dept: v.dept, owner: v.owner, expires: v.expires || '', reviewMonths: Number(v.reviewMonths || 0), nextReview: null, access: v.access, revisions: [rev], related: [] };
       S.documents.push(d);
       if (submit) { startRoute(rev); rev.history.push({ ts: nowTs(), by: S.ui.user, action: `Submitted for approval (${rev.route.length}-step route: ${rev.route.map(s => pname(s.person)).join(' → ')})`, comment: '' }); notifyCurrent(d); }
       log(`Uploaded ${d.number} ${d.title}${submit ? ' and submitted for approval' : ''}`, '#/documents/' + id); save();
@@ -258,7 +260,7 @@ ACT.docEdit = (el) => {
   const d = byId('documents', el.dataset.id);
   openModal({ title: 'Edit document details', sub: d.number, size: 'wide', body: docForm(d), buttons: [{ label: 'Save changes', cls: 'primary', onClick: m => {
     if (!validateForm(m)) return false; const v = readForm(m);
-    Object.assign(d, { number: v.number, title: v.title, category: v.category, type: v.type, site: v.site, org: siteOrgOf(v.site), dept: v.dept, owner: v.owner, reviewMonths: Number(v.reviewMonths || 0), access: v.access });
+    Object.assign(d, { number: v.number, title: v.title, category: v.category, type: v.type, site: v.site, org: siteOrgOf(v.site), dept: v.dept, owner: v.owner, expires: v.expires || '', reviewMonths: Number(v.reviewMonths || 0), access: v.access });
     docLatest(d).history.push({ ts: nowTs(), by: S.ui.user, action: 'Document details edited', comment: '' }); save(); toast('Document details saved.'); rerender();
   } }] });
 };

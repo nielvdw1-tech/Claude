@@ -12,7 +12,7 @@
    ========================================================================== */
 'use strict';
 
-function noticeFor(n, p) { return !!p && n.org === p.org && (n.audience === 'ALL' || n.audience === p.site); }
+function noticeFor(n, p) { if (!p || n.org !== p.org) return false; if ((n.audPeople || []).length) return n.audPeople.includes(p.id) || p.id === n.publishedBy; return (n.audience === 'ALL' || n.audience === p.site) && (!(n.audDepts || []).length || n.audDepts.includes(p.dept)); }
 function noticeLive(n) { return !n.expires || daysTo(n.expires) >= 0; }
 function noticeAudience(n) { return S.people.filter(p => p.sysRole && noticeFor(n, p)); }
 function noticePublished(n) { return !n.status || n.status === 'Published'; }
@@ -113,6 +113,8 @@ ACT.noticeExpire = (el) => { const n = S.notices.find(x => x.id === el.dataset.i
 ACT.noticeNew = () => openModal({ title: 'Publish notice', sub: 'Share a memo or important information with staff. They see it in Notices and on their home screen.', size: 'wide',
   body: `<div class="form-grid">${fld({ name: 'title', label: 'Title', required: true, full: true, placeholder: 'e.g. New pedestrian walkways in the warehouse' })}${fld({ name: 'body', label: 'Message', type: 'textarea', required: true, full: true, rows: 6 })}
     ${fld({ name: 'audience', label: 'Send to', type: 'select', options: siteOptions(S.ui.site === 'ALL' ? 'ALL' : S.ui.site).replace('All sites (organisation-wide)', 'All staff (every branch)'), required: true })}
+    <div class="field full"><label>Only these departments (optional)</label><div class="chk-row">${S.departments.map(d => `<label class="check"><input type="checkbox" name="nd_${d.replace(/\W/g, '')}"> <span>${esc(d)}</span></label>`).join('')}</div></div>
+    <div class="field full"><label>Or only these people (optional — overrides branch and department)</label><div class="chk-col" style="max-height:140px">${S.people.filter(p => p.org === S.ui.org && p.status !== 'Deactivated').map(p => `<label class="check"><input type="checkbox" name="np_${p.id}"> <span>${esc(p.name)} <span class="t-sub">${esc(p.jobTitle || '')} · ${esc(sname(p.site))}</span></span></label>`).join('')}</div></div>
     ${fld({ name: 'priority', label: 'Priority', type: 'select', options: opts(['Normal', 'Important']), required: true })}
     ${fld({ name: 'expires', label: 'Show until (optional)', type: 'date' })}
     ${fld({ name: 'attachment', label: 'Attachment (optional — e.g. memo PDF)', type: 'file' })}
@@ -120,7 +122,7 @@ ACT.noticeNew = () => openModal({ title: 'Publish notice', sub: 'Share a memo or
   buttons: [{ label: 'Publish notice', cls: 'primary', onClick: m => {
     if (!validateForm(m, fail => { const e = m.querySelector('[name=expires]'); if (e.value && e.value < TODAY) fail(e, 'Choose today or a later date.'); })) return false;
     const v = readForm(m); S.notices = S.notices || [];
-    const n = { id: nextId('NT-', 'notices'), org: S.ui.org, title: v.title, body: v.body, priority: v.priority, audience: v.audience, ackRequired: v.ackRequired, attachment: v.attachment, expires: v.expires || null, publishedBy: S.ui.user, publishedOn: nowTs(), reads: { [S.ui.user]: nowTs() }, acks: {} };
+    const n = { id: nextId('NT-', 'notices'), org: S.ui.org, title: v.title, body: v.body, priority: v.priority, audience: v.audience, audDepts: S.departments.filter(d => v['nd_' + d.replace(/\W/g, '')]), audPeople: S.people.filter(p => v['np_' + p.id]).map(p => p.id), ackRequired: v.ackRequired, attachment: v.attachment, expires: v.expires || null, publishedBy: S.ui.user, publishedOn: nowTs(), reads: { [S.ui.user]: nowTs() }, acks: {} };
     S.notices.push(n);
     addEvent(v.priority === 'Important' ? 'red' : 'blue', 'notices', `${v.priority === 'Important' ? 'Important notice' : 'New notice'}: ${v.title}`, `From ${pname(S.ui.user)} to ${v.audience === 'ALL' ? 'all staff' : sname(v.audience) + ' staff'}.${v.ackRequired ? ' Please confirm that you have read and understood it.' : ''}`, '#/notices/' + n.id, v.audience, noticeAudience(n).map(x => x.id));
     log(`Published notice "${v.title}"`, '#/notices/' + n.id); save();

@@ -115,6 +115,19 @@ Status key:
 | Emergency: scenarios, plans, evacuation procedure and map, assembly points, contacts, emergency team from appointments, equipment from assets, drills with results and corrective actions | Implemented | EM1–EM4 |
 | Contractors: register, documents by kind of work, review (approve / reject), expiry, employees and induction, audit findings, compliance status, filters | Implemented | CT1–CT6 |
 
+## Connections between modules
+| Requirement | Status | Notes |
+|---|---|---|
+| Dashboard shows legal compliance, training, appointments, risks, audits, contractors, emergency, document expiry, substances, PPE (by permission) | Implemented | GA1, GA2 |
+| Reports for every module incl. management review; CSV (Excel) export and print | Implemented | GA3, GA4; PDF via print |
+| Document expiry dates separate from review dates, with reminders | Implemented | GA5, GA6 |
+| Notices to departments and named employees | Implemented | GA7 |
+| Incident direct / underlying causes and contributing factors | Implemented | GA8 |
+| Audit questions linked to legal requirements | Implemented | GA9, GA10 |
+| Asset department and photo | Implemented | — |
+| Departments within each branch; employee transfer between companies | Not yet | Departments are company-wide |
+| Server-side permissions, real sign-in, file storage, e-mail and scheduled jobs | Not in the prototype | Needed before going live |
+
 ## Audits
 | Requirement | Status | Notes |
 |---|---|---|

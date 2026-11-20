@@ -465,7 +465,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await asUser('P-001'); await go('#/dashboard'); await p.waitForTimeout(250);
     if ((await S('S.ui.site')) !== 'ALL') { await S("(S.ui.site = 'ALL', save(), rerender())"); await p.waitForTimeout(250); }
     const secs = await p.$$eval('h3.dash-sec', e => e.map(x => x.textContent.trim()));
-    ok('DB1 compliance status comes first, then trends, then detail', secs.length === 3 && /Compliance status/i.test(secs[0]) && /Trends/i.test(secs[1]) && /Detail/i.test(secs[2]), secs.join(' | '));
+    ok('DB1 compliance status comes first, then compliance management, trends and detail', secs.length === 4 && /Compliance status/i.test(secs[0]) && /Compliance management/i.test(secs[1]) && /Trends/i.test(secs[2]) && /Detail/i.test(secs[3]), secs.join(' | '));
     const hero = await p.$eval('.cs-hero .pie-v', e => parseInt(e.textContent)), want = await S("compliance('ALL').overall");
     ok('DB2 the overall control score and the four areas show with a status label', hero === want && (await p.$$eval('.cs-part', e => e.length)) === 4 && (await p.$$eval('.cs-grid .pie svg', e => e.length)) === 5 && (await p.$$eval('.cs-grid .st-chip', e => e.length)) === 5, `${hero}%`);
     const rows = await p.$$eval('.tbl.hm tbody tr', e => e.length), sites = await S("orgSites().length");
@@ -1679,6 +1679,38 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     ok('CT5 contractor employees\' inductions are recorded', await S(() => byId('contractors', 'CON-001').employees.every(e => e.induction)));
     await go('#/contractors?fcomp=review'); const cr = await p.$$eval('tbody tr b', x => x.map(e => e.textContent));
     ok('CT6 the register filters to contractors with documents to review', cr.length === 1 && cr[0].startsWith('Steel Racking'), cr.join());
+  }
+
+  /* ---------------- GA. Gaps closed in the existing modules ---------------- */
+  {
+    await asUser('P-002'); await pickScope('#siteSel', 'ALL'); await go('#/dashboard');
+    const dk = await p.$$eval('.dash-comp .kpi .k-label', x => x.map(e => e.textContent.trim()));
+    ok('GA1 the dashboard shows legal compliance, training, appointments, risks, audits, contractors, emergency, documents expiring, substances and PPE', ['Legal compliance', 'Training up to date', 'Appointments awaiting acceptance', 'High and critical risks', 'Upcoming audits', 'Contractors not compliant', 'Emergency preparedness', 'Documents expiring'].every(t => dk.includes(t)), dk.join('|'));
+    await S(() => { const r = S.roles.find(x => x.name === 'Supervisor'); r.perms = r.perms.filter(x => x !== 'area.legal'); save(); });
+    await asUser('P-008'); await go('#/dashboard'); const dk2 = await p.$$eval('.dash-comp .kpi .k-label', x => x.map(e => e.textContent.trim()));
+    await asUser('P-002'); await S(() => { S.roles.find(x => x.name === 'Supervisor').perms.push('area.legal'); save(); });
+    ok('GA2 the dashboard tiles follow what the role may open (no legal tile without the legal area)', !dk2.includes('Legal compliance') && dk2.includes('Training up to date'), dk2.join('|'));
+    // reports
+    let all = true; for (const key of ['legalrep', 'riskrep', 'trainrep', 'aptrep', 'pperep', 'hcsrep', 'conrep', 'mgmtreview']) { await go('#/reports/' + key); if (!(await p.$$('#content tbody tr')).length) all = false; }
+    ok('GA3 reports exist for legal compliance, risks, training, appointments, PPE, hazardous substances, contractors and the management review', all);
+    await go('#/reports/aptrep'); const [dl] = await Promise.all([p.waitForEvent('download'), p.click('[data-act=repCsv]')]);
+    ok('GA4 the appointments register exports with the digital acceptance record', /\.csv$/.test(dl.suggestedFilename()));
+    // document expiry
+    await go('#/documents/DOC-021'); ok('GA5 documents have an expiry date separate from the review date', (await p.innerText('#content')).includes('Expiry date') && (await p.innerText('#content')).includes('Next review date'));
+    ok('GA6 the owner gets a task when a document is about to expire', await S(() => { const d = byId('documents', 'DOC-021'); d.owner = 'P-002'; return myTasks().some(t => t.title.startsWith('Expiring: ' + d.number)); }));
+    // notices to departments / named people
+    await go('#/notices'); await p.click('.fab-stack .fab:has-text("Publish notice")').catch(() => {}); await p.waitForTimeout(150);
+    if (await modalOpen()) { await mfill('title', 'Workshop only notice'); await mfill('body', 'Degreaser change.'); await p.check('.modal [name=nd_WorkshopService]'); await mbtn('Publish notice'); await p.waitForTimeout(150); }
+    ok('GA7 a notice can go to selected departments only', await S(() => { const n = (S.notices || []).find(x => x.title === 'Workshop only notice'); return !!n && noticeFor(n, person('P-008')) && !noticeFor(n, person('P-009')); }));
+    // incident causes
+    const inc = await S(() => S.incidents.find(i => !['Reported', 'Closed'].includes(i.status)).id);
+    await go('#/incidents/' + inc); await p.click('[data-act=incCauses]'); await p.waitForTimeout(100); await mfill('direct', 'Pedestrian in the aisle'); await mfill('underlying', 'No walkway separation\nNo pedestrian training'); await mbtn('Save');
+    ok('GA8 an investigation records direct causes, underlying causes and contributing factors', await S(`byId('incidents','${inc}').causes.underlying.length === 2`) && (await p.innerText('#content')).includes('No walkway separation'));
+    // audit item ↔ legal requirement
+    await go('#/audits/builder/ATPL-LEG'); await p.selectOption('select[data-k=legalReq][data-s="1"][data-i="0"]', 'LR-004'); 
+    await p.fill('#abHead [name=note]', 'Linked items to legal requirements'); await p.click('[data-act=abSave]'); await p.waitForTimeout(150);
+    ok('GA9 audit checklist items can be linked to a legal requirement', await S(() => { const t = S.auditTemplates.find(x => x.replaces === 'ATPL-LEG' && x.org === S.ui.org); return !!t && t.revisions.some(r => r.sections[1].items[0].legalReq === 'LR-004'); }));
+    await go('#/legal/LR-004'); ok('GA10 the legal requirement shows the audit results of its linked items', (await p.innerText('#content')).includes('Audit results'));
   }
 
   /* ---------------- Print output ---------------- */
