@@ -237,6 +237,15 @@ Other pages are closed to employees. An inspection can only be started from the 
 - **Hours worked reminder:** on the 1st, if last month's hours worked are missing for a branch, the HSEQ Manager and the System Administrator get an e-mail (the LTI frequency rate needs them).
 - In the prototype, e-mails are written to the outbox (Administration → E-mail outbox); they are not sent.
 
+### Legal Requirements (menu → Compliance → Legal Requirements)
+- **Requirements register:** each obligation for the company: legislation and section, plain-language description and what the company must do (**labelled "System interpretation — not legal text"**), branches, responsible person, evidence required, applicability (Applicable / Not applicable / Pending assessment, with the reason), compliance status, linked evidence, assessment history and corrective actions. Eight figures at the top (applicable, compliant, partial, non-compliant, not assessed, without evidence, with open actions, due for reassessment) open the filtered list. Filters: legislation, branch, responsible person, status and "without evidence / open actions / due for reassessment".
+- **Assessments:** Compliant, Partially compliant or Non-compliant with findings, evidence reviewed, gaps (required unless compliant), recommendations and the next review date. Every assessment is kept, so improvement or deterioration shows over time. A gap can become a corrective action (source "Legal requirement").
+- **Evidence:** link an existing document, audit or inspection (no second copy), or upload a file when it is not in the system yet.
+- **Legal library:** Acts, Regulations, standards, codes of practice, industry and customer requirements with their sections. **The system never writes legal text.** The official wording is pasted from the official source by a competent person, who must record the source and confirm it is copied exactly; the date and person are recorded. The demo library contains instrument names only, and the section titles are marked "demonstration data — verify".
+- **Legislative changes:** record the change, mark the affected requirements of every client you manage for reassessment, optionally raise a corrective action per requirement, and e-mail the responsible people and management.
+- Allocating a requirement to a person is operational; **the employer's statutory duties stay with the employer**. The compliance figures show what the assessor recorded; they do not guarantee legal compliance.
+- Permission "Maintain the legal library and assess legal requirements" (HSEQ Manager, Safety Consultant, System Administrator). Others can view.
+
 ### Audits
 - **Audits** (menu → Audits) has two tabs: **Audit programme** and **Audits**. The checklists themselves are set up under **Administration → Audit checklists** (inspection checklists under **Administration → Inspection checklists**), so the modules are the day-to-day working areas.
 - **Pre-built checklists (VDW starter checklists):** legal compliance (general), housekeeping, fire safety, hazardous chemical substances, stacking and storage, emergency preparedness and first aid, and PPE. They are suggestions to adapt to each site. **The legal compliance checklist does not quote legislation:** a competent person adds the references from the official text before relying on it.
@@ -390,6 +399,8 @@ prototype/
 ├── mod-actions-reports-admin.js  Corrective actions, reports, administration
 ├── mod-files.js                  File storage (browser) and in-app file viewer
 ├── mod-notices.js                Company notices: publish, read, acknowledge, track
+├── mod-registers.js             Shared filter bar and set-up helpers for the new registers
+├── mod-legal.js                 Legal requirements: library, register, assessments, evidence, changes
 ├── mod-auditing.js              Audits: starter and own checklists, programme, scoring, findings, PDF report
 ├── mod-dashboard.js              Dashboard: compliance status, 12-month trends, detail
 ├── vendor/pdfjs/                 PDF.js 3.11.174 (Apache-2.0) for viewing PDFs, works offline

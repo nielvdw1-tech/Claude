@@ -211,8 +211,8 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await pickScope('#siteSel', 'ALL');
     await asUser('P-007'); await go('#/notifications/tasks');
     ok('E3 overdue inspection appears in the assignee task centre', (await p.innerText('#content')).includes('Inspect: Germiston warehouse & workshop'));
-    await go('#/legal'); ok('E4 removed modules are no longer reachable', (await p.innerText('#content')).includes('Page not found'));
-    ok('E5 navigation shows only the focused modules', (await p.$$eval('.nav-item span:not(.count)', e => e.map(x => x.textContent))).join('|') === 'Dashboard|Notifications & Tasks|Company Notices|Document Manager|Assets & Equipment|Inspections|Maintenance & Defects|Audits|Incident Management|Corrective Actions|Reports|Administration');
+    await go('#/no-such-module'); ok('E4 an unknown page shows "Page not found"', (await p.innerText('#content')).includes('Page not found'));
+    ok('E5 navigation shows only the focused modules', (await p.$$eval('.nav-item span:not(.count)', e => e.map(x => x.textContent))).join('|') === 'Dashboard|Notifications & Tasks|Company Notices|Legal Requirements|Document Manager|Assets & Equipment|Inspections|Maintenance & Defects|Audits|Incident Management|Corrective Actions|Reports|Administration');
     await asUser('P-002'); await go('#/incidents'); await go('#/actions'); await btn('New action'); await mbtn('Continue'); await p.waitForTimeout(100); await mbtn('Raise action');
     ok('E6 form validation blocks empty required fields', await modalOpen() && (await p.$$('.modal .field.invalid')).length > 0); await p.keyboard.press('Escape');
     await asUser('P-009'); await go('#/documents/DOC-007');
@@ -1446,6 +1446,52 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
       await p.click('[data-act=audFltClear]'); await p.waitForTimeout(150);
     }
     await asUser('P-007'); ok('AD18 the planned auditor gets a task when an audit is due', await S(() => myTasks().some(x => /^Audit: Housekeeping/.test(x.title))));
+    await asUser('P-002');
+  }
+
+  /* ---------------- LG. Legal requirements ---------------- */
+  {
+    await asUser('P-002'); await pickScope('#siteSel', 'ALL'); await go('#/legal');
+    const k = await p.$$eval('.kpis .kpi .k-label', x => x.map(e => e.textContent.trim()));
+    ok('LG1 Legal Requirements shows applicable, compliant, partial, non-compliant, not assessed, without evidence, with open actions and due for reassessment', ['Applicable requirements', 'Compliant', 'Partially compliant', 'Non-compliant', 'Not assessed', 'Without evidence', 'With open actions', 'Due for reassessment'].every(t => k.includes(t)), k.join('|'));
+    ok('LG2 the library supplies no legal wording of its own (only names; wording is loaded by a competent person)', await S(() => S.legislation.every(l => (l.items || []).every(i => !i.text))));
+    await go('#/legal/LR-004');
+    ok('LG3 a requirement shows the official-wording panel (not loaded yet) separately from the system interpretation', (await p.innerText('#content')).includes('Official wording not loaded yet') && (await p.innerText('#content')).includes('System interpretation — not legal text'));
+    // load official wording: needs a source and confirmation
+    await go('#/legal/lib/LEG-OHSA'); await p.click('[data-act=legItemEdit] >> nth=4'); await p.waitForTimeout(120);
+    await mfill('text', 'Official wording pasted by the consultant (test).'); await mbtn('Save');
+    const blocked = await modalOpen();
+    await mfill('source', 'Official source (test)'); await p.check('.modal [name=confirm]'); await mbtn('Save');
+    const it = await S(() => byId('legislation', 'LEG-OHSA').items[4]);
+    ok('LG4 official wording can only be saved with its source and a confirmation that it is copied exactly; the check date and person are recorded', blocked && it.text.startsWith('Official wording') && it.verifiedBy === 'P-002' && it.verifiedOn === (await S(() => TODAY)));
+    await go('#/legal/LR-004'); ok('LG5 the requirement then shows the official wording with its source', (await p.innerText('.legal-text')).includes('Official wording pasted'));
+    // new requirement → applicability → assessment with action
+    await go('#/legal/register'); await p.click('.fab-stack .fab:has-text("Add requirement")'); await p.waitForTimeout(150);
+    await msel('leg', 'LEG-FAC'); await mfill('title', 'Change rooms for employees'); await msel('owner', 'P-003'); await mbtn('Add requirement'); await p.waitForTimeout(150);
+    const nid = await S(() => location.hash.split('/')[2]);
+    ok('LG6 a new requirement starts as "Pending assessment" and the responsible person is told', await S(`lrStatus(byId('legalReqs','${nid}'))`) === 'Pending assessment' && (await S(`S.outbox.some(m => m.to === 'P-003' && m.subject.includes('Change rooms'))`)));
+    await btn('Applicability'); await msel('applicability', 'Applicable'); await mbtn('Save');
+    ok('LG7 applicability needs a reason', await modalOpen());
+    await mfill('reason', 'Employees change into work clothing at Pinetown'); await mbtn('Save');
+    await btn('Record assessment'); await msel('status', 'Non-compliant'); await mfill('findings', 'No change room at Pinetown'); await mbtn('Save assessment');
+    ok('LG8 an assessment other than compliant needs the gaps described', await modalOpen());
+    await mfill('gaps', 'No change room'); await mfill('recommendations', 'Convert the old store into a change room'); await p.check('.modal [name=raise]'); await mbtn('Save assessment'); await p.waitForTimeout(150);
+    await mbtn('Raise action'); await p.waitForTimeout(150);
+    const lr = await S(`(() => { const r = byId('legalReqs','${nid}'); return { st: lrStatus(r), n: r.assessments.length, acts: S.actions.filter(a => a.source === 'Legal requirement' && a.sourceId === r.id).length }; })()`);
+    ok('LG9 the assessment is kept in the history and the gap becomes a corrective action with source "Legal requirement"', lr.st === 'Non-compliant' && lr.n === 1 && lr.acts === 1, JSON.stringify(lr));
+    // evidence
+    await go('#/legal/' + nid); await p.click('[data-act=lrEvidence]'); await p.waitForTimeout(120); await msel('kind', 'Document'); await msel('ref', 'DOC-006'); await mbtn('Link');
+    ok('LG10 evidence links an existing record instead of a second copy', await has('a[href="#/documents/DOC-006"]'));
+    // filters
+    await go('#/legal/register?fstatus=Non-compliant'); const rows = await p.$$eval('.card-body tbody tr .mono', x => x.map(e => e.textContent));
+    ok('LG11 the register filters by status', rows.length === 2 && rows.includes('LR-004') && rows.includes(nid), rows.join());
+    // legislative change
+    await go('#/legal/changes'); await p.click('.fab-stack .fab'); await p.waitForTimeout(120); await msel('leg', 'LEG-OHSA'); await p.waitForTimeout(80); await mfill('summary', 'Amendment (test)'); await mbtn('Record change'); await p.waitForTimeout(150);
+    const ch = await S(() => ({ aff: S.legalChanges[0].affected.length, re: S.legalReqs.filter(r => r.reassess).length, mail: S.outbox.filter(m => m.subject.startsWith('Legislative change')).length }));
+    ok('LG12 a legislative change marks the affected requirements for reassessment and notifies management', ch.aff === 6 && ch.re === 6 && ch.mail >= 1, JSON.stringify(ch));
+    ok('LG13 the responsible person gets a reassessment task', await S(() => myTasks().some(t => /^Reassess legal requirement/.test(t.title))));
+    await asUser('P-007'); await go('#/legal');
+    ok('LG14 people without the legal permission can view but not add or assess', !(await has('.fab-stack .fab')) && (await go('#/legal/LR-004'), !(await has('[data-act=lrAssess]'))));
     await asUser('P-002');
   }
 

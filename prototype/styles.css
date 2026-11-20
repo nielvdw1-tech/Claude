@@ -1315,3 +1315,11 @@ body.auth-mode .main { padding-top: 0; }
 .at-link { color: inherit; text-decoration: none; } .at-link:hover { color: var(--brand); text-decoration: underline; }
 .row-paused td { color: var(--muted); } .row-paused td b { color: var(--muted); }
 .tbl .btn-row.nowrap { flex-wrap: nowrap; }
+
+/* ---------- Registers (legal, people, training, risk …) ---------- */
+.kpis-8 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 900px) { .kpis-8 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.legal-text { margin: 0 0 6px; padding: 12px 14px; border-left: 3px solid var(--brand); background: var(--surface-2, #F6F8FB); border-radius: 0 8px 8px 0; white-space: pre-wrap; font-family: Georgia, 'Times New Roman', serif; font-size: 14px; line-height: 1.55; }
+.plain-list { margin: 6px 0 0; padding-left: 18px; }
+.chk-row { display: flex; flex-wrap: wrap; gap: 6px 16px; }
+.chk-col { display: grid; gap: 6px; max-height: 220px; overflow: auto; padding: 4px 0; }

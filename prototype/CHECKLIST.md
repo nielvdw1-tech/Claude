@@ -64,6 +64,17 @@ Status key:
 | Lifting equipment register: SWL, certificate status, last and next inspection | Implemented | GP2 |
 | Corrective action follow-up check after closing; "did not work" reopens the action | Implemented | GP6 |
 
+## Legal requirements
+| Requirement | Status | Notes |
+|---|---|---|
+| Legal library: Acts, Regulations, standards, codes, industry and customer requirements; sections; official source, upload, amendment and check dates; current / amended / repealed / superseded | Implemented | LG2, LG4; wording only from the official source, never generated |
+| Requirements register with reference, legislation, section, title, interpretation (labelled), must-do, applicability with reason, branches, responsible person, evidence required, status, dates | Implemented | LG3, LG6, LG7 |
+| Compliance assessments with findings, evidence reviewed, gaps, recommendations, next review; history kept | Implemented | LG8, LG9 |
+| Evidence linked from existing records or uploaded; corrective actions from gaps | Implemented | LG9, LG10 |
+| Legislative change: affected requirements and clients, reassessment, actions, notification | Implemented | LG12, LG13 |
+| Legal compliance figures and filters (legislation, branch, responsible person, status) | Implemented | LG1, LG11 |
+| Legal compliance on the main dashboard; audit items linked to requirements | Not yet | Planned with the gaps in existing modules |
+
 ## Audits
 | Requirement | Status | Notes |
 |---|---|---|
