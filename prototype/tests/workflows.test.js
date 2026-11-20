@@ -212,7 +212,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await asUser('P-007'); await go('#/notifications/tasks');
     ok('E3 overdue inspection appears in the assignee task centre', (await p.innerText('#content')).includes('Inspect: Germiston warehouse & workshop'));
     await go('#/no-such-module'); ok('E4 an unknown page shows "Page not found"', (await p.innerText('#content')).includes('Page not found'));
-    ok('E5 navigation shows only the focused modules', (await p.$$eval('.nav-item span:not(.count)', e => e.map(x => x.textContent))).join('|') === 'Dashboard|Notifications & Tasks|My appointments|Company Notices|Legal Requirements|Risk Management|People Management|Training Management|Contractor Management|Document Manager|Assets & Equipment|Inspections|Maintenance & Defects|PPE Management|Hazardous Substances|Emergency Management|Audits|Incident Management|Corrective Actions|Reports|Administration');
+    ok('E5 navigation shows only the focused modules', (await p.$$eval('.nav-item span:not(.count)', e => e.map(x => x.textContent))).join('|') === 'Dashboard|Notifications & Tasks|My appointments|My PPE|Company Notices|Legal Requirements|Risk Management|People Management|Training Management|Contractor Management|Document Manager|Assets & Equipment|Inspections|Maintenance & Defects|PPE Management|Hazardous Substances|Emergency Management|Audits|Incident Management|Corrective Actions|Reports|Administration');
     await asUser('P-002'); await go('#/incidents'); await go('#/actions'); await btn('New action'); await mbtn('Continue'); await p.waitForTimeout(100); await mbtn('Raise action');
     ok('E6 form validation blocks empty required fields', await modalOpen() && (await p.$$('.modal .field.invalid')).length > 0); await p.keyboard.press('Escape');
     await asUser('P-009'); await go('#/documents/DOC-007');
@@ -300,7 +300,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     ok('H2 Safety Consultant can issue approved documents', await has('.sh-actions button:has-text("Issue for use"):not([disabled])'));
     await asUser('P-014'); await p.waitForTimeout(150);
     const nav = await p.$$eval('.nav-item span:not(.count)', e => e.map(x => x.textContent));
-    ok('H3 Employee sees only the field screens', nav.join('|') === 'Scan & inspect|Report incident|Notices|My appointments' && !(await has('#globalSearch')), nav.join(' | '));
+    ok('H3 Employee sees only the field screens', nav.join('|') === 'Scan & inspect|Report incident|Notices|My appointments|My PPE' && !(await has('#globalSearch')), nav.join(' | '));
     await go('#/documents');
     ok('H4 other pages are closed to employees', (await p.innerText('#content')).includes('not available for your role'));
     await go('#/inspect/ISCH-04');
@@ -1645,8 +1645,8 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     const stock0 = await S(() => byId('ppeTypes', 'PPE-003').stock); await mfill('qty', '2'); await mbtn('Issue');
     ok('PP4 issuing reduces stock; stock at or below the minimum shows as low stock', await S(() => byId('ppeTypes', 'PPE-003').stock) === stock0 - 2 && (await p.innerText('.kpis')).includes('Cut-resistant gloves'));
     ok('PP5 until the employee confirms receipt the item shows "Not acknowledged"', await S(() => ppeStatus('P-013', 'PPE-003') === 'Not acknowledged'));
-    await asUser('P-013'); await go('#/me'); await p.click('[data-act=ppeAck] >> nth=0'); await p.waitForTimeout(100);
-    ok('PP6 the employee acknowledges receipt in "My appointments & PPE"', await S(() => ppeStatus('P-013', 'PPE-003') === 'Issued'));
+    await asUser('P-013'); await go('#/myppe'); await p.click('[data-act=ppeAck] >> nth=0'); await p.waitForTimeout(100);
+    ok('PP6 the employee acknowledges receipt in "My PPE"', await S(() => ppeStatus('P-013', 'PPE-003') === 'Issued'));
     await asUser('P-002');
     // hazardous substances
     await go('#/substances');

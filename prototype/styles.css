@@ -1363,3 +1363,4 @@ body.auth-mode .main { padding-top: 0; }
 .ppe-chip { font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px; }
 .pc-green { background: var(--ok-bg); color: var(--ok); } .pc-amber { background: var(--warn-bg); color: var(--warn); } .pc-red { background: var(--bad-bg); color: var(--bad); } .pc-blue { background: var(--info-bg); color: var(--info); }
 .ab-lr select { max-width: 260px; }
+.card-body.flush > .link-list > li { padding-left: 16px; padding-right: 16px; }

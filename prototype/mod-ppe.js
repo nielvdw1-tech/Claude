@@ -67,22 +67,35 @@ ACT.ppeIssue = (el) => { const d = (el && el.dataset) || {}; openModal({ title: 
   buttons: [{ label: 'Issue', cls: 'primary', onClick: m => { if (!validateForm(m)) return false; const v = readForm(m), t = ppeType(v.ppe), qty = Math.max(1, +v.qty);
     if (t.stock != null && t.stock < qty) { toast(`Only ${t.stock} in stock.`, 'error'); return false; }
     S.ppeIssues = S.ppeIssues || []; const i = { id: nextId('ISS-', 'ppeIssues', 4), org: S.ui.org, person: v.person, ppe: v.ppe, qty, size: v.size, reason: v.reason, date: v.date, replaceBy: v.replaceBy, by: S.ui.user, ack: null }; S.ppeIssues.push(i); if (t.stock != null) t.stock -= qty;
-    addEvent('blue', 'ppe', `PPE issued to you: ${t.name}`, 'Please confirm that you received it.', '#/me', 'ALL', [v.person]);
+    addEvent('blue', 'ppe', `PPE issued to you: ${t.name}`, 'Please confirm that you received it.', '#/myppe', 'ALL', [v.person]);
     if (t.minStock != null && t.stock != null && t.stock <= t.minStock) queueEmail(hseqManagers(S.ui.org), 'actions', `Low PPE stock: ${t.name} (${t.stock} left)`, `Stock of ${t.name} is at ${t.stock}, at or below the minimum of ${t.minStock}.`, '#/ppe/types');
     log(`Issued ${qty} × ${t.name} to ${pname(v.person)}`, '#/ppe/issues'); save(); toast('PPE issued.'); rerender(); } }] }); };
-ACT.ppeAck = (el) => { const i = byId('ppeIssues', el.dataset.id); i.ack = { ts: nowTs(), user: S.ui.user }; log(`${pname(S.ui.user)} acknowledged receipt of ${ppeType(i.ppe).name}`, '#/me'); save(); rerender(); };
-// "My appointments" also shows PPE to acknowledge
-const _meBeforePPE = ROUTES.me;
-ROUTES.me = (p = []) => { const r = _meBeforePPE(p); if (p[0] || !r || !r.html) return r; const L = (S.ppeIssues || []).filter(i => i.person === S.ui.user).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 12);
-  if (L.length) r.html = r.html.replace(/<\/div>$/, `<div class="card mb"><div class="card-head"><h2>My PPE</h2></div><div class="card-body flush"><ul class="link-list">${L.map(i => `<li><div class="ll-main"><b>${i.qty} × ${esc((ppeType(i.ppe) || {}).name || '')}</b><div class="t-sub">Issued ${fmt(i.date)}${i.replaceBy ? ' · replace by ' + fmt(i.replaceBy) : ''}</div></div>${i.ack ? badge('Received', 'green', true) : `<button class="btn sm primary" data-act="ppeAck" data-id="${i.id}">I received it</button>`}</li>`).join('')}</ul></div></div></div>`);
-  r.title = 'My appointments & PPE'; return r; };
+ACT.ppeAck = (el) => { const i = byId('ppeIssues', el.dataset.id); i.ack = { ts: nowTs(), user: S.ui.user }; log(`${pname(S.ui.user)} acknowledged receipt of ${ppeType(i.ppe).name}`, '#/myppe'); save(); rerender(); };
+// "My PPE": what was issued to me, what to confirm and when it must be replaced (phone and PC)
+ROUTES.myppe = () => {
+  const L = (S.ppeIssues || []).filter(i => i.person === S.ui.user).sort((a, b) => b.date.localeCompare(a.date)), x = me(), need = x ? ppeReqFor(x) : [];
+  const toAck = L.filter(i => !i.ack), rest = L.filter(i => i.ack);
+  const row = i => `<li><div class="ll-main"><b>${i.qty} × ${esc((ppeType(i.ppe) || {}).name || '')}</b>${i.size ? ` <span class="t-sub">size ${esc(i.size)}</span>` : ''}<div class="t-sub">Issued ${fmt(i.date)}${i.replaceBy ? ' · replace by ' + fmt(i.replaceBy) : ''}${i.replaceBy && daysTo(i.replaceBy) <= 14 ? ' · <span class="due amber">replacement due</span>' : ''}</div></div>${i.ack ? badge('Received ' + fmt(i.ack.ts.slice(0, 10)), 'green', true) : `<button class="btn sm primary" data-act="ppeAck" data-id="${i.id}">I received it</button>`}</li>`;
+  const html = `<div class="mobile-card"><h1 style="margin:4px 0 4px">My PPE</h1><p class="muted">The protective equipment issued to you. Confirm each item when you receive it, and ask your supervisor for a replacement when it is worn or damaged.</p>
+    ${toAck.length ? `<div class="card mb apt-respond"><div class="card-head"><h2>Confirm that you received</h2><span class="ch-sub">${toAck.length}</span></div><div class="card-body flush"><ul class="link-list">${toAck.map(row).join('')}</ul></div></div>` : ''}
+    <div class="card mb"><div class="card-head"><h2>Issued to you</h2><span class="ch-sub">${rest.length}</span></div>${rest.length ? `<div class="card-body flush"><ul class="link-list">${rest.slice(0, 20).map(row).join('')}</ul></div>` : `<div class="card-body muted">${L.length ? 'Nothing else issued.' : 'No PPE has been issued to you yet. Your supervisor records it here when you receive PPE.'}</div>`}</div>
+    ${need.length ? `<div class="card mb"><div class="card-head"><h2>PPE required for your work</h2></div><div class="card-body flush"><ul class="link-list">${need.map(r => { const s = ppeStatus(x.id, r.ppe); return `<li><div class="ll-main"><b>${esc(ppeType(r.ppe).name)}</b><div class="t-sub">${esc(r.why)}</div></div>${badge(s, PPE_TONE[s], true)}</li>`; }).join('')}</ul></div></div>` : ''}</div>`;
+  return { title: 'My PPE', nav: 'myppe', crumbs: [['My PPE', '#/myppe']], html };
+};
 
 /* ---------------- Wiring + demo data ---------------- */
 addNavGroup('Assets & inspections', { group: 'Operational safety', items: [['ppe', 'PPE Management', 'hardhat']] });
-AREA_OF.ppe = 'area.ppe'; if (!TOP_ROUTES.includes('ppe')) TOP_ROUTES.push('ppe');
+AREA_OF.ppe = 'area.ppe'; ['ppe', 'myppe'].forEach(k => { if (!TOP_ROUTES.includes(k)) TOP_ROUTES.push(k); });
+(() => { const g = NAV.find(x => x.group === 'Overview'), k = g ? g.items.findIndex(i => i[0] === 'me') : -1; if (g && !g.items.some(i => i[0] === 'myppe')) g.items.splice(k + 1, 0, ['myppe', 'My PPE', 'hardhat']); })();
+if (!NAV_FIELD[0].items.some(i => i[0] === 'myppe')) NAV_FIELD[0].items.push(['myppe', 'My PPE', 'hardhat']);
+if (!FIELD_ROUTES.includes('myppe')) FIELD_ROUTES.push('myppe');
+// the phone home screen also points to PPE waiting to be confirmed
+const _fieldBeforePPE = ROUTES.field;
+ROUTES.field = (p, q) => { const r = _fieldBeforePPE(p, q), n = (S.ppeIssues || []).filter(i => i.person === S.ui.user && !i.ack).length;
+  if (n && r && r.html) r.html = r.html.replace('<div class="mobile-card">', `<div class="mobile-card"><a class="alert info apt-callout" href="#/myppe">${icon('hardhat')}<div><b>${n} PPE item${n > 1 ? 's' : ''} to confirm.</b> Tap to confirm you received ${n > 1 ? 'them' : 'it'}.</div></a>`); return r; };
 const _needsBackBeforePPE = needsBack; needsBack = function (parts) { if (parts[0] === 'ppe' && ['register', 'issues', 'types'].includes(parts[1])) return false; return _needsBackBeforePPE(parts); };
 const _myTasksBeforePPE = myTasks;
-myTasks = function () { const out = _myTasksBeforePPE(); (S.ppeIssues || []).filter(i => i.person === S.ui.user && !i.ack).forEach(i => out.push({ title: `Confirm you received: ${(ppeType(i.ppe) || {}).name}`, sub: `Issued ${fmt(i.date)}`, link: '#/me', sev: 'blue' }));
+myTasks = function () { const out = _myTasksBeforePPE(); (S.ppeIssues || []).filter(i => i.person === S.ui.user && !i.ack).forEach(i => out.push({ title: `Confirm you received: ${(ppeType(i.ppe) || {}).name}`, sub: `Issued ${fmt(i.date)}`, link: '#/myppe', sev: 'blue' }));
   if (canPPE()) { let n = 0; ppePeople().forEach(x => ppeReqFor(x).forEach(r => { if (['Outstanding', 'Replacement due'].includes(ppeStatus(x.id, r.ppe))) n++; })); if (n) out.push({ title: `${n} PPE item(s) outstanding or due for replacement`, sub: 'PPE register', link: '#/ppe/register', sev: 'amber' }); }
   return out; };
 MIGRATIONS.push(() => {
@@ -99,5 +112,5 @@ MIGRATIONS.push(() => {
   const I = (id, person, ppe, days, ack, extra) => { if (byId('ppeIssues', id)) return; const t = byId('ppeTypes', ppe), date = addDays(TODAY, days); S.ppeIssues.push(Object.assign({ id, org: 'ORG-1', person, ppe, qty: 1, size: '', reason: 'New issue', date, replaceBy: t.replaceMonths ? addMonths(date, t.replaceMonths) : '', by: 'P-007', ack: ack ? { ts: date + 'T10:00:00.000Z', user: person } : null }, extra || {})); };
   ['P-001', 'P-002', 'P-003', 'P-004', 'P-005', 'P-007', 'P-008', 'P-009', 'P-010', 'P-011', 'P-012', 'P-016', 'P-019'].forEach((pid, k) => I('ISS-' + (3001 + k), pid, 'PPE-001', -40 - k * 20, true));
   I('ISS-3020', 'P-014', 'PPE-001', -380, true); I('ISS-3021', 'P-009', 'PPE-002', -100, true); I('ISS-3022', 'P-012', 'PPE-002', -5, false);
-  I('ISS-3023', 'P-008', 'PPE-006', -80, true); I('ISS-3024', 'P-010', 'PPE-006', -20, true); I('ISS-3025', 'P-010', 'PPE-004', -200, true);
+  I('ISS-3023', 'P-008', 'PPE-006', -80, true); I('ISS-3026', 'P-013', 'PPE-001', -3, false); I('ISS-3027', 'P-013', 'PPE-002', -3, false); I('ISS-3024', 'P-010', 'PPE-006', -20, true); I('ISS-3025', 'P-010', 'PPE-004', -200, true);
 });
