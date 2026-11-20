@@ -107,6 +107,14 @@ Status key:
 | Scheduled and refresher training with invitations and attendance | Implemented | TR5–TR7 |
 | Reminders to employees and managers before and after expiry | Implemented | TR4 |
 
+## PPE, hazardous substances, emergency, contractors
+| Requirement | Status | Notes |
+|---|---|---|
+| PPE register, types, requirements by job title / activity linked to risk assessments, issues with dates, quantities, replacement dates, acknowledgement, stock, outstanding PPE, history and export | Implemented | PP1–PP6 |
+| Hazardous substances register with SDS (linked, not duplicated), classes, PPE, handling and storage, monitoring, risk assessment, emergency procedure; gaps flagged; export | Implemented | HS1–HS4 |
+| Emergency: scenarios, plans, evacuation procedure and map, assembly points, contacts, emergency team from appointments, equipment from assets, drills with results and corrective actions | Implemented | EM1–EM4 |
+| Contractors: register, documents by kind of work, review (approve / reject), expiry, employees and induction, audit findings, compliance status, filters | Implemented | CT1–CT6 |
+
 ## Audits
 | Requirement | Status | Notes |
 |---|---|---|

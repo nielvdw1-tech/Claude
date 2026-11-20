@@ -276,6 +276,16 @@ Other pages are closed to employees. An inspection can only be started from the 
 - **Reminders:** 60 days before a required certificate expires the employee and supervisor are e-mailed; when it has expired the HSEQ Manager too (once each, not if training is already booked). Tasks for gaps and for sessions whose attendance has not been recorded.
 - The employee profile (People) shows the person's required training and status. Permission "Manage training" (HSEQ Manager, Safety Consultant, Branch Manager, System Administrator).
 
+### Operational safety: PPE, Hazardous Substances, Emergency (menu → Operational safety)
+- **PPE Management:** PPE types (replacement interval, stock, minimum stock), requirements by everyone / job title / activity (optionally linked to the risk assessment that calls for them), issues (quantity, size, reason, replacement date filled from the item; stock goes down and low stock is flagged). The employee confirms receipt under **My appointments & PPE**. Register per person: Issued, Replacement due, Outstanding, Not acknowledged. Issue history export (CSV).
+- **Hazardous Substances:** register with manufacturer, supplier, branch, storage location, quantity, hazard classes (from the supplier's safety data sheet — the system does not classify), the **safety data sheet linked from the Document Manager** (or uploaded) with its date and the date to check for a newer one, PPE, handling and storage controls, exposure monitoring (with history), the risk assessment and the emergency procedure. Gaps are flagged: no SDS, SDS review due, no risk assessment, no emergency procedure, monitoring due. Export (CSV).
+- **Emergency Management:** per branch the emergency response plan and evacuation procedure (from the Document Manager), evacuation map, scenarios, assembly points and emergency contacts; the **emergency team** comes from active fire marshal and first aider appointments (with their emergency training status); **emergency equipment** comes from Assets & Equipment with its inspection status. **Drills:** schedule (announced or unannounced, target evacuation time), record the result; each finding becomes a corrective action and a missed target is a finding. Gaps per branch and overdue drills are flagged.
+
+### Contractor Management (menu → People → Contractor Management)
+- Register: company, registration, contacts, services, branches, kinds of work, our contact person, status (Pending approval, Approved, Suspended, Inactive).
+- **Required documents depend on the kind of work** (Administration → Contractor requirements; demonstration list — set your own with your competent person). Each document is submitted, then **approved or rejected with a reason**; expiry is tracked. A contractor is **Compliant** only when every required document is approved and current; an approved contractor with documents out of order is flagged.
+- Contractor employees with competency and **induction**; audit findings become corrective actions (source "Contractor"). History of every decision. Filters: branch, kind of work, status, compliance / documents to review.
+
 ### Audits
 - **Audits** (menu → Audits) has two tabs: **Audit programme** and **Audits**. The checklists themselves are set up under **Administration → Audit checklists** (inspection checklists under **Administration → Inspection checklists**), so the modules are the day-to-day working areas.
 - **Pre-built checklists (VDW starter checklists):** legal compliance (general), housekeeping, fire safety, hazardous chemical substances, stacking and storage, emergency preparedness and first aid, and PPE. They are suggestions to adapt to each site. **The legal compliance checklist does not quote legislation:** a competent person adds the references from the official text before relying on it.
@@ -434,6 +444,10 @@ prototype/
 ├── mod-people.js                Employees, legal appointments (digital and uploaded), responsibilities, competency
 ├── mod-training.js              Training: courses, requirements, matrix, records, sessions, reminders
 ├── mod-risk.js                  Risk: hazard register, assessments, controls, reviews, configurable matrix
+├── mod-ppe.js                   PPE: types, requirements, issues, acknowledgement, stock
+├── mod-substances.js            Hazardous substances register, SDS, controls, monitoring
+├── mod-emergency.js             Emergency arrangements per branch, team, equipment, drills
+├── mod-contractors.js           Contractors, required documents and review, inductions
 ├── mod-auditing.js              Audits: starter and own checklists, programme, scoring, findings, PDF report
 ├── mod-dashboard.js              Dashboard: compliance status, 12-month trends, detail
 ├── vendor/pdfjs/                 PDF.js 3.11.174 (Apache-2.0) for viewing PDFs, works offline

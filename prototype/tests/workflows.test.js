@@ -212,7 +212,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await asUser('P-007'); await go('#/notifications/tasks');
     ok('E3 overdue inspection appears in the assignee task centre', (await p.innerText('#content')).includes('Inspect: Germiston warehouse & workshop'));
     await go('#/no-such-module'); ok('E4 an unknown page shows "Page not found"', (await p.innerText('#content')).includes('Page not found'));
-    ok('E5 navigation shows only the focused modules', (await p.$$eval('.nav-item span:not(.count)', e => e.map(x => x.textContent))).join('|') === 'Dashboard|Notifications & Tasks|My appointments|Company Notices|Legal Requirements|Risk Management|People Management|Training Management|Document Manager|Assets & Equipment|Inspections|Maintenance & Defects|Audits|Incident Management|Corrective Actions|Reports|Administration');
+    ok('E5 navigation shows only the focused modules', (await p.$$eval('.nav-item span:not(.count)', e => e.map(x => x.textContent))).join('|') === 'Dashboard|Notifications & Tasks|My appointments|Company Notices|Legal Requirements|Risk Management|People Management|Training Management|Contractor Management|Document Manager|Assets & Equipment|Inspections|Maintenance & Defects|PPE Management|Hazardous Substances|Emergency Management|Audits|Incident Management|Corrective Actions|Reports|Administration');
     await asUser('P-002'); await go('#/incidents'); await go('#/actions'); await btn('New action'); await mbtn('Continue'); await p.waitForTimeout(100); await mbtn('Raise action');
     ok('E6 form validation blocks empty required fields', await modalOpen() && (await p.$$('.modal .field.invalid')).length > 0); await p.keyboard.press('Escape');
     await asUser('P-009'); await go('#/documents/DOC-007');
@@ -1632,6 +1632,53 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     // matrix configuration
     await go('#/admin/riskmatrix'); await p.fill('#rmForm [name=bm1]', '10'); await p.click('[data-act=rmSave]'); await p.waitForTimeout(120);
     ok('RK15 an administrator can configure the risk matrix bands', await S(() => S.config.riskMatrix.bands[1].max === 10 && rBand({ l: 2, s: 5 }).name === 'Medium'));
+  }
+
+  /* ---------------- OS. PPE, hazardous substances, emergency, contractors ---------------- */
+  {
+    await asUser('P-002'); await pickScope('#siteSel', 'ALL');
+    // PPE
+    ok('PP1 PPE requirements follow job titles and activities', await S(() => ppeReqFor(person('P-013')).map(r => r.ppe).includes('PPE-003') && ppeReqFor(person('P-010')).map(r => r.ppe).includes('PPE-006')));
+    ok('PP2 the register shows outstanding PPE and replacements due', await S(() => ppeStatus('P-013', 'PPE-003') === 'Outstanding' && ppeStatus('P-014', 'PPE-001') === 'Replacement due'));
+    await go('#/ppe'); await p.click('[data-act=ppeIssue][data-p="P-013"]'); await p.waitForTimeout(120); await msel('ppe', 'PPE-003'); await p.waitForTimeout(60);
+    ok('PP3 the replacement date is filled from the item', (await p.inputValue('.modal [name=replaceBy]')) === await S(() => addMonths(TODAY, 3)));
+    const stock0 = await S(() => byId('ppeTypes', 'PPE-003').stock); await mfill('qty', '2'); await mbtn('Issue');
+    ok('PP4 issuing reduces stock; stock at or below the minimum shows as low stock', await S(() => byId('ppeTypes', 'PPE-003').stock) === stock0 - 2 && (await p.innerText('.kpis')).includes('Cut-resistant gloves'));
+    ok('PP5 until the employee confirms receipt the item shows "Not acknowledged"', await S(() => ppeStatus('P-013', 'PPE-003') === 'Not acknowledged'));
+    await asUser('P-013'); await go('#/me'); await p.click('[data-act=ppeAck] >> nth=0'); await p.waitForTimeout(100);
+    ok('PP6 the employee acknowledges receipt in "My appointments & PPE"', await S(() => ppeStatus('P-013', 'PPE-003') === 'Issued'));
+    await asUser('P-002');
+    // hazardous substances
+    await go('#/substances');
+    ok('HS1 the register flags substances without a safety data sheet, risk assessment or emergency procedure, and overdue SDS reviews and monitoring', await S(() => { const f = id => subFlags(byId('substances', id)); return f('HCS-004').includes('No safety data sheet') && f('HCS-003').includes('No risk assessment') && f('HCS-003').includes('No emergency procedure') && f('HCS-001').includes('SDS review due') && f('HCS-001').includes('Exposure monitoring due'); }));
+    await go('#/substances?fflag=No%20safety%20data%20sheet'); const hs = await p.$$eval('tbody tr b', x => x.map(e => e.textContent));
+    ok('HS2 the register filters by gap', hs.length === 1 && hs[0].startsWith('Battery acid'), hs.join());
+    await go('#/substances/HCS-001'); await btn('Record monitoring'); await mfill('result', 'Below the limit'); await mbtn('Save');
+    ok('HS3 recording exposure monitoring keeps the history and clears the gap', await S(() => !subFlags(byId('substances', 'HCS-001')).includes('Exposure monitoring due') && byId('substances', 'HCS-001').monitoring.history.length === 2));
+    ok('HS4 the safety data sheet links to the Document Manager instead of a second copy', await has('a[href="#/documents/DOC-018"]'));
+    // emergency
+    await go('#/emergency');
+    ok('EM1 each branch shows its emergency gaps (plan, assembly point, drill, emergency team, equipment)', await S(() => emGaps('S-CPT').includes('No assembly point') && emGaps('S-DBN').includes('Drill overdue') && emGaps('S-JHB').includes('No fire marshal appointed')));
+    await go('#/emergency/S-DBN'); await p.click('.fab-stack .fab:has-text("Schedule a drill")'); await p.waitForTimeout(120); await mbtn('Schedule'); await p.waitForTimeout(120);
+    const drl = await S(() => location.hash.split('/')[2]);
+    await btn('Record result'); await mfill('evacMinutes', '6'); await mfill('people', '22'); await mfill('findings', 'Assembly point sign missing\nAlarm not heard in the store'); await mbtn('Save result');
+    const dr = await S(`(() => { const d = byId('drills','${drl}'); return { st: d.status, f: d.findings.length, acts: d.findings.filter(f => f.action).length }; })()`);
+    ok('EM2 a drill result records the evacuation time; findings become corrective actions and a missed target is a finding', dr.st === 'Completed' && dr.acts === 2 && dr.f === 3, JSON.stringify(dr));
+    ok('EM3 the drill is no longer overdue at that branch', await S(() => !emGaps('S-DBN').includes('Drill overdue')));
+    await go('#/emergency/S-JHB'); ok('EM4 emergency equipment comes from Assets & Equipment with its inspection status', await has('a[href^="#/assets/"]'));
+    // contractors
+    ok('CT1 required contractor documents depend on the kind of work', await S(() => { const c = byId('contractors', 'CON-001'); return reqsFor(c).some(r => r.id === 'CR6') && !reqsFor(byId('contractors', 'CON-002')).some(r => r.id === 'CR6'); }));
+    ok('CT2 an expired or unreviewed document makes the contractor "Not compliant"', await S(() => conCompliance(byId('contractors', 'CON-001')) === 'Not compliant' && conCompliance(byId('contractors', 'CON-002')) === 'Compliant'));
+    await go('#/contractors/CON-001'); await p.click('[data-act=conReview][data-r="CR7"]'); await p.waitForTimeout(100); await msel('decision', 'Rejected'); await mbtn('Save decision');
+    ok('CT3 rejecting a document needs a reason', await modalOpen());
+    await msel('decision', 'Approved'); await mbtn('Save decision');
+    await p.click('[data-act=conDoc][data-r="CR6"]'); await p.waitForTimeout(100); await mfile('.modal [name=file]', 'registration.pdf'); await mfill('expires', await S(() => addDays(TODAY, 300))); await mbtn('Submit for review');
+    await p.click('[data-act=conReview][data-r="CR6"]'); await p.waitForTimeout(100); await msel('decision', 'Approved'); await mbtn('Save decision');
+    ok('CT4 once every required document is approved and current the contractor is compliant; decisions are kept in the history', await S(() => conCompliance(byId('contractors', 'CON-001')) === 'Compliant' && byId('contractors', 'CON-001').history.some(h => /approved/.test(h.text))));
+    await p.click('[data-act=conInduct]'); await p.waitForTimeout(80);
+    ok('CT5 contractor employees\' inductions are recorded', await S(() => byId('contractors', 'CON-001').employees.every(e => e.induction)));
+    await go('#/contractors?fcomp=review'); const cr = await p.$$eval('tbody tr b', x => x.map(e => e.textContent));
+    ok('CT6 the register filters to contractors with documents to review', cr.length === 1 && cr[0].startsWith('Steel Racking'), cr.join());
   }
 
   /* ---------------- Print output ---------------- */
