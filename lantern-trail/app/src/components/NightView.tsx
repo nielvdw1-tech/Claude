@@ -3,6 +3,7 @@ import { svg, useApp } from "../ctx";
 import { compassMini, gem, scene } from "../lib/art";
 import { fill } from "../lib/i18n";
 import { pickText, type Verse } from "../lib/model";
+import type { NightRef } from "../lib/content";
 
 function Sign({ n, children }: { n: string | number; children: string }) {
   return <h2 className="sign"><b>{n}</b>{children}</h2>;
@@ -44,7 +45,8 @@ export function NightView({ id }: { id: string }) {
   const prayTip = t.prayerStyle === "own" ? s.prayOwn : t.prayerStyle === "together" ? s.prayTogether : s.prayRepeat;
   const prayOwnWords = t.prayerStyle === "own" ? undefined : t.prayerStyle === "together" ? s.ownWordsTogether : s.ownWordsRepeat;
   const done = isDone(r);
-  const label = r.journeyIndex === undefined ? fill(s.christmasNight, { n: r.number }) : fill(s.night, { n: r.journeyIndex + 1 });
+  const seasonLabel = (x: NightRef) => fill(x.trail.season === "easter" ? s.easterNight : s.christmasNight, { n: x.number });
+  const label = r.journeyIndex === undefined ? seasonLabel(r) : fill(s.night, { n: r.journeyIndex + 1 });
   const exNo = r.trail.expeditions.indexOf(e) + 1;
   const pn = (
     <span className="pn">
@@ -100,7 +102,7 @@ export function NightView({ id }: { id: string }) {
             <div className="gems">{e.nights.filter(x => x.kind === "story").map(x => {
               const xr = lib.byId.get(x.id)!;
               const xt = pickText(x, band, lang)?.text;
-              return <a key={x.id} href={`#night-${x.id}`}><span {...svg(gem(ec, 28))} /><span><b>{x.treasure?.trait[lang]}</b><small>{xr.journeyIndex !== undefined ? fill(s.night, { n: xr.journeyIndex + 1 }) : fill(s.christmasNight, { n: xr.number })} · {xt?.title}</small></span></a>;
+              return <a key={x.id} href={`#night-${x.id}`}><span {...svg(gem(ec, 28))} /><span><b>{x.treasure?.trait[lang]}</b><small>{xr.journeyIndex !== undefined ? fill(s.night, { n: xr.journeyIndex + 1 }) : seasonLabel(xr)} · {xt?.title}</small></span></a>;
             })}</div></section>
           <section className="step"><Sign n={st()}>{s.memoryVerse}</Sign><Bubble v={e.memoryVerse[lang]} /><p className="tip">{s.memoryTip}</p></section>
           {t.game && <section className="step"><Sign n={st()}>{s.campGame}</Sign><div className="card"><p>{p(t.game)}</p></div></section>}

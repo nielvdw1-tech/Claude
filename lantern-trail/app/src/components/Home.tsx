@@ -88,6 +88,7 @@ export function Home() {
       </section>
       <div className="map gutter"><div className="inner">
         {lib.journey.map(t => <TrailMap key={t.id} trail={t} nights={lib.journeyNights.filter(r => r.trail.id === t.id)} />)}
+        {lib.easter && <TrailMap trail={lib.easter} nights={lib.easterNights} note={`${s.easterTrail} · ${s.easterOpens}. ${lib.easter.blurb[lang]}`} />}
         {lib.christmas && <TrailMap trail={lib.christmas} nights={lib.christmasNights} note={`${s.christmasTrail} · ${s.christmasOpens}. ${lib.christmas.blurb[lang]}`} />}
       </div></div>
     </>

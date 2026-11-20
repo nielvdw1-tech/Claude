@@ -198,6 +198,7 @@ console.log(`merged ${merged} night texts from content-src`);
 FIXES.en.forEach((_, i) => { if (!used.en.has(i)) throw new Error("English fix not applied: " + FIXES.en[i][0]); });
 FIXES.af.forEach((_, i) => { if (!used.af.has(i)) throw new Error("Afrikaans fix not applied: " + FIXES.af[i][0]); });
 
+const fileOf = t => t.kind === "seasonal" ? `${t.season}.json` : `journey-${String(t.order).padStart(2, "0")}.json`;
 const count = t => t.expeditions.reduce((s, e) => s + e.nights.length, 0);
 const isComplete = t => t.expeditions.every(e => e.nights.every(n => ["2-3", "4-5", "6-7", "8-9", "10-12"].every(b => n.bands[b]?.en && n.bands[b]?.af)));
 fs.mkdirSync(out, { recursive: true });
@@ -210,11 +211,11 @@ fs.writeFileSync(path.join(out, "index.json"), JSON.stringify({
     { id: christmas.id, kind: "seasonal", season: "christmas", order: 0, file: "christmas.json", nights: count(christmas) },
     // A native trail is published only when every night has every band in both languages (or with DRAFT=1 for testing).
     ...native.filter(t => process.env.DRAFT === "1" || isComplete(t))
-      .map(t => ({ id: t.id, kind: "journey", order: t.order, file: `journey-${String(t.order).padStart(2, "0")}.json`, nights: count(t) })),
+      .map(t => ({ id: t.id, kind: t.kind, ...(t.season ? { season: t.season } : {}), order: t.order, file: fileOf(t), nights: count(t) })),
   ],
 }, null, 2));
 for (const t of native) {
-  fs.writeFileSync(path.join(out, `journey-${String(t.order).padStart(2, "0")}.json`), JSON.stringify(t));
+  fs.writeFileSync(path.join(out, fileOf(t)), JSON.stringify(t));
   const missing = {};
   t.expeditions.forEach(e => e.nights.forEach(n => ["2-3", "4-5", "6-7", "8-9", "10-12"].forEach(b => ["en", "af"].forEach(l => {
     if (!n.bands[b]?.[l]) { const k = `${b}/${l}`; missing[k] = (missing[k] || 0) + 1; }
