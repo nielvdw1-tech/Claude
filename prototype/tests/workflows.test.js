@@ -212,7 +212,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await asUser('P-007'); await go('#/notifications/tasks');
     ok('E3 overdue inspection appears in the assignee task centre', (await p.innerText('#content')).includes('Inspect: Germiston warehouse & workshop'));
     await go('#/no-such-module'); ok('E4 an unknown page shows "Page not found"', (await p.innerText('#content')).includes('Page not found'));
-    ok('E5 navigation shows only the focused modules', (await p.$$eval('.nav-item span:not(.count)', e => e.map(x => x.textContent))).join('|') === 'Dashboard|Notifications & Tasks|My appointments|My PPE|Company Notices|Legal Requirements|Risk Management|People Management|Training Management|Contractor Management|Document Manager|Assets & Equipment|Inspections|Maintenance & Defects|PPE Management|Hazardous Substances|Emergency Management|Audits|Incident Management|Corrective Actions|Reports|Administration');
+    ok('E5 navigation shows only the focused modules', (await p.$$eval('.nav-item span:not(.count)', e => e.map(x => x.textContent))).join('|') === 'Dashboard|Notifications & Tasks|My appointments|My PPE|My training|Company Notices|Legal Requirements|Risk Management|People Management|Training Management|Contractor Management|Document Manager|Assets & Equipment|Inspections|Maintenance & Defects|PPE Management|Hazardous Substances|Emergency Management|Audits|Incident Management|Corrective Actions|Reports|Administration');
     await asUser('P-002'); await go('#/incidents'); await go('#/actions'); await btn('New action'); await mbtn('Continue'); await p.waitForTimeout(100); await mbtn('Raise action');
     ok('E6 form validation blocks empty required fields', await modalOpen() && (await p.$$('.modal .field.invalid')).length > 0); await p.keyboard.press('Escape');
     await asUser('P-009'); await go('#/documents/DOC-007');
@@ -300,12 +300,12 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     ok('H2 Safety Consultant can issue approved documents', await has('.sh-actions button:has-text("Issue for use"):not([disabled])'));
     await asUser('P-014'); await p.waitForTimeout(150);
     const nav = await p.$$eval('.nav-item span:not(.count)', e => e.map(x => x.textContent));
-    ok('H3 Employee sees only the field screens', nav.join('|') === 'Scan & inspect|Report incident|Notices|My appointments|My PPE' && !(await has('#globalSearch')), nav.join(' | '));
+    ok('H3 Employee sees only the field screens', nav.join('|') === 'Home|My appointments|My PPE|My training|Notifications|Company notices|Documents to read|My inspections|My incident reports|Report incident' && !(await has('#globalSearch')), nav.join(' | '));
     await go('#/documents');
     ok('H4 other pages are closed to employees', (await p.innerText('#content')).includes('not available for your role'));
     await go('#/inspect/ISCH-04');
     ok('H5 an employee cannot start an inspection without scanning the asset QR', (await p.innerText('#content')).includes("Scan the asset's QR code to start"));
-    await go('#/field'); await act('.big-actions button:has-text("Scan asset QR code")'); await p.click('.modal details summary'); await msel('pick', 'AS-004'); await mbtn('Open asset');
+    await go('#/field'); await act('.emp-quick [data-act=qrScan]'); await p.click('.modal details summary'); await msel('pick', 'AS-004'); await mbtn('Open asset');
     const qrTxt = await p.innerText('#content');
     ok('H6 an inspector\'s QR page offers the inspection, a defect report and the documents (view only) — nothing else', qrTxt.includes('Start inspection') && qrTxt.includes('Report defect') && qrTxt.includes('Last inspection') && qrTxt.includes('View only') && !qrTxt.includes('Report incident') && !qrTxt.includes('Upload') && !qrTxt.includes('Open full asset record'));
     await act('.big-actions button:has-text("Start inspection")');
@@ -325,10 +325,10 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await go('#/print/' + lastIns.id);
     ok('SG5 the signature prints in the inspector signature box', await has('.sign-box img'));
     await asUser('P-014');
-    await go('#/field'); await act('.big-actions button:has-text("Report incident")');
+    await go('#/field'); await act('.emp-quick a[href="#/report"]');
     await p.fill('#incForm [name=title]', 'Oil on floor at bay 4'); await p.fill('#incForm [name=location]', 'Bay 4'); await p.fill('#incForm [name=description]', 'Slippery patch.'); await p.fill('#incForm [name=immediate]', 'Cordoned off.');
     await p.click('[data-act=incSubmit]'); await p.waitForTimeout(250);
-    ok('H8 employee reports an incident and sees it on their home screen', (await S('S.incidents[S.incidents.length-1].reporter')) === 'P-014' && (await p.innerText('#content')).includes('Oil on floor at bay 4'));
+    await go('#/myincidents'); ok('H8 employee reports an incident and sees it under "My incident reports"', (await S('S.incidents[S.incidents.length-1].reporter')) === 'P-014' && (await p.innerText('#content')).includes('Oil on floor at bay 4'));
     await asUser('P-002'); await go('#/actions'); await btn('New action'); await mbtn('Continue'); await p.waitForTimeout(100);
     const owners = await p.$$eval('.modal [name=owner] option', o => o.map(x => x.value));
     ok('H9 employees are not offered as corrective action owners', !owners.includes('P-009') && !owners.includes('P-014') && owners.includes('P-007'));
@@ -395,7 +395,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
   /* ---------------- R. Defect review, escalation, corrections, effectiveness ---------------- */
   {
     const tryReview = async () => { await act('[data-act=defectReview]'); };
-    await asUser('P-014'); await go('#/field'); await act('.big-actions button:has-text("Scan asset QR code")'); await p.click('.modal details summary'); await msel('pick', 'AS-004'); await mbtn('Open asset');
+    await asUser('P-014'); await go('#/field'); await act('.emp-quick [data-act=qrScan]'); await p.click('.modal details summary'); await msel('pick', 'AS-004'); await mbtn('Open asset');
     await act('.big-actions button:has-text("Start inspection")');
     const qv = await S(`tplCurrent(byId('templates','TPL-VEH')).questions.map(q=>q.id)`);
     for (const q of qv) await p.click(`[data-act=qAns][data-q="${q}"][data-v="${q === qv[0] ? 'Fail' : 'Pass'}"]`);
@@ -1645,8 +1645,11 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     const stock0 = await S(() => byId('ppeTypes', 'PPE-003').stock); await mfill('qty', '2'); await mbtn('Issue');
     ok('PP4 issuing reduces stock; stock at or below the minimum shows as low stock', await S(() => byId('ppeTypes', 'PPE-003').stock) === stock0 - 2 && (await p.innerText('.kpis')).includes('Cut-resistant gloves'));
     ok('PP5 until the employee confirms receipt the item shows "Not acknowledged"', await S(() => ppeStatus('P-013', 'PPE-003') === 'Not acknowledged'));
-    await asUser('P-013'); await go('#/myppe'); await p.click('[data-act=ppeAck] >> nth=0'); await p.waitForTimeout(100);
-    ok('PP6 the employee acknowledges receipt in "My PPE"', await S(() => ppeStatus('P-013', 'PPE-003') === 'Issued'));
+    await asUser('P-013'); await go('#/myppe'); await p.click('[data-act=ppeAck][data-id] >> nth=0'); await p.waitForTimeout(150);
+    await mbtn('Sign and submit'); const ppeNoSig = await modalOpen() && await S(() => ppeStatus('P-013', 'PPE-003') === 'Not acknowledged');
+    await p.check('#ppeOk'); { const bb = await (await p.$('#ppeSig')).boundingBox(); await p.mouse.move(bb.x + 20, bb.y + 40); await p.mouse.down(); for (let k = 1; k < 12; k++) await p.mouse.move(bb.x + 20 + k * 15, bb.y + 40 + (k % 2) * 10); await p.mouse.up(); }
+    await mbtn('Sign and submit'); await p.waitForTimeout(120);
+    ok('PP6 the employee signs for PPE in "My PPE" (tick and signature required), like an appointment', ppeNoSig && await S(() => { const i = S.ppeIssues.filter(x => x.person === 'P-013' && x.ppe === 'PPE-003').slice(-1)[0]; return ppeStatus('P-013', 'PPE-003') === 'Issued' && /^data:image/.test(i.ack.sig || ''); }));
     await asUser('P-002');
     // hazardous substances
     await go('#/substances');

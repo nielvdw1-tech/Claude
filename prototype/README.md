@@ -295,6 +295,11 @@ Other pages are closed to employees. An inspection can only be started from the 
 - **Incidents:** direct causes, underlying causes and contributing factors (next to the 5 Whys root cause).
 - **Audits ↔ legal requirements:** each audit checklist item can be linked to a legal requirement; the requirement shows the latest audit results of its linked items.
 
+### Employee app (phone first; also on a PC)
+- **Home screen** for employees: greeting with job title, branch and date, and how many things need attention; large **Scan & inspect** and **Report incident** buttons; **Needs your attention** (the most urgent first: appointments to accept, PPE to sign for, notices to acknowledge, documents to read and sign, inspections due); **Notices for you**; and tiles with counts for **My appointments, My PPE, My training, Notifications, Company notices, Documents to read, My inspections and My incident reports**. Each tile opens its own page.
+- Every employee page has a **Back** bar to return home; the menu lists the same pages.
+- **PPE is signed for like an appointment:** the employee ticks that they received it in good condition and know how to use it, signs and submits (one item or all at once). The signature shows in the manager's PPE issue history.
+
 ### Audits
 - **Audits** (menu → Audits) has two tabs: **Audit programme** and **Audits**. The checklists themselves are set up under **Administration → Audit checklists** (inspection checklists under **Administration → Inspection checklists**), so the modules are the day-to-day working areas.
 - **Pre-built checklists (VDW starter checklists):** legal compliance (general), housekeeping, fire safety, hazardous chemical substances, stacking and storage, emergency preparedness and first aid, and PPE. They are suggestions to adapt to each site. **The legal compliance checklist does not quote legislation:** a competent person adds the references from the official text before relying on it.
@@ -458,6 +463,7 @@ prototype/
 ├── mod-emergency.js             Emergency arrangements per branch, team, equipment, drills
 ├── mod-contractors.js           Contractors, required documents and review, inductions
 ├── mod-gaps.js                  Dashboard compliance section, new reports, incident causes, audit–legal links, document expiry
+├── mod-employee.js              Employee home screen and pages, PPE signature, back buttons
 ├── mod-auditing.js              Audits: starter and own checklists, programme, scoring, findings, PDF report
 ├── mod-dashboard.js              Dashboard: compliance status, 12-month trends, detail
 ├── vendor/pdfjs/                 PDF.js 3.11.174 (Apache-2.0) for viewing PDFs, works offline
