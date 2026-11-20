@@ -13,7 +13,7 @@ const empNotifs = () => (typeof buildNotifs === 'function' ? buildNotifs() : [])
 function empCounts() {
   const uid = S.ui.user, x = me();
   const apt = (S.appointments || []).filter(a => a.person === uid && ['Sent to employee', 'Awaiting acknowledgement', 'Awaiting acceptance'].includes(a.status)).length;
-  const ppe = (S.ppeIssues || []).filter(i => i.person === uid && !i.ack).length;
+  const ppe = (S.ppeIssues || []).filter(i => i.person === uid && !ppeSigned(i)).length;
   const tr = x && typeof requiredFor === 'function' ? requiredFor(x).filter(r => ['Missing', 'Expired', 'Expiring', 'Not yet competent', 'Assessment outstanding'].includes(trStatus(x.id, r.course))).length : 0;
   const ins = S.schedules.filter(s => s.assignee === uid && s.asset && daysTo(s.nextDue) <= 7).length;
   const read = typeof docsToRead === 'function' ? docsToRead().length : 0;
@@ -68,7 +68,7 @@ ROUTES.myreading = () => { const inner = typeof fieldReadHtml === 'function' ? f
 
 /* ---------------- PPE: sign for receipt (like an appointment) ---------------- */
 const PPESIG = { sig: null };
-ACT.ppeAck = (el) => { const ids = el.dataset.all ? (S.ppeIssues || []).filter(i => i.person === S.ui.user && !i.ack).map(i => i.id) : [el.dataset.id], L = ids.map(id => byId('ppeIssues', id));
+ACT.ppeAck = (el) => { const ids = el.dataset.all ? (S.ppeIssues || []).filter(i => i.person === S.ui.user && !ppeSigned(i)).map(i => i.id) : [el.dataset.id], L = ids.map(id => byId('ppeIssues', id));
   openModal({ title: 'Sign for your PPE', sub: 'Check the items, then confirm and sign. Your signature is kept as the record of issue.', body: `<ul class="emp-list boxed">${L.map(i => `<li><div><b>${i.qty} × ${esc(ppeType(i.ppe).name)}</b><small>${i.size ? 'Size ' + esc(i.size) + ' · ' : ''}issued ${fmt(i.date)} by ${esc(pname(i.by))}${i.replaceBy ? ' · replace by ' + fmt(i.replaceBy) : ''}</small></div></li>`).join('')}</ul>
     <label class="check mt-s"><input type="checkbox" id="ppeOk"> <span><b>I received this PPE in good condition.</b> I know how to use it and look after it, and I will report it when it is worn, damaged or lost.</span></label>
     <div class="field full mt-s" id="ppeSigField"><label for="ppeSig">Your signature<span class="req">*</span></label><div class="sig-wrap"><canvas id="ppeSig" class="sig-pad"></canvas><div class="sig-foot"><span>${esc(pname(S.ui.user))} · ${fmt(TODAY)}</span><button type="button" class="btn sm" data-act="ppeSigClear">Clear</button></div></div></div>`,
@@ -78,7 +78,7 @@ ACT.ppeAck = (el) => { const ids = el.dataset.all ? (S.ppeIssues || []).filter(i
 ACT.ppeSigClear = () => { PPESIG.sig = null; const c = document.getElementById('ppeSig'); if (c) c.getContext('2d').clearRect(0, 0, c.width, c.height); };
 // My PPE page: a "sign for all" button when more than one item waits
 const _myppeBeforeEmp = ROUTES.myppe;
-ROUTES.myppe = (p) => { const r = _myppeBeforeEmp(p), n = (S.ppeIssues || []).filter(i => i.person === S.ui.user && !i.ack).length;
+ROUTES.myppe = (p) => { const r = _myppeBeforeEmp(p), n = (S.ppeIssues || []).filter(i => i.person === S.ui.user && !ppeSigned(i)).length;
   if (n > 1) r.html = r.html.replace('<h2>Confirm that you received</h2>', `<h2>Sign for what you received</h2><button class="btn sm primary" data-act="ppeAck" data-all="1">Sign for all ${n}</button>`);
   r.html = r.html.replace(/>I received it</g, '>Sign</').replace('<div class="mobile-card"><h1 style="margin:4px 0 4px">My PPE</h1>', '<div class="mobile-card emp"><div class="emp-head"><h1>My PPE</h1></div>'); r.crumbs = [['Home', '#/field'], ['My PPE', '#']]; return r; };
 

@@ -1644,9 +1644,9 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     ok('PP3 the replacement date is filled from the item', (await p.inputValue('.modal [name=replaceBy]')) === await S(() => addMonths(TODAY, 3)));
     const stock0 = await S(() => byId('ppeTypes', 'PPE-003').stock); await mfill('qty', '2'); await mbtn('Issue');
     ok('PP4 issuing reduces stock; stock at or below the minimum shows as low stock', await S(() => byId('ppeTypes', 'PPE-003').stock) === stock0 - 2 && (await p.innerText('.kpis')).includes('Cut-resistant gloves'));
-    ok('PP5 until the employee confirms receipt the item shows "Not acknowledged"', await S(() => ppeStatus('P-013', 'PPE-003') === 'Not acknowledged'));
+    ok('PP5 until the employee confirms receipt the item shows "Not signed"', await S(() => ppeStatus('P-013', 'PPE-003') === 'Not signed'));
     await asUser('P-013'); await go('#/myppe'); await p.click('[data-act=ppeAck][data-id] >> nth=0'); await p.waitForTimeout(150);
-    await mbtn('Sign and submit'); const ppeNoSig = await modalOpen() && await S(() => ppeStatus('P-013', 'PPE-003') === 'Not acknowledged');
+    await mbtn('Sign and submit'); const ppeNoSig = await modalOpen() && await S(() => ppeStatus('P-013', 'PPE-003') === 'Not signed');
     await p.check('#ppeOk'); { const bb = await (await p.$('#ppeSig')).boundingBox(); await p.mouse.move(bb.x + 20, bb.y + 40); await p.mouse.down(); for (let k = 1; k < 12; k++) await p.mouse.move(bb.x + 20 + k * 15, bb.y + 40 + (k % 2) * 10); await p.mouse.up(); }
     await mbtn('Sign and submit'); await p.waitForTimeout(120);
     ok('PP6 the employee signs for PPE in "My PPE" (tick and signature required), like an appointment', ppeNoSig && await S(() => { const i = S.ppeIssues.filter(x => x.person === 'P-013' && x.ppe === 'PPE-003').slice(-1)[0]; return ppeStatus('P-013', 'PPE-003') === 'Issued' && /^data:image/.test(i.ack.sig || ''); }));

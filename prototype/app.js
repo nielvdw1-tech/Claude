@@ -702,7 +702,7 @@ document.addEventListener('click', (e) => {
     const fn = ACT[actEl.dataset.act];
     if (fn) { e.preventDefault(); fn(actEl, e); return; }
   }
-  const row = e.target.closest('tr[data-href]');
+  const row = e.target.closest('tr[data-href], li[data-href]');
   if (row && !e.target.closest('a, button, input, select, label')) { navigate(row.dataset.href); return; }
   if (!e.target.closest('.dropdown') && !e.target.closest('[data-act=userMenu]')) document.querySelectorAll('.dropdown').forEach(d => d.remove());
   if (!e.target.closest('.top-search')) { const r = document.getElementById('searchResults'); if (r) r.classList.add('hidden'); }
