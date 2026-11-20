@@ -1323,3 +1323,15 @@ body.auth-mode .main { padding-top: 0; }
 .plain-list { margin: 6px 0 0; padding-left: 18px; }
 .chk-row { display: flex; flex-wrap: wrap; gap: 6px 16px; }
 .chk-col { display: grid; gap: 6px; max-height: 220px; overflow: auto; padding: 4px 0; }
+/* People & appointments */
+.seg-pick { display: grid; gap: 8px; }
+.seg-pick .check { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; align-items: flex-start; }
+.apt-doc { max-width: 760px; }
+.apt-doc-head { display: flex; gap: 12px; align-items: center; padding-bottom: 10px; border-bottom: 1px solid var(--line); margin-bottom: 10px; }
+.apt-doc h2 { margin: 6px 0 10px; font-size: 20px; }
+.apt-doc h3 { margin: 16px 0 6px; font-size: 15px; }
+.apt-duties { white-space: pre-wrap; line-height: 1.6; background: var(--surface-2, #F6F8FB); border-radius: 8px; padding: 10px 14px; }
+.apt-answer { margin: 6px 0 0 14px; padding: 6px 10px; border-left: 3px solid var(--brand); background: var(--surface-2, #F6F8FB); border-radius: 0 6px 6px 0; }
+.apt-respond { border: 2px solid var(--brand); }
+.apt-callout { display: flex; gap: 10px; text-decoration: none; color: inherit; }
+.mb-s { margin-bottom: 10px; }

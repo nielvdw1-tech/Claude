@@ -75,6 +75,18 @@ Status key:
 | Legal compliance figures and filters (legislation, branch, responsible person, status) | Implemented | LG1, LG11 |
 | Legal compliance on the main dashboard; audit items linked to requirements | Not yet | Planned with the gaps in existing modules |
 
+## People management and legal appointments
+| Requirement | Status | Notes |
+|---|---|---|
+| Employee register incl. people without a login; number, title, branch, department, supervisor, status; transfers and leavers with history | Implemented | PM1–PM3, PM19 |
+| Digital appointment: prepare, review, issue; employee opens, acknowledges, accepts with signature; decline with reason; clarification; times and identity recorded | Implemented | PM4–PM14 |
+| Uploaded appointment with signed letter and competency documents; labelled as uploaded, never as digitally accepted | Implemented | PM15 |
+| One register for both, with filters (employee, branch, type, method, status) and dashboard figures | Implemented | PM16, PM17 |
+| Changes: resend, new version re-accepted (old kept), end, replace, withdraw | Implemented | PM18 |
+| Responsibilities with acknowledgement; unallocated flagged; competency records | Implemented | PM20 |
+| Employees only see their own appointments | Implemented | PM21 (on screen; server-side in production) |
+| Departments within each branch | Not yet | Departments are company-wide; planned with the gaps |
+
 ## Audits
 | Requirement | Status | Notes |
 |---|---|---|

@@ -109,8 +109,8 @@ function legalDetail(id) {
 }
 function evidenceLink(e) {
   const f = e.file; if (f) return `<button type="button" class="link-btn" ${fileAttrs(f)}>${icon('docs', 'sm')} ${esc(f.name)}</button>`;
-  const href = { Document: '#/documents/', Audit: '#/audits/', Inspection: '#/inspections/', Asset: '#/assets/', Appointment: '#/people/appointments/', Training: '#/training/' }[e.kind];
-  const rec = { Document: () => byId('documents', e.ref), Audit: () => byId('audits', e.ref), Inspection: () => byId('inspections', e.ref), Asset: () => byId('assets', e.ref) }[e.kind];
+  const href = { Document: '#/documents/', Audit: '#/audits/', Inspection: '#/inspections/', Asset: '#/assets/', Appointment: '#/people/', Training: '#/training/' }[e.kind];
+  const rec = { Appointment: () => { const a = byId('appointments', e.ref); return a && { title: `${a.id} ${(S.config.apptTypes || []).find(t => t.id === a.type) ? S.config.apptTypes.find(t => t.id === a.type).name : ''} — ${pname(a.person)}` }; }, Document: () => byId('documents', e.ref), Audit: () => byId('audits', e.ref), Inspection: () => byId('inspections', e.ref), Asset: () => byId('assets', e.ref) }[e.kind];
   const x = rec ? rec() : null, label = e.label || (x ? (x.number ? x.number + ' ' + x.title : x.title || x.name || x.tag || e.ref) : e.ref);
   return href ? `<a href="${href}${e.ref}">${esc(label)}</a>` : esc(label);
 }
@@ -163,11 +163,11 @@ ACT.lrEvidence = (el) => { const r = byId('legalReqs', el.dataset.id);
   const audits = (S.audits || []).filter(a => a.org === S.ui.org && a.status === 'Completed').map(a => ({ value: a.id, label: `${a.id} — ${a.template.title} (${sname(a.site)}, ${fmt(a.date)})` }));
   const insps = S.inspections.filter(i => inSite(i, 'ALL')).slice(-40).map(i => ({ value: i.id, label: `${i.id} — ${(i.template && i.template.title) || ""} ${i.target || ""} (${fmt(i.date)})` }));
   openModal({ title: 'Link evidence', sub: 'Link a record that already exists rather than uploading a second copy. Upload only when the evidence is not in the system yet.', body: `<div class="form-grid">
-    ${fld({ name: 'kind', label: 'Kind of evidence', type: 'select', options: opts(['Document', 'Audit', 'Inspection', 'Upload a file']), required: true })}
+    ${fld({ name: 'kind', label: 'Kind of evidence', type: 'select', options: opts(['Document', 'Appointment', 'Audit', 'Inspection', 'Upload a file']), required: true })}
     <div class="field full" data-field="ref" id="evPick">${fld({ name: 'ref', label: 'Record', type: 'select', options: opts(docs, '', '— Select —'), full: true })}</div>
     <div class="field full hidden" id="evFile">${fld({ name: 'file', label: 'File', type: 'file', full: true })}</div>
     ${fld({ name: 'note', label: 'Note (optional)', full: true })}</div>`,
-    onOpen: m => { const k = m.querySelector('[name=kind]'); k.addEventListener('change', () => { const up = k.value === 'Upload a file'; m.querySelector('#evFile').classList.toggle('hidden', !up); m.querySelector('#evPick').classList.toggle('hidden', up); m.querySelector('[name=ref]').innerHTML = opts(k.value === 'Audit' ? audits : k.value === 'Inspection' ? insps : docs, '', '— Select —'); }); },
+    onOpen: m => { const k = m.querySelector('[name=kind]'); k.addEventListener('change', () => { const up = k.value === 'Upload a file'; m.querySelector('#evFile').classList.toggle('hidden', !up); m.querySelector('#evPick').classList.toggle('hidden', up); m.querySelector('[name=ref]').innerHTML = opts(k.value === 'Audit' ? audits : k.value === 'Inspection' ? insps : k.value === 'Appointment' ? (S.appointments || []).filter(a => a.org === S.ui.org && !['Draft', 'Withdrawn'].includes(a.status)).map(a => ({ value: a.id, label: `${a.id} — ${pname(a.person)} (${a.method})` })) : docs, '', '— Select —'); }); },
     buttons: [{ label: 'Link', cls: 'primary', onClick: m => { const v = readForm(m); if (v.kind === 'Upload a file' ? !v.file : !v.ref) { toast('Choose the record or file.', 'error'); return false; }
       r.evidence = r.evidence || []; r.evidence.push(v.kind === 'Upload a file' ? { kind: 'File', file: v.file, note: v.note, by: S.ui.user, on: TODAY } : { kind: v.kind, ref: v.ref, note: v.note, by: S.ui.user, on: TODAY });
       log(`Linked evidence to ${r.id}`, '#/legal/' + r.id); save(); rerender(); } }] }); };

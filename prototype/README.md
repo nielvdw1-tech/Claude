@@ -246,6 +246,19 @@ Other pages are closed to employees. An inspection can only be started from the 
 - Allocating a requirement to a person is operational; **the employer's statutory duties stay with the employer**. The compliance figures show what the assessor recorded; they do not guarantee legal compliance.
 - Permission "Maintain the legal library and assess legal requirements" (HSEQ Manager, Safety Consultant, System Administrator). Others can view.
 
+### People Management (menu → People → People Management) and My appointments
+- **Employees:** everyone in the company, **with or without a system login**: employee number, job title, branch, department, reports-to, start date, e-mail and mobile (optional). **Transfer** (branch, department, job title) and **Leaving** (deactivates the person, ends active appointments and withdraws open ones) are kept in the person's history. The profile shows appointments, competency records (qualifications, certificates, experience, registrations, competency assessments, with documents and validity), responsibilities and history. Filters: branch, department, employees / contractors, current / left.
+- **Legal appointments: two methods, one register.**
+  - **Digital:** the manager picks the employee and the appointment type (its duties are filled in and can be adjusted), links the legislation from the legal library, the reference, appointing authority, effective date and an end date only if it ends, and can attach a document. It is saved as a draft to **review exactly as the employee will see it**, then **issued**. The employee is notified, opens it in **My appointments** (opening is recorded), ticks "I have read and understood" (acknowledgement time recorded), then **signs and accepts** (acceptance time, person and signature recorded). They can instead **decline with a reason** or **ask for clarification**; the manager answers and it goes back to them. It is never shown as accepted before the employee has done this. The employee cannot change it.
+  - **Uploaded:** an appointment already signed on paper is uploaded with the signed letter (and competency proof where the type needs it). It is labelled **Uploaded** and shows "not digitally accepted". Missing documents are flagged.
+  - Statuses (digital): Draft, Sent to employee, Awaiting acknowledgement, Awaiting acceptance, Accepted, Active, Declined, Clarification requested, Ended, Withdrawn. (Uploaded): Draft, Awaiting supporting documents, Uploaded, Active, Ended, Withdrawn.
+  - The manager can **resend**, **change it (new version)** — the employee must accept the new version and the earlier version with its acceptance is kept — **end** it (optionally preparing a replacement) or **withdraw** it. Everything is in the appointment's history and the audit trail. **Download** gives the appointment with its acceptance record as a PDF (or the signed letter for an uploaded one).
+  - Figures at the top: employees, active appointments (digital / uploaded), awaiting acceptance, declined, clarification requested, missing documents, ended / withdrawn, unallocated responsibilities. Filters: employee, branch, type, method, status, awaiting / missing documents.
+- **Responsibilities:** internal, operational responsibilities, optionally linked to a legal requirement or activity, acknowledged by the person where required. Applicable legal requirements without a responsible person are flagged.
+- **Appointment types** are set up under Administration → Appointment types: name, default duties, legislation link (from the library) and whether proof of competency is needed.
+- **My appointments** (menu, and on the employee's phone screens): waiting for a response, active, declined and previous appointments, and my responsibilities to acknowledge.
+- Permission "Manage employees and issue appointments" (HSEQ Manager, Safety Consultant, Branch Manager, System Administrator). Others see only their own appointments. Appointments assign operational duties; **the employer's statutory duties remain with the employer**.
+
 ### Audits
 - **Audits** (menu → Audits) has two tabs: **Audit programme** and **Audits**. The checklists themselves are set up under **Administration → Audit checklists** (inspection checklists under **Administration → Inspection checklists**), so the modules are the day-to-day working areas.
 - **Pre-built checklists (VDW starter checklists):** legal compliance (general), housekeeping, fire safety, hazardous chemical substances, stacking and storage, emergency preparedness and first aid, and PPE. They are suggestions to adapt to each site. **The legal compliance checklist does not quote legislation:** a competent person adds the references from the official text before relying on it.
@@ -401,6 +414,7 @@ prototype/
 ├── mod-notices.js                Company notices: publish, read, acknowledge, track
 ├── mod-registers.js             Shared filter bar and set-up helpers for the new registers
 ├── mod-legal.js                 Legal requirements: library, register, assessments, evidence, changes
+├── mod-people.js                Employees, legal appointments (digital and uploaded), responsibilities, competency
 ├── mod-auditing.js              Audits: starter and own checklists, programme, scoring, findings, PDF report
 ├── mod-dashboard.js              Dashboard: compliance status, 12-month trends, detail
 ├── vendor/pdfjs/                 PDF.js 3.11.174 (Apache-2.0) for viewing PDFs, works offline

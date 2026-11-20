@@ -212,7 +212,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await asUser('P-007'); await go('#/notifications/tasks');
     ok('E3 overdue inspection appears in the assignee task centre', (await p.innerText('#content')).includes('Inspect: Germiston warehouse & workshop'));
     await go('#/no-such-module'); ok('E4 an unknown page shows "Page not found"', (await p.innerText('#content')).includes('Page not found'));
-    ok('E5 navigation shows only the focused modules', (await p.$$eval('.nav-item span:not(.count)', e => e.map(x => x.textContent))).join('|') === 'Dashboard|Notifications & Tasks|Company Notices|Legal Requirements|Document Manager|Assets & Equipment|Inspections|Maintenance & Defects|Audits|Incident Management|Corrective Actions|Reports|Administration');
+    ok('E5 navigation shows only the focused modules', (await p.$$eval('.nav-item span:not(.count)', e => e.map(x => x.textContent))).join('|') === 'Dashboard|Notifications & Tasks|My appointments|Company Notices|Legal Requirements|People Management|Document Manager|Assets & Equipment|Inspections|Maintenance & Defects|Audits|Incident Management|Corrective Actions|Reports|Administration');
     await asUser('P-002'); await go('#/incidents'); await go('#/actions'); await btn('New action'); await mbtn('Continue'); await p.waitForTimeout(100); await mbtn('Raise action');
     ok('E6 form validation blocks empty required fields', await modalOpen() && (await p.$$('.modal .field.invalid')).length > 0); await p.keyboard.press('Escape');
     await asUser('P-009'); await go('#/documents/DOC-007');
@@ -300,7 +300,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     ok('H2 Safety Consultant can issue approved documents', await has('.sh-actions button:has-text("Issue for use"):not([disabled])'));
     await asUser('P-014'); await p.waitForTimeout(150);
     const nav = await p.$$eval('.nav-item span:not(.count)', e => e.map(x => x.textContent));
-    ok('H3 Employee sees only the field screens', nav.join('|') === 'Scan & inspect|Report incident|Notices' && !(await has('#globalSearch')), nav.join(' | '));
+    ok('H3 Employee sees only the field screens', nav.join('|') === 'Scan & inspect|Report incident|Notices|My appointments' && !(await has('#globalSearch')), nav.join(' | '));
     await go('#/documents');
     ok('H4 other pages are closed to employees', (await p.innerText('#content')).includes('not available for your role'));
     await go('#/inspect/ISCH-04');
@@ -1492,6 +1492,69 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     ok('LG13 the responsible person gets a reassessment task', await S(() => myTasks().some(t => /^Reassess legal requirement/.test(t.title))));
     await asUser('P-007'); await go('#/legal');
     ok('LG14 people without the legal permission can view but not add or assess', !(await has('.fab-stack .fab')) && (await go('#/legal/LR-004'), !(await has('[data-act=lrAssess]'))));
+    await asUser('P-002');
+  }
+
+  /* ---------------- PM. People management and legal appointments ---------------- */
+  {
+    const signOn = async (canvas) => { await p.locator(canvas).scrollIntoViewIfNeeded(); const bb = await (await p.$(canvas)).boundingBox(); await p.mouse.move(bb.x + 20, bb.y + 40); await p.mouse.down(); for (let k = 1; k < 12; k++) await p.mouse.move(bb.x + 20 + k * 15, bb.y + 40 + (k % 2) * 10); await p.mouse.up(); await p.waitForTimeout(80); };
+    await asUser('P-002'); await pickScope('#siteSel', 'ALL'); await go('#/people');
+    ok('PM1 the employee register lists people with and without a system login', (await p.innerText('#content')).includes('Sizwe Dube') && (await p.innerText('#content')).includes('No login'));
+    // add employee without a login
+    await p.click('.fab-stack .fab:has-text("Add employee")'); await p.waitForTimeout(120);
+    await mfill('name', 'Lebo Mahlangu'); await mfill('empNo', 'KIE-1040'); await mfill('jobTitle', 'Picker'); await msel('dept', 'Warehouse & Logistics'); await msel('supervisor', 'P-007'); await mbtn('Add employee');
+    const nid = await S(() => location.hash.split('/')[2]);
+    ok('PM2 an employee can be added without a system login (number, job title, branch, department, supervisor)', await S(`(() => { const x = person('${nid}'); return x.empNo === 'KIE-1040' && !x.sysRole && x.supervisor === 'P-007'; })()`));
+    await btn('Transfer'); await msel('site', 'S-DBN'); await msel('dept', 'Workshop & Service'); await mbtn('Transfer');
+    ok('PM3 a transfer moves the employee and is kept in their history', await S(`person('${nid}').site === 'S-DBN' && person('${nid}').history.some(h => h.text.startsWith('Transferred'))`));
+    // digital appointment: manager prepares, reviews, issues
+    await btn('New appointment'); await p.waitForTimeout(120); await msel('type', 'AT-FIRST'); await p.waitForTimeout(60);
+    const dut = await p.inputValue('.modal [name=duties]');
+    await mbtn('Continue'); await p.waitForTimeout(120);
+    const aid = await S(() => location.hash.split('/')[2]);
+    ok('PM4 a digital appointment starts as a draft with the duties of its type, for the manager to review before issuing', /^APT-/.test(aid) && dut.startsWith('Give first aid') && await S(`byId('appointments','${aid}').status`) === 'Draft' && (await p.innerText('#content')).includes('Review before issuing'));
+    await btn('Issue to employee'); await mbtn('Issue');
+    ok('PM5 issuing sends it to the employee (status "Sent to employee" and a notification)', await S(`byId('appointments','${aid}').status`) === 'Sent to employee' && await S(`S.events.some(e => e.link === '#/me/${aid}')`));
+    // employee (field user) accepts APT-003
+    await asUser('P-009'); await go('#/me');
+    ok('PM6 the employee sees the appointment waiting for their response in "My appointments"', (await p.innerText('#content')).includes('Waiting for your response') && (await p.innerText('#content')).includes('Lift truck operator'));
+    await go('#/me/APT-003');
+    ok('PM7 opening it records that the employee opened it and shows the full appointment with its duties', await S(`byId('appointments','APT-003').status`) === 'Awaiting acknowledgement' && !!(await S(`byId('appointments','APT-003').opened`)) && (await p.innerText('.apt-duties')).includes('pre-use check'));
+    await p.click('[data-act=aptAck]'); await p.waitForTimeout(100);
+    ok('PM8 the employee must tick "read and understood" before acknowledging', await S(`byId('appointments','APT-003').status`) === 'Awaiting acknowledgement');
+    await p.check('#aptAck'); await p.click('[data-act=aptAck]'); await p.waitForTimeout(150);
+    ok('PM9 acknowledgement is recorded with its time; the appointment is not yet accepted', await S(`(() => { const a = byId('appointments','APT-003'); return a.status === 'Awaiting acceptance' && !!a.ack.ts && !a.accept; })()`));
+    await p.click('[data-act=aptAccept]'); await p.waitForTimeout(100);
+    ok('PM10 accepting needs a signature', await S(`byId('appointments','APT-003').status`) === 'Awaiting acceptance');
+    await signOn('#aptSig'); await p.click('[data-act=aptAccept]'); await p.waitForTimeout(150);
+    const acc = await S(() => { const a = byId('appointments', 'APT-003'); return { st: a.status, by: a.accept.user, ts: !!a.accept.ts, sig: /^data:image/.test(a.accept.sig || '') }; });
+    ok('PM11 acceptance records who accepted, when, and their signature; the appointment becomes active', acc.by === 'P-009' && acc.ts && acc.sig && await S(`aptStatus(byId('appointments','APT-003'))`) === 'Active', JSON.stringify(acc));
+    ok('PM12 the manager is told the appointment was accepted', await S(`S.outbox.some(m => m.subject.startsWith('Appointment accepted: Nomvula'))`));
+    ok('PM13 the employee cannot edit or issue the appointment', !(await has('[data-act=aptEdit]')) && !(await has('[data-act=aptIssue]')) && !(await has('[data-act=aptWithdraw]')));
+    // clarification answered, then decline
+    await asUser('P-002'); await go('#/people/APT-004'); await p.click('[data-act=aptAnswer]'); await p.waitForTimeout(100); await mfill('answer', 'Accept now; renew the certificate before it expires.'); await mbtn('Send answer');
+    ok('PM14 the manager answers a clarification request and the appointment goes back to the employee', await S(`byId('appointments','APT-004').status`) === 'Awaiting acknowledgement' && await S(`byId('appointments','APT-004').clarify[0].answeredBy`) === 'P-002');
+    // uploaded appointment
+    await go('#/people/appointments'); await p.click('.fab-stack .fab'); await p.waitForTimeout(120); await p.check('.modal [name=method][value=Uploaded]');
+    await msel('person', 'P-008'); await msel('type', 'AT-STACK'); await mfill('signedOn', await S(() => addDays(TODAY, -3))); await mfile('.modal [name=file]', 'signed_appointment.pdf'); await mbtn('Continue'); await p.waitForTimeout(150);
+    const up = await S(() => location.hash.split('/')[2]);
+    ok('PM15 an existing signed appointment can be uploaded; it is marked "Uploaded" and never shown as digitally accepted', await S(`(() => { const a = byId('appointments','${up}'); return a.method === 'Uploaded' && aptStatus(a) === 'Active' && !a.accept; })()`) && (await p.innerText('#content')).includes('not digitally accepted'));
+    await go('#/people/appointments');
+    ok('PM16 digital and uploaded appointments are in one register', (await p.innerText('#content')).includes(up) && (await p.innerText('#content')).includes('APT-003'));
+    await go('#/people/appointments?fmethod=Uploaded'); const rowsU = await p.$$eval('.card-body tbody td[data-label=Appointment] .mono', x => x.map(e => e.textContent));
+    ok('PM17 the register filters by method', rowsU.length && rowsU.every(t => ['APT-001', 'APT-006', up].includes(t)), rowsU.join());
+    // material change → new version must be accepted again
+    await go('#/people/APT-003'); await btn('Change (new version)'); await mfill('duties', 'Operate counterbalance and reach trucks.\nDo the pre-use check.'); await mfill('reason', 'Reach trucks added'); await mbtn('Issue new version');
+    ok('PM18 a material change makes version 2 that must be accepted again; version 1 and its acceptance are kept', await S(() => { const a = byId('appointments', 'APT-003'); return a.version === 2 && a.status === 'Sent to employee' && !a.accept && a.versions[0].accept && a.versions[0].accept.user === 'P-009'; }));
+    // employee leaves → appointments ended
+    await go('#/people/P-007'); await btn('Leaving'); await mbtn('Deactivate');
+    ok('PM19 when an employee leaves, their active appointments are ended and all records are kept', await S(() => byId('appointments', 'APT-002').status === 'Ended' && person('P-007').status === 'Deactivated'));
+    await S(() => { person('P-007').status = 'Active'; delete person('P-007').leftOn; save(); });
+    // responsibilities + supervisor only sees own
+    await go('#/people/responsibilities');
+    ok('PM20 responsibilities show who holds them, link to legal requirements and flag unallocated ones', (await p.innerText('#content')).includes('LR-005') && (await p.innerText('#content')).includes('Not allocated'));
+    await asUser('P-008'); await go('#/people');
+    ok('PM21 a supervisor without the people permission sees only their own appointments, not the employee register', (await p.innerText('#content')).includes('My appointments') && !(await has('.tabs a[href="#/people/employees"]')));
     await asUser('P-002');
   }
 
