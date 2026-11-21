@@ -1404,3 +1404,26 @@ body.auth-mode .main { padding-top: 0; }
 .emp-head h1 { margin: 0 0 2px; font-size: 22px; } .emp-head p { margin: 0; color: var(--muted); }
 .emp .notice-list, .emp .card { margin: 0; }
 .emp-notices .notice-list { padding: 0 12px 12px; display: grid; gap: 10px; }
+
+/* ---------- Administration: tabs grouped into sections ---------- */
+.adm-nav { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; margin-bottom: 16px; }
+.adm-grp { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 10px 6px; min-width: 0; }
+.adm-grp > span { display: block; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 0 4px 6px; }
+.adm-tabs.tabs { display: flex; flex-wrap: wrap; gap: 2px; border: 0; margin: 0; overflow: visible; }
+.adm-tabs.tabs a { border: 0; border-radius: 7px; padding: 5px 8px; font-size: 13px; margin: 0; }
+.adm-tabs.tabs a.active { background: var(--brand); color: #fff; }
+.adm-tabs.tabs a:not(.active):hover { background: var(--info-bg, #E8F0FE); }
+
+/* ---------- Employee bottom bar (phones) ---------- */
+.emp-bar { display: none; }
+@media (max-width: 760px) {
+  body.has-empbar .emp-bar { display: grid; grid-template-columns: repeat(5, 1fr); position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; background: var(--surface); border-top: 1px solid var(--line); box-shadow: 0 -4px 14px rgba(10, 42, 107, .08); padding: 6px max(6px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(6px, env(safe-area-inset-left, 0px)); }
+  body.has-empbar #content, body.has-empbar main.content { padding-bottom: 86px; }
+  .eb-i { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 2px; border: 0; background: none; color: var(--muted); font: inherit; font-size: 11px; text-decoration: none; border-radius: 10px; cursor: pointer; }
+  .eb-i .ic { width: 22px; height: 22px; }
+  .eb-i.on { color: var(--brand); background: var(--info-bg, #E8F0FE); }
+  .eb-i[data-act="qrScan"] { color: #fff; background: var(--brand); margin-top: -18px; border-radius: 16px; box-shadow: 0 6px 16px rgba(0, 95, 239, .35); }
+  .eb-i b { position: absolute; top: 2px; right: 18%; min-width: 17px; height: 17px; padding: 0 5px; border-radius: 999px; background: var(--st-bad, #d03b3b); color: #fff; font-size: 10px; display: grid; place-items: center; }
+  body.has-empbar .fab-stack { bottom: 96px; }
+}
+@media (min-width: 900px) { .cs-grid.cs-six { grid-template-columns: repeat(3, minmax(0, 1fr)); } }

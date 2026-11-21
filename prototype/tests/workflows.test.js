@@ -212,7 +212,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await asUser('P-007'); await go('#/notifications/tasks');
     ok('E3 overdue inspection appears in the assignee task centre', (await p.innerText('#content')).includes('Inspect: Germiston warehouse & workshop'));
     await go('#/no-such-module'); ok('E4 an unknown page shows "Page not found"', (await p.innerText('#content')).includes('Page not found'));
-    ok('E5 navigation shows only the focused modules', (await p.$$eval('.nav-item span:not(.count)', e => e.map(x => x.textContent))).join('|') === 'Dashboard|Notifications & Tasks|My appointments|My PPE|My training|Company Notices|Legal Requirements|Risk Management|People Management|Training Management|Contractor Management|Document Manager|Assets & Equipment|Inspections|Maintenance & Defects|PPE Management|Hazardous Substances|Emergency Management|Audits|Incident Management|Corrective Actions|Reports|Administration');
+    ok('E5 navigation shows only the focused modules', (await p.$$eval('.nav-item span:not(.count)', e => e.map(x => x.textContent))).join('|') === 'Dashboard|Notifications & Tasks|My team|My appointments|My PPE|My training|Company Notices|Legal Requirements|Risk Management|People Management|Training Management|Contractor Management|Document Manager|Assets & Equipment|Inspections|Maintenance & Defects|PPE Management|Hazardous Substances|Emergency Management|Audits|Incident Management|Corrective Actions|Reports|Administration');
     await asUser('P-002'); await go('#/incidents'); await go('#/actions'); await btn('New action'); await mbtn('Continue'); await p.waitForTimeout(100); await mbtn('Raise action');
     ok('E6 form validation blocks empty required fields', await modalOpen() && (await p.$$('.modal .field.invalid')).length > 0); await p.keyboard.press('Escape');
     await asUser('P-009'); await go('#/documents/DOC-007');
@@ -467,7 +467,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     const secs = await p.$$eval('h3.dash-sec', e => e.map(x => x.textContent.trim()));
     ok('DB1 compliance status comes first, then compliance management, trends and detail', secs.length === 4 && /Compliance status/i.test(secs[0]) && /Compliance management/i.test(secs[1]) && /Trends/i.test(secs[2]) && /Detail/i.test(secs[3]), secs.join(' | '));
     const hero = await p.$eval('.cs-hero .pie-v', e => parseInt(e.textContent)), want = await S("compliance('ALL').overall");
-    ok('DB2 the overall control score and the four areas show with a status label', hero === want && (await p.$$eval('.cs-part', e => e.length)) === 4 && (await p.$$eval('.cs-grid .pie svg', e => e.length)) === 5 && (await p.$$eval('.cs-grid .st-chip', e => e.length)) === 5, `${hero}%`);
+    ok('DB2 the overall control score and the five areas (incl. legal compliance) show with a status label', hero === want && (await p.$$eval('.cs-part', e => e.length)) === 5 && (await p.$$eval('.cs-grid .pie svg', e => e.length)) === 6 && (await p.$$eval('.cs-grid .st-chip', e => e.length)) === 6, `${hero}%`);
     const rows = await p.$$eval('.tbl.hm tbody tr', e => e.length), sites = await S("orgSites().length");
     await p.click('.tbl.hm [data-act=focusSite][data-site="S-DBN"]'); await p.waitForTimeout(250);
     ok('DB3 branch status table lists every branch; clicking one focuses the dashboard on it', rows === sites && (await S('S.ui.site')) === 'S-DBN' && (await p.$eval('.cs-hero .pie-v', e => parseInt(e.textContent))) === (await S("compliance('S-DBN').overall")));
@@ -1534,7 +1534,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await asUser('P-002'); await go('#/people/APT-004'); await p.click('[data-act=aptAnswer]'); await p.waitForTimeout(100); await mfill('answer', 'Accept now; renew the certificate before it expires.'); await mbtn('Send answer');
     ok('PM14 the manager answers a clarification request and the appointment goes back to the employee', await S(`byId('appointments','APT-004').status`) === 'Awaiting acknowledgement' && await S(`byId('appointments','APT-004').clarify[0].answeredBy`) === 'P-002');
     // uploaded appointment
-    await go('#/people/appointments'); await p.click('.fab-stack .fab'); await p.waitForTimeout(120); await p.check('.modal [name=method][value=Uploaded]');
+    await go('#/people/appointments'); await p.click('.fab-stack .fab:has-text("New appointment")'); await p.waitForTimeout(120); await p.check('.modal [name=method][value=Uploaded]');
     await msel('person', 'P-008'); await msel('type', 'AT-STACK'); await mfill('signedOn', await S(() => addDays(TODAY, -3))); await mfile('.modal [name=file]', 'signed_appointment.pdf'); await mbtn('Continue'); await p.waitForTimeout(150);
     const up = await S(() => location.hash.split('/')[2]);
     ok('PM15 an existing signed appointment can be uploaded; it is marked "Uploaded" and never shown as digitally accepted', await S(`(() => { const a = byId('appointments','${up}'); return a.method === 'Uploaded' && aptStatus(a) === 'Active' && !a.accept; })()`) && (await p.innerText('#content')).includes('not digitally accepted'));
@@ -1713,6 +1713,34 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await p.fill('#abHead [name=note]', 'Linked items to legal requirements'); await p.click('[data-act=abSave]'); await p.waitForTimeout(150);
     ok('GA9 audit checklist items can be linked to a legal requirement', await S(() => { const t = S.auditTemplates.find(x => x.replaces === 'ATPL-LEG' && x.org === S.ui.org); return !!t && t.revisions.some(r => r.sections[1].items[0].legalReq === 'LR-004'); }));
     await go('#/legal/LR-004'); ok('GA10 the legal requirement shows the audit results of its linked items', (await p.innerText('#content')).includes('Audit results'));
+  }
+
+  /* ---------------- QA. Review fixes: score, team, admin, phone bar, bulk issue, PDF, departments ---------------- */
+  {
+    await asUser('P-002'); await pickScope('#siteSel', 'ALL');
+    ok('QA1 legal compliance is part of the control score', await S(() => compliance('ALL').parts.legal != null && S.config.complianceWeights.legal > 0));
+    await asUser('P-007'); await go('#/team'); const tm = await p.innerText('#content');
+    ok('QA2 "My team" shows a supervisor\'s people with appointments, PPE, training, inspections and documents to read', tm.includes('Nomvula Sithole') && tm.includes('to accept') && await has('#sidebar a[href="#/team"]'));
+    await p.click('tbody tr.rowlink >> nth=0'); await p.waitForTimeout(120);
+    ok('QA3 a supervisor can open the profile of someone in their team', /#\/people\/P-/.test(await S(() => location.hash)) && !(await p.innerText('#content')).includes('Page not found'));
+    await asUser('P-002'); ok('QA4 "My team" is not in the menu of someone without a team', !(await has('#sidebar a[href="#/team"]')));
+    await go('#/admin/riskmatrix'); const grp = await p.$$eval('.adm-grp > span', x => x.map(e => e.textContent));
+    ok('QA5 Administration tabs are grouped into sections', grp.includes('Company and people') && grp.includes('Checklists and types') && !grp.includes('Other'), grp.join('|'));
+    // bulk PPE
+    await go('#/ppe/issues'); await p.click('.fab-stack .fab:has-text("Issue PPE")'); await p.waitForTimeout(120); await msel('ppe', 'PPE-001'); await p.click('#ppeNeed'); await p.waitForTimeout(60);
+    const ticked = await p.$$eval('#ppePeople input:checked', x => x.length); await mbtn('Issue'); await p.waitForTimeout(120);
+    ok('QA6 PPE can be issued to several people at once (those who need it are ticked); each must sign', ticked >= 1 && await S(() => S.ppeIssues.filter(i => i.ppe === 'PPE-001' && !i.ack && i.date === TODAY).length) >= ticked, String(ticked));
+    // bulk appointments
+    await go('#/people/appointments'); await p.click('.fab-stack .fab:has-text("Issue to several people")'); await p.waitForTimeout(120); await msel('type', 'AT-FIRE'); await p.check('.modal [name=ab_P-013]'); await p.check('.modal [name=ab_P-020]'); await mbtn('Issue to all ticked'); await p.waitForTimeout(120);
+    ok('QA7 an appointment can be issued to several people at once, each to sign and accept', await S(() => ['P-013', 'P-020'].every(id => S.appointments.some(a => a.person === id && a.type === 'AT-FIRE' && a.status === 'Sent to employee'))));
+    // report PDF
+    await go('#/reports/legalrep'); const [dl] = await Promise.all([p.waitForEvent('download'), p.click('[data-act=repPdf]')]);
+    ok('QA8 every report downloads as a PDF', /\.pdf$/.test(dl.suggestedFilename()), dl.suggestedFilename());
+    // departments per branch
+    await S(() => { S.config.deptSites = { 'Hire Fleet': ['S-JHB'] }; save(); }); await go('#/people/employees'); await p.click('.fab-stack .fab:has-text("Add employee")'); await p.waitForTimeout(120); await msel('site', 'S-CPT'); await p.waitForTimeout(60);
+    const depts = await p.$$eval('.modal select[name=dept] option', x => x.map(o => o.textContent)); await p.keyboard.press('Escape'); await p.waitForTimeout(80); if (await modalOpen()) await mbtn('Cancel');
+    ok('QA9 forms only offer the departments that exist at the chosen branch', !depts.includes('Hire Fleet') && depts.includes('Warehouse & Logistics'), depts.join('|'));
+    await S(() => { S.config.deptSites = {}; save(); });
   }
 
   /* ---------------- Print output ---------------- */

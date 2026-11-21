@@ -300,6 +300,16 @@ Other pages are closed to employees. An inspection can only be started from the 
 - Every employee page has a **Back** bar to return home; the menu lists the same pages.
 - **PPE is signed for like an appointment:** the employee ticks that they received it in good condition and know how to use it, signs and submits (one item or all at once). The signature shows in the manager's PPE issue history.
 
+### Review of the whole prototype (all roles)
+- Every page, tab and record was opened as each role (System Administrator, HSEQ Manager, Safety Consultant, Managing Director, Branch Manager, Supervisor, Employee) on a PC and on a phone: no errors, no buttons without an action, no page wider than the screen. Links to pages a person may not open are shown as plain text; employees are sent to their own version of a page (read and sign a document, their incident reports, the asset's QR page, their notification settings).
+- **Legal compliance is the fifth part of the control score** (weight 25 by default, Administration → Control scoring).
+- **My team** (menu, for anyone with people reporting to them): per person, appointments to accept or declined, PPE to issue or not signed, training gaps, overdue inspections and documents to read. Supervisors can open their team's profiles.
+- **Administration** tabs are grouped: Company and people · Documents and approvals · Checklists and types · Risk, actions and incidents · System.
+- **Employees on a phone** get a bottom bar: Home, Alerts, Scan, Report, My items.
+- **Issue to several people at once:** PPE (tick everyone who needs the item) and appointments (one digital appointment each, to sign and accept).
+- **Every report** downloads as a PDF as well as CSV.
+- **Departments per branch** (Administration → Organisations & sites → Departments per branch): forms only offer the departments of the chosen branch.
+
 ### Audits
 - **Audits** (menu → Audits) has two tabs: **Audit programme** and **Audits**. The checklists themselves are set up under **Administration → Audit checklists** (inspection checklists under **Administration → Inspection checklists**), so the modules are the day-to-day working areas.
 - **Pre-built checklists (VDW starter checklists):** legal compliance (general), housekeeping, fire safety, hazardous chemical substances, stacking and storage, emergency preparedness and first aid, and PPE. They are suggestions to adapt to each site. **The legal compliance checklist does not quote legislation:** a competent person adds the references from the official text before relying on it.
@@ -464,6 +474,7 @@ prototype/
 ├── mod-contractors.js           Contractors, required documents and review, inductions
 ├── mod-gaps.js                  Dashboard compliance section, new reports, incident causes, audit–legal links, document expiry
 ├── mod-employee.js              Employee home screen and pages, PPE signature, back buttons
+├── mod-qa.js                    Legal in the control score, My team, grouped admin, phone bar, bulk issue, report PDF, departments per branch
 ├── mod-auditing.js              Audits: starter and own checklists, programme, scoring, findings, PDF report
 ├── mod-dashboard.js              Dashboard: compliance status, 12-month trends, detail
 ├── vendor/pdfjs/                 PDF.js 3.11.174 (Apache-2.0) for viewing PDFs, works offline
