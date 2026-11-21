@@ -118,7 +118,7 @@ ACT.empLeave = (el) => { const x = person(el.dataset.id); openModal({ title: `${
 /* ---------------- Employee profile ---------------- */
 function personProfile(id) {
   const x = person(id); if (!x || x.org !== S.ui.org) return ROUTES.notfound();
-  const own = x.id === S.ui.user; if (!canPeople() && !own && !can('report.view')) return ROUTES.notfound();
+  const own = x.id === S.ui.user; if (!canViewPerson(x.id)) return ROUTES.notfound();
   const A = (S.appointments || []).filter(a => a.person === x.id), R = (S.responsibilities || []).filter(r => r.person === x.id), C = (S.competencies || []).filter(c => c.person === x.id);
   const T = typeof trainingFor === 'function' ? trainingFor(x) : null;
   const html = `<div class="status-hero"><div><div class="sh-id">${esc(x.empNo || x.id)} · ${esc(x.type)}</div><h1 style="margin:2px 0 6px">${esc(x.name)}</h1><div class="btn-row">${x.status === 'Deactivated' ? badge('Left ' + (x.leftOn ? fmt(x.leftOn) : ''), 'grey') : badge('Active', 'green')} <span class="tag">${esc(x.jobTitle || '')}</span> <span class="tag">${esc(sname(x.site))} · ${esc(x.dept || '')}</span></div></div>

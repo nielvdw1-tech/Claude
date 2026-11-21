@@ -92,3 +92,20 @@ needsBack = function (parts) { if (typeof isFieldUser === 'function' && isFieldU
 (() => { const g = NAV.find(x => x.group === 'Overview'), k = g ? g.items.findIndex(i => i[0] === 'myppe') : -1; if (g && k >= 0 && !g.items.some(i => i[0] === 'mytraining')) g.items.splice(k + 1, 0, ['mytraining', 'My training', 'checkCircle']); })();
 // employee pages: crumbs start at Home so Back goes there
 (() => { ['me'].forEach(k => { const f = ROUTES[k]; ROUTES[k] = (p, q) => { const r = f(p, q); if (r && isFieldUser() && r.crumbs && r.crumbs[0][1] !== '#/field') r.crumbs = [['Home', '#/field']].concat(r.crumbs); return r; }; }); })();
+
+/* ---------------- Links: never send someone to a page they may not open ---------------- */
+// who may open a person's profile: people managers, report viewers, the person, and their supervisor
+function canViewPerson(id) { const x = person(id); return !!x && (canPeople() || can('report.view') || id === S.ui.user || x.supervisor === S.ui.user); }
+function routeAllowed(href) { const h = href.replace(/^#\/?/, ''), key = h.split(/[/?]/)[0] || 'dashboard', parts = h.split('?')[0].split('/');
+  if (key === 'people' && /^P-/.test(parts[1] || '')) return canViewPerson(parts[1]);
+  if (isFieldUser()) return FIELD_ROUTES.includes(key) || !!(AREA_OF[key] && canArea(key));
+  return !AREA_OF[key] || canArea(key); }
+// employees get their own version of a page where one exists
+function fieldLink(href) { const m = href.match(/^#\/(documents|incidents|assets|admin)\/?([\w-]*)/); if (!m) return href;
+  if (m[1] === 'documents' && m[2]) return '#/read/' + m[2]; if (m[1] === 'incidents') return '#/myincidents'; if (m[1] === 'assets' && m[2]) return '#/qr/' + m[2]; if (m[1] === 'admin' && m[2] === 'notifications') return '#/settings'; return href; }
+function tidyLinks(root) { if (!root || !S || !S.ui || !S.ui.user) return;
+  root.querySelectorAll('a[href^="#/"]').forEach(a => { let h = a.getAttribute('href'); if (isFieldUser()) { const f = fieldLink(h); if (f !== h) { a.setAttribute('href', f); h = f; } }
+    if (!routeAllowed(h)) { const s = document.createElement('span'); s.className = a.className.replace(/\bbtn\b.*$/, ''); s.innerHTML = a.innerHTML; if (/\bbtn\b/.test(a.className)) a.remove(); else a.replaceWith(s); } });
+  root.querySelectorAll('[data-href]').forEach(r => { let h = r.dataset.href; if (isFieldUser()) { const f = fieldLink(h); if (f !== h) r.dataset.href = h = f; } if (!routeAllowed(h)) { r.removeAttribute('data-href'); r.classList.remove('rowlink'); } }); }
+const _rerenderBeforeLinks = rerender;
+rerender = function (keepScroll) { _rerenderBeforeLinks(keepScroll); try { tidyLinks(document.getElementById('content')); } catch (e) { console.error(e); } };
