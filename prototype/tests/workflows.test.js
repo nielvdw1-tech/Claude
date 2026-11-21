@@ -1452,7 +1452,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
   /* ---------------- LG. Legal requirements ---------------- */
   {
     await asUser('P-002'); await pickScope('#siteSel', 'ALL'); await go('#/legal');
-    const k = await p.$$eval('.kpis .kpi .k-label', x => x.map(e => e.textContent.trim()));
+    const k = await p.$$eval('.kpis .kpi .k-label, .kpi-chip span', x => x.map(e => e.textContent.trim()));
     ok('LG1 Legal Requirements shows applicable, compliant, partial, non-compliant, not assessed, without evidence, with open actions and due for reassessment', ['Applicable requirements', 'Compliant', 'Partially compliant', 'Non-compliant', 'Not assessed', 'Without evidence', 'With open actions', 'Due for reassessment'].every(t => k.includes(t)), k.join('|'));
     ok('LG2 the library supplies no legal wording of its own (only names; wording is loaded by a competent person)', await S(() => S.legislation.every(l => (l.items || []).every(i => !i.text))));
     await go('#/legal/LR-004');
@@ -1593,7 +1593,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
   /* ---------------- RK. Risk management ---------------- */
   {
     await asUser('P-002'); await pickScope('#siteSel', 'ALL'); await go('#/risk');
-    const k = await p.$$eval('.kpis .kpi .k-label', x => x.map(e => e.textContent.trim()));
+    const k = await p.$$eval('.kpis .kpi .k-label, .kpi-chip span', x => x.map(e => e.textContent.trim()));
     ok('RK1 the risk dashboard shows hazards, current assessments, high and critical risks, outstanding controls, overdue reviews and risks by branch', ['Hazards recorded', 'Current assessments', 'High and critical risks', 'Outstanding controls', 'Overdue reviews', 'Germiston'].every(t => k.includes(t)), k.join('|'));
     // record a hazard (any office user), then assess it
     await go('#/risk/hazards'); await p.click('.fab-stack .fab:has-text("Record a hazard")'); await p.waitForTimeout(120); await mbtn('Record');
@@ -1741,6 +1741,38 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     const depts = await p.$$eval('.modal select[name=dept] option', x => x.map(o => o.textContent)); await p.keyboard.press('Escape'); await p.waitForTimeout(80); if (await modalOpen()) await mbtn('Cancel');
     ok('QA9 forms only offer the departments that exist at the chosen branch', !depts.includes('Hire Fleet') && depts.includes('Warehouse & Logistics'), depts.join('|'));
     await S(() => { S.config.deptSites = {}; save(); });
+  }
+
+  /* ---------------- CN. Consultant tools, languages, install ---------------- */
+  {
+    const signOn = async (canvas) => { await p.locator(canvas).scrollIntoViewIfNeeded(); const bb = await (await p.$(canvas)).boundingBox(); await p.mouse.move(bb.x + 20, bb.y + 40); await p.mouse.down(); for (let k = 1; k < 12; k++) await p.mouse.move(bb.x + 20 + k * 15, bb.y + 40 + (k % 2) * 10); await p.mouse.up(); await p.waitForTimeout(80); };
+    await asUser('P-006'); await go('#/clients');
+    const hd = await p.$$eval('.tbl.cmp th', x => x.map(e => e.textContent.trim()));
+    ok('CN1 the consultant compares clients on score, legal compliance, training, appointments, risks, actions, incidents and visits', ['Score', 'Legal', 'Training', 'High risks', 'Overdue', 'Last visit', 'Next visit'].every(t => hd.includes(t)) && (await p.$$('.tbl.cmp tbody tr')).length >= 2, hd.join('|'));
+    await go('#/clients/VIS-002'); await p.click('[data-act=visitStart]'); await p.waitForTimeout(150);
+    await p.click('[data-act=visitFinding]'); await p.waitForTimeout(120); await mfill('text', 'Racking damage at bay 4 not reported'); await msel('owner', 'P-002'); await mbtn('Add'); await p.waitForTimeout(120);
+    const fa = await S(() => byId('visits', 'VIS-002').findings[0].action);
+    ok('CN2 a visit finding becomes a corrective action at the client (source "Consultant visit")', /^ACT-/.test(fa) && await S(`byId('actions','${fa}').source`) === 'Consultant visit' && await S(`byId('actions','${fa}').org`) === 'ORG-1');
+    await p.click('[data-act=visitComplete]'); await p.waitForTimeout(80);
+    ok('CN3 a visit cannot be completed without a summary and the consultant\'s signature', await S(() => byId('visits', 'VIS-002').status) === 'In progress');
+    await p.fill('#content [name=summary]', 'Racking needs attention; otherwise good.'); await signOn('#vCon'); await p.click('[data-act=visitComplete]'); await p.waitForTimeout(150);
+    ok('CN4 completing a visit plans the next one and e-mails the report to the client\'s management', await S(() => byId('visits', 'VIS-002').status === 'Completed' && S.visits.filter(v => v.org === 'ORG-1' && v.status === 'Planned').length >= 1 && S.outbox.some(m => m.subject.startsWith('Consultant visit report'))));
+    const [dl] = await Promise.all([p.waitForEvent('download'), p.click('[data-act=visitPdf]')]);
+    ok('CN5 the visit report downloads as a PDF', /^Visit_VIS-002.*\.pdf$/.test(dl.suggestedFilename()), dl.suggestedFilename());
+    await go('#/clients/library'); await p.click('[data-act=libCopy]'); await p.waitForTimeout(120); await msel('from', 'ORG-1'); await msel('to', 'ORG-2'); await mbtn('Copy'); await p.waitForTimeout(150);
+    const cp = await S(() => ({ lr: S.legalReqs.filter(r => r.org === 'ORG-2'), crs: S.courses.filter(c => c.org === 'ORG-2').length, ra: S.riskAssessments.filter(a => a.org === 'ORG-2') }));
+    ok('CN6 the template library copies a client\'s set-up to another client, as drafts / pending assessment', cp.lr.length >= 8 && cp.lr.every(r => r.applicability === 'Pending assessment' && !r.assessments.length) && cp.crs >= 6 && cp.ra.every(a => a.status === 'Draft'));
+    // languages
+    await asUser('P-009'); await go('#/field'); await p.click('.lang-pick [data-l=af]'); await p.waitForTimeout(150);
+    ok('LN1 an employee can choose Afrikaans; the employee screens are translated', (await p.innerText('#content')).includes('Skandeer en inspekteer') && await S(() => person('P-009').lang) === 'af');
+    await go('#/myppe'); ok('LN2 the translation follows the employee to their other pages', (await p.innerText('#content')).includes('My PBT'));
+    await go('#/field'); await p.click('.lang-pick [data-l=en]'); await p.waitForTimeout(120);
+    ok('LN3 switching back to English', (await p.innerText('#content')).includes('Scan & inspect'));
+    // install
+    ok('IN1 the app can be installed: manifest, icons and an offline service worker are linked, and the employee home offers "Install"', await has('link[rel=manifest]') && await has('link[rel=apple-touch-icon]') && await has('.install-card [data-act=installApp]'));
+    await p.click('.install-card [data-act=installApp]'); await p.waitForTimeout(120);
+    ok('IN2 without an install prompt (e.g. iPhone), the steps for Safari and Chrome are shown', (await p.innerText('.modal')).includes('Add to Home Screen'));
+    await mbtn('Done'); await asUser('P-002');
   }
 
   /* ---------------- Print output ---------------- */

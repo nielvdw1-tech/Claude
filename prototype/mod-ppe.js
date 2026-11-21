@@ -30,11 +30,11 @@ ROUTES.ppe = (p, q = {}) => {
   if (tab === 'register') body = ppeRegisterHtml(P, q);
   if (tab === 'issues') body = ppeIssuesHtml(q);
   if (tab === 'types') { body = ppeTypesHtml(); fab = canPPE() ? fabStack([{ act: 'ppeTypeEdit', label: 'New PPE type' }, { act: 'ppeReqNew', label: 'Add requirement', icon: 'target', cls: 'ghost' }]) : ''; }
-  const html = `${pageHead('PPE Management', 'Which personal protective equipment each person needs, what was issued and when it must be replaced. Employees acknowledge what they receive.', '', scopePill())}${fab}
+  const html = `${pageHead('PPE management', 'Which personal protective equipment each person needs, what was issued and when it must be replaced. Employees acknowledge what they receive.', '', scopePill())}${fab}
     <div class="kpis">${kpi('Outstanding PPE', out, 'Required, never issued', out ? 'red' : 'green', '#/ppe/register?fstatus=Outstanding', 'hardhat')}${kpi('Replacement due', due, 'Within 14 days or overdue', due ? 'amber' : 'green', '#/ppe/register?fstatus=Replacement%20due', 'refresh')}
       ${kpi('Not signed', noack, 'Issued, employee has not signed', noack ? 'amber' : 'green', '#/ppe/register?fstatus=Not%20acknowledged', 'user')}${kpi('Low stock', low.length, low.map(t => t.name).join(', ') || 'Stock above minimum', low.length ? 'amber' : 'green', '#/ppe/types', 'docs')}</div>
     ${tabsHtml('#/ppe', tabs, tab)}${body}`;
-  return { title: 'PPE Management', nav: 'ppe', crumbs: [['PPE Management', '#/ppe']], html };
+  return { title: 'PPE management', nav: 'ppe', crumbs: [['PPE Management', '#/ppe']], html };
 };
 const PPEREG_F = {
   fsite: { all: 'All branches', list: () => orgSites().length > 1 ? branchOpts() : [], test: (x, v) => x.site === v },

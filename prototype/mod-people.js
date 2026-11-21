@@ -56,7 +56,7 @@ ROUTES.people = (p, q = {}) => {
   if (tab === 'appointments') { body = appointmentsHtml(A, q); fab = canPeople() ? fabStack([{ act: 'aptNew', label: 'New appointment' }]) : ''; }
   if (tab === 'responsibilities') { body = respHtml(R); fab = canPeople() ? fabBtn('respNew', 'Allocate responsibility') : ''; }
   const st = s => A.filter(a => aptStatus(a) === s).length;
-  const html = `${pageHead('People Management', 'Employees, legal appointments, responsibilities and competency. Appointments can be issued digitally for the employee to accept in their app, or an existing signed appointment can be uploaded — both in one register.', '', scopePill())}${fab}
+  const html = `${pageHead('People management', 'Employees, legal appointments, responsibilities and competency. Appointments can be issued digitally for the employee to accept in their app, or an existing signed appointment can be uploaded — both in one register.', '', scopePill())}${fab}
     <div class="kpis kpis-8">${kpi('Employees', emp.length, `${emp.filter(x => !x.sysRole).length} without a system login`, 'blue', '#/people/employees', 'people')}
       ${kpi('Active appointments', st('Active'), `${A.filter(a => a.method === 'Digital').length} digital · ${A.filter(a => a.method === 'Uploaded').length} uploaded`, 'green', '#/people/appointments?fstatus=Active', 'checkCircle')}
       ${kpi('Awaiting acceptance', A.filter(aptOpen).length - st('Clarification requested'), 'Sent, not yet accepted', A.filter(aptOpen).length ? 'amber' : 'green', '#/people/appointments?fflag=open', 'clock')}
@@ -66,7 +66,7 @@ ROUTES.people = (p, q = {}) => {
       ${kpi('Ended / withdrawn', st('Ended') + st('Withdrawn'), 'Kept on record', 'blue', '#/people/appointments?fstatus=Ended', 'docs')}
       ${kpi('Unallocated responsibilities', unalloc, 'Legal requirements or responsibilities without a person', unalloc ? 'amber' : 'green', '#/people/responsibilities', 'target')}</div>
     ${tabsHtml('#/people', tabs, tab)}${body}`;
-  return { title: 'People Management', nav: 'people', crumbs: [['People', '#/people']], html };
+  return { title: 'People management', nav: 'people', crumbs: [['People', '#/people']], html };
 };
 
 /* ---------------- Employees ---------------- */

@@ -48,7 +48,7 @@ ROUTES.risk = (p, q = {}) => {
   if (tab === 'hazards') { body = hazardsHtml(H, q); fab = fabBtn('hzNew', 'Record a hazard'); }
   if (tab === 'matrix') body = matrixPageHtml(rows);
   const bySite = orgSites().map(s => ({ s, n: rows.filter(x => x.a.site === s.id && hi.includes(x)).length, od: A.filter(a => a.site === s.id && raOverdue(a)).length }));
-  const html = `${pageHead('Risk Management', 'Hazards, risk assessments, controls and reviews. Initial and residual risk are recorded separately; a score never decides on its own that a risk is acceptable.', '', scopePill())}${fab}
+  const html = `${pageHead('Risk management', 'Hazards, risk assessments, controls and reviews. Initial and residual risk are recorded separately; a score never decides on its own that a risk is acceptable.', '', scopePill())}${fab}
     <div class="kpis kpis-8">${kpi('Hazards recorded', H.length, `${H.filter(h => h.status === 'Open').length} not yet controlled`, 'blue', '#/risk/hazards', 'alert')}
       ${kpi('Current assessments', A.filter(a => a.status === 'Approved').length, `${A.filter(a => a.status === 'Draft').length} draft`, 'blue', '#/risk/assessments', 'risk')}
       ${kpi('High and critical risks', hi.length, 'Current risk (residual where assessed)', hi.length ? 'red' : 'green', '#/risk/matrix', 'flame')}
@@ -56,7 +56,7 @@ ROUTES.risk = (p, q = {}) => {
       ${kpi('Overdue reviews', A.filter(raOverdue).length, 'Review date passed', A.some(raOverdue) ? 'red' : 'green', '#/risk/assessments?fflag=overdue', 'refresh')}
       ${bySite.map(x => kpi(x.s.short || x.s.name, x.n, `high/critical · ${x.od} review(s) overdue`, x.n ? 'amber' : 'green', `#/risk/assessments?fsite=${x.s.id}`, 'building')).slice(0, 3).join('')}</div>
     ${tabsHtml('#/risk', tabs, tab)}${body}`;
-  return { title: 'Risk Management', nav: 'risk', crumbs: [['Risk Management', '#/risk']], html };
+  return { title: 'Risk management', nav: 'risk', crumbs: [['Risk Management', '#/risk']], html };
 };
 const RA_F = {
   ftype: { all: 'All types', list: () => RA_TYPES.map(t => ({ value: t, label: t })), test: (a, v) => a.type === v },

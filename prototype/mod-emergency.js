@@ -35,13 +35,13 @@ ROUTES.emergency = (p, q = {}) => {
   else if (tab === 'drills') body = drillsHtml(D);
   else body = emSiteHtml(byId('sites', tab));
   const fab = canEm() ? (tab === 'drills' || tab === 'overview' ? fabBtn('drillNew', 'Schedule a drill') : fabStack([{ act: 'drillNew', label: 'Schedule a drill', attrs: `data-site="${tab}"` }, { act: 'emEdit', label: 'Edit arrangements', icon: 'edit', cls: 'ghost', attrs: `data-site="${tab}"` }])) : '';
-  const html = `${pageHead('Emergency Management', 'Emergency plans, evacuation, assembly points, contacts, the emergency team, emergency equipment and drills for each branch.', '', scopePill())}${fab}
+  const html = `${pageHead('Emergency management', 'Emergency plans, evacuation, assembly points, contacts, the emergency team, emergency equipment and drills for each branch.', '', scopePill())}${fab}
     <div class="kpis">${kpi('Branches with gaps', sites.filter(s => emGaps(s.id).length).length, `of ${sites.length} branch(es)`, sites.some(s => emGaps(s.id).length) ? 'amber' : 'green', '#/emergency', 'siren')}
       ${kpi('Drills overdue', sites.filter(s => daysTo(drillDue(s.id)) < 0).length, `${D.filter(d => d.status === 'Scheduled').length} scheduled`, sites.some(s => daysTo(drillDue(s.id)) < 0) ? 'red' : 'green', '#/emergency/drills', 'clock')}
       ${kpi('Open drill findings', openF, 'Corrective actions not yet verified', openF ? 'amber' : 'green', '#/actions?source=Emergency%20drill', 'target')}
       ${kpi('Emergency equipment not in order', sites.reduce((n, s) => n + emEquip(s.id).filter(a => !equipOk(a)).length, 0), 'Inspection overdue, certificate or defect', 'amber', '#/assets', 'flame')}</div>
     ${tabsHtml('#/emergency', tabs, tab)}${body}`;
-  return { title: 'Emergency Management', nav: 'emergency', crumbs: [['Emergency Management', '#/emergency']], html };
+  return { title: 'Emergency management', nav: 'emergency', crumbs: [['Emergency Management', '#/emergency']], html };
 };
 function emSiteHtml(s) { const e = emOf(s.id) || {}, doc = id => { const d = byId('documents', id); return d ? `<a href="#/documents/${d.id}">${esc(d.number)} — ${esc(d.title)}</a>` : '—'; }, g = emGaps(s.id), team = emTeam(s.id);
   const trn = x => { if (typeof trStatus !== 'function') return ''; const c = (S.courses || []).filter(c => c.org === s.org && c.category === 'Emergency'), need = typeof requiredFor === 'function' ? requiredFor(person(x)).filter(r => c.some(cc => cc.id === r.course)) : []; return need.map(r => badge(`${byId('courses', r.course).short || byId('courses', r.course).name}: ${trStatus(x, r.course)}`, TR_TONE[trStatus(x, r.course)], true)).join(' '); };

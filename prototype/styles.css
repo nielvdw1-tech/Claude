@@ -1427,3 +1427,28 @@ body.auth-mode .main { padding-top: 0; }
   body.has-empbar .fab-stack { bottom: 96px; }
 }
 @media (min-width: 900px) { .cs-grid.cs-six { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.tbl.cmp th { white-space: nowrap; } .tbl.cmp .client-cell { min-width: 150px; } .tbl.cmp td { vertical-align: top; }
+/* Language choice */
+.lang-pick { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 13px; color: var(--muted); }
+.lang-pick button { border: 1px solid var(--line); background: var(--surface); color: var(--fg); border-radius: 999px; padding: 4px 11px; font: inherit; font-size: 12.5px; cursor: pointer; }
+.lang-pick button.on { background: var(--brand); border-color: var(--brand); color: #fff; }
+.lang-menu { border-top: 1px solid var(--line); padding: 10px 12px; display: grid; gap: 4px; } .lang-menu small { color: var(--muted); font-size: 11px; }
+/* Install the app */
+.install-card { display: grid; grid-template-columns: auto 1fr; gap: 10px 12px; align-items: center; padding: 14px 16px; background: var(--info-bg, #E8F0FE); border-color: transparent; }
+.ic-icon img { width: 44px; height: 44px; border-radius: 11px; display: block; box-shadow: 0 2px 6px rgba(10, 42, 107, .15); background: #fff; }
+.ic-txt b { display: block; font-size: 14.5px; } .ic-txt small { color: var(--muted); font-size: 12.5px; }
+.ic-btns { grid-column: 1 / -1; display: flex; gap: 8px; }
+@media (min-width: 560px) { .install-card { grid-template-columns: auto 1fr auto; } .ic-btns { grid-column: auto; } }
+.install-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+.install-steps h3 { margin: 0 0 6px; font-size: 15px; } .install-steps ol { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+.install-dd { display: flex; gap: 8px; align-items: center; width: 100%; border: 0; border-top: 1px solid var(--line); background: none; padding: 10px 12px; font: inherit; color: var(--brand); cursor: pointer; text-align: left; }
+/* ---------- Design pass: newer pages match the older ones ---------- */
+.kpi-more { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; }
+.kpi-chip { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); font: inherit; font-size: 13px; color: var(--fg); cursor: pointer; }
+.kpi-chip b { font-variant-numeric: tabular-nums; }
+.kpi-chip.t-red b { color: var(--bad); } .kpi-chip.t-amber b { color: var(--warn); } .kpi-chip.t-green b { color: var(--ok); } .kpi-chip.t-blue b { color: var(--brand); }
+.kpi-chip:hover { border-color: var(--brand); }
+.page-note { display: flex; gap: 8px; align-items: flex-start; color: var(--muted); font-size: 12.5px; margin: 14px 2px 0; max-width: 90ch; }
+.flt-bar .search { flex: 0 1 240px; min-width: 170px; }
+.flt-bar select { flex: 1 1 140px; max-width: 200px; min-width: 0; }
+.flt-bar .tb-count { margin-left: auto; white-space: nowrap; }

@@ -131,3 +131,12 @@ ACT.deptSites = () => openModal({ title: 'Departments per branch', sub: 'Tick th
   buttons: [{ label: 'Save', cls: 'primary', onClick: m => { S.config.deptSites = {}; S.departments.forEach((d, i) => { const all = m.querySelector(`[name=ds_${i}_ALL]`).checked, list = orgSites().filter(s => m.querySelector(`[name=ds_${i}_${s.id}]`).checked).map(s => s.id); S.config.deptSites[d] = all || !list.length ? ['ALL'] : list; }); log('Updated departments per branch', '#/admin/orgs'); save(); toast('Saved.'); rerender(); } }] });
 const _adminBeforeDept = ROUTES.admin;
 ROUTES.admin = (p, q) => { const r = _adminBeforeDept(p, q); if (r && r.html && (p[0] || 'orgs') === 'orgs' && can('admin')) r.html = r.html.replace('data-act="addDept"', 'data-act="addDept"').replace(/(<button[^>]*data-act="addDept"[^>]*>[\s\S]*?<\/button>)/, `$1<button class="btn sm" data-act="deptSites">${icon('building', 'sm')} Departments per branch</button>`); return r; };
+
+/* ---------------- Design: same page layout as the older modules ---------------- */
+// at most four number cards in a row; any further figures become compact quick filters under them
+function tidyKpis(root) { (root || document).querySelectorAll('.kpis:not(.dash-comp)').forEach(k => { const cards = [...k.querySelectorAll(':scope > .kpi')]; if (cards.length <= 4 || k.dataset.tidy) return; k.dataset.tidy = '1'; k.classList.remove('kpis-8');
+  const more = cards.slice(4).map(c => { const tone = (c.className.match(/t-(\w+)/) || [])[1] || 'blue', label = c.querySelector('.k-label').textContent.trim(), val = c.querySelector('.k-value').textContent.trim(), sub = (c.querySelector('.k-sub') || {}).textContent || '';
+    c.remove(); return `<button type="button" class="kpi-chip t-${tone}" data-act="go" data-href="${c.dataset.href}" title="${esc(sub)}"><span>${esc(label)}</span><b>${esc(val)}</b></button>`; }).join('');
+  k.insertAdjacentHTML('afterend', `<div class="kpi-more">${more}</div>`); }); }
+const _rerenderBeforeDesign = rerender;
+rerender = function (k) { _rerenderBeforeDesign(k); try { tidyKpis(document.getElementById('content')); } catch (e) { console.error(e); } };

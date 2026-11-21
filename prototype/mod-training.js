@@ -58,13 +58,13 @@ ROUTES.training = (p, q = {}) => {
   if (tab === 'records') { body = recordsHtml(q); fab = canTraining() ? fabBtn('trRecord', 'Record training') : ''; }
   if (tab === 'sessions') { body = sessionsHtml(); fab = canTraining() ? fabBtn('trSession', 'Schedule training') : ''; }
   if (tab === 'courses') { body = coursesHtml(); fab = canTraining() ? fabStack([{ act: 'crsEdit', label: 'New course' }, { act: 'treqNew', label: 'Add requirement', icon: 'target', cls: 'ghost' }]) : ''; }
-  const html = `${pageHead('Training Management', 'Who needs which training, who has it, and when it expires. Requirements follow job titles, appointments and activities, so new employees and new appointments show their training needs straight away.', '', scopePill())}${fab}
+  const html = `${pageHead('Training management', 'Who needs which training, who has it, and when it expires. Requirements follow job titles, appointments and activities, so new employees and new appointments show their training needs straight away.', '', scopePill())}${fab}
     <div class="kpis">${kpi('Training up to date', sm.pct == null ? '—' : sm.pct + '%', `${sm.full} of ${sm.people} people fully trained`, sm.pct == null ? 'blue' : scoreColour(sm.pct), '#/training/matrix', 'checkCircle')}
       ${kpi('Missing training', sm.missing, 'Required, never done', sm.missing ? 'red' : 'green', '#/training/matrix?fstatus=Missing', 'x')}
       ${kpi('Expired certificates', sm.expired, `${sm.expiring} expiring within ${EXPIRING_DAYS} days`, sm.expired ? 'red' : sm.expiring ? 'amber' : 'green', '#/training/matrix?fstatus=Expired', 'clock')}
       ${kpi('Assessments outstanding', sm.assess, `${ses.length} session(s) scheduled`, sm.assess ? 'amber' : 'green', '#/training/matrix?fstatus=Assessment%20outstanding', 'target')}</div>
     ${tabsHtml('#/training', tabs, tab)}${body}`;
-  return { title: 'Training Management', nav: 'training', crumbs: [['Training', '#/training']], html };
+  return { title: 'Training management', nav: 'training', crumbs: [['Training', '#/training']], html };
 };
 const MX_F = {
   fsite: { all: 'All branches', list: () => orgSites().length > 1 ? branchOpts() : [], test: (x, v) => x.site === v },

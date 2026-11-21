@@ -55,8 +55,8 @@ ROUTES.legal = (p, q = {}) => {
   if (tab === 'changes') body = changesHtml();
   const fab = tab === 'register' ? (canLegal() ? fabBtn('lrNew', 'Add requirement') : '') : tab === 'library' ? (canLegal() ? fabBtn('legNew', 'Add legislation') : '') : (canLegal() ? fabBtn('lcNew', 'Record a change') : '');
   const k = (label, v, sub, tone, href, ic) => kpi(label, v, sub, tone, href, ic);
-  const html = `${pageHead('Legal Requirements', 'What this company must comply with, whether it complies, who is responsible and where the evidence is. The legal text comes from the official source; the system\'s interpretation is shown separately.', '', scopePill())}${fab}
-    <div class="alert info">${icon('scale')}<div>Allocating a requirement to a person is an operational responsibility; <b>the employer's statutory duties stay with the employer</b>. The compliance figures show the status recorded by the assessor — they do not guarantee legal compliance.</div></div>
+  const html = `${pageHead('Legal requirements', 'What this company must comply with, whether it complies, who is responsible and where the evidence is. The legal text comes from the official source; the system\'s interpretation is shown separately.', '', scopePill())}${fab}
+    
     <div class="kpis kpis-8">${k('Applicable requirements', c.applicable, `${c.pending} pending applicability`, 'blue', '#/legal/register', 'scale')}
       ${k('Compliant', c.compliant, c.pct == null ? 'Not yet assessed' : `Legal compliance ${c.pct}%`, 'green', '#/legal/register?fstatus=Compliant', 'checkCircle')}
       ${k('Partially compliant', c.partial, 'Gaps remain', c.partial ? 'amber' : 'green', '#/legal/register?fstatus=Partially%20compliant', 'alert')}
@@ -65,8 +65,9 @@ ROUTES.legal = (p, q = {}) => {
       ${k('Without evidence', c.noEvidence, 'No evidence linked', c.noEvidence ? 'amber' : 'green', '#/legal/register?fflag=noev', 'docs')}
       ${k('With open actions', c.withActions, 'Corrective actions open', c.withActions ? 'amber' : 'green', '#/legal/register?fflag=acts', 'target')}
       ${k('Due for reassessment', c.due, 'Review date passed or law changed', c.due ? 'red' : 'green', '#/legal/register?fflag=due', 'refresh')}</div>
-    ${tabsHtml('#/legal', tabs, tab)}${body}`;
-  return { title: 'Legal Requirements', nav: 'legal', crumbs: [['Legal Requirements', '#/legal']], html };
+    ${tabsHtml('#/legal', tabs, tab)}${body}
+    <p class="page-note">${icon('scale', 'sm')} Allocating a requirement to a person is an operational responsibility; <b>the employer's statutory duties stay with the employer</b>. The compliance figures show what the assessor recorded — they do not guarantee legal compliance.</p>`;
+  return { title: 'Legal requirements', nav: 'legal', crumbs: [['Legal Requirements', '#/legal']], html };
 };
 function lrTable(rows) {
   return `<div class="table-wrap"><table class="tbl stackable"><thead><tr><th>Reference</th><th>Requirement</th><th>Branches</th><th>Responsible</th><th>Status</th><th>Evidence</th><th>Next review</th></tr></thead><tbody>
