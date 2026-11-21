@@ -1793,10 +1793,18 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await p.setViewportSize({ width: 1280, height: 900 }); await asUser('P-002'); await go('#/risk/RA-001');
     ok('RV1 a risk assessment has "View / print"', await has('.sh-actions a[href="#/risk/RA-001/view"]'));
     ok('RV2 on a laptop no button sits outside its card on the risk assessment (controls table fits)', !(await inside()).length, (await inside()).join('|'));
-    await go('#/risk/RA-001/view'); const vt = await p.$eval('#content', e => e.textContent);
-    ok('RV3 the view shows the controlled header, every hazard with initial and residual risk, controls, sign-off and the matrix used', vt.includes('Assessment details') && vt.includes('Pedestrians in forklift aisles') && vt.includes('Residual risk') && vt.includes('Sign-off') && vt.includes('Risk matrix used') && await has('.ra-view .controlled-header') && await has('[data-act=print]'));
+    await go('#/risk/RA-004/view'); const vt = await p.$eval('#content', e => e.textContent);
+    ok('RV3 the view follows the company layout: Doc name/no/rev header, process band, risk matrix with rating levels, hierarchy of controls, the I/P/RR table and originator and team signatures', ['Doc name:', 'Doc no:', 'Rev no:', 'Process / activity:', 'Response required for risks identified', 'Hierarchy of hazard controls', 'Activities / task steps', 'Pre-risk rating', 'Post-risk rating', 'Originator', 'Team members signatures', 'Travel in picking aisles with MHE'].every(t => vt.toLowerCase().includes(t.toLowerCase())) && await has('[data-act=print]'), vt.slice(0, 80));
     const [dl] = await Promise.all([p.waitForEvent('download'), p.click('[data-act=raPdf]')]);
-    ok('RV4 the risk assessment downloads as a PDF', /^Risk_assessment_RA-001_.*\.pdf$/.test(dl.suggestedFilename()), dl.suggestedFilename());
+    ok('RV4 the risk assessment downloads as a PDF named after its document number', /^RA004_Order_picking_pallet_racking\.pdf$/.test(dl.suggestedFilename()), dl.suggestedFilename());
+    ok('RV7 the originator and team members still to sign get a task, and the assessment shows the signatures outstanding', await S(() => myTasks().some(t => t.link === '#/risk/RA-004/view')));
+    await p.click('[data-act=raSign][data-p="P-009"]'); await p.waitForTimeout(150); await mbtn('Sign'); await p.waitForTimeout(100);
+    ok('RV8 a signature needs the confirmation tick and a drawn signature', await S(() => !(byId('riskAssessments', 'RA-004').signatures || {})['P-009']) && await modalOpen());
+    await p.check('#raAck'); { const bb = await (await p.$('#raSig')).boundingBox(); await p.mouse.move(bb.x + 20, bb.y + 30); await p.mouse.down(); for (let k = 1; k < 12; k++) await p.mouse.move(bb.x + 20 + k * 14, bb.y + 30 + (k % 2) * 12); await p.mouse.up(); }
+    await mbtn('Sign'); await p.waitForTimeout(150);
+    ok('RV9 a team member signs on the screen (collected in person by the assessor); the signature shows in the team table', await S(() => { const g = byId('riskAssessments', 'RA-004').signatures['P-009']; return g && g.image.startsWith('data:image/png') && g.collectedBy === 'P-002' && g.role === 'team member'; }) && await has('.ra-sig.t .sig-show img'));
+    await go('#/risk/RA-004'); await p.click('.ra-row [data-act=raRow]'); await p.waitForTimeout(120);
+    ok('RV10 a hazard row records the activity / task step and the risk (what can happen?)', await S(() => !!document.querySelector('.modal [name=step]') && !!document.querySelector('.modal [name=risk]') && document.querySelector('.modal [name=step]').value === 'Travel in picking aisles with MHE')); await p.keyboard.press('Escape'); await p.waitForTimeout(80);
     await p.setViewportSize({ width: 390, height: 844 });
     let wide = [];
     for (const h of ['#/risk', '#/risk/hazards', '#/risk/matrix', '#/risk/RA-001', '#/risk/RA-001/view']) { await go(h); if (await S(() => document.documentElement.scrollWidth > window.innerWidth)) wide.push(h); const b2 = await inside(); if (b2.length) wide.push(h + ':' + b2.join(',')); }
