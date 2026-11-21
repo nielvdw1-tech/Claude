@@ -65,7 +65,7 @@ const RA_F = {
   fflag: { all: 'Anything', list: () => [{ value: 'high', label: 'With high or critical risks' }, { value: 'ctrl', label: 'With outstanding controls' }, { value: 'overdue', label: 'Review overdue' }], test: (a, v) => v === 'ctrl' ? openCtrls(a).length > 0 : v === 'overdue' ? raOverdue(a) : (a.rows || []).some(r => { const b = rBand(rowRisk(r)); return b && RM().bands.indexOf(b) >= RM().bands.length - 2; }) }
 };
 function raListHtml(A, q) { const rows = regFilter(A, q, RA_F).sort((x, y) => x.id.localeCompare(y.id));
-  return `<div class="card">${regFilterBar('#/risk/assessments', q, A, rows.length, RA_F, 'Search title, activity, assessor…')}<div class="card-body flush">${rows.length ? `<div class="table-wrap"><table class="tbl stackable"><thead><tr><th>Assessment</th><th>Type</th><th>Branch / department</th><th>Hazards</th><th>Highest current risk</th><th>Open controls</th><th>Review</th><th>Status</th></tr></thead><tbody>
+  return `<div class="card cq-wide">${regFilterBar('#/risk/assessments', q, A, rows.length, RA_F, 'Search title, activity, assessor…')}<div class="card-body flush">${rows.length ? `<div class="table-wrap"><table class="tbl stackable"><thead><tr><th>Assessment</th><th>Type</th><th>Branch / department</th><th>Hazards</th><th>Highest current risk</th><th>Open controls</th><th>Review</th><th>Status</th></tr></thead><tbody>
     ${rows.map(a => { const top = (a.rows || []).map(rowRisk).filter(rScore).sort((x, y) => rScore(y) - rScore(x))[0], st = raStatus(a);
       return `<tr class="rowlink" data-href="#/risk/${a.id}"><td data-label="Assessment"><span class="mono">${a.id}</span>${a.version > 1 ? ` <span class="t-sub">v${a.version}</span>` : ''}<div class="t-title">${esc(a.title)}</div></td><td data-label="Type">${esc(a.type)}</td><td data-label="Branch">${esc(sname(a.site))}<div class="t-sub">${esc(a.dept || '')}</div></td><td data-label="Hazards">${(a.rows || []).length}</td><td data-label="Highest">${top ? rChip(top) : '—'}</td><td data-label="Open controls">${openCtrls(a).length || '—'}</td><td data-label="Review">${a.reviewDate ? dueText(a.reviewDate) : '—'}</td><td data-label="Status">${badge(st, st === 'Approved' ? 'green' : st === 'Draft' ? 'grey' : st === 'Superseded' ? 'grey' : 'red')}</td></tr>`; }).join('')}
   </tbody></table></div>` : emptyList(A.length ? 'No assessments match these filters.' : 'No risk assessments yet.')}</div></div>`; }
@@ -92,7 +92,7 @@ function raDetail(id) {
 }
 function raRowHtml(a, r, k, edit) {
   const hz = r.hazard && byId('hazards', r.hazard);
-  return `<div class="card ra-row"><div class="card-head"><div><h2>${k + 1}. ${esc(r.title)}</h2><span class="ch-sub">${esc(r.category || '')}${hz ? ` · from <a href="#/risk/${hz.id}">${hz.id}</a>` : ''}</span></div>${edit ? `<button class="btn sm" data-act="raRow" data-id="${a.id}" data-k="${k}">${icon('edit', 'sm')} Edit</button>` : ''}</div><div class="card-body">
+  return `<div class="card ra-row cq-card"><div class="card-head"><div><h2>${k + 1}. ${esc(r.title)}</h2><span class="ch-sub">${esc(r.category || '')}${hz ? ` · from <a href="#/risk/${hz.id}">${hz.id}</a>` : ''}</span></div>${edit ? `<button class="btn sm" data-act="raRow" data-id="${a.id}" data-k="${k}">${icon('edit', 'sm')} Edit</button>` : ''}</div><div class="card-body">
     <div class="ra-grid"><div><span class="t-sub">Possible consequences</span><div>${esc(r.consequences || '—')}</div></div><div><span class="t-sub">Exposed persons</span><div>${esc(r.exposed || '—')}</div></div><div class="full"><span class="t-sub">Existing controls</span><div>${esc(r.existing || '—')}</div></div></div>
     <div class="ra-risks"><div><span class="t-sub">Initial risk</span>${rChip(r.initial)}</div><span class="ra-arrow">→</span><div><span class="t-sub">Residual risk (after additional controls)</span>${r.residual && r.residual.l ? rChip(r.residual) : '<span class="muted">Not assessed yet</span>'}</div>
       <div class="ra-accept">${r.accepted ? `${icon('checkCircle', 'sm')} Residual risk accepted by <b>${esc(pname(r.accepted.by))}</b> ${fmt(r.accepted.on)}<div class="t-sub">${esc(r.accepted.reason)}</div>` : r.residual && r.residual.l ? `<span class="due amber">Residual risk not yet accepted</span>${edit ? ` <button class="btn sm" data-act="raAccept" data-id="${a.id}" data-k="${k}">Accept residual risk</button>` : ''}` : ''}</div></div>
@@ -174,7 +174,7 @@ const HZ_F = {
   fstatus: { all: 'All statuses', list: () => ['Open', 'Assessed', 'Controlled', 'Closed'].map(s => ({ value: s, label: s })), test: (h, v) => h.status === v }
 };
 function hazardsHtml(H, q) { const rows = regFilter(H, q, HZ_F).sort((a, b) => b.identifiedOn.localeCompare(a.identifiedOn));
-  return `<div class="card">${regFilterBar('#/risk/hazards', q, H, rows.length, HZ_F, 'Search hazard, location, activity…')}<div class="card-body flush">${rows.length ? `<div class="table-wrap"><table class="tbl stackable"><thead><tr><th>Hazard</th><th>Category</th><th>Branch / location</th><th>Activity</th><th>Identified</th><th>Linked</th><th>Status</th></tr></thead><tbody>
+  return `<div class="card cq-wide">${regFilterBar('#/risk/hazards', q, H, rows.length, HZ_F, 'Search hazard, location, activity…')}<div class="card-body flush">${rows.length ? `<div class="table-wrap"><table class="tbl stackable"><thead><tr><th>Hazard</th><th>Category</th><th>Branch / location</th><th>Activity</th><th>Identified</th><th>Linked</th><th>Status</th></tr></thead><tbody>
     ${rows.map(h => `<tr class="rowlink" data-href="#/risk/${h.id}"><td data-label="Hazard"><span class="mono">${h.id}</span><div class="t-title">${esc(h.title)}</div></td><td data-label="Category">${esc(h.category)}</td><td data-label="Branch">${esc(sname(h.site))}<div class="t-sub">${esc(h.location || '')}</div></td><td data-label="Activity">${esc(h.activity || '—')}</td><td data-label="Identified">${fmt(h.identifiedOn)}<div class="t-sub">${esc(pname(h.identifiedBy))}</div></td><td data-label="Linked">${[(h.assessments || []).length && `${h.assessments.length} RA`, h.incident && h.incident, h.inspection && h.inspection].filter(Boolean).join(' · ') || '—'}</td><td data-label="Status">${badge(h.status, h.status === 'Open' ? 'amber' : h.status === 'Closed' ? 'grey' : 'green', true)}</td></tr>`).join('')}
   </tbody></table></div>` : emptyList(H.length ? 'No hazards match these filters.' : 'No hazards recorded yet.')}</div></div>`; }
 function hazardDetail(id) { const h = byId('hazards', id); if (!h || h.org !== S.ui.org) return ROUTES.notfound();
@@ -206,9 +206,9 @@ ACT.hzStatus = (el) => { const h = byId('hazards', el.dataset.id); openModal({ t
 /* ---------------- Risk matrix ---------------- */
 function matrixGrid(counts) {
   const L = RM().likelihood, Sv = RM().severity;
-  return `<div class="rm-wrap"><table class="rm"><thead><tr><th class="rm-corner">Likelihood ↓ · Severity →</th>${Sv.map((s, j) => `<th>${j + 1}<div class="t-sub">${esc(s.name)}</div></th>`).join('')}</tr></thead><tbody>
+  return `<div class="rm-wrap"><div class="rm-scroll"><table class="rm"><thead><tr><th class="rm-corner">Likelihood ↓ · Severity →</th>${Sv.map((s, j) => `<th>${j + 1}<div class="t-sub">${esc(s.name)}</div></th>`).join('')}</tr></thead><tbody>
     ${L.map((l, i0) => { const i = L.length - i0; return `<tr><th>${i}<div class="t-sub">${esc(L[i - 1].name)}</div></th>${Sv.map((s, j) => { const r = { l: i, s: j + 1 }, b = rBand(r), n = counts ? counts[i + '-' + (j + 1)] || 0 : null; return `<td class="rc-${b.tone}" title="${esc(b.name)} (${i * (j + 1)})">${i * (j + 1)}${n ? `<b class="rm-n">${n}</b>` : ''}</td>`; }).join('')}</tr>`; }).join('')}
-  </tbody></table><div class="rm-bands">${RM().bands.map(b => `<div><span class="risk-chip rc-${b.tone}">${esc(b.name)} (up to ${b.max})</span> ${esc(b.action || '')}</div>`).join('')}<p class="t-sub">Escalated to the HSEQ Manager and Managing Director from: <b>${esc(RM().escalateFrom)}</b>.</p></div></div>`;
+  </tbody></table></div><div class="rm-bands">${RM().bands.map(b => `<div><span class="risk-chip rc-${b.tone}">${esc(b.name)} (up to ${b.max})</span> ${esc(b.action || '')}</div>`).join('')}<p class="t-sub">Escalated to the HSEQ Manager and Managing Director from: <b>${esc(RM().escalateFrom)}</b>.</p></div></div>`;
 }
 function matrixPageHtml(rows) { const counts = {}; rows.forEach(x => { const r = rowRisk(x.r); if (rScore(r)) counts[r.l + '-' + r.s] = (counts[r.l + '-' + r.s] || 0) + 1; });
   return `<div class="card"><div class="card-head"><h2>Current risks on the matrix</h2><span class="ch-sub">Number of hazards per cell (residual risk where assessed)</span>${can('admin') ? `<a class="btn sm" href="#/admin/riskmatrix">${icon('settings', 'sm')} Configure</a>` : ''}</div><div class="card-body">${matrixGrid(counts)}</div></div>`; }
@@ -270,3 +270,89 @@ MIGRATIONS.push(() => {
   A('RA-002', { site: 'S-DBN', dept: 'Workshop & Service', title: 'Workshop parts degreasing', type: 'Hazardous substance', activity: 'Cleaning parts with solvent degreaser', date: addDays(TODAY, -400), assessor: 'P-002', approvedOn: addDays(TODAY, -398), reviewDate: addDays(TODAY, -35),
     rows: [{ id: 'r1', hazard: 'HZ-003', title: 'Solvent degreaser vapour', category: 'Chemical', exposed: 'Technicians', consequences: 'Dizziness, dermatitis, fire', existing: 'Gloves and goggles', initial: { l: 4, s: 3 }, residual: null, controls: [{ desc: 'Replace solvent degreaser with a water-based cleaner', category: 'Substitution', owner: 'P-003', due: addDays(TODAY, 20), status: 'Planned', evidence: [] }] }] });
 });
+
+/* ---------------- View and print a risk assessment ----------------
+   #/risk/RA-x/view is a clean, read-only copy laid out like a controlled
+   document: header, details, every hazard with its initial risk, controls and
+   residual risk, the acceptance of residual risk, sign-off and the matrix used.
+   It works on a phone and prints from a normal browser; "Download PDF" makes
+   an A4 landscape PDF (also where printing is blocked, e.g. a preview frame). */
+function raViewHtml(a) {
+  const org = orgOf(a.org || S.ui.org), st = raStatus(a);
+  const chip = r => r && r.l ? `${rChip(r)}<div class="t-sub">L${r.l} × S${r.s}</div>` : '<span class="muted">Not assessed</span>';
+  return `<div class="no-print btn-row mb ra-view-bar"><button class="btn" data-act="print">${icon('print', 'sm')} Print</button><button class="btn primary" data-act="raPdf" data-id="${a.id}">${icon('download', 'sm')} Download PDF</button></div>
+  <div class="screen-paper print-doc ra-view"><table class="report-frame"><thead><tr><td>
+    <div class="controlled-header"><div class="chh"><div class="print-logo">${orgMark(org, 'doc')}<div><b style="font-size:12px">${esc(org.short)}</b><small>HSEQ Management System</small></div></div><div class="ch-title">Risk assessment<br><span style="font-weight:500">${esc(a.title)}</span></div><div class="ch-meta">Record: <b class="mono">${a.id}</b><br>Version: <b>${a.version || 1}</b><br>Status: <b>${esc(st)}</b><br>Next review: <b>${a.reviewDate ? fmt(a.reviewDate) : '—'}</b></div></div></div>
+  </td></tr></thead><tbody><tr><td>
+    <div class="rep-section">Assessment details</div>
+    <div class="rv-kv"><div><span>Type</span><b>${esc(a.type)}</b></div><div><span>Branch / department</span><b>${esc(sname(a.site))}${a.dept ? ' · ' + esc(a.dept) : ''}</b></div><div class="wide"><span>Activity / process</span><b>${esc(a.activity || '—')}</b></div>
+      <div><span>Assessment date</span><b>${fmt(a.date)}</b></div><div><span>Assessor</span><b>${esc(pname(a.assessor))}</b></div><div class="wide"><span>Participants</span><b>${(a.participants || []).map(pname).map(esc).join(', ') || '—'}</b></div>
+      ${a.asset ? `<div><span>Equipment</span><b>${esc((byId('assets', a.asset) || {}).tag || a.asset)}</b></div>` : ''}${a.substance ? `<div><span>Substance</span><b>${esc((byId('substances', a.substance) || {}).name || a.substance)}</b></div>` : ''}</div>
+    <div class="rep-section">Hazards and risks (${(a.rows || []).length})</div>
+    ${(a.rows || []).map((r, k) => `<div class="rv-hz">
+      <div class="rv-hz-h"><b>${k + 1}. ${esc(r.title)}</b><span class="t-sub">${esc(r.category || '')}</span></div>
+      <div class="rv-kv"><div><span>Possible consequences</span><b>${esc(r.consequences || '—')}</b></div><div><span>Exposed persons</span><b>${esc(r.exposed || '—')}</b></div><div class="wide"><span>Existing controls</span><b>${esc(r.existing || '—')}</b></div></div>
+      <div class="rv-risk"><div><span>Initial risk</span>${chip(r.initial)}</div><div><span>Residual risk</span>${chip(r.residual)}</div><div class="wide"><span>Residual risk accepted</span><b>${r.accepted ? `${esc(pname(r.accepted.by))}, ${fmt(r.accepted.on)}</b><div class="t-sub">${esc(r.accepted.reason)}</div>` : 'Not yet accepted</b>'}</div></div>
+      ${(r.controls || []).length ? `<table class="rt rv-ctrl"><thead><tr><th>Additional control</th><th>Type</th><th>Responsible</th><th>Target</th><th>Status</th></tr></thead><tbody>${r.controls.map(c => `<tr><td data-label="Control">${esc(c.desc)}</td><td data-label="Type">${esc(c.category)}</td><td data-label="Responsible">${esc(pname(c.owner))}</td><td data-label="Target">${c.due ? fmt(c.due) : '—'}</td><td data-label="Status">${esc(c.status)}</td></tr>`).join('')}</tbody></table>` : '<p class="muted" style="margin:6px 0 0">No additional controls.</p>'}
+    </div>`).join('') || '<p class="muted">No hazards assessed yet.</p>'}
+    <div class="rep-section">Reviews</div>
+    ${(a.reviews || []).length ? `<ul class="rv-list">${a.reviews.map(v => `<li><b>${fmt(v.date)}</b> · ${esc(v.reason)}${v.ref ? ` (${esc(v.ref)})` : ''} — ${esc(v.outcome || '')} · ${esc(pname(v.by))}</li>`).join('')}</ul>` : '<p class="muted">No reviews yet.</p>'}
+    <div class="rep-section">Sign-off</div>
+    <div class="rv-kv"><div><span>Assessed by</span><b>${esc(pname(a.assessor))}, ${fmt(a.date)}</b></div><div><span>Approved by</span><b>${a.approvedBy ? `${esc(pname(a.approvedBy))}, ${fmt(a.approvedOn)}` : 'Not approved yet'}</b></div></div>
+    <div class="rep-section">Risk matrix used</div>
+    <p class="t-sub" style="margin:0 0 6px">Risk = likelihood (1–${RM().likelihood.length}) × severity (1–${RM().severity.length}). ${RM().bands.map(b => `${esc(b.name)}: up to ${b.max}`).join(' · ')}. A score never decides on its own that a risk is acceptable; residual risk is accepted by a named person.</p>
+    <p class="muted" style="font-size:10px;margin-top:10px">Generated by the VDW HSEQ Management System prototype from demonstration data on ${fmt(TODAY)}. It does not by itself show legal compliance.</p>
+  </td></tr></tbody></table></div>`;
+}
+const _riskBeforeView = ROUTES.risk;
+ROUTES.risk = (p, q) => {
+  if (p[0] && /^RA-/.test(p[0]) && p[1] === 'view') { const a = byId('riskAssessments', p[0]); if (!a || a.org !== S.ui.org) return ROUTES.notfound();
+    return { title: a.id + ' · view', nav: 'risk', crumbs: [['Risk Management', '#/risk'], [a.id, '#/risk/' + a.id], ['View and print', '#']], html: raViewHtml(a) }; }
+  const r = _riskBeforeView(p, q);
+  if (r && r.html && p[0] && /^RA-/.test(p[0])) r.html = r.html.replace('<div class="sh-actions">', `<div class="sh-actions"><a class="btn" href="#/risk/${p[0]}/view">${icon('print', 'sm')} View / print</a>`);
+  return r;
+};
+
+ACT.raPdf = async (el) => {
+  const a = byId('riskAssessments', el.dataset.id); toast('Preparing the risk assessment…', 'info');
+  try {
+    const { PDFDocument, StandardFonts, rgb } = await ensurePdfLib();
+    const pdf = await PDFDocument.create(), R = await pdf.embedFont(StandardFonts.Helvetica), B = await pdf.embedFont(StandardFonts.HelveticaBold);
+    const W = 842, H = 595, M = 32, ink = rgb(0.06, 0.1, 0.2), mute = rgb(0.4, 0.45, 0.55), line = rgb(0.8, 0.84, 0.89), head = rgb(0.94, 0.95, 0.97);
+    const TONE = { green: [rgb(0.87, 0.95, 0.9), rgb(0.04, 0.42, 0.23)], amber: [rgb(0.99, 0.94, 0.8), rgb(0.54, 0.35, 0)], orange: [rgb(0.99, 0.89, 0.81), rgb(0.6, 0.24, 0.02)], red: [rgb(0.98, 0.84, 0.84), rgb(0.63, 0.12, 0.12)] };
+    const org = orgOf(a.org || S.ui.org), pages = []; let pg, y;
+    const T = (s, x, yy, o = {}) => pg.drawText(pdfSafe(s), { x, y: yy, size: o.size || 8, font: o.bold ? B : R, color: o.color || ink });
+    const wrap = (s, size, width, f = R) => { const out = []; String(pdfSafe(s || '')).split('\n').forEach(par => { let cur = ''; par.split(' ').forEach(w => { const t = cur ? cur + ' ' + w : w; if (f.widthOfTextAtSize(t, size) > width && cur) { out.push(cur); cur = w; } else cur = t; }); out.push(cur); }); return out; };
+    // columns of the hazard table (landscape)
+    const C = [['#', 18], ['Hazard', 98], ['Consequences', 92], ['Exposed', 64], ['Existing controls', 112], ['Initial', 52], ['Additional controls (responsible, target, status)', 196], ['Residual', 52], ['Accepted', 94]];
+    const TW = C.reduce((n, c) => n + c[1], 0), sx = M + (W - 2 * M - TW) / 2;
+    const tableHead = () => { pg.drawRectangle({ x: sx, y: y - 16, width: TW, height: 16, color: head, borderColor: line, borderWidth: 0.5 }); let x = sx; C.forEach(([l, w]) => { const ls = wrap(l, 6.8, w - 6, B); T(ls[0] + (ls.length > 1 ? '…' : ''), x + 3, y - 10.5, { size: 6.8, bold: true, color: mute }); x += w; }); y -= 16; };
+    const newPage = (withTable) => { pg = pdf.addPage([W, H]); pages.push(pg); y = H - M;
+      T(org.name, M, y - 8, { size: 9, bold: true }); T(`Risk assessment · ${a.title}`, M, y - 24, { size: 14, bold: true }); const id = `${a.id} · version ${a.version || 1}`; T(id, W - M - B.widthOfTextAtSize(id, 9), y - 8, { size: 9, bold: true }); y -= 38; if (withTable) tableHead(); };
+    const chip = (r, x, yy) => { if (!r || !r.l) { T('—', x + 3, yy, { color: mute }); return; } const b = rBand(r), t = TONE[b.tone] || TONE.amber, s = `${rScore(r)} ${b.name}`; pg.drawRectangle({ x: x + 2, y: yy - 3, width: Math.min(46, B.widthOfTextAtSize(s, 6.8) + 6), height: 11, color: t[0] }); T(s, x + 5, yy, { size: 6.8, bold: true, color: t[1] }); T(`L${r.l} x S${r.s}`, x + 3, yy - 11, { size: 6.5, color: mute }); };
+    newPage(false);
+    const det = [['Type', a.type], ['Branch / department', sname(a.site) + (a.dept ? ' · ' + a.dept : '')], ['Activity / process', a.activity || '—'], ['Assessment date', fmt(a.date)], ['Assessor', pname(a.assessor)], ['Participants', (a.participants || []).map(pname).join(', ') || '—'], ['Status', raStatus(a)], ['Approved', a.approvedBy ? `${pname(a.approvedBy)}, ${fmt(a.approvedOn)}` : 'Not approved yet'], ['Next review', a.reviewDate ? fmt(a.reviewDate) : '—']];
+    det.forEach(([l, v], n) => { const x = M + (n % 3) * ((W - 2 * M) / 3), yy = y - Math.floor(n / 3) * 22; T(l.toUpperCase(), x, yy, { size: 6.5, bold: true, color: mute }); T(wrap(v, 8.5, (W - 2 * M) / 3 - 10)[0], x, yy - 10, { size: 8.5 }); });
+    y -= Math.ceil(det.length / 3) * 22 + 8; tableHead();
+    (a.rows || []).forEach((r, k) => {
+      const ctrl = (r.controls || []).flatMap(c => wrap(`- ${c.desc} (${c.category}; ${pname(c.owner)}; ${c.due ? fmt(c.due) : 'no date'}; ${c.status})`, 7.2, C[6][1] - 6));
+      const cells = [[String(k + 1)], wrap(r.title, 7.2, C[1][1] - 6, B).concat(r.category ? wrap(r.category, 6.5, C[1][1] - 6) : []), wrap(r.consequences || '—', 7.2, C[2][1] - 6), wrap(r.exposed || '—', 7.2, C[3][1] - 6), wrap(r.existing || '—', 7.2, C[4][1] - 6), null, ctrl.length ? ctrl : ['None'], null, r.accepted ? wrap(`${pname(r.accepted.by)}, ${fmt(r.accepted.on)}: ${r.accepted.reason}`, 7.2, C[8][1] - 6) : ['Not yet accepted']];
+      const h = Math.max(28, ...cells.filter(Boolean).map(c => c.length * 9 + 8));
+      if (y - h < M + 24) newPage(true);
+      let x = sx; C.forEach(([, w], n) => { pg.drawRectangle({ x, y: y - h, width: w, height: h, borderColor: line, borderWidth: 0.5 });
+        if (n === 5) chip(r.initial, x, y - 10); else if (n === 7) chip(r.residual && r.residual.l ? r.residual : null, x, y - 10);
+        else cells[n].forEach((l, i) => T(l, x + 3, y - 10 - i * 9, { size: n === 1 && i >= wrap(r.title, 7.2, C[1][1] - 6, B).length ? 6.5 : 7.2, bold: n === 1 && i < wrap(r.title, 7.2, C[1][1] - 6, B).length, color: n === 1 && i >= wrap(r.title, 7.2, C[1][1] - 6, B).length ? mute : ink })); x += w; });
+      y -= h;
+    });
+    if (!(a.rows || []).length) { T('No hazards assessed yet.', sx + 3, y - 12, { color: mute }); y -= 20; }
+    // matrix bands and sign-off
+    if (y < M + 90) newPage(false);
+    y -= 16; T('RISK MATRIX USED', M, y, { size: 6.5, bold: true, color: mute }); y -= 11;
+    T(`Risk = likelihood (1-${RM().likelihood.length}) x severity (1-${RM().severity.length}). ` + RM().bands.map(b => `${b.name}: up to ${b.max}`).join(' · ') + '. A score never decides on its own that a risk is acceptable.', M, y, { size: 7.5 }); y -= 22;
+    T('SIGN-OFF', M, y, { size: 6.5, bold: true, color: mute }); y -= 12;
+    [['Assessed by', `${pname(a.assessor)}, ${fmt(a.date)}`], ['Approved by', a.approvedBy ? `${pname(a.approvedBy)}, ${fmt(a.approvedOn)}` : 'Not approved yet']].forEach(([l, v], n) => { const x = M + n * 260; T(l, x, y, { size: 7.5, color: mute }); T(v, x, y - 11, { size: 8.5, bold: true }); pg.drawLine({ start: { x, y: y - 30 }, end: { x: x + 220, y: y - 30 }, thickness: 0.5, color: line }); T('Signature', x, y - 39, { size: 6.5, color: mute }); });
+    pages.forEach((p, n) => { p.drawLine({ start: { x: M, y: 24 }, end: { x: W - M, y: 24 }, thickness: 0.4, color: line }); p.drawText(pdfSafe(`${org.short} · ${a.id} · Demonstration data from the VDW HSEQ prototype; this report does not by itself show legal compliance.`), { x: M, y: 13, size: 6.8, font: R, color: mute }); p.drawText(`Page ${n + 1} of ${pages.length} · Powered by VDW`, { x: W - M - 95, y: 13, size: 6.8, font: R, color: mute }); });
+    const blob = new Blob([await pdf.save()], { type: 'application/pdf' });
+    if (await saveFile(`Risk_assessment_${a.id}_${sname(a.site).replace(/\W+/g, '_')}.pdf`, blob)) { toast('Risk assessment downloaded.'); log(`Downloaded risk assessment ${a.id} as PDF`, '#/risk/' + a.id); save(); }
+  } catch (e) { console.error(e); toast('The PDF could not be made: ' + esc(e.message), 'error'); }
+};

@@ -1783,6 +1783,24 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     ok('MB6 on a PC the full dashboard shows as before', await has('.cs-grid') && !(await has('.mob-stats')));
   }
 
+  /* ---------------- RV. Risk assessment: view, print, PDF and margins ---------------- */
+  {
+    const inside = () => S(() => { const bad = []; document.querySelectorAll('#content .btn').forEach(el => { const r = el.getBoundingClientRect(), c = el.closest('.card, .status-hero'); if (!r.width || !c) return; const cr = c.getBoundingClientRect(); if (r.right > cr.right + 1 || r.left < cr.left - 1) bad.push(el.textContent.trim()); }); return bad; });
+    await p.setViewportSize({ width: 1280, height: 900 }); await asUser('P-002'); await go('#/risk/RA-001');
+    ok('RV1 a risk assessment has "View / print"', await has('.sh-actions a[href="#/risk/RA-001/view"]'));
+    ok('RV2 on a laptop no button sits outside its card on the risk assessment (controls table fits)', !(await inside()).length, (await inside()).join('|'));
+    await go('#/risk/RA-001/view'); const vt = await p.$eval('#content', e => e.textContent);
+    ok('RV3 the view shows the controlled header, every hazard with initial and residual risk, controls, sign-off and the matrix used', vt.includes('Assessment details') && vt.includes('Pedestrians in forklift aisles') && vt.includes('Residual risk') && vt.includes('Sign-off') && vt.includes('Risk matrix used') && await has('.ra-view .controlled-header') && await has('[data-act=print]'));
+    const [dl] = await Promise.all([p.waitForEvent('download'), p.click('[data-act=raPdf]')]);
+    ok('RV4 the risk assessment downloads as a PDF', /^Risk_assessment_RA-001_.*\.pdf$/.test(dl.suggestedFilename()), dl.suggestedFilename());
+    await p.setViewportSize({ width: 390, height: 844 });
+    let wide = [];
+    for (const h of ['#/risk', '#/risk/hazards', '#/risk/matrix', '#/risk/RA-001', '#/risk/RA-001/view']) { await go(h); if (await S(() => document.documentElement.scrollWidth > window.innerWidth)) wide.push(h); const b2 = await inside(); if (b2.length) wide.push(h + ':' + b2.join(',')); }
+    ok('RV5 on a phone the risk pages never scroll sideways and no button goes past its card', !wide.length, wide.join(' '));
+    await go('#/risk/matrix'); ok('RV6 on a phone all risk tabs are visible (they wrap, none hidden off the edge)', await S(() => [...document.querySelectorAll('#content .tabs a')].every(a => a.getBoundingClientRect().right <= window.innerWidth)));
+    await p.setViewportSize({ width: 1400, height: 950 });
+  }
+
   /* ---------------- Print output ---------------- */
   { await go('#/print/INS-1087'); await p.emulateMedia({ media: 'print' }); await p.pdf({ path: path.join(os.tmpdir(), 'vdw_inspection_report.pdf'), format: 'A4', printBackground: true }); await p.emulateMedia({ media: 'screen' }); }
 
