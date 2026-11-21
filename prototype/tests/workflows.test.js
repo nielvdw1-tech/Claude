@@ -1770,6 +1770,19 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await mbtn('Done'); await asUser('P-002');
   }
 
+  /* ---------------- MB. Phone view for every role ---------------- */
+  {
+    await p.setViewportSize({ width: 390, height: 844 }); await asUser('P-002'); await go('#/dashboard'); await p.waitForTimeout(150);
+    const t = await p.$eval('#content', e => e.textContent);
+    ok('MB1 on a phone the HSEQ Manager opens on a phone home screen (attention, key figures, scan, report, areas, me)', t.includes('Needs your attention') && t.includes('Control score') && t.includes('My areas') && await has('.emp-quick [data-act=qrScan]'));
+    ok('MB2 every role gets the bottom bar on a phone (office roles: Home, Tasks, Scan, Report, Menu)', (await p.$$eval('#empBar .eb-i span', x => x.map(e => e.textContent))).join('|') === 'Home|Tasks|Scan|Report|Menu');
+    await go('#/dashboard?full=1'); ok('MB3 "Full dashboard" opens the complete dashboard on the phone, with a way back', await has('.cs-grid') && await has('.back-btn'));
+    await asUser('P-007'); await go('#/dashboard'); ok('MB4 a supervisor also gets the phone home screen, including My team', (await p.innerText('#content')).includes('My team'));
+    ok('MB5 nothing is wider than the phone screen', !(await S(() => document.documentElement.scrollWidth > window.innerWidth)));
+    await p.setViewportSize({ width: 1400, height: 950 }); await asUser('P-002'); await go('#/dashboard'); await p.waitForTimeout(150);
+    ok('MB6 on a PC the full dashboard shows as before', await has('.cs-grid') && !(await has('.mob-stats')));
+  }
+
   /* ---------------- Print output ---------------- */
   { await go('#/print/INS-1087'); await p.emulateMedia({ media: 'print' }); await p.pdf({ path: path.join(os.tmpdir(), 'vdw_inspection_report.pdf'), format: 'A4', printBackground: true }); await p.emulateMedia({ media: 'screen' }); }
 

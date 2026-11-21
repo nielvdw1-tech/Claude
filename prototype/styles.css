@@ -1447,3 +1447,15 @@ body.auth-mode .main { padding-top: 0; }
 .flt-bar .search { flex: 0 1 240px; min-width: 170px; }
 .flt-bar select { flex: 1 1 140px; max-width: 200px; min-width: 0; }
 .flt-bar .tb-count { margin-left: auto; white-space: nowrap; }
+/* Phone home for office roles */
+.mob-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.mob-stat { display: grid; gap: 2px; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); text-decoration: none; color: var(--fg); }
+.mob-stat span { font-size: 12px; color: var(--muted); font-weight: 600; } .mob-stat b { font-family: var(--font-display); font-size: 26px; line-height: 1.1; font-variant-numeric: tabular-nums; } .mob-stat small { font-size: 11.5px; color: var(--muted); }
+.mob-stat.t-red b { color: var(--bad); } .mob-stat.t-amber b { color: var(--warn); } .mob-stat.t-green b { color: var(--ok); }
+@media (min-width: 720px) { .mob-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.mob-full { justify-content: center; width: 100%; }
+.mob-areas { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.mob-areas .emp-tile { min-height: 0; padding: 10px 8px; align-items: center; text-align: center; gap: 6px; }
+.mob-areas .emp-tile .et-ic { width: 32px; height: 32px; }
+.mob-areas .emp-tile .et-txt b { font-size: 12px; font-weight: 600; } .mob-areas .emp-tile .et-txt small:empty { display: none; }
+@media (min-width: 720px) { .mob-areas { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
