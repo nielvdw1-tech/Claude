@@ -315,9 +315,6 @@ Other pages are closed to employees. An inspection can only be started from the 
 - **Visit reports:** plan a visit; on the day start it, tick what was checked, add findings (each can become a corrective action at the client, with an owner there), write the summary and the next visit date, sign (consultant; client representative optional) and complete. The report is e-mailed to the client's HSEQ Manager and Managing Director, the next visit is planned, and a PDF visit report can be downloaded.
 - **Template library:** copy a client's set-up to another client — legal requirements (as "Pending assessment"), courses and training requirements, PPE types and requirements, risk assessments (as drafts) and company audit checklists (as drafts).
 
-### Languages (employee screens)
-- English, **Afrikaans** and **isiZulu** for the employee screens (home, my appointments, my PPE, my training, inspections, incident reports, documents to read, the phone bar and the signing forms). Each person chooses on their home screen or in their menu. Content people wrote (notices, document titles, appointment duties) stays as written. **The translations are a first draft and must be checked by first-language speakers before use with a client.**
-
 ### Installing the app on a phone
 - The app has a name ("VDW Safety"), an icon, a full-screen mode and works offline once opened (service worker). Employees see **Install the app** on their home screen (also in the person's menu): on Android it installs straight away; on an iPhone the Safari steps are shown (Share → Add to Home Screen). Installation needs the system to be hosted on its own web address (https); inside the Claude preview the browser may not offer it. When files are added, the list in `sw.js` must be updated.
 
@@ -490,7 +487,6 @@ prototype/
 ├── mod-employee.js              Employee home screen and pages, PPE signature, back buttons
 ├── mod-qa.js                    Legal in the control score, My team, grouped admin, phone bar, bulk issue, report PDF, departments per branch
 ├── mod-consultant.js            Client comparison, visit reports, template library
-├── mod-lang.js                  Employee screens in Afrikaans and isiZulu (first draft)
 ├── mod-install.js               Install on the home screen; offline service worker
 ├── manifest.webmanifest, sw.js, icons/   Installable app
 ├── mod-auditing.js              Audits: starter and own checklists, programme, scoring, findings, PDF report

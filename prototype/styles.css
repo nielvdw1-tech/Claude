@@ -1428,11 +1428,6 @@ body.auth-mode .main { padding-top: 0; }
 }
 @media (min-width: 900px) { .cs-grid.cs-six { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .tbl.cmp th { white-space: nowrap; } .tbl.cmp .client-cell { min-width: 150px; } .tbl.cmp td { vertical-align: top; }
-/* Language choice */
-.lang-pick { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 13px; color: var(--muted); }
-.lang-pick button { border: 1px solid var(--line); background: var(--surface); color: var(--fg); border-radius: 999px; padding: 4px 11px; font: inherit; font-size: 12.5px; cursor: pointer; }
-.lang-pick button.on { background: var(--brand); border-color: var(--brand); color: #fff; }
-.lang-menu { border-top: 1px solid var(--line); padding: 10px 12px; display: grid; gap: 4px; } .lang-menu small { color: var(--muted); font-size: 11px; }
 /* Install the app */
 .install-card { display: grid; grid-template-columns: auto 1fr; gap: 10px 12px; align-items: center; padding: 14px 16px; background: var(--info-bg, #E8F0FE); border-color: transparent; }
 .ic-icon img { width: 44px; height: 44px; border-radius: 11px; display: block; box-shadow: 0 2px 6px rgba(10, 42, 107, .15); background: #fff; }
