@@ -32,6 +32,13 @@ ROUTES.emergency = (p, q = {}) => {
   let body = '';
   if (tab === 'overview') body = `<div class="card"><div class="card-body flush"><div class="table-wrap"><table class="tbl stackable"><thead><tr><th>Branch</th><th>Plan</th><th>Assembly points</th><th>Emergency team</th><th>Equipment</th><th>Last drill</th><th>Next drill due</th><th>Gaps</th></tr></thead><tbody>${sites.map(s => { const e = emOf(s.id) || {}, l = lastDrill(s.id), eq = emEquip(s.id), g = emGaps(s.id);
     return `<tr class="rowlink" data-href="#/emergency/${s.id}"><td data-label="Branch"><b>${esc(s.name)}</b></td><td data-label="Plan">${e.plan ? `<span class="mono">${esc((byId('documents', e.plan) || {}).number || '')}</span>` : '<span class="due red">None</span>'}</td><td data-label="Assembly">${(e.assembly || []).length || '<span class="due red">0</span>'}</td><td data-label="Team">${emTeam(s.id).length}</td><td data-label="Equipment">${eq.length ? `${eq.filter(equipOk).length} of ${eq.length} in order` : '—'}</td><td data-label="Last drill">${l ? fmt(l.held) : '—'}</td><td data-label="Next drill">${dueText(drillDue(s.id))}</td><td data-label="Gaps">${g.length ? g.map(t => badge(t, 'amber', true)).join(' ') : badge('In order', 'green', true)}</td></tr>`; }).join('')}</tbody></table></div></div></div>`;
+  if (tab === 'overview') { const s0 = sites[0], step = (n, t, d, href, lbl) => `<li><span class="em-n">${n}</span><div><b>${t}</b><small>${d}</small>${href ? `<a href="${href}">${lbl} →</a>` : ''}</div></li>`;
+    body = `<div class="card em-guide"><div class="card-head"><h2>What this module does</h2><span class="ch-sub">Being ready for an emergency at each branch, and proving it with drills</span></div><div class="card-body"><ol class="em-steps">
+      ${step(1, 'Set up each branch\'s arrangements', 'Emergency scenarios (fire, gas leak, bomb threat…), the emergency response plan and evacuation procedure/map from the Document Manager, assembly points and emergency contacts.', s0 ? '#/emergency/' + s0.id : '', 'Open ' + esc(s0 ? s0.short || s0.name : ''))}
+      ${step(2, 'Know your emergency team', 'Fire marshals and first aiders come from their appointments in People, with their emergency training status. A branch without one is flagged.', '#/people/appointments', 'Appointments')}
+      ${step(3, 'Keep emergency equipment in order', 'Fire extinguishers, hose reels and first aid boxes come from Assets & Equipment, with their inspection status. Nothing is captured twice.', '#/assets', 'Equipment')}
+      ${step(4, 'Hold and record drills', 'Schedule a drill, record the evacuation time, people evacuated and observations, and turn findings into corrective actions. The next drill falls due automatically.', '#/emergency/drills', 'Drills')}
+    </ol><p class="t-sub" style="margin:10px 0 0">Anything missing (no plan, no assembly point, no fire marshal or first aider, equipment not in order, drill overdue) shows as a gap below, on the dashboard and in the compliance figures. Open a branch to see and fix its arrangements.</p></div></div>` + body; }
   else if (tab === 'drills') body = drillsHtml(D);
   else body = emSiteHtml(byId('sites', tab));
   const fab = canEm() ? (tab === 'drills' || tab === 'overview' ? fabBtn('drillNew', 'Schedule a drill') : fabStack([{ act: 'drillNew', label: 'Schedule a drill', attrs: `data-site="${tab}"` }, { act: 'emEdit', label: 'Edit arrangements', icon: 'edit', cls: 'ghost', attrs: `data-site="${tab}"` }])) : '';
@@ -99,4 +106,16 @@ MIGRATIONS.push(() => {
   D('DRL-001', { site: 'S-JHB', date: addDays(TODAY, -150), held: addDays(TODAY, -150), scenario: 'Fire — full evacuation', coordinator: 'P-005', status: 'Completed', evacMinutes: 5, people: 58, observations: 'Two employees in the cold room did not hear the alarm.', findings: [{ text: 'Alarm not audible in the cold room', action: null }, { text: 'Evacuation took 5 min, target 4 min', action: null }] });
   D('DRL-002', { site: 'S-DBN', date: addDays(TODAY, -420), held: addDays(TODAY, -420), scenario: 'Fire — full evacuation', coordinator: 'P-003', status: 'Completed', evacMinutes: 3, people: 24, observations: 'Good.' });
   D('DRL-003', { site: 'S-CPT', date: addDays(TODAY, 12), scenario: 'Fire — full evacuation', coordinator: 'P-004', status: 'Scheduled' });
+});
+
+/* Demo: a signed fire marshal and first aider at Germiston, so one branch shows a complete
+   emergency team (Durban and Cape Town keep their gaps to show what is flagged). */
+MIGRATIONS.push(() => {
+  if (S.migr && S.migr.em2) return; S.migr = S.migr || {}; S.migr.em2 = true;
+  if (!S.appointments || !S.config.apptTypes) return;
+  const T = id => S.config.apptTypes.find(t => t.id === id) || {};
+  const ts = d => addDays(TODAY, d) + 'T08:00:00';
+  [['APT-007', 'P-008', 'AT-FIRE', 'KIE-APP-007'], ['APT-008', 'P-007', 'AT-FIRST', 'KIE-APP-008']].forEach(([id, person, type, ref]) => { if (byId('appointments', id)) return;
+    S.appointments.push({ id, org: 'ORG-1', site: 'S-JHB', person, type, method: 'Uploaded', ref, legal: T(type).legal || '', authority: 'P-001', effective: addDays(TODAY, -120), signedOn: addDays(TODAY, -121), end: '', notes: '', duties: T(type).duties, version: 1, versions: [], created: addDays(TODAY, -121), createdBy: 'P-002', status: 'Uploaded',
+      file: { name: `${ref}_signed.pdf`, type: 'application/pdf', size: 120000, seeded: true }, history: [{ ts: ts(-121), by: 'P-002', action: 'Uploaded the signed appointment' }] }); });
 });

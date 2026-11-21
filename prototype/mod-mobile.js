@@ -43,11 +43,20 @@ const _dashBeforeMobile = ROUTES.dashboard;
 ROUTES.dashboard = (p, q = {}) => (isPhone() && !q.full && !isFieldUser()) ? mobileHome() : _dashBeforeMobile(p, q);
 // the full dashboard on a phone gets a way back to the phone home screen
 const _needsBackBeforeMobile = needsBack;
-// on a phone every page except the home screen gets Back: there is no side menu in view to find your way
-needsBack = function (parts) { if (isPhone()) { const k = parts[0] || (isFieldUser() ? 'field' : 'dashboard'); return !(k === 'field' || (k === 'dashboard' && !/full=1/.test(location.hash))); } return _needsBackBeforeMobile(parts); };
-// with no history (page opened directly) a top-level page goes back to Home rather than to itself
-const _goBackBeforeMobile = ACT.goBack;
-ACT.goBack = (el) => { const here = location.hash.split('?')[0]; if (!NAV_STACK.length && (BACK_PARENT === here || BACK_PARENT === location.hash)) { navigate(isFieldUser() ? '#/field' : '#/dashboard'); return; } return _goBackBeforeMobile(el); };
+/* Back, on every device:
+   - every page except Home has a Back button (module pages and their tabs too);
+   - Back goes up one level, not through the browsing history: from a module page or one of its
+     tabs straight to Home; from a record to its module; from a sub-page to its record. */
+const homeHash = () => isFieldUser() ? '#/field' : '#/dashboard';
+needsBack = function (parts) { const k = parts[0] || (isFieldUser() ? 'field' : 'dashboard'); return !(k === 'field' || (k === 'dashboard' && !/full=1/.test(location.hash))); };
+ACT.goBack = () => {
+  const here = location.hash.split('?')[0], segs = here.replace(/^#\/?/, '').split('/').filter(Boolean);
+  const isRecord = x => /^[A-Z]{1,5}-[A-Z0-9]/.test(x || '');
+  let to = homeHash();                                                     // module page or one of its tabs → Home
+  if (segs.length >= 2 && (isRecord(segs[1]) || segs.length >= 3)) {      // a record or deeper → one level up
+    to = BACK_PARENT && BACK_PARENT.split('?')[0] !== here ? BACK_PARENT : '#/' + segs[0];
+  }
+  NAV_STACK.length = 0; navigate(to); };
 
 /* Bottom bar for everyone on a phone */
 empBottomNav = function () {

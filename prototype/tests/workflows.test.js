@@ -803,13 +803,15 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
   {
     const hash = () => p.evaluate(() => location.hash);
     await asUser('P-002'); await go('#/documents');
-    const noBackTop = !(await has('.page-nav [data-act=goBack]'));
-    await go('#/admin/users'); const noBackTab = !(await has('.page-nav [data-act=goBack]'));
-    ok('BB1 main pages and tabs have no Back button', noBackTop && noBackTab);
+    const backTop = await has('.page-nav [data-act=goBack]');
+    await go('#/ppe/issues'); const backTab = await has('.page-nav [data-act=goBack]'); await act('.page-nav [data-act=goBack]'); const hT = await hash();
+    await go('#/dashboard'); const noBackHome = !(await has('.page-nav [data-act=goBack]'));
+    ok('BB1 every page except Home has a Back button (module pages and tabs too, e.g. PPE)', backTop && backTab && noBackHome);
+    ok('BB1b Back from a module page or tab goes straight to Home', hT === '#/dashboard', hT);
     await go('#/documents'); await go('#/documents/DOC-001'); await go('#/actions/ACT-1001');
     await act('.page-nav [data-act=goBack]'); const h1 = await hash();
     await act('.page-nav [data-act=goBack]'); const h2 = await hash();
-    ok('BB2 Back returns to the pages you came from, in order', h1 === '#/documents/DOC-001' && h2 === '#/documents', `${h1} → ${h2}`);
+    ok('BB2 Back goes up one level: from a record to its module, then Home', h1 === '#/actions' && h2 === '#/dashboard', `${h1} → ${h2}`);
     await S("NAV_STACK.length = 0"); await go('#/incidents/INC-2026-005');
     await S("NAV_STACK.length = 0"); await act('.page-nav [data-act=goBack]');
     ok('BB3 opened directly (no history), Back goes to the page above it', (await hash()) === '#/incidents');
@@ -1541,7 +1543,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await go('#/people/appointments');
     ok('PM16 digital and uploaded appointments are in one register', (await p.innerText('#content')).includes(up) && (await p.innerText('#content')).includes('APT-003'));
     await go('#/people/appointments?fmethod=Uploaded'); const rowsU = await p.$$eval('.card-body tbody td[data-label=Appointment] .mono', x => x.map(e => e.textContent));
-    ok('PM17 the register filters by method', rowsU.length && rowsU.every(t => ['APT-001', 'APT-006', up].includes(t)), rowsU.join());
+    ok('PM17 the register filters by method', rowsU.length && rowsU.every(t => ['APT-001', 'APT-006', 'APT-007', 'APT-008', up].includes(t)), rowsU.join());
     // material change → new version must be accepted again
     await go('#/people/APT-003'); await btn('Change (new version)'); await mfill('duties', 'Operate counterbalance and reach trucks.\nDo the pre-use check.'); await mfill('reason', 'Reach trucks added'); await mbtn('Issue new version');
     ok('PM18 a material change makes version 2 that must be accepted again; version 1 and its acceptance are kept', await S(() => { const a = byId('appointments', 'APT-003'); return a.version === 2 && a.status === 'Sent to employee' && !a.accept && a.versions[0].accept && a.versions[0].accept.user === 'P-009'; }));
@@ -1660,7 +1662,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     ok('HS4 the safety data sheet links to the Document Manager instead of a second copy', await has('a[href="#/documents/DOC-018"]'));
     // emergency
     await go('#/emergency');
-    ok('EM1 each branch shows its emergency gaps (plan, assembly point, drill, emergency team, equipment)', await S(() => emGaps('S-CPT').includes('No assembly point') && emGaps('S-DBN').includes('Drill overdue') && emGaps('S-JHB').includes('No fire marshal appointed')));
+    ok('EM1 each branch shows its emergency gaps (plan, assembly point, drill, emergency team, equipment)', await S(() => emGaps('S-CPT').includes('No assembly point') && emGaps('S-DBN').includes('Drill overdue') && emGaps('S-DBN').includes('No fire marshal appointed') && !emGaps('S-JHB').includes('No fire marshal appointed') && emTeam('S-JHB').length >= 1), await S(() => JSON.stringify({ j: emGaps('S-JHB'), t: emTeam('S-JHB').map(a => a.id), a7: byId('appointments', 'APT-007') && aptStatus(byId('appointments', 'APT-007')) })));
     await go('#/emergency/S-DBN'); await p.click('.fab-stack .fab:has-text("Schedule a drill")'); await p.waitForTimeout(120); await mbtn('Schedule'); await p.waitForTimeout(120);
     const drl = await S(() => location.hash.split('/')[2]);
     await btn('Record result'); await mfill('evacMinutes', '6'); await mfill('people', '22'); await mfill('findings', 'Assembly point sign missing\nAlarm not heard in the store'); await mbtn('Save result');

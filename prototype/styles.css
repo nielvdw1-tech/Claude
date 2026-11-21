@@ -1541,3 +1541,10 @@ body.auth-mode .main { padding-top: 0; }
 @media print { .ra-view { max-width: none; page: ra-land; } .ra-p1 { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) !important; } .ra-sig { break-inside: avoid; } .ra-key + .ra-sig { break-before: auto; } .ra-p1 { break-after: page; } .ra-tbl tr { break-inside: avoid; } .ra-tbl thead { display: table-header-group; } }
 /* tabs wrap on a phone so no tab hides off the edge */
 @media (max-width: 640px) { .tabs:not(.adm-tabs) { flex-wrap: wrap; overflow: visible; row-gap: 0; } .tabs:not(.adm-tabs) a, .tabs:not(.adm-tabs) button { padding: 9px 9px; } }
+/* Emergency management: what the module does */
+.em-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.em-steps li { display: flex; gap: 10px; align-items: flex-start; } .em-steps li > div { display: grid; gap: 4px; min-width: 0; } .em-steps small { color: var(--muted); font-size: 12.5px; line-height: 1.45; } .em-steps a { font-size: 13px; font-weight: 600; }
+.em-n { flex: none; width: 26px; height: 26px; border-radius: 50%; background: var(--brand); color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 13px; }
+.em-guide { margin-bottom: 16px; }
+@media (max-width: 1100px) { .em-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .em-steps { grid-template-columns: minmax(0, 1fr); } }
