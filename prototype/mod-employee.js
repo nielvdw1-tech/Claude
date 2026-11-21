@@ -18,7 +18,8 @@ function empCounts() {
   const ins = S.schedules.filter(s => s.assignee === uid && s.asset && daysTo(s.nextDue) <= 7).length;
   const read = typeof docsToRead === 'function' ? docsToRead().length : 0;
   const notices = typeof myNotices === 'function' ? myNotices().filter(n => noticeUnread(n) || noticeNeedsAck(n)).length : 0;
-  return { apt, ppe, tr, ins, read, notices, notif: empNotifs().length, inc: S.incidents.filter(i => i.reporter === uid && i.status !== 'Closed').length };
+  const ra = typeof raToSign === 'function' ? raToSign(uid).length : 0;
+  return { apt, ppe, tr, ins, read, notices, ra, notif: empNotifs().length, inc: S.incidents.filter(i => i.reporter === uid && i.status !== 'Closed').length };
 }
 function greeting() { const h = new Date().getHours(); return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'; }
 
@@ -36,6 +37,7 @@ ROUTES.field = (p, q = {}) => {
     <div class="emp-grid">
       ${tile('#/me', 'user', 'My appointments', c.apt ? `${c.apt} to accept` : 'Read, accept and sign', c.apt, c.apt ? 'warn' : '')}
       ${tile('#/myppe', 'hardhat', 'My PPE', c.ppe ? `${c.ppe} to sign for` : 'Issued to me', c.ppe, c.ppe ? 'warn' : '')}
+      ${tile('#/myra', 'risk', 'Risk assessments', c.ra ? `${c.ra} to read and sign` : 'The ones I took part in', c.ra, c.ra ? 'warn' : '')}
       ${tile('#/mytraining', 'checkCircle', 'My training', c.tr ? `${c.tr} need attention` : 'Courses and certificates', c.tr, c.tr ? 'warn' : '')}
       ${tile('#/notifications', 'bell', 'Notifications', c.notif ? `${c.notif} unread` : 'All read', c.notif, '')}
       ${tile('#/notices', 'info', 'Company notices', c.notices ? `${c.notices} to read` : 'From management', c.notices, c.notices ? 'warn' : '')}
@@ -87,7 +89,7 @@ const _needsBackBeforeEmp = needsBack;
 needsBack = function (parts) { if (typeof isFieldUser === 'function' && isFieldUser()) return (parts[0] || 'field') !== 'field'; return _needsBackBeforeEmp(parts); };
 ['mytraining', 'myinspections', 'myincidents', 'myreading', 'notifications'].forEach(k => { if (!FIELD_ROUTES.includes(k)) FIELD_ROUTES.push(k); });
 ['mytraining', 'myinspections', 'myincidents', 'myreading'].forEach(k => { if (!TOP_ROUTES.includes(k)) TOP_ROUTES.push(k); });
-(() => { const g = NAV_FIELD[0]; g.group = 'My work'; g.items = [['field', 'Home', 'dashboard'], ['me', 'My appointments', 'user'], ['myppe', 'My PPE', 'hardhat'], ['mytraining', 'My training', 'checkCircle'], ['notifications', 'Notifications', 'bell'], ['notices', 'Company notices', 'info'], ['myreading', 'Documents to read', 'docs'], ['myinspections', 'My inspections', 'clipboard'], ['myincidents', 'My incident reports', 'alert'], ['report', 'Report incident', 'siren']]; })();
+(() => { const g = NAV_FIELD[0]; g.group = 'My work'; g.items = [['field', 'Home', 'dashboard'], ['me', 'My appointments', 'user'], ['myppe', 'My PPE', 'hardhat'], ['mytraining', 'My training', 'checkCircle'], ['myra', 'Risk assessments', 'risk'], ['notifications', 'Notifications', 'bell'], ['notices', 'Company notices', 'info'], ['myreading', 'Documents to read', 'docs'], ['myinspections', 'My inspections', 'clipboard'], ['myincidents', 'My incident reports', 'alert'], ['report', 'Report incident', 'siren']]; })();
 // office staff also get "My training" next to their other personal pages
 (() => { const g = NAV.find(x => x.group === 'Overview'), k = g ? g.items.findIndex(i => i[0] === 'myppe') : -1; if (g && k >= 0 && !g.items.some(i => i[0] === 'mytraining')) g.items.splice(k + 1, 0, ['mytraining', 'My training', 'checkCircle']); })();
 // employee pages: crumbs start at Home so Back goes there

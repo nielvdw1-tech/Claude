@@ -354,8 +354,35 @@ ACT.raSign = (el) => { const a = byId('riskAssessments', el.dataset.id), pid = e
       log(`${pname(pid)} signed risk assessment ${a.id} as ${who}${pid !== S.ui.user ? ` (collected by ${pname(S.ui.user)})` : ''}`, '#/risk/' + a.id); RASIG.sig = null; save(); toast('Signed.'); rerender(); } }] }); };
 ACT.raSigClear = () => { RASIG.sig = null; const c = document.getElementById('raSig'); if (c) c.getContext('2d').clearRect(0, 0, c.width, c.height); };
 const _myTasksBeforeRaSig = myTasks;
-myTasks = function () { const out = _myTasksBeforeRaSig(); if (typeof isFieldUser === 'function' && isFieldUser()) return out;
-  (S.riskAssessments || []).filter(a => a.org === S.ui.org && a.status !== 'Superseded' && raSignNeeded(a).includes(S.ui.user)).forEach(a => out.push({ title: `Sign risk assessment ${a.id}: ${a.title}`, sub: a.assessor === S.ui.user ? 'As originator' : 'As team member', link: `#/risk/${a.id}/view`, sev: 'blue' })); return out; };
+const raToSign = (uid = S.ui.user) => (S.riskAssessments || []).filter(a => a.org === S.ui.org && a.status !== 'Superseded' && raSignNeeded(a).includes(uid));
+myTasks = function () { const out = _myTasksBeforeRaSig();
+  raToSign().forEach(a => out.push({ title: `Sign the risk assessment: ${a.title}`, sub: `${a.id} · ${a.assessor === S.ui.user ? 'as originator' : 'as team member'} — read it, then sign`, link: `#/myra/${a.id}`, sev: 'amber' })); return out; };
+
+/* "My risk assessments": everyone (employees too) can open the risk assessments they took part
+   in, read them and sign as originator or team member. */
+ROUTES.myra = (p) => {
+  const mine = (S.riskAssessments || []).filter(a => a.org === S.ui.org && a.status !== 'Superseded' && (a.assessor === S.ui.user || (a.participants || []).includes(S.ui.user)));
+  if (p[0]) { const a = mine.find(x => x.id === p[0]); if (!a) return ROUTES.notfound();
+    const signed = raSigs(a)[S.ui.user];
+    const top = signed ? `<div class="alert success no-print">${icon('checkCircle')}<div>You signed this risk assessment on ${fmt(signed.date)}.</div></div>`
+      : `<div class="alert warn no-print">${icon('edit')}<div><b>Please read this risk assessment and sign it.</b> Your name is in the ${a.assessor === S.ui.user ? 'Originator' : 'Team members signatures'} table at the bottom. <button class="btn sm primary" data-act="raSign" data-id="${a.id}" data-p="${S.ui.user}">${icon('edit', 'sm')} Sign now</button></div></div>`;
+    return { title: a.id, nav: isFieldUser() ? 'myra' : 'risk', crumbs: [['My risk assessments', '#/myra'], [a.id, '#']], html: top + raViewHtml(a) }; }
+  const row = a => { const sg = raSigs(a)[S.ui.user]; return `<li><a href="#/myra/${a.id}"><div><b>${esc(a.title)}</b><small>${a.id} · ${esc(sname(a.site))} · ${a.assessor === S.ui.user ? 'Originator' : 'Team member'}</small></div>${sg ? `<span class="badge green">Signed ${fmt(sg.date)}</span>` : '<span class="badge amber">To sign</span>'}</a></li>`; };
+  const todo = mine.filter(a => !raSigs(a)[S.ui.user]), done = mine.filter(a => raSigs(a)[S.ui.user]);
+  const html = `<div class="emp"><div class="emp-head"><h1>My risk assessments</h1><p>Risk assessments you took part in. Read each one and sign it to confirm you understand the hazards, the risks and the controls.</p></div>
+    <section class="emp-card"><header><h2>To sign (${todo.length})</h2></header>${todo.length ? `<ul class="emp-list ra-mine">${todo.map(row).join('')}</ul>` : '<p class="muted" style="padding:0 16px 14px">Nothing to sign.</p>'}</section>
+    <section class="emp-card"><header><h2>Signed (${done.length})</h2></header>${done.length ? `<ul class="emp-list ra-mine">${done.map(row).join('')}</ul>` : '<p class="muted" style="padding:0 16px 14px">None yet.</p>'}</section></div>`;
+  return { title: 'My risk assessments', nav: isFieldUser() ? 'myra' : 'risk', crumbs: [['My risk assessments', '#']], html };
+};
+if (!FIELD_ROUTES.includes('myra')) FIELD_ROUTES.push('myra');
+
+/* When an assessment is approved, everyone still to sign is told (e-mail and notification). */
+const _raApproveBeforeSign = ACT.raApprove;
+ACT.raApprove = (el) => { const a = byId('riskAssessments', el.dataset.id), was = a && a.status; const r = _raApproveBeforeSign(el);
+  setTimeout(() => { if (!a || was === 'Approved' || a.status !== 'Approved') return; const to = raSignNeeded(a); if (!to.length) return;
+    queueEmail(to, 'actions', `Please sign risk assessment ${a.id}: ${a.title}`, `You took part in risk assessment ${a.id} "${a.title}". Please open it, read it and sign it to confirm you understand the hazards, risks and controls.`, '#/myra/' + a.id);
+    addEvent('amber', 'risk', 'Risk assessment to sign', `${a.id} ${a.title}`, '#/myra/' + a.id, a.site, to); save(); }, 0);
+  return r; };
 
 /* PDF: A4 landscape, in the same layout */
 ACT.raPdf = async (el) => {
