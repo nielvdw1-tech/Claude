@@ -43,7 +43,11 @@ const _dashBeforeMobile = ROUTES.dashboard;
 ROUTES.dashboard = (p, q = {}) => (isPhone() && !q.full && !isFieldUser()) ? mobileHome() : _dashBeforeMobile(p, q);
 // the full dashboard on a phone gets a way back to the phone home screen
 const _needsBackBeforeMobile = needsBack;
-needsBack = function (parts) { return _needsBackBeforeMobile(parts) || (isPhone() && (parts[0] || 'dashboard') === 'dashboard' && /full=1/.test(location.hash)); };
+// on a phone every page except the home screen gets Back: there is no side menu in view to find your way
+needsBack = function (parts) { if (isPhone()) { const k = parts[0] || (isFieldUser() ? 'field' : 'dashboard'); return !(k === 'field' || (k === 'dashboard' && !/full=1/.test(location.hash))); } return _needsBackBeforeMobile(parts); };
+// with no history (page opened directly) a top-level page goes back to Home rather than to itself
+const _goBackBeforeMobile = ACT.goBack;
+ACT.goBack = (el) => { const here = location.hash.split('?')[0]; if (!NAV_STACK.length && (BACK_PARENT === here || BACK_PARENT === location.hash)) { navigate(isFieldUser() ? '#/field' : '#/dashboard'); return; } return _goBackBeforeMobile(el); };
 
 /* Bottom bar for everyone on a phone */
 empBottomNav = function () {

@@ -1778,6 +1778,10 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     ok('MB2 every role gets the bottom bar on a phone (office roles: Home, Tasks, Scan, Report, Menu)', (await p.$$eval('#empBar .eb-i span', x => x.map(e => e.textContent))).join('|') === 'Home|Tasks|Scan|Report|Menu');
     await go('#/dashboard?full=1'); ok('MB3 "Full dashboard" opens the complete dashboard on the phone, with a way back', await has('.cs-grid') && await has('.back-btn'));
     await asUser('P-007'); await go('#/dashboard'); ok('MB4 a supervisor also gets the phone home screen, including My team', (await p.innerText('#content')).includes('My team'));
+    { const miss = []; await asUser('P-002'); for (const h of ['#/notices', '#/notifications', '#/documents', '#/assets', '#/inspections', '#/incidents', '#/actions', '#/reports', '#/admin', '#/legal/register', '#/risk/hazards', '#/people/employees', '#/me']) { await go(h); if (!(await has('#content .back-btn'))) miss.push(h); }
+      await go('#/dashboard'); ok('MB7 on a phone every page except Home has a Back button (incl. Company Notices and tab pages)', !miss.length && !(await has('#content .back-btn')), miss.join(' '));
+      await S(() => { NAV_STACK.length = 0; location.hash = '#/notices'; }); await p.waitForTimeout(150); await S(() => { NAV_STACK.length = 0; }); await p.click('#content .back-btn'); await p.waitForTimeout(150);
+      ok('MB8 Back on a top-level page opened directly goes to Home', await S(() => location.hash) === '#/dashboard'); }
     ok('MB5 nothing is wider than the phone screen', !(await S(() => document.documentElement.scrollWidth > window.innerWidth)));
     await p.setViewportSize({ width: 1400, height: 950 }); await asUser('P-002'); await go('#/dashboard'); await p.waitForTimeout(150);
     ok('MB6 on a PC the full dashboard shows as before', await has('.cs-grid') && !(await has('.mob-stats')));
