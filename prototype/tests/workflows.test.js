@@ -1662,6 +1662,10 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     ok('HS4 the safety data sheet links to the Document Manager instead of a second copy', await has('a[href="#/documents/DOC-018"]'));
     // emergency
     await go('#/emergency');
+    await go('#/emergency/drills'); await p.click('#content [data-act=drillHeld]'); await p.waitForTimeout(150); await mbtn('Next: the result'); await p.waitForTimeout(250);
+    await mfill('evacMinutes', '5'); await mfill('people', '40'); await mbtn('Save result'); await p.waitForTimeout(150);
+    ok('EM0 "Record a drill already held" (a labelled button on the Drills tab) records the drill and its result in one go', await S(() => { const d = S.drills[S.drills.length - 1]; return d.status === 'Completed' && d.evacMinutes === 5 && d.people === 40; }));
+    ok('EM0b Hazardous substances has a labelled "Add substance" button on the register', (await go('#/substances'), await has('#content .card-head [data-act=subNew]')));
     ok('EM1 each branch shows its emergency gaps (plan, assembly point, drill, emergency team, equipment)', await S(() => emGaps('S-CPT').includes('No assembly point') && emGaps('S-DBN').includes('Drill overdue') && emGaps('S-DBN').includes('No fire marshal appointed') && !emGaps('S-JHB').includes('No fire marshal appointed') && emTeam('S-JHB').length >= 1), await S(() => JSON.stringify({ j: emGaps('S-JHB'), t: emTeam('S-JHB').map(a => a.id), a7: byId('appointments', 'APT-007') && aptStatus(byId('appointments', 'APT-007')) })));
     await go('#/emergency/S-DBN'); await p.click('.fab-stack .fab:has-text("Schedule a drill")'); await p.waitForTimeout(120); await mbtn('Schedule'); await p.waitForTimeout(120);
     const drl = await S(() => location.hash.split('/')[2]);

@@ -1260,12 +1260,15 @@ body.auth-mode .main { padding-top: 0; }
 .notice-closed p { margin: 0 0 10px; color: var(--muted); }
 .card > .card-head + .toolbar { border-radius: 0; }
 
-/* Phones: the floating buttons become round icon buttons so they do not cover the page title */
-@media (max-width: 600px) {
-  .fab-stack { gap: 8px; }
-  .fab-stack .fab { width: 48px; height: 48px; padding: 0; justify-content: center; border-radius: 50%; }
-  .fab-stack .fab span { display: none; }
-  .fab-stack .fab svg { width: 20px; height: 20px; margin: 0; }
+/* Phones: the floating buttons sit at the bottom right, just above the bottom bar, and keep their
+   words ("+ Add substance") so it is clear what they do */
+@media (max-width: 760px) {
+  .fab-stack:not(.moved) { top: auto; bottom: 18px; right: 12px; flex-direction: column-reverse; gap: 8px; }
+  body.has-empbar .fab-stack:not(.moved) { bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
+  .fab-stack .fab { padding: 11px 16px; font-size: 14px; font-weight: 650; max-width: calc(100vw - 24px); }
+  .fab-stack .fab span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fab-stack .fab.ghost { background: var(--surface); }
+  #content { padding-bottom: 150px; }
 }
 
 /* Hour meter, reading check */
@@ -1424,7 +1427,6 @@ body.auth-mode .main { padding-top: 0; }
   .eb-i.on { color: var(--brand); background: var(--info-bg, #E8F0FE); }
   .eb-i[data-act="qrScan"] { color: #fff; background: var(--brand); margin-top: -18px; border-radius: 16px; box-shadow: 0 6px 16px rgba(0, 95, 239, .35); }
   .eb-i b { position: absolute; top: 2px; right: 18%; min-width: 17px; height: 17px; padding: 0 5px; border-radius: 999px; background: var(--st-bad, #d03b3b); color: #fff; font-size: 10px; display: grid; place-items: center; }
-  body.has-empbar .fab-stack { bottom: 96px; }
 }
 @media (min-width: 900px) { .cs-grid.cs-six { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .tbl.cmp th { white-space: nowrap; } .tbl.cmp .client-cell { min-width: 150px; } .tbl.cmp td { vertical-align: top; }
