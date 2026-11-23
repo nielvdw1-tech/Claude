@@ -1917,6 +1917,15 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await go('#/mytalks/TBT-002'); await p.click('.alert [data-act=talkSign]'); await p.waitForTimeout(150); await p.check('#ohsAck'); await sign(); await mbtn('Sign'); await p.waitForTimeout(150);
     ok('D14f the employee reads the talk, views its document and signs it themselves; the task disappears', await S(() => { const a = byId('talks', 'TBT-002').attendees.find(x => x.person === 'P-009'); return !!(a.sig && a.sig.collectedBy === 'P-009') && !myTasks().some(t => t.link === '#/mytalks/TBT-002'); }) && await has('.alert.success'));
     await asUser('P-002');
+    await asUser('P-007'); await go('#/toolbox/library');
+    ok('D14g the toolbox talk library lists ready-made talks (topic, category, document) for managers and supervisors', (await p.$$('.tbl tbody tr')).length >= 10 && await has('[data-act=talkNew][data-lib]'));
+    await p.click('[data-act=talkNew][data-lib="TBL-002"]'); await p.waitForTimeout(200);
+    const pre = await S(() => [document.querySelector('.modal [name=topic]').value, document.querySelector('.modal [name=lib]').value]);
+    await mbtn('Save'); await p.waitForTimeout(250);
+    ok('D14h "Use this talk" starts a new talk filled in from the library, with the library document attached', pre[0] === 'Safe lifting and carrying' && pre[1] === 'TBL-002' && await S(() => { const t = S.talks[S.talks.length - 1]; return t.lib === 'TBL-002' && t.files.length === 1 && /Safe_lifting/.test(t.files[0].name); }));
+    await go('#/toolbox/library'); await p.click('.fab-stack .fab'); await p.waitForTimeout(150); await mfill('topic', 'Slips, trips and falls'); await mfill('content', 'Keep floors dry.'); await mbtn('Add'); await p.waitForTimeout(200);
+    ok('D14i managers and supervisors can add their own talks to the library', await S(() => S.talkLib.some(x => x.topic === 'Slips, trips and falls')));
+    await asUser('P-002');
     // D15 permits
     await go('#/permits/PTW-002'); await p.click('[data-act=ptwIssue]'); await p.waitForTimeout(150); await mbtn('Issue'); await p.waitForTimeout(80);
     const notIssued = await S(() => byId('permits', 'PTW-002').status === 'Requested');
