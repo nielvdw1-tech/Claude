@@ -66,7 +66,7 @@ function noticeDetail(id) {
     ${pub ? `<div class="card mt"><div class="card-head"><h2>Read and acknowledgement</h2><div class="btn-row">${n.ackRequired && aud.some(x => !(n.acks || {})[x.id]) ? `<button class="btn sm" data-act="noticeRemind" data-id="${n.id}">${icon('bell', 'sm')} Remind outstanding</button>` : ''}${noticeLive(n) ? `<button class="btn sm danger" data-act="noticeExpire" data-id="${n.id}">Withdraw</button>` : ''}</div></div><div class="card-body flush"><table class="tbl stackable compact"><thead><tr><th>Person</th><th>Role</th><th>Read</th><th>Acknowledged</th><th>Signature</th></tr></thead><tbody>
       ${aud.map(x => `<tr><td data-label="Person"><b>${esc(x.name)}</b><div class="t-sub">${esc(sname(x.site))}</div></td><td data-label="Role">${esc(x.sysRole)}</td><td data-label="Read">${(n.reads || {})[x.id] ? fmtTs(n.reads[x.id]) : '<span class="due amber">Not yet</span>'}</td><td data-label="Acknowledged">${!n.ackRequired ? '<span class="muted">Not required</span>' : (n.acks || {})[x.id] ? `<span class="due green">${fmtTs(n.acks[x.id])}</span>` : '<span class="due red">Outstanding</span>'}</td><td data-label="Signature">${(n.ackSigs || {})[x.id] ? `<img class="ack-sig" src="${n.ackSigs[x.id]}" alt="Signature of ${esc(x.name)}">` : (n.acks || {})[x.id] ? '<span class="muted">Before signing was required</span>' : '—'}</td></tr>`).join('')}
     </tbody></table></div></div>` : ''}
-    <a class="btn mt" href="${isFieldUser() ? '#/field' : '#/notices'}">← Back</a>
+
   </div>`;
   return { title: n.title, nav: 'notices', crumbs: [['Company notices', '#/notices'], [n.title, '#']], html };
 }
@@ -173,7 +173,7 @@ function alertApprovalDetail(n) {
     </div></div>
     <div class="card mt"><div class="card-head"><h2>Approval route</h2></div><div class="card-body">${routeHtml({ route: n.approvals })}</div></div>
     ${inc ? `<div class="card mt"><div class="card-head"><h2>Source incident</h2></div><div class="card-body"><div class="kv"><div>Incident</div><div><a href="#/incidents/${inc.id}">${inc.id}</a> · ${esc(inc.title)}</div><div>Status</div><div>${sbadge(inc.status)}</div><div>Draft created by</div><div>${esc(pname(n.createdBy))} · ${fmtTs(n.createdOn)}</div></div></div></div>` : ''}
-    <a class="btn mt" href="#/notices">← Back</a>
+
   </div>`;
   return { title: n.title, nav: 'notices', crumbs: [['Company notices', '#/notices'], [n.id, '#']], html };
 }

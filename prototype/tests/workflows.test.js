@@ -27,7 +27,9 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
   const S = (fn) => p.evaluate(fn);
   const act = async (sel) => { await p.click(sel); await p.waitForTimeout(120); };
   const btn = async (text) => { await p.click(`.sh-actions button:has-text("${text}"), .page-head button:has-text("${text}"), .alert button:has-text("${text}"), .fab-stack .fab:has-text("${text}")`); await p.waitForTimeout(150); };
-  const mbtn = async (text) => { await p.click(`.modal-foot button:has-text("${text}")`); await p.waitForTimeout(150); };
+  let keepRaPrompt = false;
+  const mbtn = async (text) => { await p.click(`.modal-foot button:has-text("${text}")`); await p.waitForTimeout(150);
+    if (text === 'Close incident' && !keepRaPrompt) { await p.waitForTimeout(200); if (await p.$('.modal h2:has-text("Review the risk assessments?")')) await p.click('.modal-foot button:has-text("Cancel")'); } };
   const mfill = async (name, val) => { await p.fill(`.modal [name="${name}"]`, val); };
   const msel = async (name, val) => { await p.selectOption(`.modal [name="${name}"]`, val); };
   const mfile = async (sel = '.modal input[type=file]', name = 'evidence.pdf') => { await p.setInputFiles(sel, { name, mimeType: 'application/pdf', buffer: Buffer.from('demo evidence') }); };
@@ -1824,6 +1826,35 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     ok('RV5 on a phone the risk pages never scroll sideways and no button goes past its card', !wide.length, wide.join(' '));
     await go('#/risk/matrix'); ok('RV6 on a phone all risk tabs are visible (they wrap, none hidden off the edge)', await S(() => [...document.querySelectorAll('#content .tabs a')].every(a => a.getBoundingClientRect().right <= window.innerWidth)));
     await p.setViewportSize({ width: 1400, height: 950 });
+  }
+
+  /* ---------------- IM-A. Workflow gaps closed (A2–A6) ---------------- */
+  {
+    await p.setViewportSize({ width: 1400, height: 950 }); await asUser('P-002');
+    const iid = await S(() => { const i = S.incidents.find(x => x.status !== 'Closed' && x.investigation && x.investigation.completed); incActions(i).forEach(a => { a.status = 'Verified'; }); if (i.injury && !i.injury.classification) i.injury.classification = 'FAC'; save(); return i.id; });
+    await go('#/incidents/' + iid); await p.click('[data-act=incClose]'); await p.waitForTimeout(150); await mfill('comment', 'Closed after verification.'); keepRaPrompt = true; await mbtn('Close incident'); keepRaPrompt = false; await p.waitForTimeout(400);
+    const ask = await modalOpen() && (await p.innerText('.modal')).includes('Review the risk assessments?');
+    ok('A2a closing an incident asks which risk assessments to review', ask, iid);
+    if (ask) { await p.click('.modal .chk-col input[type=checkbox]'); const picked = await S(() => [...document.querySelectorAll('.modal .chk-col input:checked')].length); if (!picked) await p.click('.modal .chk-col input[type=checkbox]'); await mbtn('Request review'); await p.waitForTimeout(150); }
+    const ra = await S(() => (S.riskAssessments.find(a => (a.reviewRequests || []).some(r => !r.done)) || {}).id);
+    ok('A2b the review request shows on the assessment and as a task for the assessor', !!ra && await S(`myTasks().some(t => t.link === '#/risk/${ra}')`) && (await go('#/risk/' + ra), await has('.alert.warn [data-act=raReview]')));
+    await p.click('.alert.warn [data-act=raReview]'); await p.waitForTimeout(200);
+    ok('A2c "Record the review" is filled in with "After an incident" and the incident', await S(() => document.querySelector('.modal [name=reason]').value === 'After an incident' && /^INC-/.test(document.querySelector('.modal [name=ref]').value)));
+    await mfill('outcome', 'Controls still adequate.'); await mbtn('Save review'); await p.waitForTimeout(400);
+    ok('A2d recording the review clears the request', await S(`!(byId('riskAssessments','${ra}').reviewRequests || []).some(r => !r.done)`));
+    await go('#/risk/HZ-004'); await p.click('.sh-actions [data-act=hzToRa]'); await p.waitForTimeout(150); await mbtn('Next'); await p.waitForTimeout(400);
+    ok('A3 a hazard can be added to a (new) risk assessment from the hazard; the hazard form opens filled in', await S(() => /^#\/risk\/RA-/.test(location.hash) && document.querySelector('.modal [name=hazard]').value === 'HZ-004'));
+    await mbtn('Save'); await p.waitForTimeout(80); await p.evaluate(() => document.querySelectorAll('.modal-back').forEach(m => m.remove()));
+    const sid = await S(() => { const x = S.substances.find(s => s.org === S.ui.org); x.ra = null; save(); return x.id; });
+    await go('#/substances/' + sid);
+    ok('A4a a hazardous substance has "Raise action" and, when it has none, "Create its risk assessment"', await has('.sh-actions [data-act=subAction]') && await has('.sh-actions [data-act=subRa]'));
+    await p.click('.sh-actions [data-act=subRa]'); await p.waitForTimeout(200);
+    ok('A4b the risk assessment is created as a draft, typed "Hazardous substance" and linked both ways', await S(`(() => { const x = byId('substances','${sid}'), a = byId('riskAssessments', x.ra); return a && a.type === 'Hazardous substance' && a.substance === x.id && a.status === 'Draft'; })()`));
+    const did = await S(() => S.drills.find(d => d.status === 'Scheduled').id); await go('#/emergency/' + did);
+    await p.click('[data-act=drillMove]'); await p.waitForTimeout(120); await mfill('date', '2026-12-20'); await mbtn('Save'); await p.waitForTimeout(120);
+    await p.click('[data-act=drillCancel]'); await p.waitForTimeout(120); await mfill('reason', 'Shutdown week.'); await mbtn('Cancel drill'); await p.waitForTimeout(120);
+    ok('A5 a scheduled drill can be moved and cancelled, with the reason kept', await S(`(() => { const d = byId('drills','${did}'); return d.date === '2026-12-20' && d.status === 'Cancelled' && d.cancelled.reason === 'Shutdown week.'; })()`) && await has('.alert.info'));
+    await go('#/notices/NT-004'); ok('A6 a notice has one Back button', (await p.$$eval('#content a.btn, #content button', x => x.filter(e => /Back/.test(e.textContent)).length)) === 1);
   }
 
   /* ---------------- Print output ---------------- */
