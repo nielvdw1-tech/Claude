@@ -1591,3 +1591,7 @@ body.auth-mode .main { padding-top: 0; }
 .med-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 2px 0; }
 .moc-imp { display: grid; grid-template-columns: minmax(0, 220px) minmax(0, 1fr); gap: 10px; align-items: center; } .moc-imp input { width: 100%; }
 @media (max-width: 640px) { .moc-imp { grid-template-columns: minmax(0, 1fr); } }
+/* Control score with six parts: the overall score on the left over two rows, three parts per row */
+@media (min-width: 1181px) { .cs-grid.cs-seven { grid-template-columns: minmax(230px, 1.2fr) repeat(3, minmax(0, 1fr)); } .cs-grid.cs-seven .cs-hero { grid-row: span 2; } }
+@media (min-width: 900px) and (max-width: 1180px) { .cs-grid.cs-seven { grid-template-columns: repeat(3, minmax(0, 1fr)); } .cs-grid.cs-seven .cs-hero { grid-column: 1 / -1; } }
+.ohs-prof .kv > div:nth-child(even) { line-height: 1.7; }

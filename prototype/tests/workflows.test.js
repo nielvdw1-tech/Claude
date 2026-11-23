@@ -474,7 +474,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await S(() => document.querySelectorAll('.dash-fold:not(.open) .dash-toggle').forEach(b => b.click())); await p.waitForTimeout(150);
     ok('DB1 compliance status comes first, then compliance management, trends and detail', secs.length === 4 && /Compliance status/i.test(secs[0]) && /Compliance management/i.test(secs[1]) && /Trends/i.test(secs[2]) && /Detail/i.test(secs[3]), secs.join(' | '));
     const hero = await p.$eval('.cs-hero .pie-v', e => parseInt(e.textContent)), want = await S("compliance('ALL').overall");
-    ok('DB2 the overall control score and the five areas (incl. legal compliance) show with a status label', hero === want && (await p.$$eval('.cs-part', e => e.length)) === 5 && (await p.$$eval('.cs-grid .pie svg', e => e.length)) === 6 && (await p.$$eval('.cs-grid .st-chip', e => e.length)) === 6, `${hero}%`);
+    ok('DB2 the overall control score and the six areas (incl. legal compliance and safety programmes) show with a status label', hero === want && (await p.$$eval('.cs-part', e => e.length)) === 6 && (await p.$$eval('.cs-grid .pie svg', e => e.length)) === 7 && (await p.$$eval('.cs-grid .st-chip', e => e.length)) === 7, `${hero}%`);
     const rows = await p.$$eval('.tbl.hm tbody tr', e => e.length), sites = await S("orgSites().length");
     await p.click('.tbl.hm [data-act=focusSite][data-site="S-DBN"]'); await p.waitForTimeout(250);
     ok('DB3 branch status table lists every branch; clicking one focuses the dashboard on it', rows === sites && (await S('S.ui.site')) === 'S-DBN' && (await p.$eval('.cs-hero .pie-v', e => parseInt(e.textContent))) === (await S("compliance('S-DBN').overall")));
@@ -1886,7 +1886,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     ok('C11a each list shows its add button(s) at the top of the list', await has('.card .list-actions [data-act=ppeIssue]'));
     const lcKeep = await S(() => { const k = S.legalChanges; S.legalChanges = []; return k; }); await go('#/legal/changes'); ok('C11b an empty list offers its add button ("Add your first…")', await has('.empty .empty-cta [data-act]')); await p.evaluate(k => { S.legalChanges = k; save(); }, lcKeep);
     await go('#/admin'); const st = await p.innerText('.setup-card summary');
-    ok('C12 Administration shows a set-up checklist (done / to set up, with links)', /of 16 done/.test(st) && await has('.setup-list li.ok') && await has('.setup-list a[href="#/admin/approvals"]'), st);
+    ok('C12 Administration shows a set-up checklist (done / to set up, with links)', /of 21 done/.test(st) && (await p.innerText('.setup-card')).includes('H&S committee set up') && await has('.setup-list li.ok') && await has('.setup-list a[href="#/admin/approvals"]'), st);
   }
 
   /* ---------------- OHS modules (D13–D17) ---------------- */
@@ -1949,6 +1949,23 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     const notClosed = await S(() => byId('mocs', 'MOC-001').status === 'Implementing');
     await S(`(() => { const a = byId('actions', '${aid}'); a.status = 'Verified'; save(); rerender(); })()`); await p.waitForTimeout(100); await p.click('[data-act=mocClose]'); await p.waitForTimeout(120); await mfill('comment', 'Electric units in use; charging bay ventilated.'); await mbtn('Close the change'); await p.waitForTimeout(120);
     ok('D17b implementation actions are raised; the change only closes after they are verified, with a post-implementation review', notClosed && await S(() => byId('mocs', 'MOC-001').status === 'Closed'));
+  }
+
+  /* ---------------- Item 2: new modules connected to the rest ---------------- */
+  {
+    await p.setViewportSize({ width: 1400, height: 950 }); await asUser('P-002'); await S(() => { S.ui.site = 'ALL'; save(); }); await go('#/dashboard');
+    const tiles = await p.$$eval('.dash-comp .kpi .k-label', e => e.map(x => x.textContent.trim()));
+    ok('L1 the dashboard shows tiles for the H&S committee, toolbox talks, permits, medical examinations and changes', ['H&S committee', 'Toolbox talks this month', 'Permits to work', 'Medical examinations', 'Changes in progress'].every(t => tiles.includes(t)), tiles.join('|'));
+    ok('L2 the control score has a sixth part, "Safety programmes", with its own weight', await has('.cs-part') && (await p.innerText('.cs-grid')).includes('Safety programmes') && await S(() => compliance('ALL').parts.programmes != null && S.config.complianceWeights.programmes === 10));
+    const rep = []; for (const k of ['comrep', 'tbtrep', 'ptwrep', 'medrep', 'mocrep']) { await go('#/reports/' + k); if ((await p.$$('#content tbody tr')).length) rep.push(k); }
+    ok('L3 Reports has a report for each new module (committee, toolbox talks, permits, medical, change)', rep.length === 5, rep.join(','));
+    await go('#/people/P-009'); const prof = await p.innerText('.ohs-prof');
+    ok('L4 an employee\'s profile shows committee/representative, toolbox talks signed and medical status', prof.includes('Germiston health and safety committee') && prof.includes('Toolbox talks') && prof.includes('Fitness for operating lift trucks'));
+    await asUser('P-007'); await go('#/people/P-009'); ok('L5 medical status is hidden on the profile from roles without the medical permission', !(await p.innerText('#content')).includes('Fitness for operating lift trucks')); await asUser('P-002');
+    await go('#/contractors/CON-001'); ok('L6 a contractor\'s page lists its permits to work', (await p.innerText('#content')).includes('Permits to work') && await has('#content a[href^="#/permits/PTW-"]'));
+    await go('#/admin/ohs'); await p.fill('#content [name=repMonths]', '2'); await p.fill('#content [name=pp0]', 'Area cleared\nExtinguisher present'); await p.click('[data-act=ohsSetSave]'); await p.waitForTimeout(150);
+    ok('L7 Administration → Safety programmes edits the permit precautions and the representatives\' inspection interval', await S(() => S.config.repInspMonths === 2 && S.config.permitTypes[0].precautions.length === 2));
+    await go('#/admin'); ok('L8 the set-up checklist includes the new modules', (await p.innerText('.setup-card')).includes('Permit types and precautions'));
   }
 
   /* ---------------- Print output ---------------- */
