@@ -39,6 +39,7 @@ function onOpen() {
     .createMenu("PPE Management")
     .addItem("Refresh Dashboard", "refreshPPEDashboard")
     .addItem("Build Supplier Quote List", "buildPPESupplierQuoteList")
+    .addItem("Email Supplier Quote List", "emailPPESupplierQuoteList")
     .addSeparator()
     .addItem("Issue PPE", "showIssuePPESidebar")
     .addItem("Request PPE", "showPPERequestSidebar")

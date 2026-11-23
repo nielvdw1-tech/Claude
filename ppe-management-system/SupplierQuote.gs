@@ -11,8 +11,10 @@
  * numbers or internal prices are shown.
  *
  * Settings sit at the top of the sheet (branch, which
- * requests, optional date range). Change them, then click
- * PPE Management → Build Supplier Quote List.
+ * requests, optional date range, who to email). Change them,
+ * then click PPE Management → Build Supplier Quote List, or
+ * PPE Management → Email Supplier Quote List to receive it
+ * by email with a PDF attached.
  */
 
 const PPE_QUOTE_SHEET = "Supplier Quote";
@@ -93,7 +95,7 @@ function buildPPESupplierQuoteList() {
       .setFontColor("#667085");
 
     ss.toast("No PPE requests match these settings.", "Supplier Quote", 5);
-    return;
+    return { sheet: sheet, settings: settings, lines: lines, lastRow: row };
   }
 
   /*
@@ -155,6 +157,15 @@ function buildPPESupplierQuoteList() {
     "Supplier Quote",
     6
   );
+
+  return {
+    sheet: sheet,
+    settings: settings,
+    lines: lines,
+    branches: branches,
+    companyName: companyName,
+    lastRow: row - 1
+  };
 }
 
 /**
@@ -179,7 +190,8 @@ function setupPPEQuoteSettings_(ss) {
     ["Branch:"],
     ["Requests to include:"],
     ["Request date from:"],
-    ["Request date to:"]
+    ["Request date to:"],
+    ["Email quote to:"]
   ];
 
   sheet
@@ -229,16 +241,24 @@ function setupPPEQuoteSettings_(ss) {
     statusCell.setValue(PPE_QUOTE_STATUS_OPTIONS[0]);
   }
 
+  const emailCell = sheet.getRange("B7");
+
+  // Defaults to the person running it. Several addresses can be
+  // separated by commas, e.g. to send straight to a supplier.
+  if (!cleanPPEText_(emailCell.getValue())) {
+    emailCell.setValue(Session.getActiveUser().getEmail() || "");
+  }
+
   sheet
-    .getRange("B3:B6")
+    .getRange("B3:B7")
     .setBackground("#FFF7D6")
     .setBorder(true, true, true, true, true, true, "#1F4E78", SpreadsheetApp.BorderStyle.SOLID);
 
   sheet
     .getRange("A8")
     .setValue(
-      "Change the yellow settings, then click PPE Management → Build Supplier Quote List. " +
-      "Dates are optional."
+      "Change the yellow settings, then click PPE Management → Build Supplier Quote List, " +
+      "or Email Supplier Quote List to receive it by email with a PDF. Dates are optional."
     )
     .setFontStyle("italic")
     .setFontColor("#667085");
@@ -517,4 +537,230 @@ function writePPEQuoteSection_(sheet, row, title, infoLines, lines) {
     .setBorder(true, true, true, true, true, true, "#D0D5DD", SpreadsheetApp.BorderStyle.SOLID);
 
   return row + values.length + 1;
+}
+
+
+/**
+ * Menu: PPE Management → Email Supplier Quote List
+ *
+ * Rebuilds the list and emails it to the address(es) in B7,
+ * with the quote in the email and as a PDF attachment.
+ */
+function emailPPESupplierQuoteList() {
+  const ui = SpreadsheetApp.getUi();
+  const result = buildPPESupplierQuoteList();
+
+  const branchNames = Object.keys(result.lines).sort();
+
+  if (branchNames.length === 0) {
+    ui.alert("Supplier Quote", "No PPE requests match these settings, so there is nothing to send.", ui.ButtonSet.OK);
+    return;
+  }
+
+  let recipients =
+    cleanPPEText_(result.sheet.getRange("B7").getValue());
+
+  if (!recipients) {
+    const answer = ui.prompt(
+      "Supplier Quote",
+      "Which email address should the quote be sent to?",
+      ui.ButtonSet.OK_CANCEL
+    );
+
+    if (answer.getSelectedButton() !== ui.Button.OK) {
+      return;
+    }
+
+    recipients = cleanPPEText_(answer.getResponseText());
+    result.sheet.getRange("B7").setValue(recipients);
+  }
+
+  const addresses =
+    recipients.split(/[,;]/).map(cleanPPEText_).filter(function(value) {
+      return value;
+    });
+
+  const invalid = addresses.filter(function(address) {
+    return !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address);
+  });
+
+  if (addresses.length === 0 || invalid.length > 0) {
+    ui.alert(
+      "Supplier Quote",
+      "Please check the email address in cell B7" +
+        (invalid.length ? ": " + invalid.join(", ") : "") + ".",
+      ui.ButtonSet.OK
+    );
+    return;
+  }
+
+  const dateText =
+    Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "dd MMMM yyyy");
+
+  const title =
+    "PPE Quote Request – " + result.settings.branchLabel + " – " + dateText;
+
+  /*
+   * PDF of the quote part of the sheet (not the settings).
+   * If the PDF cannot be made, the email is still sent.
+   */
+  const attachments = [];
+  let pdfNote = "";
+
+  try {
+    attachments.push(
+      exportPPEQuoteSheetAsPdf_(result.sheet, result.lastRow)
+        .setName(title.replace(/[\\/:*?"<>|]/g, "-") + ".pdf")
+    );
+  } catch (error) {
+    pdfNote =
+      '<p style="color:#b45309;">The PDF could not be attached (' +
+      escapePPEApprovalHtml(error.message) +
+      '). The full quote is in this email.</p>';
+  }
+
+  MailApp.sendEmail({
+    to: addresses.join(","),
+    subject: title,
+    htmlBody: buildPPEQuoteEmailHtml_(result, branchNames, dateText) + pdfNote,
+    body:
+      "Request for quotation – " + result.settings.branchLabel + " – " + dateText +
+      ". Please see the attached PDF or open this email in HTML view.",
+    attachments: attachments,
+    name: PPE_SYSTEM_NAME
+  });
+
+  logPPEAction(
+    Session.getActiveUser().getEmail(),
+    "Supplier Quote Emailed",
+    result.settings.branchLabel,
+    "Sent to " + addresses.join(", ") + (attachments.length ? " with PDF" : " without PDF")
+  );
+
+  ui.alert(
+    "Supplier Quote",
+    "The quote list was emailed to " + addresses.join(", ") +
+      (attachments.length ? " with the PDF attached." : ". (The PDF could not be attached.)"),
+    ui.ButtonSet.OK
+  );
+}
+
+/**
+ * Exports rows 10 to lastRow (columns A:E) of the quote sheet
+ * as an A4 PDF.
+ */
+function exportPPEQuoteSheetAsPdf_(sheet, lastRow) {
+  SpreadsheetApp.flush();
+
+  const ss = sheet.getParent();
+
+  const url =
+    "https://docs.google.com/spreadsheets/d/" + ss.getId() + "/export" +
+    "?format=pdf" +
+    "&gid=" + sheet.getSheetId() +
+    "&range=" + encodeURIComponent("A" + PPE_QUOTE_FIRST_OUTPUT_ROW + ":E" + lastRow) +
+    "&size=A4&portrait=true&fitw=true" +
+    "&gridlines=false&printtitle=false&sheetnames=false&pagenum=UNDEFINED" +
+    "&top_margin=0.6&bottom_margin=0.6&left_margin=0.6&right_margin=0.6";
+
+  const response =
+    UrlFetchApp.fetch(url, {
+      headers: { Authorization: "Bearer " + ScriptApp.getOAuthToken() },
+      muteHttpExceptions: true
+    });
+
+  if (response.getResponseCode() !== 200) {
+    throw new Error("Google returned code " + response.getResponseCode());
+  }
+
+  return response.getBlob();
+}
+
+/**
+ * The same quote as an HTML email body.
+ */
+function buildPPEQuoteEmailHtml_(result, branchNames, dateText) {
+  const cell = "padding:7px 9px;border:1px solid #d0d5dd;";
+  const head = cell + "background:#eaf1f8;color:#1f4e78;text-align:left;";
+
+  function table(lines) {
+    const total =
+      lines.reduce(function(sum, line) {
+        return sum + line.quantity;
+      }, 0);
+
+    return (
+      '<table style="border-collapse:collapse;width:100%;margin:8px 0 22px;font-size:14px;">' +
+        '<tr>' +
+          '<th style="' + head + '">Category</th>' +
+          '<th style="' + head + '">Item</th>' +
+          '<th style="' + head + '">Size</th>' +
+          '<th style="' + head + '">Unit</th>' +
+          '<th style="' + head + 'text-align:center;">Quantity</th>' +
+        '</tr>' +
+        lines.map(function(line) {
+          return (
+            '<tr>' +
+              '<td style="' + cell + '">' + escapePPEApprovalHtml(line.category) + '</td>' +
+              '<td style="' + cell + '">' + escapePPEApprovalHtml(line.description) + '</td>' +
+              '<td style="' + cell + '">' + escapePPEApprovalHtml(line.size || "Standard") + '</td>' +
+              '<td style="' + cell + '">' + escapePPEApprovalHtml(line.unit) + '</td>' +
+              '<td style="' + cell + 'text-align:center;">' + line.quantity + '</td>' +
+            '</tr>'
+          );
+        }).join("") +
+        '<tr style="font-weight:bold;background:#eaf1f8;">' +
+          '<td style="' + cell + '"></td>' +
+          '<td style="' + cell + '">Total</td>' +
+          '<td style="' + cell + '"></td><td style="' + cell + '"></td>' +
+          '<td style="' + cell + 'text-align:center;">' + total + '</td>' +
+        '</tr>' +
+      '</table>'
+    );
+  }
+
+  let html =
+    '<div style="font-family:Arial,sans-serif;max-width:760px;color:#1f2937;">' +
+    '<h2 style="color:#1f4e78;margin-bottom:4px;">REQUEST FOR QUOTATION</h2>' +
+    (result.companyName
+      ? '<div style="font-weight:bold;">' + escapePPEApprovalHtml(result.companyName) + '</div>'
+      : '') +
+    '<p style="color:#475569;">Date: ' + escapePPEApprovalHtml(dateText) +
+      '<br>Please provide your best price and lead time for the items below.</p>';
+
+  const combined = {};
+
+  branchNames.forEach(function(branchName) {
+    const branch = result.branches[branchName.toLowerCase()] || {};
+
+    html +=
+      '<h3 style="background:#1f4e78;color:#fff;padding:7px 10px;margin:18px 0 4px;">BRANCH: ' +
+        escapePPEApprovalHtml(branchName.toUpperCase()) + '</h3>' +
+      (branch.address
+        ? '<div style="color:#475569;">Delivery address: ' + escapePPEApprovalHtml(branch.address) + '</div>'
+        : '') +
+      (branch.contact
+        ? '<div style="color:#475569;">Contact: ' + escapePPEApprovalHtml(branch.contact) + '</div>'
+        : '') +
+      table(result.lines[branchName]);
+
+    result.lines[branchName].forEach(function(line) {
+      if (!combined[line.key]) {
+        combined[line.key] = Object.assign({}, line, { quantity: 0 });
+      }
+
+      combined[line.key].quantity += line.quantity;
+    });
+  });
+
+  if (branchNames.length > 1) {
+    html +=
+      '<h3 style="background:#1f4e78;color:#fff;padding:7px 10px;margin:18px 0 4px;">' +
+        'TOTAL – ALL BRANCHES ABOVE</h3>' +
+      table(sortPPEQuoteLines_(Object.keys(combined).map(function(key) {
+        return combined[key];
+      })));
+  }
+
+  return html + '<p>Regards,<br>' + PPE_SYSTEM_NAME + '</p></div>';
 }
