@@ -1572,3 +1572,17 @@ body.auth-mode .main { padding-top: 0; }
 .more-menu > .btn:hover { background: var(--surface-2); }
 @media (max-width: 640px) { .status-hero .sh-actions .more-wrap { flex: 1 1 auto; } .status-hero .sh-actions .more-btn { width: 100%; justify-content: center; } .more-menu { left: 0; right: 0; } }
 @media (max-width: 640px) { #content .card > .toolbar > .btn-row:has(a[href*="#/notifications/tasks"]) { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; } #content .card > .toolbar > .btn-row:has(a[href*="#/notifications/tasks"]) .btn { flex: none; } }
+/* Add buttons at the top of each list */
+.list-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; padding: 10px 16px; border-bottom: 1px solid var(--line); background: var(--surface); border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+.list-actions .btn { box-shadow: none; } .list-actions .btn.ghost { background: var(--surface); }
+.empty-cta { margin-top: 12px; }
+@media (max-width: 640px) { .list-actions { justify-content: stretch; } .list-actions .btn { flex: 1 1 auto; justify-content: center; } }
+/* Administration set-up checklist */
+.setup-card > summary { cursor: pointer; list-style: none; flex-wrap: wrap; } .setup-card > summary::-webkit-details-marker { display: none; }
+.setup-bar { flex: 1 1 140px; max-width: 220px; height: 8px; border-radius: 99px; background: var(--surface-3, #E8ECF2); overflow: hidden; margin-left: auto; } .setup-bar > span { display: block; height: 100%; background: var(--st-good, #0ca30c); }
+.setup-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.setup-list li { display: flex; gap: 10px; align-items: center; padding: 10px 16px; border-bottom: 1px solid var(--line); } .setup-list li > div { flex: 1; min-width: 0; display: grid; } .setup-list small { color: var(--muted); font-size: 12px; }
+.setup-list li.ok > svg { color: var(--ok, #0b8a3e); } .setup-list li.todo > svg { color: var(--warn, #b7791f); }
+@media (max-width: 760px) { .setup-list { grid-template-columns: minmax(0, 1fr); } }
+.page-note { display: block; } .page-note > svg { vertical-align: -3px; margin-right: 6px; }
+.setup-card { margin-bottom: 16px; }

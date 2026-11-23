@@ -164,3 +164,45 @@ ACT.moreMenu = (el) => { const w = el.closest('.more-wrap'), open = !w.classList
 document.addEventListener('click', e => { if (!e.target.closest || !e.target.closest('.more-wrap')) document.querySelectorAll('.more-wrap.open').forEach(x => x.classList.remove('open')); else if (e.target.closest('.more-menu')) setTimeout(() => document.querySelectorAll('.more-wrap.open').forEach(x => x.classList.remove('open')), 0); });
 const _rerenderBeforeMore = rerender;
 rerender = function (...a) { const r = _rerenderBeforeMore.apply(this, a); try { tidyRecordActions(); } catch (e) { console.error(e); } return r; };
+
+/* ---------- C11. Every list shows its add buttons; empty lists offer "Add your first…" ---------- */
+function listActions() {
+  const c = document.getElementById('content'); if (!c) return; const fab = c.querySelector(':scope > .fab-stack'); if (!fab) return;
+  const fabs = [...fab.querySelectorAll('.fab')]; if (!fabs.length) return;
+  const anchor = c.querySelector(':scope > .tabs') || c.querySelector(':scope > .kpi-fold, :scope > .kpis') || c.querySelector(':scope > .page-head');
+  let card = anchor; while (card && !(card.classList && card.classList.contains('card'))) card = card.nextElementSibling;
+  if (!card || card.querySelector('.list-actions')) return;
+  const clone = (b, small = true) => { const n = b.cloneNode(true); n.classList.remove('fab'); if (small) n.classList.add('sm'); return n; };
+  const missing = fabs.filter(b => !card.querySelector(`[data-act="${b.dataset.act}"]`));
+  if (missing.length) { const bar = document.createElement('div'); bar.className = 'list-actions'; missing.forEach(b => bar.appendChild(clone(b))); card.insertBefore(bar, card.firstChild); }
+  card.querySelectorAll('.empty').forEach(e => { if (e.querySelector('.btn') || /match|filter/i.test(e.textContent)) return; const b = clone(fabs[0], false); b.classList.add('primary'); const w = document.createElement('div'); w.className = 'empty-cta'; w.appendChild(b); (e.querySelector('div') || e).appendChild(w); });
+}
+const _rerenderBeforeList = rerender;
+rerender = function (...a) { const r = _rerenderBeforeList.apply(this, a); try { listActions(); } catch (e) { console.error(e); } return r; };
+
+/* ---------- C12. Administration: set-up checklist for a (new) client ---------- */
+function setupItems() { const o = S.ui.org, org = orgOf(o) || {}, sites = orgSites(), by = k => (S[k] || []).filter(x => !x.org || x.org === o);
+  return [
+    ['Company details and logo', !!org.logo, '#/admin/orgs', 'Upload the logo (used on reports and printed documents)'],
+    ['Branches', sites.length > 0, '#/admin/orgs', `${sites.length} branch(es)`],
+    ['Departments', (S.departments || []).length > 0, '#/admin/orgs', `${(S.departments || []).length} department(s)`],
+    ['People with a login and a role', S.people.filter(p => p.org === o && p.sysRole && p.email && p.status !== 'Deactivated').length >= 2, '#/admin/users', 'At least the HSEQ manager and one manager'],
+    ['Document approval routes', Object.keys(S.config.approvalRoutes || {}).length > 0, '#/admin/approvals', 'Who approves each kind of document, in order'],
+    ['Document categories and review periods', (S.config.docCategories || []).length > 0, '#/admin/doccats', ''],
+    ['Asset types', (S.assetTypes || []).length > 0, '#/admin/assettypes', 'With required certificates and inspection intervals'],
+    ['Inspection checklists', (S.templates || []).length > 0, '#/admin/templates', ''],
+    ['Audit checklists', by('auditTemplates').length > 0, '#/admin/audittemplates', ''],
+    ['Appointment types', (S.config.apptTypes || []).length > 0, '#/admin/appttypes', 'Legal appointments with their duties'],
+    ['Risk matrix', !!(S.config.riskMatrix && S.config.riskMatrix.bands), '#/admin/riskmatrix', ''],
+    ['Legal requirements register', by('legalReqs').length > 0, '#/legal/register', 'The Act and regulations that apply'],
+    ['Training courses and requirements', by('courses').length > 0 && by('trainingReqs').length > 0, '#/training/courses', ''],
+    ['PPE types and requirements', by('ppeTypes').length > 0 && by('ppeReqs').length > 0, '#/ppe/types', ''],
+    ['Emergency arrangements per branch', sites.length > 0 && sites.every(s => { const e = (S.emergency || []).find(x => x.site === s.id); return e && e.plan && (e.assembly || []).length; }), '#/emergency', 'Plan and assembly point for every branch'],
+    ['Assets loaded', by('assets').length > 0, '#/assets', 'Import from Excel under Import data'] ]; }
+const _adminBeforeSetup = ROUTES.admin;
+ROUTES.admin = (p, q) => { const r = _adminBeforeSetup(p, q);
+  if (r && r.html && (p[0] || 'orgs') === 'orgs' && can('admin')) { const it = setupItems(), done = it.filter(x => x[1]).length, all = done === it.length;
+    const card = `<details class="card setup-card"${all ? '' : ' open'}><summary class="card-head"><h2>Set-up checklist — ${esc((orgOf(S.ui.org) || {}).short || '')}</h2><span class="ch-sub">${done} of ${it.length} done${all ? ' · ready' : ''}</span><span class="setup-bar"><span style="width:${Math.round(done / it.length * 100)}%"></span></span></summary>
+      <div class="card-body flush"><ul class="setup-list">${it.map(([t, ok, href, hint]) => `<li class="${ok ? 'ok' : 'todo'}">${icon(ok ? 'checkCircle' : 'alert', 'sm')}<div><b>${esc(t)}</b>${hint ? `<small>${esc(hint)}</small>` : ''}</div><a class="btn sm ${ok ? 'ghost' : 'primary'}" href="${href}">${ok ? 'View' : 'Set up'}</a></li>`).join('')}</ul></div></details>`;
+    const i = r.html.indexOf('<div class="adm-nav">'); r.html = i > -1 ? r.html.slice(0, i) + card + r.html.slice(i) : card + r.html; }
+  return r; };

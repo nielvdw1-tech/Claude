@@ -1878,6 +1878,15 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await p.click('.more-btn'); ok('B10b "More" opens the menu', await has('.more-wrap.open .more-menu .btn'));
   }
 
+  /* ---------------- IM-C. Consistency (C11–C12) ---------------- */
+  {
+    await asUser('P-002'); await go('#/ppe/issues');
+    ok('C11a each list shows its add button(s) at the top of the list', await has('.card .list-actions [data-act=ppeIssue]'));
+    const lcKeep = await S(() => { const k = S.legalChanges; S.legalChanges = []; return k; }); await go('#/legal/changes'); ok('C11b an empty list offers its add button ("Add your first…")', await has('.empty .empty-cta [data-act]')); await p.evaluate(k => { S.legalChanges = k; save(); }, lcKeep);
+    await go('#/admin'); const st = await p.innerText('.setup-card summary');
+    ok('C12 Administration shows a set-up checklist (done / to set up, with links)', /of 16 done/.test(st) && await has('.setup-list li.ok') && await has('.setup-list a[href="#/admin/approvals"]'), st);
+  }
+
   /* ---------------- Print output ---------------- */
   { await go('#/print/INS-1087'); await p.emulateMedia({ media: 'print' }); await p.pdf({ path: path.join(os.tmpdir(), 'vdw_inspection_report.pdf'), format: 'A4', printBackground: true }); await p.emulateMedia({ media: 'screen' }); }
 
