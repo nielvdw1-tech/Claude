@@ -38,6 +38,7 @@ function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu("PPE Management")
     .addItem("Refresh Dashboard", "refreshPPEDashboard")
+    .addItem("Build Supplier Quote List", "buildPPESupplierQuoteList")
     .addSeparator()
     .addItem("Issue PPE", "showIssuePPESidebar")
     .addItem("Request PPE", "showPPERequestSidebar")
