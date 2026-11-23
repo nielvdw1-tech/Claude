@@ -10,6 +10,8 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
 (async () => {
   const b = await chromium.launch(); const ctx = await b.newContext({ viewport: { width: 1400, height: 950 }, acceptDownloads: true });
   const p = await ctx.newPage();
+  // buttons in a record's "More" menu are opened first, the way a person would
+  { const _click = p.click.bind(p); p.click = async (sel, o) => { try { const h = await p.$(sel); if (h) await h.evaluate(el => { const w = el.closest('.more-menu') && el.closest('.more-wrap'); if (w && !w.classList.contains('open')) w.classList.add('open'); }); } catch (e) { /* selector for a later element */ } return _click(sel, o); }; }
   p.on('pageerror', e => errs.push('PAGEERROR ' + e.message)); p.on('console', m => { if (m.type() === 'error') errs.push('CONSOLE ' + m.text()); });
   await p.goto(URL); await p.evaluate(() => localStorage.clear()); await p.goto(URL); await p.waitForTimeout(300);
 
@@ -466,7 +468,10 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
   {
     await asUser('P-001'); await go('#/dashboard'); await p.waitForTimeout(250);
     if ((await S('S.ui.site')) !== 'ALL') { await S("(S.ui.site = 'ALL', save(), rerender())"); await p.waitForTimeout(250); }
-    const secs = await p.$$eval('h3.dash-sec', e => e.map(x => x.textContent.trim()));
+    const secs = await p.$$eval('.dash-sec', e => e.map(x => x.textContent.replace(/(Show|Hide)$/, '').trim()));
+    const folded = await p.$$eval('.dash-fold:not(.open)', e => e.map(x => x.dataset.sec));
+    ok('DB0 the dashboard sections fold away; the Managing Director sees compliance status and management first, trends and detail folded', folded.includes('Trends') && folded.includes('Detail') && !folded.includes('Compliance status'), folded.join('|'));
+    await S(() => document.querySelectorAll('.dash-fold:not(.open) .dash-toggle').forEach(b => b.click())); await p.waitForTimeout(150);
     ok('DB1 compliance status comes first, then compliance management, trends and detail', secs.length === 4 && /Compliance status/i.test(secs[0]) && /Compliance management/i.test(secs[1]) && /Trends/i.test(secs[2]) && /Detail/i.test(secs[3]), secs.join(' | '));
     const hero = await p.$eval('.cs-hero .pie-v', e => parseInt(e.textContent)), want = await S("compliance('ALL').overall");
     ok('DB2 the overall control score and the five areas (incl. legal compliance) show with a status label', hero === want && (await p.$$eval('.cs-part', e => e.length)) === 5 && (await p.$$eval('.cs-grid .pie svg', e => e.length)) === 6 && (await p.$$eval('.cs-grid .st-chip', e => e.length)) === 6, `${hero}%`);
@@ -1855,6 +1860,22 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await p.click('[data-act=drillCancel]'); await p.waitForTimeout(120); await mfill('reason', 'Shutdown week.'); await mbtn('Cancel drill'); await p.waitForTimeout(120);
     ok('A5 a scheduled drill can be moved and cancelled, with the reason kept', await S(`(() => { const d = byId('drills','${did}'); return d.date === '2026-12-20' && d.status === 'Cancelled' && d.cancelled.reason === 'Shutdown week.'; })()`) && await has('.alert.info'));
     await go('#/notices/NT-004'); ok('A6 a notice has one Back button', (await p.$$eval('#content a.btn, #content button', x => x.filter(e => /Back/.test(e.textContent)).length)) === 1);
+  }
+
+  /* ---------------- IM-B. Less information at once (B7–B10) ---------------- */
+  {
+    await asUser('P-002'); await go('#/notifications/tasks');
+    const grp = await p.$$eval('.tg-head b', e => e.map(x => x.textContent));
+    ok('B7a My tasks are grouped by urgency (overdue/urgent, soon, to do) and can be filtered by module', grp.length >= 2 && grp[0] === 'Overdue or urgent' && await has('.toolbar a[href*="?mod="]'), grp.join('|'));
+    const n0 = await S('myTasks().length'); await p.click('[data-act=taskSnooze]'); await p.waitForTimeout(150);
+    ok('B7b a task can be snoozed for 7 days, and shown again', (await S('myTasks().length')) === n0 - 1 && await has('[data-act=taskUnsnooze]'));
+    await p.click('[data-act=taskUnsnooze]'); await p.waitForTimeout(120); ok('B7c un-snoozing brings it back', (await S('myTasks().length')) === n0);
+    await go('#/risk/hazards'); const fold = await has('details.kpi-fold:not([open]) .kpis'); await go('#/risk'); const first = await has('#content > .kpis');
+    ok('B9 module figures show on the first tab and fold away on the other tabs', fold && first);
+    const iid = await S(() => (S.incidents.find(i => i.status === 'Under Investigation') || S.incidents.find(i => i.status !== 'Closed')).id); await go('#/incidents/' + iid);
+    const vis = await p.$$eval('.status-hero .sh-actions > .btn, .status-hero .sh-actions > a.btn', e => e.length), more = await p.$$eval('.more-menu .btn', e => e.length);
+    ok('B10 a record page shows at most three buttons; the rest are under "More"', vis <= 3 && more >= 1 && await has('.more-btn'), `${vis} visible, ${more} in More`);
+    await p.click('.more-btn'); ok('B10b "More" opens the menu', await has('.more-wrap.open .more-menu .btn'));
   }
 
   /* ---------------- Print output ---------------- */

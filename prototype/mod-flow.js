@@ -86,3 +86,81 @@ ACT.drillMove = (el) => { const d = byId('drills', el.dataset.id); openModal({ t
     queueEmail([d.coordinator], 'actions', `Emergency drill moved: ${sname(d.site)} to ${fmt(v.date)}`, `The ${d.scenario} drill at ${sname(d.site)} moved from ${fmt(old)} to ${fmt(v.date)}.`, '#/emergency/' + d.id); log(`Moved drill ${d.id} to ${fmt(v.date)}`, '#/emergency/' + d.id); save(); rerender(); } }] }); };
 ACT.drillCancel = (el) => { const d = byId('drills', el.dataset.id); openModal({ title: 'Cancel the drill', sub: `${d.id} ${d.scenario}`, body: fld({ name: 'reason', label: 'Reason', type: 'textarea', required: true, full: true }),
   buttons: [{ label: 'Cancel drill', cls: 'danger', onClick: m => { if (!validateForm(m)) return false; d.status = 'Cancelled'; d.cancelled = { on: TODAY, by: S.ui.user, reason: readForm(m).reason }; log(`Cancelled drill ${d.id}`, '#/emergency/' + d.id); save(); rerender(); } }] }); };
+
+/* ---------- B7. My tasks: grouped by urgency and module, with snooze ---------- */
+const taskKey = t => (t.link || '') + '|' + (t.title || '');
+const snoozed = () => (S.ui.snooze = S.ui.snooze || {});
+const _myTasksBeforeSnooze = myTasks;
+function myTasksAll() { return _myTasksBeforeSnooze(); }
+myTasks = function () { const z = snoozed(); return _myTasksBeforeSnooze().filter(t => !(z[taskKey(t)] && z[taskKey(t)] > TODAY)); };
+const TASK_GROUPS = [['red', 'Overdue or urgent', 'Do these first'], ['amber', 'Needs action soon', 'Due soon or waiting on you'], ['blue', 'To do', 'When you can']];
+function taskModule(link) { const k = (link || '').replace(/^#\/?/, '').split(/[/?]/)[0]; const it = NAV.flatMap(g => g.items).find(i => i[0] === k); return it ? it[1] : ({ myra: 'Risk Management', me: 'My appointments', myppe: 'My PPE', mytraining: 'My training', myreading: 'Documents to read', inspect: 'Inspections', field: 'Home' })[k] || 'Other'; }
+function tasksHtml(q) {
+  const all = myTasks(), mods = [...new Set(all.map(t => taskModule(t.link)))].sort(), mod = q.mod || '', list = mod ? all.filter(t => taskModule(t.link) === mod) : all;
+  const z = snoozed(), hidden = myTasksAll().filter(t => z[taskKey(t)] && z[taskKey(t)] > TODAY);
+  const row = t => `<div class="notif"><div class="n-ic ic-${t.sev}">${icon('tasks')}</div><div class="n-body"><div class="n-title">${esc(t.title)}</div><div class="n-text">${esc(t.sub || '')}</div><div class="n-meta"><span>${esc(taskModule(t.link))}</span></div></div><div class="btn-row nowrap"><a class="btn sm primary" href="${t.link}">Open</a><button class="btn sm ghost" data-act="taskSnooze" data-k="${esc(taskKey(t))}" title="Hide this task for 7 days">Snooze 7 days</button></div></div>`;
+  const groups = TASK_GROUPS.map(([sev, h, sub]) => { const g = list.filter(t => (t.sev === sev) || (sev === 'blue' && !['red', 'amber'].includes(t.sev))); return g.length ? `<div class="task-group"><div class="tg-head sev-${sev}"><b>${h}</b> <span class="t-sub">${g.length} · ${sub}</span></div>${g.map(row).join('')}</div>` : ''; }).join('');
+  return `<div class="card"><div class="card-head"><h2>My tasks — ${esc(me().name)}</h2><span class="ch-sub">${all.length} open · ${esc(myRole().name)} · ${esc(scopeLabel())}</span></div>
+    ${mods.length > 1 ? `<div class="toolbar"><div class="btn-row">${['', ...mods].map(m => `<a class="btn sm ${mod === m ? 'primary' : ''}" href="#/notifications/tasks${m ? '?mod=' + encodeURIComponent(m) : ''}">${m ? esc(m) + ` (${all.filter(t => taskModule(t.link) === m).length})` : 'All modules'}</a>`).join('')}</div></div>` : ''}
+    <div class="card-body flush">${list.length ? groups : `<div class="empty">${icon('checkCircle')}<div>No tasks${mod ? ' in ' + esc(mod) : ''}. You are up to date.</div></div>`}</div>
+    ${hidden.length ? `<div class="card-body t-sub">${hidden.length} task(s) snoozed. <button class="link-btn" data-act="taskUnsnooze">Show them again</button></div>` : ''}</div>`;
+}
+const _notifBeforeFlow = ROUTES.notifications;
+ROUTES.notifications = (p, q = {}) => { const r = _notifBeforeFlow(p, q);
+  if ((p[0] || 'all') === 'tasks' && r && r.html) { const i = r.html.indexOf('<div class="card"><div class="card-head"><h2>My tasks'); if (i > -1) r.html = r.html.slice(0, i) + tasksHtml(q); }
+  return r; };
+ACT.taskSnooze = (el) => { snoozed()[el.dataset.k] = addDays(TODAY, 7); save(); toast('Snoozed for 7 days.'); rerender(); };
+ACT.taskUnsnooze = () => { S.ui.snooze = {}; save(); rerender(); };
+
+/* ---------- B8. Dashboard: sections fold away; what is open first depends on the role ---------- */
+const DASH_OPEN = {   // sections open by default per role (the person's own choice is remembered)
+  'Managing Director': ['Compliance status', 'Compliance management'],
+  'HSEQ Manager': ['Compliance status', 'Compliance management'],
+  'Safety Consultant': ['Compliance status', 'Compliance management'],
+  'Branch Manager': ['Compliance status', 'Detail'],
+  'Supervisor': ['Detail', 'Compliance management'],
+  'System Administrator': ['Compliance status']
+};
+const dashOpen = (name) => { const mine = ((S.ui.dashFold = S.ui.dashFold || {})[S.ui.user] || {}); if (name in mine) return mine[name]; return (DASH_OPEN[myRole().name] || ['Compliance status']).includes(name); };
+const _dashBeforeFold = ROUTES.dashboard;
+ROUTES.dashboard = (p, q = {}) => { const r = _dashBeforeFold(p, q);
+  if (!r || !r.html || r.html.indexOf('dash-sec') < 0 || r.html.indexOf('class="emp"') > -1) return r;
+  const t = document.createElement('template'); t.innerHTML = r.html; const kids = [...t.content.childNodes]; const out = document.createDocumentFragment(); let sec = null;
+  kids.forEach(n => { if (n.nodeType === 1 && n.classList.contains('dash-sec')) { const name = n.textContent.trim().replace(/^—\s*/, '').replace(/ — .*/, ''), open = dashOpen(name);
+      sec = document.createElement('section'); sec.className = 'dash-fold' + (open ? ' open' : ''); sec.dataset.sec = name;
+      const hb = document.createElement('button'); hb.type = 'button'; hb.className = 'dash-sec dash-toggle'; hb.dataset.act = 'dashFold'; hb.dataset.sec = name; hb.setAttribute('aria-expanded', open ? 'true' : 'false'); hb.innerHTML = n.innerHTML + `<span class="df-hint">${open ? 'Hide' : 'Show'}</span>`;
+      const body = document.createElement('div'); body.className = 'df-body'; sec.appendChild(hb); sec.appendChild(body); out.appendChild(sec); return; }
+    (sec ? sec.querySelector('.df-body') : out).appendChild(n); });
+  const d = document.createElement('div'); d.appendChild(out); r.html = d.innerHTML; return r; };
+ACT.dashFold = (el) => { const sec = el.closest('.dash-fold'), name = el.dataset.sec, open = !sec.classList.contains('open'); sec.classList.toggle('open', open); el.setAttribute('aria-expanded', open); el.querySelector('.df-hint').textContent = open ? 'Hide' : 'Show';
+  S.ui.dashFold = S.ui.dashFold || {}; (S.ui.dashFold[S.ui.user] = S.ui.dashFold[S.ui.user] || {})[name] = open; save(); if (open) window.dispatchEvent(new Event('resize')); };
+
+/* ---------- B9. Module figures show on the module's first tab; on the other tabs they fold away ---------- */
+function foldTabKpis() {
+  const c = document.getElementById('content'); if (!c) return; const tabs = c.querySelector('.tabs:not(.adm-tabs)'); if (!tabs) return;
+  const links = [...tabs.querySelectorAll('a')], act = tabs.querySelector('.active'); if (!act || links.indexOf(act) <= 0) return;
+  c.querySelectorAll(':scope > .kpis, :scope > .kpi-more').forEach(k => { if (k.compareDocumentPosition(tabs) & Node.DOCUMENT_POSITION_FOLLOWING) {
+    if (k.classList.contains('kpi-more')) { k.remove(); return; }
+    const d = document.createElement('details'); d.className = 'kpi-fold'; d.innerHTML = `<summary>${icon('chart', 'sm')} Show the figures</summary>`; k.parentNode.insertBefore(d, k); d.appendChild(k); } });
+}
+const _rerenderBeforeFold = rerender;
+rerender = function (...a) { const r = _rerenderBeforeFold.apply(this, a); try { foldTabKpis(); } catch (e) { console.error(e); } return r; };
+
+/* ---------- B10. Record pages: the next step stands out; the rest are under "More" ---------- */
+function tidyRecordActions() {
+  document.querySelectorAll('#content .status-hero .sh-actions').forEach(bar => {
+    const btns = [...bar.children].filter(b => b.matches('.btn, a.btn, label.btn')); if (btns.length <= 3 || bar.querySelector('.more-wrap')) return;
+    const keep = btns.filter(b => b.classList.contains('primary') || b.classList.contains('success')).slice(0, 2);
+    btns.forEach(b => { if (keep.length < 3 && !keep.includes(b)) keep.push(b); });
+    const rest = btns.filter(b => !keep.includes(b)); if (!rest.length) return;
+    keep.sort((a, b) => (b.classList.contains('primary') || b.classList.contains('success')) - (a.classList.contains('primary') || a.classList.contains('success')));
+    const wrap = document.createElement('div'); wrap.className = 'more-wrap';
+    wrap.innerHTML = `<button type="button" class="btn more-btn" data-act="moreMenu" aria-haspopup="true" aria-expanded="false">More ${icon('chevron', 'sm')}</button><div class="more-menu" role="menu"></div>`;
+    rest.forEach(b => { b.classList.remove('primary', 'success'); wrap.querySelector('.more-menu').appendChild(b); });
+    bar.innerHTML = ''; keep.slice().reverse().forEach(b => bar.appendChild(b)); bar.appendChild(wrap);
+  });
+}
+ACT.moreMenu = (el) => { const w = el.closest('.more-wrap'), open = !w.classList.contains('open'); document.querySelectorAll('.more-wrap.open').forEach(x => x.classList.remove('open')); w.classList.toggle('open', open); el.setAttribute('aria-expanded', open); };
+document.addEventListener('click', e => { if (!e.target.closest || !e.target.closest('.more-wrap')) document.querySelectorAll('.more-wrap.open').forEach(x => x.classList.remove('open')); else if (e.target.closest('.more-menu')) setTimeout(() => document.querySelectorAll('.more-wrap.open').forEach(x => x.classList.remove('open')), 0); });
+const _rerenderBeforeMore = rerender;
+rerender = function (...a) { const r = _rerenderBeforeMore.apply(this, a); try { tidyRecordActions(); } catch (e) { console.error(e); } return r; };

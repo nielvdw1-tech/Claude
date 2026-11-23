@@ -1550,3 +1550,25 @@ body.auth-mode .main { padding-top: 0; }
 .em-guide { margin-bottom: 16px; }
 @media (max-width: 1100px) { .em-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 640px) { .em-steps { grid-template-columns: minmax(0, 1fr); } }
+/* My tasks grouped by urgency */
+.task-group + .task-group { border-top: 1px solid var(--line); }
+.tg-head { padding: 10px 16px; background: var(--surface-2); border-left: 3px solid var(--line-strong); font-size: 13px; }
+.tg-head.sev-red { border-left-color: var(--st-bad, #d03b3b); } .tg-head.sev-amber { border-left-color: var(--st-warn, #fab219); } .tg-head.sev-blue { border-left-color: var(--brand); }
+@media (max-width: 640px) { .notif .btn-row.nowrap { flex-wrap: wrap; } }
+/* Dashboard sections that fold away */
+.dash-fold { margin-bottom: 8px; }
+.dash-toggle { display: flex; width: 100%; align-items: center; gap: 8px; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 11px 14px; cursor: pointer; font: inherit; text-align: left; margin: 10px 0; }
+.dash-toggle:hover { border-color: var(--line-strong); }
+.dash-toggle .df-hint { margin-left: auto; font-size: 12.5px; font-weight: 600; color: var(--brand); text-transform: none; letter-spacing: 0; }
+.dash-toggle .df-hint::after { content: ' ▾'; } .dash-fold.open .df-hint::after { content: ' ▴'; }
+.dash-fold:not(.open) > .df-body { display: none; }
+.kpi-fold { margin: 0 0 12px; } .kpi-fold > summary { cursor: pointer; display: inline-flex; gap: 6px; align-items: center; font-size: 13px; font-weight: 600; color: var(--brand); padding: 4px 0; list-style: none; }
+.kpi-fold > summary::-webkit-details-marker { display: none; } .kpi-fold[open] > summary { margin-bottom: 8px; }
+/* Record page: "More" menu for the less common actions */
+.more-wrap { position: relative; display: inline-flex; }
+.more-menu { display: none; position: absolute; right: 0; top: calc(100% + 6px); z-index: 60; min-width: 230px; background: var(--surface); border: 1px solid var(--line-strong); border-radius: 10px; box-shadow: var(--shadow, 0 10px 30px rgba(0,0,0,.15)); padding: 6px; flex-direction: column; gap: 2px; }
+.more-wrap.open .more-menu { display: flex; }
+.more-menu > .btn, .more-menu > a.btn, .more-menu > label.btn { justify-content: flex-start; border: 0; background: none; width: 100%; box-shadow: none; padding: 9px 10px; white-space: normal; text-align: left; }
+.more-menu > .btn:hover { background: var(--surface-2); }
+@media (max-width: 640px) { .status-hero .sh-actions .more-wrap { flex: 1 1 auto; } .status-hero .sh-actions .more-btn { width: 100%; justify-content: center; } .more-menu { left: 0; right: 0; } }
+@media (max-width: 640px) { #content .card > .toolbar > .btn-row:has(a[href*="#/notifications/tasks"]) { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; } #content .card > .toolbar > .btn-row:has(a[href*="#/notifications/tasks"]) .btn { flex: none; } }
