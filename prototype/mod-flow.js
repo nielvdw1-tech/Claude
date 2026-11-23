@@ -150,7 +150,7 @@ rerender = function (...a) { const r = _rerenderBeforeFold.apply(this, a); try {
 function tidyRecordActions() {
   document.querySelectorAll('#content .status-hero .sh-actions').forEach(bar => {
     const btns = [...bar.children].filter(b => b.matches('.btn, a.btn, label.btn')); if (btns.length <= 3 || bar.querySelector('.more-wrap')) return;
-    const keep = btns.filter(b => b.classList.contains('primary') || b.classList.contains('success')).slice(0, 2);
+    const keep = btns.filter(b => b.classList.contains('keep')).concat(btns.filter(b => !b.classList.contains('keep') && (b.classList.contains('primary') || b.classList.contains('success'))).slice(0, 2));
     btns.forEach(b => { if (keep.length < 3 && !keep.includes(b)) keep.push(b); });
     const rest = btns.filter(b => !keep.includes(b)); if (!rest.length) return;
     keep.sort((a, b) => (b.classList.contains('primary') || b.classList.contains('success')) - (a.classList.contains('primary') || a.classList.contains('success')));

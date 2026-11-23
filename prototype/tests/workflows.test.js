@@ -304,7 +304,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     ok('H2 Safety Consultant can issue approved documents', await has('.sh-actions button:has-text("Issue for use"):not([disabled])'));
     await asUser('P-014'); await p.waitForTimeout(150);
     const nav = await p.$$eval('.nav-item span:not(.count)', e => e.map(x => x.textContent));
-    ok('H3 Employee sees only the field screens', nav.join('|') === 'Home|My appointments|My PPE|My training|Risk assessments|Notifications|Company notices|Documents to read|My inspections|My incident reports|Report incident' && !(await has('#globalSearch')), nav.join(' | '));
+    ok('H3 Employee sees only the field screens', nav.join('|') === 'Home|My appointments|My PPE|My training|Risk assessments|Toolbox talks|Notifications|Company notices|Documents to read|My inspections|My incident reports|Report incident' && !(await has('#globalSearch')), nav.join(' | '));
     await go('#/documents');
     ok('H4 other pages are closed to employees', (await p.innerText('#content')).includes('not available for your role'));
     await go('#/inspect/ISCH-04');
@@ -1804,7 +1804,9 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
   {
     const inside = () => S(() => { const bad = []; document.querySelectorAll('#content .btn').forEach(el => { const r = el.getBoundingClientRect(), c = el.closest('.card, .status-hero'); if (!r.width || !c) return; const cr = c.getBoundingClientRect(); if (r.right > cr.right + 1 || r.left < cr.left - 1) bad.push(el.textContent.trim()); }); return bad; });
     await p.setViewportSize({ width: 1280, height: 900 }); await asUser('P-002'); await go('#/risk/RA-001');
-    ok('RV1 a risk assessment has "View / print"', await has('.sh-actions a[href="#/risk/RA-001/view"]'));
+    ok('RV1 a risk assessment has a "View" button that always stays visible (not under More)', await has('.sh-actions > a[href="#/risk/RA-001/view"]'));
+    await go('#/risk'); ok('RV1b every risk assessment in the list has its own "View" button', (await p.$$eval('.tbl tbody tr', r => r.filter(x => x.querySelector('a[href$="/view"]')).length)) === (await p.$$eval('.tbl tbody tr', r => r.length)));
+    await p.click('.tbl tbody tr a[href="#/risk/RA-001/view"]'); await p.waitForTimeout(150); ok('RV1c "View" opens the read-only risk assessment', (await S('location.hash')) === '#/risk/RA-001/view' && await has('.ra-view')); await go('#/risk/RA-001');
     ok('RV2 on a laptop no button sits outside its card on the risk assessment (controls table fits)', !(await inside()).length, (await inside()).join('|'));
     await go('#/risk/RA-004/view'); const vt = await p.$eval('#content', e => e.textContent);
     ok('RV3 the view follows the company layout: Doc name/no/rev header, process band, risk matrix with rating levels, hierarchy of controls, the I/P/RR table and originator and team signatures', ['Doc name:', 'Doc no:', 'Rev no:', 'Process / activity:', 'Response required for risks identified', 'Hierarchy of hazard controls', 'Activities / task steps', 'Pre-risk rating', 'Post-risk rating', 'Originator', 'Team members signatures', 'Travel in picking aisles with MHE'].every(t => vt.toLowerCase().includes(t.toLowerCase())) && await has('[data-act=print]'), vt.slice(0, 80));
@@ -1902,6 +1904,19 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     const blocked = await S(() => !byId('talks', 'TBT-001').attendees.find(a => a.person === 'P-008').sig);
     await p.check('#ohsAck'); await sign(); await mbtn('Sign'); await p.waitForTimeout(150);
     ok('D14 each attendee signs the toolbox talk register on the screen (tick + signature required)', blocked && await S(() => !!byId('talks', 'TBT-001').attendees.find(a => a.person === 'P-008').sig.image));
+    await go('#/toolbox'); await p.click('.fab-stack .fab'); await p.waitForTimeout(150);
+    await p.setInputFiles('.modal [name=file]', { name: 'Talk_manual_handling.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4 demo') }); await mfill('topic', 'Manual handling'); await mbtn('Save'); await p.waitForTimeout(300);
+    ok('D14b a new toolbox talk can have its document uploaded, and the talk shows it with a "View" button', await S(() => { const t = S.talks[S.talks.length - 1]; return t.files.length === 1 && t.files[0].name === 'Talk_manual_handling.pdf'; }) && await has('.card .link-list .btn.primary'));
+    await p.click('.card .link-list .btn.primary'); await p.waitForTimeout(400);
+    ok('D14c "View" opens the uploaded toolbox talk document', await modalOpen());
+    await p.keyboard.press('Escape'); await p.waitForTimeout(100);
+    await S(() => { const t = byId('talks', 'TBT-002'); t.status = 'Held'; t.date = TODAY; t.attendees.forEach(x => { x.sig = null; }); save(); });
+    await asUser('P-009'); await go('#/field');
+    ok('D14d an employee on the attendance list gets "Sign the toolbox talk register" on their home screen and a Toolbox talks tile', await has('.emp-todo a[href="#/mytalks/TBT-002"]') || await S(() => myTasks().some(t => t.link === '#/mytalks/TBT-002')));
+    ok('D14e the employee home has a "Toolbox talks" tile showing how many to sign', await has('.emp-grid a[href="#/mytalks"].t-warn'));
+    await go('#/mytalks/TBT-002'); await p.click('.alert [data-act=talkSign]'); await p.waitForTimeout(150); await p.check('#ohsAck'); await sign(); await mbtn('Sign'); await p.waitForTimeout(150);
+    ok('D14f the employee reads the talk, views its document and signs it themselves; the task disappears', await S(() => { const a = byId('talks', 'TBT-002').attendees.find(x => x.person === 'P-009'); return !!(a.sig && a.sig.collectedBy === 'P-009') && !myTasks().some(t => t.link === '#/mytalks/TBT-002'); }) && await has('.alert.success'));
+    await asUser('P-002');
     // D15 permits
     await go('#/permits/PTW-002'); await p.click('[data-act=ptwIssue]'); await p.waitForTimeout(150); await mbtn('Issue'); await p.waitForTimeout(80);
     const notIssued = await S(() => byId('permits', 'PTW-002').status === 'Requested');
