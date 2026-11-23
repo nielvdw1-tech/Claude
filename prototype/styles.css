@@ -1586,3 +1586,8 @@ body.auth-mode .main { padding-top: 0; }
 @media (max-width: 760px) { .setup-list { grid-template-columns: minmax(0, 1fr); } }
 .page-note { display: block; } .page-note > svg { vertical-align: -3px; margin-right: 6px; }
 .setup-card { margin-bottom: 16px; }
+/* OHS modules */
+.ptw-checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; } .ptw-checks li { display: flex; gap: 8px; align-items: flex-start; } .ptw-checks li > svg { flex: none; margin-top: 2px; color: var(--muted); } .ptw-checks li.ok > svg { color: var(--ok, #0b8a3e); }
+.med-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 2px 0; }
+.moc-imp { display: grid; grid-template-columns: minmax(0, 220px) minmax(0, 1fr); gap: 10px; align-items: center; } .moc-imp input { width: 100%; }
+@media (max-width: 640px) { .moc-imp { grid-template-columns: minmax(0, 1fr); } }

@@ -216,7 +216,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await asUser('P-007'); await go('#/notifications/tasks');
     ok('E3 overdue inspection appears in the assignee task centre', (await p.innerText('#content')).includes('Inspect: Germiston warehouse & workshop'));
     await go('#/no-such-module'); ok('E4 an unknown page shows "Page not found"', (await p.innerText('#content')).includes('Page not found'));
-    ok('E5 navigation shows only the focused modules', (await p.$$eval('.nav-item span:not(.count)', e => e.map(x => x.textContent))).join('|') === 'Dashboard|Notifications & Tasks|My team|My appointments|My PPE|My training|Company Notices|Legal Requirements|Risk Management|People Management|Training Management|Contractor Management|Document Manager|Assets & Equipment|Inspections|Maintenance & Defects|PPE Management|Hazardous Substances|Emergency Management|Audits|Incident Management|Corrective Actions|Reports|Administration');
+    ok('E5 navigation shows only the focused modules', (await p.$$eval('.nav-item span:not(.count)', e => e.map(x => x.textContent))).join('|') === 'Dashboard|Notifications & Tasks|My team|My appointments|My PPE|My training|Company Notices|Legal Requirements|Risk Management|People Management|Training Management|Contractor Management|H&S Committee|Toolbox Talks|Document Manager|Assets & Equipment|Inspections|Maintenance & Defects|PPE Management|Hazardous Substances|Emergency Management|Permits to Work|Management of Change|Audits|Incident Management|Corrective Actions|Reports|Administration');
     await asUser('P-002'); await go('#/incidents'); await go('#/actions'); await btn('New action'); await mbtn('Continue'); await p.waitForTimeout(100); await mbtn('Raise action');
     ok('E6 form validation blocks empty required fields', await modalOpen() && (await p.$$('.modal .field.invalid')).length > 0); await p.keyboard.press('Escape');
     await asUser('P-009'); await go('#/documents/DOC-007');
@@ -1885,6 +1885,46 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     const lcKeep = await S(() => { const k = S.legalChanges; S.legalChanges = []; return k; }); await go('#/legal/changes'); ok('C11b an empty list offers its add button ("Add your first…")', await has('.empty .empty-cta [data-act]')); await p.evaluate(k => { S.legalChanges = k; save(); }, lcKeep);
     await go('#/admin'); const st = await p.innerText('.setup-card summary');
     ok('C12 Administration shows a set-up checklist (done / to set up, with links)', /of 16 done/.test(st) && await has('.setup-list li.ok') && await has('.setup-list a[href="#/admin/approvals"]'), st);
+  }
+
+  /* ---------------- OHS modules (D13–D17) ---------------- */
+  {
+    const sign = async (canvas = '#ohsSig') => { const bb = await (await p.$(canvas)).boundingBox(); await p.mouse.move(bb.x + 20, bb.y + 30); await p.mouse.down(); for (let k = 1; k < 12; k++) await p.mouse.move(bb.x + 20 + k * 14, bb.y + 30 + (k % 2) * 12); await p.mouse.up(); await p.waitForTimeout(60); };
+    await p.setViewportSize({ width: 1400, height: 950 }); await asUser('P-002');
+    // D13 committee
+    await go('#/committee'); ok('D13a the H&S committee page lists committees and the health and safety representatives (from their appointments)', (await p.innerText('#content')).includes('Germiston health and safety committee') && (await p.innerText('#content')).includes('Nomvula Sithole'));
+    await go('#/committee/MTG-002'); await p.click('[data-act=mtgMinutes]'); await p.waitForTimeout(150); await mfill('minutes', 'Walkways reviewed.'); await mfill('findings', 'Repaint the loading bay walkway\nReplace the damaged dock bumper'); await msel('owner', 'P-005'); await mbtn('Save minutes'); await p.waitForTimeout(150);
+    ok('D13b recording the minutes marks the meeting held, and each decision becomes a corrective action', await S(() => { const m = byId('comMeetings', 'MTG-002'); return m.status === 'Held' && m.findings.length === 2 && m.findings.every(f => byId('actions', f.action).source === 'H&S committee'); }));
+    await go('#/committee/inspections'); await p.click('.fab-stack .fab'); await p.waitForTimeout(150); await mfill('area', 'Workshop'); await mfill('findings', 'Grinder guard missing'); await msel('owner', 'P-005'); await mbtn('Save'); await p.waitForTimeout(150);
+    ok('D13c a representative\'s workplace inspection is recorded and its findings become actions', await S(() => { const r = S.repInspections[S.repInspections.length - 1]; return r.area === 'Workshop' && byId('actions', r.findings[0].action).source === 'H&S representative inspection'; }));
+    // D14 toolbox
+    await go('#/toolbox/TBT-001'); await p.click('[data-act=talkSign][data-p="P-008"]'); await p.waitForTimeout(150); await mbtn('Sign'); await p.waitForTimeout(80);
+    const blocked = await S(() => !byId('talks', 'TBT-001').attendees.find(a => a.person === 'P-008').sig);
+    await p.check('#ohsAck'); await sign(); await mbtn('Sign'); await p.waitForTimeout(150);
+    ok('D14 each attendee signs the toolbox talk register on the screen (tick + signature required)', blocked && await S(() => !!byId('talks', 'TBT-001').attendees.find(a => a.person === 'P-008').sig.image));
+    // D15 permits
+    await go('#/permits/PTW-002'); await p.click('[data-act=ptwIssue]'); await p.waitForTimeout(150); await mbtn('Issue'); await p.waitForTimeout(80);
+    const notIssued = await S(() => byId('permits', 'PTW-002').status === 'Requested');
+    await S(() => document.querySelectorAll('.modal .chk-col input[type=checkbox]').forEach(c => { c.checked = true; })); await sign(); await mbtn('Issue'); await p.waitForTimeout(150);
+    ok('D15a a permit is only issued when every precaution is confirmed and the issuer signs', notIssued && await S(() => { const x = byId('permits', 'PTW-002'); return x.status === 'Issued' && x.precautions.every(c => c.ok) && !!x.issued.sig.image; }));
+    await p.click('[data-act=ptwClose]'); await p.waitForTimeout(150); await p.check('.modal [name=safe]'); await sign(); await mbtn('Close permit'); await p.waitForTimeout(150);
+    ok('D15b the permit is closed out (area left safe, signed)', await S(() => byId('permits', 'PTW-002').status === 'Closed'));
+    await S(() => { byId('permits', 'PTW-001').validTo = '2000-01-01T00:00'; save(); }); await go('#/permits');
+    ok('D15c an issued permit past its end time shows as expired and becomes a task', (await p.innerText('#content')).includes('Expired — not closed') && await S(() => myTasks().some(t => t.link === '#/permits/PTW-001')));
+    // D16 medical
+    await go('#/medical'); const medTxt = await p.innerText('#content');
+    ok('D16a the surveillance register shows who needs which examination and its status (fitness outcome only)', medTxt.includes('Audiometry') && medTxt.includes('Missing') && medTxt.includes('Restrictions'));
+    await p.click('[data-act=medRec][data-p="P-016"], [data-act=medRec]'); await p.waitForTimeout(150); await mfill('provider', 'Demo clinic'); await msel('outcome', 'Fit'); await mbtn('Save'); await p.waitForTimeout(150);
+    ok('D16b recording an examination sets the next due date from the interval', await S(() => { const r = S.medRecs[S.medRecs.length - 1]; return r.nextDue > TODAY && r.outcome === 'Fit'; }));
+    await asUser('P-001'); await go('#/medical'); ok('D16c medical surveillance is closed to roles without the permission (e.g. Managing Director)', (await p.innerText('#content')).includes('Not available'));
+    // D17 MOC
+    await go('#/moc/MOC-001'); await p.click('[data-act=mocDecide]'); await p.waitForTimeout(150); await mbtn('Approve'); await p.waitForTimeout(150);
+    ok('D17a the change is approved in order (last approver approves → Approved)', await S(() => byId('mocs', 'MOC-001').status === 'Approved'));
+    await asUser('P-002'); await go('#/moc/MOC-001'); await p.click('[data-act=mocAct]'); await p.waitForTimeout(150); await msel('owner', 'P-005'); await mbtn('Raise action'); await p.waitForTimeout(150);
+    const aid = await S(() => byId('mocs', 'MOC-001').actions[0]); await p.click('[data-act=mocClose]'); await p.waitForTimeout(100);
+    const notClosed = await S(() => byId('mocs', 'MOC-001').status === 'Implementing');
+    await S(`(() => { const a = byId('actions', '${aid}'); a.status = 'Verified'; save(); rerender(); })()`); await p.waitForTimeout(100); await p.click('[data-act=mocClose]'); await p.waitForTimeout(120); await mfill('comment', 'Electric units in use; charging bay ventilated.'); await mbtn('Close the change'); await p.waitForTimeout(120);
+    ok('D17b implementation actions are raised; the change only closes after they are verified, with a post-implementation review', notClosed && await S(() => byId('mocs', 'MOC-001').status === 'Closed'));
   }
 
   /* ---------------- Print output ---------------- */
