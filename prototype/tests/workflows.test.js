@@ -1463,7 +1463,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await asUser('P-002'); await pickScope('#siteSel', 'ALL'); await go('#/legal');
     const k = await p.$$eval('.kpis .kpi .k-label, .kpi-chip span', x => x.map(e => e.textContent.trim()));
     ok('LG1 Legal Requirements shows applicable, compliant, partial, non-compliant, not assessed, without evidence, with open actions and due for reassessment', ['Applicable requirements', 'Compliant', 'Partially compliant', 'Non-compliant', 'Not assessed', 'Without evidence', 'With open actions', 'Due for reassessment'].every(t => k.includes(t)), k.join('|'));
-    ok('LG2 the library supplies no legal wording of its own (only names; wording is loaded by a competent person)', await S(() => S.legislation.every(l => (l.items || []).every(i => !i.text))));
+    ok('LG2 the library has no wording of its own: wording comes only from the owner\'s documents (with their source file) and starts unchecked', await S(() => S.legislation.filter(l => !l.ltx).every(l => (l.items || []).every(i => !i.text)) && S.legislation.filter(l => l.ltx && !LEGAL_TEXTS[l.ltx].notext).every(l => LEGAL_TEXTS[l.ltx].file && (l.items || []).every(i => typeof i.text === 'string'))));
     await go('#/legal/LR-004');
     ok('LG3 a requirement shows the official-wording panel (not loaded yet) separately from the system interpretation', (await p.innerText('#content')).includes('Official wording not loaded yet') && (await p.innerText('#content')).includes('System interpretation — not legal text'));
     // load official wording: needs a source and confirmation
