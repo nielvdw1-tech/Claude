@@ -295,6 +295,7 @@ Other pages are closed to employees. An inspection can only be started from the 
 - **Company notices:** can go to selected **departments** or **named people**, not only all staff or one branch.
 - **Incidents:** direct causes, underlying causes and contributing factors (next to the 5 Whys root cause).
 - **Audits ↔ legal requirements:** each audit checklist item can be linked to a legal requirement; the requirement shows the latest audit results of its linked items.
+- **The modules feed the requirements register (live):** documents, risk assessments, appointments, training courses, inspection schedules, medical examination types and emergency drills can be linked to the legal requirements they support **from the record itself** (card "Legal requirements this supports", with suggestions marked ★). Each requirement shows **"Evidence from the system"** with the live state of every linked record (issued revision and review date, review overdue, accepted or awaiting acceptance, and so on). **Link evidence** also takes inspections, audits, training records and PPE issues. **Gaps are flagged automatically**: a linked record that is overdue or not in order, an overdue compliance task, or no evidence where evidence is required. A requirement assessed "Compliant" shows as **"Partially compliant"** while it has a gap, so the legal compliance figure reflects it; the register marks those rows in red. (mod-legal-links.js)
 
 ### Employee app (phone first; also on a PC)
 - **Home screen** for employees: greeting with job title, branch and date, and how many things need attention; large **Scan & inspect** and **Report incident** buttons; **Needs your attention** (the most urgent first: appointments to accept, PPE to sign for, notices to acknowledge, documents to read and sign, inspections due); **Notices for you**; and tiles with counts for **My appointments, My PPE, My training, Notifications, Company notices, Documents to read, My inspections and My incident reports**. Each tile opens its own page.
@@ -477,6 +478,7 @@ prototype/
 ├── mod-notices.js                Company notices: publish, read, acknowledge, track
 ├── mod-registers.js             Shared filter bar and set-up helpers for the new registers
 ├── mod-legal.js                 Legal requirements: library, register, assessments, evidence, changes
+├── mod-legal-links.js           Live links from records to legal requirements, evidence gaps
 ├── mod-people.js                Employees, legal appointments (digital and uploaded), responsibilities, competency
 ├── mod-training.js              Training: courses, requirements, matrix, records, sessions, reminders
 ├── mod-risk.js                  Risk: hazard register, assessments, controls, reviews, configurable matrix

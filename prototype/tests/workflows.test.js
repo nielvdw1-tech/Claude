@@ -1990,6 +1990,30 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     ok('LX9 the compliance calendar shows overdue tasks and the owner gets them as a task', (await p.innerText('#content')).includes('Noise exposure risk assessment') && await has('tr.row-red') && await S(() => myTasks().some(t => /^Compliance:/.test(t.title))));
   }
 
+  /* ---------------- The modules feed the legal register ---------------- */
+  {
+    await p.setViewportSize({ width: 1400, height: 950 }); await asUser('P-002'); await S(() => { S.ui.site = 'ALL'; save(); });
+    await go('#/legal/LR-001');
+    ok('LK1 a policy linked on the document shows live under its requirement ("Evidence from the system", issued revision and review date)', (await p.innerText('.lk-card')).includes('KIE-POL-001') && (await p.innerText('.lk-card')).includes('Issued Rev'));
+    await go('#/risk/RA-002'); await p.click('.lk-rec [data-act=lkFromRecord]'); await p.waitForTimeout(150);
+    const lr = await S(() => { const l = [...document.querySelectorAll('.modal .chk-col label')].find(x => !x.querySelector('input').checked); return l ? l.textContent.match(/LR-\d+/)[0] : ''; });
+    const k = await p.evaluate(lr => [...document.querySelectorAll('.modal .chk-col label')].findIndex(l => l.textContent.includes(lr)), lr); await p.check(`.modal [name=lr${k}]`); await mbtn('Save'); await p.waitForTimeout(150);
+    ok('LK2 a risk assessment can be linked to a legal requirement from the risk assessment itself', !!lr && await p.evaluate(lr => (byId('riskAssessments', 'RA-002').legalReqs || []).includes(lr), lr) && (await p.innerText('.lk-rec')).includes(lr), lr);
+    await go('#/legal/' + lr);
+    ok('LK3 the requirement then shows the risk assessment with its state; an overdue review is an evidence gap', (await p.innerText('.lk-card')).includes('RA-002') && await p.evaluate(lr => lkGaps(byId('legalReqs', lr)).some(g => /review overdue/.test(g)), lr) && await has('.lk-gap'));
+    const was = await S(() => { const r = byId('legalReqs', 'LR-001'); return lrStatus(r); });
+    await S(() => { const d = byId('documents', 'DOC-001'); d.__nr = d.nextReview; d.nextReview = addDays(TODAY, -5); save(); });
+    const now = await S(() => lrStatus(byId('legalReqs', 'LR-001')));
+    await S(() => { const d = byId('documents', 'DOC-001'); d.nextReview = d.__nr; delete d.__nr; save(); });
+    ok('LK4 a requirement assessed compliant becomes "Partially compliant" while its linked document is overdue for review, and recovers after', was === 'Compliant' && now === 'Partially compliant' && await S(() => lrStatus(byId('legalReqs', 'LR-001')) === 'Compliant'), was + ' → ' + now);
+    await go('#/legal/LR-003'); await p.click('.lk-card [data-act=lrEvidence]'); await p.waitForTimeout(150);
+    const kinds = await S(() => [...document.querySelectorAll('.modal [name=kind] option')].map(o => o.value));
+    ok('LK5 Link evidence also takes risk assessments, training records, PPE issues, courses, inspection schedules, medical examinations and drills', ['Risk assessment', 'Training record', 'PPE issue', 'Training course', 'Inspection schedule', 'Medical examination type', 'Emergency drill'].every(x => kinds.includes(x)), kinds.join('|'));
+    await msel('kind', 'PPE issue'); await p.waitForTimeout(80); const pid = await S(() => document.querySelector('.modal [name=ref] option:nth-child(2)').value); await msel('ref', pid); await mbtn('Link'); await p.waitForTimeout(150);
+    ok('LK6 a PPE issue is linked as evidence and shown on the requirement', await S(() => (byId('legalReqs', 'LR-003').evidence || []).some(e => e.kind === 'PPE issue')));
+    await go('#/legal/register'); ok('LK7 the register marks requirements with an evidence gap', await has('tr.lk-row-gap'));
+  }
+
   /* ---------------- Print output ---------------- */
   { await go('#/print/INS-1087'); await p.emulateMedia({ media: 'print' }); await p.pdf({ path: path.join(os.tmpdir(), 'vdw_inspection_report.pdf'), format: 'A4', printBackground: true }); await p.emulateMedia({ media: 'screen' }); }
 

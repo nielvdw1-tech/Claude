@@ -1601,3 +1601,7 @@ body.auth-mode .main { padding-top: 0; }
 .ltx-amend { margin-top: 10px; padding: 8px 10px; border: 1px dashed var(--warn-line, #e8c66a); border-radius: 8px; background: var(--warn-bg, #fff8e5); }
 .ltx-amend .legal-text { margin-top: 6px; }
 @media (max-width: 760px) { .ltx-lib tr.fam-row { display: block; } .ltx-lib tr.fam-row td { display: block; padding-left: 12px !important; } .ltx-lib tr.fam-row td::before { display: none; } }
+/* Legal register fed by the modules */
+.lk-gap ul { margin: 4px 0 0; } .lk-gap li { margin: 2px 0; }
+.lk-sug { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; display: grid; gap: 6px; background: var(--surface-2); }
+.tbl tr.lk-row-gap td:first-child { box-shadow: inset 3px 0 0 var(--st-bad, #d03b3b); }
