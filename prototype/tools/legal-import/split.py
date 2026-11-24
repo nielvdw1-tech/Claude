@@ -12,7 +12,7 @@ NOISE = [r'This gazette is also available free online', r'^\s*(STAATSKOERANT|GOV
          r'©.*LABOUR GUIDE', r'LABOUR GUIDE PART', r'^\s*\d{1,3}\s*$', r'ISSN \d', r'AIDS HELPLINE', r'Printing Works', r'Hard Copies', r'Electronic Files',
          r'submitted for publication', r'^\s*Vol\.\s*\d+', r'Regulation Gazette', r'Regulasiekoerant', r'^\s*REPUBLI[CE]', r'^\s*(\d\s){6,}', r'not be held responsible',
          r'^\s*No\.?\s*\d{5}\s*\d*\s*$', r'^\s*\d+\s+No\.?\s*\d{5}', r'^\s*(November|Desember|December|Maart|March|Julie|July|Mei|May|Junie|June|Augustus|August|Februarie|February|Januarie|January|Oktober|October|September|April)\s*$',
-         r'^\s*N\.B\.', r'GovernmenT PrinTinG', r'no fuTure queries', r'IMPORTANT NOTICE', r'mi[gG]h[tT] occur due', r'submission of incomplete', r'^\s*Contents\s*$', r'Page\s+No\.\s+Gazette', r'^\s*(Page|Gazette|No\.)\s*$', r'fax machine', r'OK.{0,3} slip', r'documents were received', r'respon-?\s*sibility to phone', r'amendments which have not been done', r'CONTENTS\s*[-•]\s*INHOUD', r'^\s*@@PAGE']
+         r'^\s*N\.B\.', r'GovernmenT PrinTinG', r'no fuTure queries', r'IMPORTANT NOTICE', r'mi[gG]h[tT] occur due', r'submission of incomplete', r'Page\s+No\.\s+Gazette', r'^\s*(Page|Gazette|No\.)\s*$', r'fax machine', r'OK.{0,3} slip', r'documents were received', r'respon-?\s*sibility to phone', r'amendments which have not been done', r'CONTENTS\s*[-•]\s*INHOUD', r'^\s*@@PAGE']
 NOISE_RE = [re.compile(p, re.I) for p in NOISE]
 PARA = re.compile(r'^\s*(\((?:\d{1,3}[A-Za-z]?|[a-z]{1,2}|[ivxlc]{1,6})\)|["“”]|\d{1,2}\.\s|[A-Z]\.\s)')
 
@@ -33,7 +33,7 @@ def clean(pages):
     for p, l in pages:
         s = l.strip()
         if not s or any(r.search(s) for r in NOISE_RE) or s in repeated: continue
-        if re.search(r'\.{5,}\s*\d*\s*$', s): continue   # contents-page lines with dot leaders
+        if re.search(r'\.{5,}\s*\d*\s*$', s) or (re.search(r'\.{4,}', s) and len(s) < 110): continue   # contents-page lines with dot leaders (also OCR-garbled)
         out.append((p, s))
     return out
 

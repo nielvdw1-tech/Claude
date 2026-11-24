@@ -42,7 +42,9 @@ MIGRATIONS.push(() => {
 let LTX_HYDRATED = null;
 function ltxHydrate() { if (!S || !S.legislation || LTX_HYDRATED === S) return; LTX_HYDRATED = S;
   S.legislation.forEach(l => { const m = ltxMeta(l); if (!m) return; const map = {}; (m.items || []).forEach(i => { map[i.id] = i.text; });
-    (l.items || []).forEach(it => { if (map[it.id] != null) Object.defineProperty(it, 'text', { value: map[it.id], enumerable: false, configurable: true, writable: true }); }); }); }
+    const pg = {}; (m.items || []).forEach(i => { pg[i.id] = i.page; });
+    (l.items || []).forEach(it => { if (map[it.id] != null) { Object.defineProperty(it, 'text', { value: map[it.id], enumerable: false, configurable: true, writable: true });
+      Object.defineProperty(it, 'source', { value: `${m.file || m.name}, page ${pg[it.id]} — ${m.copyNote}`, enumerable: false, configurable: true, writable: true }); } }); }); }
 const _rerenderBeforeLtx = rerender;
 rerender = function (...a) { try { ltxHydrate(); } catch (e) { console.error(e); } return _rerenderBeforeLtx.apply(this, a); };
 
@@ -110,13 +112,81 @@ ACT.ltxSelect = (el) => { const l = byId('legislation', el.dataset.id), m = ltxM
   openModal({ title: `Select what applies — ${l.short || l.name}`, sub: `Tick every regulation that applies to ${esc((orgOf(S.ui.org) || {}).name || 'the company')}. Each ticked regulation becomes a requirement in the legal register, linked to its wording. You decide, as the competent person — there is no questionnaire.`, size: 'wide',
     body: `<div class="btn-row mb"><button type="button" class="btn sm" data-act="ltxAll">Tick all</button><button type="button" class="btn sm" data-act="ltxNone">Clear</button></div>
       <div class="chk-col ltx-pick" style="max-height:46vh">${parts.map((p, k) => { const r = inReg(p); return `<label class="check"><input type="checkbox" name="lp${k}" ${r ? 'checked disabled' : ''}> <span>${esc(p.label)}${r ? ` <span class="t-sub">— already in the register (${r.id}, ${esc(r.applicability)})</span>` : ''}${p.it.verifiedOn ? '' : ' <span class="t-sub">· wording not checked yet</span>'}</span></label>`; }).join('')}</div>
-      <div class="form-grid mt-s">${fld({ name: 'owner', label: 'Responsible person (optional)', type: 'select', options: personOptions('', x => !!x.sysRole) })}${fld({ name: 'na', label: 'Record the regulations that are not ticked as "Not applicable" (keeps a record of the decision)', type: 'checkbox', full: true })}${fld({ name: 'reason', label: 'Reason for not applicable (optional)', full: true })}</div>`,
+      <div class="form-grid mt-s">${fld({ name: 'setup', label: 'Also set up the suggested compliance work for each ticked regulation (system interpretation — you can change it later)', type: 'checkbox', value: true, full: true })}${fld({ name: 'owner', label: 'Responsible person', type: 'select', options: personOptions(S.ui.user, x => !!x.sysRole) })}${fld({ name: 'na', label: 'Record the regulations that are not ticked as "Not applicable" (keeps a record of the decision)', type: 'checkbox', full: true })}${fld({ name: 'reason', label: 'Reason for not applicable (optional)', full: true })}</div>`,
     buttons: [{ label: 'Add to the register', cls: 'primary', onClick: mm => { const v = readForm(mm); S.legalReqs = S.legalReqs || []; let a = 0, n = 0;
       parts.forEach((p, k) => { if (inReg(p)) return; const on = mm.querySelector(`[name=lp${k}]`).checked; if (!on && !v.na) return;
         const ob = typeof LEGAL_OBLIGATIONS === 'object' ? LEGAL_OBLIGATIONS[p.it.id] : null;
         const r = { id: nextId('LR-', 'legalReqs'), org: S.ui.org, leg: p.leg, item: p.it.id, title: `${l.short || l.name}: ${p.it.ref.replace('Regulation ', 'reg. ')}${p.it.title ? ' — ' + p.it.title : ''}`, description: ob ? ob.summary : '', mustDo: ob ? ob.mustDo : '', evidenceReq: ob ? ob.evidence.slice() : [], sites: ['ALL'], owner: on ? v.owner || '' : '',
           applicability: on ? 'Applicable' : 'Not applicable', applicReason: on ? 'Selected by the competent person' : (v.reason || 'Not ticked when the regulations were selected'), evidence: [], assessments: [], created: TODAY, createdBy: S.ui.user, fromLibrary: true };
-        S.legalReqs.push(r); on ? a++ : n++; });
+        S.legalReqs.push(r); on ? a++ : n++;
+        if (on && v.setup && ob) ob.work.forEach(w => ctCreate(r, w, r.owner || S.ui.user, addDays(TODAY, 30))); });
       log(`Selected ${a} applicable regulation(s) from ${l.short || l.name}${n ? ` (${n} recorded as not applicable)` : ''}`, '#/legal/lib/' + l.id); save(); toast(`${a} requirement(s) added to the legal register${n ? `, ${n} recorded as not applicable` : ''}.`); navigate('#/legal/register?fleg=' + l.id); } }] }); };
 ACT.ltxAll = () => document.querySelectorAll('.ltx-pick input:not(:disabled)').forEach(c => { c.checked = true; });
 ACT.ltxNone = () => document.querySelectorAll('.ltx-pick input:not(:disabled)').forEach(c => { c.checked = false; });
+
+/* ==========================================================================
+   Keeping compliance: compliance tasks set up from the obligations
+   - "Set up compliance work" on a requirement lists the system's interpretation
+     of the work (appointments, training, assessments, inspections, monitoring,
+     medical, documents, records, notifications, reviews). Each ticked item
+     becomes a compliance task with an owner and a due date.
+   - Completing a task records the date, a note and evidence; recurring tasks
+     are then due again after their interval. Event-driven tasks ("when
+     required") stay open as a standing duty and are recorded each time.
+   - Compliance calendar: every task across the register, overdue first; owners
+     get them in their task list; a requirement shows its tasks and how many are overdue.
+   ========================================================================== */
+const CT_LINK = { Training: '#/training/courses', Appointment: '#/people/appointments', Medical: '#/medical/types', Document: '#/documents', Notification: '', Inspection: '#/inspections', Monitoring: '', Assessment: '#/risk', Record: '', Review: '' };
+const ctAll = () => (S.compTasks || []).filter(t => t.org === S.ui.org);
+const ctForReq = id => ctAll().filter(t => t.req === id && t.status !== 'Stopped');
+const ctOverdue = t => t.due && t.status !== 'Stopped' && daysTo(t.due) < 0;
+const ctEvery = e => e === 'change' ? 'When required' : !e ? 'Once' : e % 12 === 0 ? (e === 12 ? 'Every year' : `Every ${e / 12} years`) : `Every ${e} month${e > 1 ? 's' : ''}`;
+function ctCreate(r, w, owner, due) { S.compTasks = S.compTasks || []; const t = { id: nextId('CT-', 'compTasks', 4), org: r.org, req: r.id, type: w.type, what: w.what, every: w.every, owner: owner || r.owner || '', due: w.every === 'change' ? '' : due, status: 'Open', history: [], created: TODAY, by: S.ui.user }; S.compTasks.push(t); return t; }
+ACT.ctSetup = (el) => { const r = byId('legalReqs', el.dataset.id), ob = LEGAL_OBLIGATIONS[r.item] || { work: [] }, have = ctForReq(r.id).map(t => t.what);
+  const work = ob.work.filter(w => !have.includes(w.what));
+  openModal({ title: 'Set up the compliance work', sub: `${esc(r.title)} · ${badge('System interpretation — check against the legal text', 'purple', true)}`, size: 'wide', body: `${work.length ? `<p class="t-sub" style="margin-top:0">Tick the work this company needs. Each ticked item becomes a compliance task with an owner and a due date; recurring tasks come round again automatically.</p>
+    <div class="chk-col" style="max-height:none">${work.map((w, k) => `<label class="check"><input type="checkbox" name="w${k}" checked> <span>${badge(w.type, 'blue', true)} ${esc(w.what)} <span class="t-sub">· ${ctEvery(w.every)}</span></span></label>`).join('')}</div>` : '<p class="muted">All the suggested work is already set up. Add your own task below.</p>'}
+    <div class="form-grid mt-s">${fld({ name: 'owner', label: 'Owner of the tasks', type: 'select', options: personOptions(r.owner || S.ui.user, x => !!x.sysRole), required: true })}${fld({ name: 'due', label: 'First due date', type: 'date', value: addDays(TODAY, 30), required: true })}
+      ${fld({ name: 'own', label: 'Add your own task (optional)', full: true, placeholder: 'e.g. Quarterly ladder inspection' })}${fld({ name: 'ownType', label: 'Type', type: 'select', options: opts(Object.keys(CT_LINK), 'Inspection') })}${fld({ name: 'ownEvery', label: 'Every (months; 0 = once)', type: 'number', min: 0, value: 12 })}</div>`,
+    buttons: [{ label: 'Set up', cls: 'primary', onClick: m => { if (!validateForm(m)) return false; const v = readForm(m); let n = 0;
+      work.forEach((w, k) => { if (m.querySelector(`[name=w${k}]`).checked) { ctCreate(r, w, v.owner, v.due); n++; } });
+      if (v.own && v.own.trim()) { ctCreate(r, { type: v.ownType, what: v.own.trim(), every: +v.ownEvery || 0 }, v.owner, v.due); n++; }
+      if (n && v.owner) queueEmail([v.owner], 'actions', `Compliance tasks allocated to you: ${r.title}`, `${pname(S.ui.user)} set up ${n} compliance task(s) for ${r.id} "${r.title}". The first is due ${fmt(v.due)}.`, '#/legal/' + r.id);
+      log(`Set up ${n} compliance task(s) for ${r.id}`, '#/legal/' + r.id); save(); toast(`${n} compliance task(s) set up.`); rerender(); } }] }); };
+ACT.ctDone = (el) => { const t = byId('compTasks', el.dataset.id);
+  openModal({ title: 'Record that it was done', sub: `${t.type}: ${t.what}`, body: `<div class="form-grid">${fld({ name: 'on', label: 'Done on', type: 'date', value: TODAY, required: true })}${fld({ name: 'note', label: 'Note (what was done, findings, reference)', type: 'textarea', full: true })}${fld({ name: 'file', label: 'Evidence (report, certificate, register)', type: 'file', full: true })}
+    ${t.every && t.every !== 'change' ? `<p class="t-sub full">Next due: ${ctEvery(t.every).toLowerCase()} after the date it was done.</p>` : ''}</div>`,
+    buttons: [{ label: 'Save', cls: 'primary', onClick: m => { if (!validateForm(m)) return false; const v = readForm(m);
+      t.history.push({ on: v.on, by: S.ui.user, note: v.note, file: v.file || null });
+      if (t.every === 'change') t.last = v.on; else if (t.every) { t.last = v.on; t.due = addMonths(v.on, t.every); } else { t.last = v.on; t.status = 'Done'; t.due = ''; }
+      const r = byId('legalReqs', t.req); if (r && v.file) (r.evidence = r.evidence || []).push({ name: v.file.name, file: v.file, note: `${t.what} (${fmt(v.on)})`, by: S.ui.user, on: TODAY });
+      log(`Completed compliance task ${t.id}: ${t.what}`, '#/legal/' + t.req); save(); toast(t.status === 'Done' ? 'Recorded. The task is complete.' : `Recorded.${t.due ? ' Next due ' + fmt(t.due) + '.' : ''}`); rerender(); } }] }); };
+ACT.ctStop = (el) => { const t = byId('compTasks', el.dataset.id); confirmBox(`Stop "${t.what}"? Use this when it no longer applies; its history is kept.`, () => { t.status = 'Stopped'; log(`Stopped compliance task ${t.id}`, '#/legal/' + t.req); save(); rerender(); }); };
+function ctTable(list, showReq) { return list.length ? `<div class="table-wrap"><table class="tbl stackable"><thead><tr><th>Task</th>${showReq ? '<th>Requirement</th>' : ''}<th>Owner</th><th>How often</th><th>Due</th><th>Last done</th><th></th></tr></thead><tbody>${list.map(t => { const r = byId('legalReqs', t.req), link = CT_LINK[t.type];
+    return `<tr class="${ctOverdue(t) ? 'row-red' : ''}"><td data-label="Task">${badge(t.type, 'blue', true)} ${esc(t.what)}${link ? ` <a class="t-sub" href="${link}">open module</a>` : ''}</td>${showReq ? `<td data-label="Requirement"><a href="#/legal/${t.req}">${t.req}</a><div class="t-sub">${esc(r ? r.title : '')}</div></td>` : ''}<td data-label="Owner">${esc(pname(t.owner) || '—')}</td><td data-label="How often">${ctEvery(t.every)}</td>
+      <td data-label="Due">${t.status === 'Done' ? badge('Done', 'green', true) : t.status === 'Stopped' ? badge('Stopped', 'grey', true) : t.due ? dueText(t.due) : '<span class="t-sub">When required</span>'}</td><td data-label="Last done">${t.last ? fmt(t.last) : '—'}</td>
+      <td data-label="">${t.status === 'Open' && (canLegal() || t.owner === S.ui.user) ? `<div class="btn-row nowrap"><button class="btn sm primary" data-act="ctDone" data-id="${t.id}">Record done</button>${canLegal() ? `<button class="btn sm ghost" data-act="ctStop" data-id="${t.id}" title="No longer applies">Stop</button>` : ''}</div>` : ''}</td></tr>`; }).join('')}</tbody></table></div>` : ''; }
+// on the requirement page: the obligations and the compliance tasks
+const _legalRouteBeforeCt = ROUTES.legal;
+ROUTES.legal = (p, q) => { const r = _legalRouteBeforeCt(p, q);
+  if (r && r.html && p[0] && /^LR-/.test(p[0])) { const req = byId('legalReqs', p[0]); if (!req || req.org !== S.ui.org) return r;
+    const T = ctForReq(req.id), od = T.filter(ctOverdue).length, ob = LEGAL_OBLIGATIONS[req.item];
+    const card = `<div class="card ct-card"><div class="card-head"><h2>Keeping compliance</h2><span class="ch-sub">${T.length} compliance task(s)${od ? ` · <span class="due red">${od} overdue</span>` : ''}</span>${canLegal() && req.applicability === 'Applicable' ? `<button class="btn sm primary" data-act="ctSetup" data-id="${req.id}">${icon('plus', 'sm')} Set up compliance work</button>` : ''}</div>
+      <div class="card-body${T.length ? ' flush' : ''}">${T.length ? ctTable(T, false) : `<p class="muted" style="margin:0">${req.applicability !== 'Applicable' ? 'Not applicable — no compliance work needed.' : ob ? `${ob.work.length} item(s) of work are suggested for this regulation (system interpretation). Use "Set up compliance work".` : 'No suggested work for this regulation yet — add your own with "Set up compliance work".'}</p>`}</div></div>`;
+    r.html = r.html.replace('<div class="card"><div class="card-head"><h2>Evidence</h2>', card + '<div class="card"><div class="card-head"><h2>Evidence</h2>'); }
+  return r; };
+// tasks for the owner
+const _myTasksBeforeCt = myTasks;
+myTasks = function () { const out = _myTasksBeforeCt(); if (isFieldUser()) return out;
+  ctAll().filter(t => t.status === 'Open' && t.owner === S.ui.user && t.due && daysTo(t.due) <= 14).forEach(t => out.push({ title: `Compliance: ${t.what}`, sub: `${t.req} · ${daysTo(t.due) < 0 ? 'overdue since ' + fmt(t.due) : 'due ' + fmt(t.due)}`, link: '#/legal/' + t.req, sev: daysTo(t.due) < 0 ? 'red' : 'amber' }));
+  return out; };
+// the compliance calendar
+ROUTES.compliance = (p, q = {}) => { const all = ctAll().filter(t => t.status !== 'Stopped'), f = q.f || 'open';
+  const list = (f === 'overdue' ? all.filter(ctOverdue) : f === 'month' ? all.filter(t => t.status === 'Open' && t.due && daysTo(t.due) <= 31) : f === 'all' ? all : all.filter(t => t.status === 'Open')).sort((a, b) => (a.due || '9999').localeCompare(b.due || '9999'));
+  const html = `${pageHead('Compliance calendar', 'Everything the company does to keep compliance with the regulations it selected: assessments, inspections, monitoring, medical surveillance, training, appointments, documents and reviews — who does it and when it is due.', '', scopePill())}
+    <div class="kpis">${kpi('Overdue', all.filter(ctOverdue).length, 'Past the due date', all.some(ctOverdue) ? 'red' : 'green', '#/compliance?f=overdue', 'alert')}${kpi('Due in 31 days', all.filter(t => t.status === 'Open' && t.due && daysTo(t.due) >= 0 && daysTo(t.due) <= 31).length, 'Coming up', 'amber', '#/compliance?f=month', 'clock')}${kpi('Open tasks', all.filter(t => t.status === 'Open').length, `${all.filter(t => t.every === 'change' && t.status === 'Open').length} when required`, 'blue', '#/compliance', 'tasks')}${kpi('Requirements covered', new Set(all.map(t => t.req)).size, `of ${legalReqs().filter(r => r.applicability === 'Applicable').length} applicable`, 'blue', '#/legal/register', 'scale')}</div>
+    <div class="card"><div class="toolbar"><div class="btn-row">${[['open', 'Open'], ['overdue', 'Overdue'], ['month', 'Next 31 days'], ['all', 'All, incl. done']].map(([k, l]) => `<a class="btn sm ${f === k ? 'primary' : ''}" href="#/compliance?f=${k}">${l}</a>`).join('')}</div></div>
+    <div class="card-body flush">${list.length ? ctTable(list, true) : emptyList(all.length ? 'Nothing in this view.' : 'No compliance tasks yet. Select the regulations that apply in the legal library, then use "Set up compliance work" on each requirement.')}</div></div>`;
+  return { title: 'Compliance calendar', nav: 'compliance', crumbs: [['Compliance calendar', '#/compliance']], html }; };
+(() => { const g = NAV.find(x => x.group === 'Compliance'); if (g && !g.items.some(i => i[0] === 'compliance')) { const k = g.items.findIndex(i => i[0] === 'legal'); g.items.splice(k + 1, 0, ['compliance', 'Compliance Calendar', 'clock']); } })();
+AREA_OF.compliance = 'area.legal'; if (!TOP_ROUTES.includes('compliance')) TOP_ROUTES.push('compliance');

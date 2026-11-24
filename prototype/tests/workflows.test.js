@@ -216,7 +216,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await asUser('P-007'); await go('#/notifications/tasks');
     ok('E3 overdue inspection appears in the assignee task centre', (await p.innerText('#content')).includes('Inspect: Germiston warehouse & workshop'));
     await go('#/no-such-module'); ok('E4 an unknown page shows "Page not found"', (await p.innerText('#content')).includes('Page not found'));
-    ok('E5 navigation shows only the focused modules', (await p.$$eval('.nav-item span:not(.count)', e => e.map(x => x.textContent))).join('|') === 'Dashboard|Notifications & Tasks|My team|My appointments|My PPE|My training|Company Notices|Legal Requirements|Risk Management|People Management|Training Management|Contractor Management|H&S Committee|Toolbox Talks|Document Manager|Assets & Equipment|Inspections|Maintenance & Defects|PPE Management|Hazardous Substances|Emergency Management|Permits to Work|Management of Change|Audits|Incident Management|Corrective Actions|Reports|Administration');
+    ok('E5 navigation shows only the focused modules', (await p.$$eval('.nav-item span:not(.count)', e => e.map(x => x.textContent))).join('|') === 'Dashboard|Notifications & Tasks|My team|My appointments|My PPE|My training|Company Notices|Legal Requirements|Compliance Calendar|Risk Management|People Management|Training Management|Contractor Management|H&S Committee|Toolbox Talks|Document Manager|Assets & Equipment|Inspections|Maintenance & Defects|PPE Management|Hazardous Substances|Emergency Management|Permits to Work|Management of Change|Audits|Incident Management|Corrective Actions|Reports|Administration');
     await asUser('P-002'); await go('#/incidents'); await go('#/actions'); await btn('New action'); await mbtn('Continue'); await p.waitForTimeout(100); await mbtn('Raise action');
     ok('E6 form validation blocks empty required fields', await modalOpen() && (await p.$$('.modal .field.invalid')).length > 0); await p.keyboard.press('Escape');
     await asUser('P-009'); await go('#/documents/DOC-007');
@@ -1966,6 +1966,28 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await go('#/admin/ohs'); await p.fill('#content [name=repMonths]', '2'); await p.fill('#content [name=pp0]', 'Area cleared\nExtinguisher present'); await p.click('[data-act=ohsSetSave]'); await p.waitForTimeout(150);
     ok('L7 Administration → Safety programmes edits the permit precautions and the representatives\' inspection interval', await S(() => S.config.repInspMonths === 2 && S.config.permitTypes[0].precautions.length === 2));
     await go('#/admin'); ok('L8 the set-up checklist includes the new modules', (await p.innerText('.setup-card')).includes('Permit types and precautions'));
+  }
+
+  /* ---------------- Legal texts from the owner's documents ---------------- */
+  {
+    await p.setViewportSize({ width: 1400, height: 950 }); await asUser('P-002'); await go('#/legal/library');
+    ok('LX1 the legal library lists the owner\'s documents grouped by subject, with kind, status and copy quality', (await p.$$('.ltx-lib tr.fam-row')).length >= 15 && (await p.innerText('.ltx-lib')).includes('Asbestos Abatement Regulations, 2020') && (await p.innerText('.ltx-lib')).includes('Unofficial retyped copy'));
+    ok('LX2 the wording is attached on load and not saved in the browser\'s data', await S(() => !localStorage.getItem('vdw-hseq-prototype-v16').includes('No person may') && byId('legislation', 'LT-ASB').items.find(i => i.ref === 'Regulation 24').text.startsWith('No person may')));
+    await go('#/legal/lib/LT-ASB');
+    ok('LX3 an amendment shows on the regulation it changes (R. 5042 on Asbestos regulation 24)', (await p.innerText('#LT-ASB-Regulation24')).includes('Amended by R. 5042'));
+    await go('#/legal/lib/LT-CR-DRAFT2025'); ok('LX4 a draft is marked "not in force" and cannot be selected', (await p.innerText('#content')).includes('Draft — not in force') && !(await has('[data-act=ltxSelect]')));
+    await go('#/legal/lib/LT-GSR'); await p.click('[data-act=ltxCheck][data-i="LT-GSR-Regulation3"]'); await p.waitForTimeout(150); await p.check('.modal [name=ok]'); await mbtn('Save'); await p.waitForTimeout(150);
+    ok('LX5 a competent person checks a regulation against the original; who and when is recorded', await S(() => { const i = byId('legislation', 'LT-GSR').items.find(x => x.id === 'LT-GSR-Regulation3'); return i.verifiedOn === TODAY && i.verifiedBy === 'P-002'; }));
+    await go('#/legal/lib/LT-NOISE'); await p.click('[data-act=ltxSelect]'); await p.waitForTimeout(200);
+    const idx = await S(() => [...document.querySelectorAll('.ltx-pick label')].findIndex(l => /Regulation 7 —/.test(l.textContent)));
+    await p.check(`.ltx-pick [name=lp${idx}]`); await mbtn('Add to the register'); await p.waitForTimeout(250);
+    const rid = await S(() => (S.legalReqs.find(r => r.item === 'LT-NOISE-Regulation7') || {}).id);
+    ok('LX6 "Select what applies" adds the ticked regulation to the register, linked to its wording, with the system\'s interpretation', !!rid && await S(`(() => { const r = byId('legalReqs','${rid}'); return r.applicability === 'Applicable' && /24 months/.test(r.description) && r.evidenceReq.length > 0; })()`));
+    ok('LX7 the suggested compliance work is set up as tasks with owner and due date (assessment every 24 months)', await S(`S.compTasks.some(t => t.req === '${rid}' && t.every === 24 && !!t.owner && !!t.due)`));
+    await go('#/legal/' + rid); await p.click('.ct-card [data-act=ctDone]'); await p.waitForTimeout(150); await mfill('note', 'Assessment done'); await mbtn('Save'); await p.waitForTimeout(150);
+    ok('LX8 recording a compliance task as done sets the next due date from its interval', await S(`(() => { const t = S.compTasks.find(t => t.req === '${rid}'); return t.last === TODAY && t.due === addMonths(TODAY, 24); })()`));
+    await S(`(() => { const t = S.compTasks.find(t => t.req === '${rid}'); t.due = addDays(TODAY, -3); save(); })()`); await go('#/compliance');
+    ok('LX9 the compliance calendar shows overdue tasks and the owner gets them as a task', (await p.innerText('#content')).includes('Noise exposure risk assessment') && await has('tr.row-red') && await S(() => myTasks().some(t => /^Compliance:/.test(t.title))));
   }
 
   /* ---------------- Print output ---------------- */
