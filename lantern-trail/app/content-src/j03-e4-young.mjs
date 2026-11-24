@@ -161,7 +161,7 @@ export default {
         prayer: ["Dear God,", "please shape me to be like Jesus. Amen."] }),
       af: rep({ title: "God Vorm My", bibleStory: "Jeremia 1, 18",
         story: ["God het vir jong Jeremia gesê: ‘Ek het jou geken voordat jy gebore is!’", "Toe het God Jeremia geneem om na ’n pottebakker te gaan kyk.", "Die pottebakker het sagte klei in ’n pragtige pot gevorm. Druk, druk!", "God het gesê: ‘Jy is soos klei in my hande.’", "God vorm my in iets pragtigs!"],
-        verse: simple("Ons is die klei, U is die pottebakker.", "Jesaja 64:8"),
+        verse: simple("Ons is die klei, U is die pottebakker.", "Jesaja 64:7"),
         action: "Druk ’n bietjie speelklei en vorm iets daarmee, en sê: ‘God vorm my!’",
         lessons: ["God vorm my in iets pragtigs."], questions: ["Wat sou jy met klei maak?"],
         prayer: ["Liewe God,", "vorm my asseblief om soos Jesus te wees. Amen."] }),
