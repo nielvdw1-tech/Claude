@@ -38,6 +38,8 @@ for key, m in C.items():
             if it['ref'] == 'Regulation 3' and 'Notification of construction work\n' in it['text']:
                 a, b = it['text'].split('Notification of construction work\n', 1)
                 it['text'] = a.strip(); items.insert(k + 1, {'ref': 'Regulation 4', 'title': 'Notification of construction work', 'page': it['page'], 'text': b.strip(), 'note': 'The number of this regulation was not recognised by OCR; it was separated at its heading. Check it against the scanned page.'}); break
+    for it in items:   # symbols the PDF does not map to text (e.g. equations) are shown as a box
+        if '\ufffd' in it['text']: it['text'] = it['text'].replace('\ufffd', '\u25a1'); it['note'] = 'Some symbols (e.g. equations) could not be read from the PDF and are shown as \u25a1. See page ' + str(it['page']) + ' of the original.'
     for it in items: it['id'] = m['id'] + '-' + slug(it['ref'])
     seen = {}
     for it in items:
