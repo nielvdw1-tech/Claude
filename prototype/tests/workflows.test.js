@@ -2014,6 +2014,35 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await go('#/legal/register'); ok('LK7 the register marks requirements with an evidence gap', await has('tr.lk-row-gap'));
   }
 
+  /* ---------------- Attendance registers ---------------- */
+  {
+    await p.setViewportSize({ width: 1400, height: 950 }); await asUser('P-002'); await S(() => { S.ui.site = 'ALL'; save(); });
+    await go('#/reports/attreg');
+    const hrefs = await S(() => [...document.querySelectorAll('a[href^="#/attendance/"]')].map(a => a.getAttribute('href')));
+    ok('AR1 Reports → Attendance registers lists the registers of documents to read, training sessions, courses and toolbox talks', ['#/attendance/doc/DOC-001', '#/attendance/session/TS-002', '#/attendance/course/CRS-004', '#/attendance/talk/TBT-001'].every(h => hrefs.includes(h)), hrefs.length);
+    await go('#/documents/DOC-001');
+    ok('AR2 the document\'s "Read and acknowledge" card has an Attendance register button', await has('#ackCard a[href="#/attendance/doc/DOC-001"]'));
+    await go('#/attendance/doc/DOC-001'); const dt = await p.innerText('.att-reg');
+    ok('AR3 the document register lists who had to read it, who read and signed (with the date and signature) and who is outstanding', /Read and signed/.test(dt) && /Outstanding|Overdue/.test(dt) && /Rev 3/.test(dt) && await S(() => document.querySelectorAll('.att-tbl td.att-sig img').length) >= 4, (await S(() => document.querySelectorAll('.att-tbl td.att-sig img').length)) + ' ' + dt.slice(0, 600).replace(/\n/g, ' | '));
+    const [dl] = await Promise.all([p.waitForEvent('download'), p.click('[data-act=attPdf]')]);
+    ok('AR4 the register downloads as a PDF (with the signatures)', /^Attendance_register_KIE-POL-001_.*\.pdf$/.test(dl.suggestedFilename()), dl.suggestedFilename());
+    const [dc] = await Promise.all([p.waitForEvent('download'), p.click('[data-act=attCsv]')]);
+    ok('AR5 and as CSV', /\.csv$/.test(dc.suggestedFilename()));
+    await go('#/training/sessions');
+    ok('AR6 training sessions offer a sign-in sheet before the session and the attendance register after it', await has('a[href="#/attendance/session/TS-001"]') && (await p.innerText('a[href="#/attendance/session/TS-001"]')).includes('Sign-in sheet') && (await p.innerText('a[href="#/attendance/session/TS-002"]')).includes('Attendance register'));
+    await go('#/attendance/session/TS-002'); const st = await p.innerText('.att-reg');
+    ok('AR7 the session register shows who attended and who did not', /Attended/.test(st) && /Did not attend/.test(st) && /Fire fighting/.test(st));
+    await go('#/attendance/session/TS-001');
+    ok('AR8 before the session it prints as a sign-in sheet with an empty signature line per person', await S(() => document.querySelectorAll('.att-tbl td.att-sig .att-line').length) === 2 && (await p.innerText('.att-reg')).includes('Sign-in sheet'));
+    await go('#/attendance/course/CRS-004');
+    ok('AR9 a course register lists everyone who attended the course, with the session and validity', (await p.innerText('.att-reg')).includes('TS-002'));
+    await go('#/toolbox/TBT-001'); await p.click('a[href="#/attendance/talk/TBT-001"]'); await p.waitForTimeout(150);
+    ok('AR10 a toolbox talk\'s register opens from the talk, with the signatures', await S(() => location.hash) === '#/attendance/talk/TBT-001' && await S(() => document.querySelectorAll('.att-tbl td.att-sig img').length) >= 2, (await S(() => location.hash)) + ' ' + (await S(() => document.querySelectorAll('.att-tbl td.att-sig img').length)));
+    const emp = await S(() => S.people.find(x => x.org === 'ORG-1' && x.sysRole === 'Employee').id); await asUser(emp); await go('#/attendance/doc/DOC-001');
+    ok('AR11 an employee cannot draw attendance registers', !(await has('.att-reg')) && /cannot draw|not available for your role/.test(await p.innerText('main')), emp + ' ' + (await S(() => location.hash)) + ' ' + (await p.innerText('main')).slice(0, 200).replace(/\n/g, ' | '));
+    await asUser('P-002');
+  }
+
   /* ---------------- Print output ---------------- */
   { await go('#/print/INS-1087'); await p.emulateMedia({ media: 'print' }); await p.pdf({ path: path.join(os.tmpdir(), 'vdw_inspection_report.pdf'), format: 'A4', printBackground: true }); await p.emulateMedia({ media: 'screen' }); }
 

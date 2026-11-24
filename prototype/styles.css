@@ -1605,3 +1605,15 @@ body.auth-mode .main { padding-top: 0; }
 .lk-gap ul { margin: 4px 0 0; } .lk-gap li { margin: 2px 0; }
 .lk-sug { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; display: grid; gap: 6px; background: var(--surface-2); }
 .tbl tr.lk-row-gap td:first-child { box-shadow: inset 3px 0 0 var(--st-bad, #d03b3b); }
+
+/* Attendance registers */
+.att-head { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
+.att-title { font-size: 1.15rem; font-weight: 750; letter-spacing: .04em; }
+.att-meta { margin-bottom: 10px; }
+.att-note { margin: 0 0 10px; }
+.att-tbl td.att-sig img { max-height: 34px; max-width: 150px; display: block; }
+.att-line { display: inline-block; min-width: 140px; border-bottom: 1px solid var(--grey-500, #777); height: 1.1em; vertical-align: bottom; }
+.att-sign { display: flex; flex-wrap: wrap; gap: 16px 32px; margin-top: 22px; }
+.att-foot { margin-top: 14px; }
+.att-btns { gap: 6px; }
+@media print { .att-reg .card-head { display: none; } .att-tbl td.att-sig { min-width: 160px; height: 36px; } }
