@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>VDW Compliance Control System</title>
+<style>
+@page { size: A4; margin: 0; }
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body { font-family: 'Inter', 'Liberation Sans', Arial, sans-serif; color: #14213d; font-size: 10.4pt; line-height: 1.5; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.page { width: 210mm; height: 297mm; padding: 18mm 17mm 16mm; position: relative; page-break-after: always; overflow: hidden; }
+.page:last-child { page-break-after: auto; }
+.foot { position: absolute; left: 17mm; right: 17mm; bottom: 9mm; display: flex; justify-content: space-between; font-size: 7.6pt; color: #7a869a; border-top: 1px solid #e3e8ef; padding-top: 2.5mm; }
+h1 { font-family: 'Inter Display', 'Inter', sans-serif; font-weight: 800; letter-spacing: -0.02em; margin: 0; }
+h2 { font-family: 'Inter Display', 'Inter', sans-serif; font-size: 19pt; font-weight: 800; letter-spacing: -0.01em; margin: 0 0 2mm; color: #0b1f4b; }
+h3 { font-size: 11.5pt; font-weight: 700; margin: 0 0 1.2mm; color: #0b1f4b; }
+p { margin: 0 0 2.6mm; }
+.kicker { font-size: 8pt; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: #0a5bd8; margin-bottom: 2mm; }
+.lead { font-size: 11.2pt; color: #33405a; max-width: 160mm; }
+ul { margin: 0; padding-left: 4.5mm; } li { margin: 0 0 1mm; }
+/* cover */
+.cover { padding: 0; background: linear-gradient(160deg, #0b1f4b 0%, #0a3a8f 58%, #0a5bd8 100%); color: #fff; }
+.cover .top { padding: 18mm 17mm 0; display: flex; justify-content: space-between; align-items: center; }
+.cover .logo { background: #fff; border-radius: 4mm; padding: 3.5mm 5mm; display: inline-flex; }
+.cover .logo img { height: 15mm; }
+.cover .body { padding: 40mm 17mm 0; }
+.cover h1 { font-size: 36pt; line-height: 1.05; max-width: 150mm; }
+.cover .tag { margin-top: 6mm; font-size: 15pt; font-weight: 500; color: #cfe0ff; max-width: 150mm; }
+.cover .pills { display: flex; flex-wrap: wrap; gap: 2.5mm; margin-top: 12mm; max-width: 170mm; }
+.cover .pill { border: 1px solid rgba(255,255,255,.35); border-radius: 20mm; padding: 1.6mm 4mm; font-size: 9pt; color: #e8f0ff; }
+.cover .shot { position: absolute; right: -12mm; bottom: -6mm; width: 150mm; border-radius: 4mm; box-shadow: 0 10mm 30mm rgba(0,0,0,.45); }
+.cover .phone { position: absolute; left: 22mm; bottom: 14mm; width: 52mm; border-radius: 6mm; border: 2.2mm solid #0b1225; box-shadow: 0 8mm 22mm rgba(0,0,0,.5); }
+.cover .note { position: absolute; left: 17mm; top: 268mm; font-size: 7.6pt; color: #b8c9ea; }
+/* blocks */
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4mm; }
+.card { border: 1px solid #e1e7f0; border-radius: 3mm; padding: 4mm 4.5mm; background: #fff; }
+.card.soft { background: #f4f7fc; border-color: #e6ecf5; }
+.step { position: relative; padding-top: 9mm; }
+.step .n { position: absolute; top: 0; left: 0; width: 7mm; height: 7mm; border-radius: 50%; background: #0a5bd8; color: #fff; font-weight: 800; font-size: 10pt; display: grid; place-items: center; }
+.band { background: #0b1f4b; color: #fff; border-radius: 3mm; padding: 5mm 6mm; }
+.band h3 { color: #fff; }
+.band p, .band li { color: #d9e4ff; }
+.mods { display: grid; grid-template-columns: 1fr 1fr; gap: 3.6mm; }
+.mod { border: 1px solid #e1e7f0; border-left: 1.4mm solid #0a5bd8; border-radius: 2.4mm; padding: 3.2mm 4mm; break-inside: avoid; }
+.mod h3 { font-size: 10.8pt; margin-bottom: .6mm; }
+.mod .role { font-size: 9.2pt; color: #33405a; margin-bottom: 1.4mm; }
+.mod ul { font-size: 8.9pt; color: #3a4660; }
+.mod.g2 { border-left-color: #0f9d58; } .mod.g3 { border-left-color: #f39c12; } .mod.g4 { border-left-color: #d63b3b; } .mod.g5 { border-left-color: #7b4fd6; } .mod.g6 { border-left-color: #12a3b4; }
+.grp { font-size: 8pt; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #7a869a; margin: 4.5mm 0 2mm; }
+.shotbox { border: 1px solid #dfe6f0; border-radius: 3mm; overflow: hidden; box-shadow: 0 2mm 6mm rgba(11,31,75,.08); }
+.shotbox img { display: block; width: 100%; }
+.cap { font-size: 8.4pt; color: #5b6880; margin-top: 1.6mm; }
+table.roles { width: 100%; border-collapse: collapse; font-size: 9.2pt; }
+table.roles th, table.roles td { text-align: left; vertical-align: top; padding: 2.4mm 3mm; border-bottom: 1px solid #e6ecf5; }
+table.roles th { background: #f4f7fc; font-size: 8pt; text-transform: uppercase; letter-spacing: .06em; color: #5b6880; }
+table.roles td:first-child { font-weight: 700; color: #0b1f4b; width: 38mm; }
+.check li { list-style: none; position: relative; padding-left: 5.5mm; }
+.check li::before { content: ''; position: absolute; left: 0; top: 1.4mm; width: 3mm; height: 1.6mm; border-left: .5mm solid #0f9d58; border-bottom: .5mm solid #0f9d58; transform: rotate(-45deg); }
+.check { padding-left: 0; }
+.disclaimer { font-size: 8.2pt; color: #5b6880; border-top: 1px solid #e3e8ef; padding-top: 3mm; margin-top: 4mm; }
+</style></head><body>
+
+<!-- 1. Cover -->
+<section class="page cover">
+  <div class="top"><span class="logo"><img src="vdw-logo.png" alt="VDW"></span><span style="font-size:9pt;color:#cfe0ff;letter-spacing:.12em;text-transform:uppercase;font-weight:700">Product overview</span></div>
+  <div class="body">
+    <h1>VDW Compliance Control System</h1>
+    <div class="tag">Know what you must comply with under the Occupational Health and Safety Act — and stay compliant, every day.</div>
+    <div class="pills"><span class="pill">Legal requirements</span><span class="pill">Document control</span><span class="pill">Assets &amp; inspections</span><span class="pill">Incidents</span><span class="pill">Corrective actions</span><span class="pill">Audits</span><span class="pill">Risk</span><span class="pill">People &amp; training</span><span class="pill">PPE</span><span class="pill">Employee app</span></div>
+  </div>
+  <img class="shot" src="dash.png" alt="">
+  <img class="phone" src="phone.png" alt="">
+</section>
+
+<!-- 2. What it is -->
+<section class="page">
+  <div class="kicker">What the system is</div>
+  <h2>One place to control health and safety compliance</h2>
+  <p class="lead">The VDW Compliance Control System helps a company do two things: <b>know what it needs to comply with</b> under the Occupational Health and Safety Act 85 of 1993 and its regulations, and <b>stay compliant</b> over time. It replaces spreadsheets, paper registers and reminders in people's heads with one system that shows, at any moment, where the company stands and what needs to be done next.</p>
+  <div class="grp">How it works</div>
+  <div class="grid3">
+    <div class="card soft step"><span class="n">1</span><h3>Identify what applies</h3><p>A competent person — for example your VDW safety consultant — selects the regulations that apply to your company from the legal library, which holds the wording of the regulations. There is no questionnaire: the professional decides.</p></div>
+    <div class="card soft step"><span class="n">2</span><h3>Set up the work</h3><p>For each selected regulation the system sets out what shows compliance (documents, appointments, training, certificates, records) and what keeps it (recurring assessments, inspections, monitoring, medical surveillance, reviews), with an owner and a due date.</p></div>
+    <div class="card soft step"><span class="n">3</span><h3>Run it day to day</h3><p>Inspections, incident investigations, training, maintenance, audits and corrective actions are done in the system — on a computer or on a phone — and feed back into the compliance status as they happen.</p></div>
+  </div>
+  <div class="grp">What you get</div>
+  <div class="grid2">
+    <div class="card"><h3>Clear status at a glance</h3><p>A dashboard and a control score per branch show what is on track, what needs attention and what is at risk — documents, assets and inspections, corrective actions, incidents, legal compliance and safety programmes.</p></div>
+    <div class="card"><h3>Nothing falls through the cracks</h3><p>Every task has an owner and a due date. People see their own tasks, receive reminders, and overdue items escalate to management automatically.</p></div>
+    <div class="card"><h3>Proof, not promises</h3><p>Each requirement links to its evidence: approved documents, signed appointments, training records, inspection reports, audit results and certificates — with a full history of who did what and when.</p></div>
+    <div class="card"><h3>Built for the workplace</h3><p>Employees use the phone app to scan equipment QR codes and inspect, report incidents, read and sign documents, accept appointments and PPE with a signature, and sign toolbox talk registers.</p></div>
+  </div>
+  <div class="foot"><span>VDW Compliance Control System — product overview</span><span>2</span></div>
+</section>
+
+<!-- 3. Modules: compliance & documents -->
+<section class="page">
+  <div class="kicker">Modules and their role</div>
+  <h2>Know what applies — and prove it</h2>
+  <div class="grp">Compliance</div>
+  <div class="mods">
+    <div class="mod"><h3>Legal Requirements</h3><div class="role">Role: the company's register of what it must comply with, and whether it complies.</div><ul><li>Legal library with the wording of the OHS regulations, amendments, directions and incorporated standards — each checked against the original by a competent person</li><li>"Select what applies": the competent person ticks the regulations that apply</li><li>Per requirement: responsible person, evidence, compliance assessments, corrective actions and review dates</li><li>The system's interpretation of each duty is shown separately from the legal text</li></ul></div>
+    <div class="mod"><h3>Compliance Calendar</h3><div class="role">Role: keeps compliance alive between audits.</div><ul><li>Recurring work for each requirement: assessments, inspections, monitoring, medical surveillance, training, appointments, documents and reviews</li><li>Owners, due dates and automatic next due dates when work is recorded as done, with evidence</li><li>Overdue items shown first and sent to the owner's task list</li></ul></div>
+    <div class="mod"><h3>Risk Management</h3><div class="role">Role: identify hazards and control the risk.</div><ul><li>Hazard register and risk assessments (baseline, issue-based, task-specific and more)</li><li>Initial and residual risk on a configurable risk matrix; residual risk accepted by a named person</li><li>Controls with owners and target dates; reviews after incidents or changes</li><li>Printable risk assessment in your company layout, signed by the originator and team members</li></ul></div>
+    <div class="mod"><h3>Management of Change</h3><div class="role">Role: assess changes before they are made.</div><ul><li>Impact on legal requirements, risk, procedures, training, PPE, emergency arrangements and contractors</li><li>Approval in order, implementation actions and a post-implementation review</li></ul></div>
+  </div>
+  <div class="grp">Document control</div>
+  <div class="mods">
+    <div class="mod g2"><h3>Document Manager</h3><div class="role">Role: the controlled register of policies, procedures, plans and records.</div><ul><li>Upload, then approval by several people <b>in sequence</b> — each approver in turn</li><li>Issue, revisions, periodic review dates and obsolete versions kept as history</li><li>Downloads stamped "Uncontrolled when printed"</li><li>Read-and-sign for employees, with reading checks for critical documents; change requests</li></ul></div>
+    <div class="mod g2"><h3>Company Notices</h3><div class="role">Role: communicate safety alerts and notices.</div><ul><li>Notices and safety alerts to all staff or selected branches</li><li>Acknowledgement tracking — who has read and confirmed</li></ul></div>
+  </div>
+  <div class="foot"><span>VDW Compliance Control System — product overview</span><span>3</span></div>
+</section>
+
+<!-- 4. Modules: operations -->
+<section class="page">
+  <div class="kicker">Modules and their role</div>
+  <h2>Control equipment and operations</h2>
+  <div class="grp">Assets and inspections</div>
+  <div class="mods">
+    <div class="mod g3"><h3>Assets &amp; Equipment</h3><div class="role">Role: register of equipment and its legal and safety status.</div><ul><li>Forklifts, cranes, lifting equipment, pressure vessels, fire equipment, vehicles and more</li><li>Required certificates per equipment type with expiry dates</li><li>QR labels for each asset; out-of-service status after a critical failure until the fix is verified</li></ul></div>
+    <div class="mod g3"><h3>Inspections</h3><div class="role">Role: inspect equipment and areas against checklists.</div><ul><li>Controlled checklists, schedules and an inspection calendar</li><li>Start by scanning the asset's QR code on a phone; works offline</li><li>Failed items become defects and corrective actions automatically; signed, printable reports</li></ul></div>
+    <div class="mod g3"><h3>Maintenance &amp; Defects</h3><div class="role">Role: keep equipment safe to use.</div><ul><li>Planned maintenance by date or by hours / kilometres</li><li>Defects reported by operators, reviewed and closed</li></ul></div>
+    <div class="mod g3"><h3>Permits to Work</h3><div class="role">Role: control high-risk work.</div><ul><li>Hot work, working at heights, confined spaces, electrical isolation and excavation</li><li>Precautions confirmed and signed by an authorised issuer; close-out when the area is safe; expired permits flagged</li></ul></div>
+  </div>
+  <div class="grp">Health and hazards</div>
+  <div class="mods">
+    <div class="mod g6"><h3>PPE Management</h3><div class="role">Role: issue and track personal protective equipment.</div><ul><li>Requirements by job title or activity; issues with the employee's signature</li><li>Replacement dates and stock levels</li></ul></div>
+    <div class="mod g6"><h3>Hazardous Substances</h3><div class="role">Role: control chemicals at the workplace.</div><ul><li>Register with safety data sheets, storage, PPE, controls and exposure monitoring</li><li>Gaps flagged: no data sheet, review due, no risk assessment, no emergency procedure</li></ul></div>
+    <div class="mod g6"><h3>Medical Surveillance</h3><div class="role">Role: make sure employees are examined when required.</div><ul><li>Examination types per job title (e.g. audiometry, lung function, operator fitness)</li><li>Fitness outcomes and restrictions only — no clinical results; restricted access</li></ul></div>
+    <div class="mod g6"><h3>Emergency Management</h3><div class="role">Role: be ready for emergencies at every branch.</div><ul><li>Emergency plans, evacuation, assembly points, contacts, emergency team and equipment</li><li>Drills scheduled and recorded; findings become corrective actions</li></ul></div>
+  </div>
+  <div class="foot"><span>VDW Compliance Control System — product overview</span><span>4</span></div>
+</section>
+
+<!-- 5. Modules: people, incidents, assurance -->
+<section class="page">
+  <div class="kicker">Modules and their role</div>
+  <h2>People, incidents and assurance</h2>
+  <div class="grp">People</div>
+  <div class="mods">
+    <div class="mod g5"><h3>People &amp; Appointments</h3><div class="role">Role: employees and their legal appointments.</div><ul><li>Employee register with branches, departments and reporting lines</li><li>Legal appointments issued digitally and accepted with the employee's signature, or uploaded</li><li>Responsibilities allocated and acknowledged</li></ul></div>
+    <div class="mod g5"><h3>Training Management</h3><div class="role">Role: competent people, on time.</div><ul><li>Courses and training requirements by job title or appointment</li><li>Training matrix, sessions, certificates and expiry reminders</li></ul></div>
+    <div class="mod g5"><h3>Contractor Management</h3><div class="role">Role: safe contractors on site.</div><ul><li>Required documents, review and approval, inductions and findings</li><li>Permits to work issued to the contractor</li></ul></div>
+    <div class="mod g5"><h3>H&amp;S Committee &amp; Toolbox Talks</h3><div class="role">Role: consultation and communication.</div><ul><li>Committees, meetings and minutes; representatives and their workplace inspections</li><li>Toolbox talk library; attendance registers signed on the screen</li></ul></div>
+  </div>
+  <div class="grp">Incidents and corrective actions</div>
+  <div class="mods">
+    <div class="mod g4"><h3>Incident Management</h3><div class="role">Role: learn from every incident.</div><ul><li>Report from a phone with photos; injury classification and lost-time tracking</li><li>Investigation, root cause (5 Whys), witness statements, costs and lessons learned</li><li>Review of the related risk assessments when an incident is closed</li></ul></div>
+    <div class="mod g4"><h3>Corrective Actions</h3><div class="role">Role: one register for every action, from every module.</div><ul><li>Owner, priority and due date; evidence submitted and <b>independently verified</b></li><li>Escalation of overdue actions; follow-up check that the action worked</li></ul></div>
+  </div>
+  <div class="grp">Assurance</div>
+  <div class="mods">
+    <div class="mod g2"><h3>Audits</h3><div class="role">Role: check the system works.</div><ul><li>Ready-made checklists — legal compliance, housekeeping, fire safety, hazardous chemical substances, stacking and storage, emergency, PPE — and your own checklists</li><li>Audit programme, scoring, findings and corrective actions; PDF audit reports</li></ul></div>
+    <div class="mod g2"><h3>Dashboard &amp; Reports</h3><div class="role">Role: management information.</div><ul><li>Control score per branch and its trend over 12 months; LTIFR and lost-time injuries</li><li>Reports for every module, a monthly management report and a management review summary — exported to Excel or PDF</li></ul></div>
+  </div>
+  <div class="foot"><span>VDW Compliance Control System — product overview</span><span>5</span></div>
+</section>
+
+<!-- 6. Screens -->
+<section class="page">
+  <div class="kicker">In the system</div>
+  <h2>A look at the screens</h2>
+  <p class="lead" style="margin-bottom:5mm">Screens are shown with fictional demonstration data.</p>
+  <div class="grid2" style="grid-template-columns: 1.55fr 1fr; align-items: start">
+    <div><div class="shotbox"><img src="legal.png" alt=""></div><div class="cap"><b>Legal library.</b> The wording of each regulation, its source and whether it has been checked; amendments shown on the regulation they change.</div>
+      <div class="shotbox" style="margin-top:5mm"><img src="ra.png" alt=""></div><div class="cap"><b>Risk assessment.</b> Printed in the company's own layout, with the risk matrix, hierarchy of controls and signatures.</div></div>
+    <div><div class="shotbox" style="border-radius:6mm;border:2mm solid #0b1225"><img src="phone.png" alt=""></div><div class="cap"><b>Employee app.</b> Scan &amp; inspect, report an incident, and everything that needs the employee's attention — notices, documents to read and sign, appointments and PPE to accept.</div>
+      <div class="shotbox" style="margin-top:5mm"><img src="assets.png" alt=""></div><div class="cap"><b>Assets &amp; equipment.</b> Certificates, inspections and service status for every item.</div></div>
+  </div>
+  <div class="foot"><span>VDW Compliance Control System — product overview</span><span>6</span></div>
+</section>
+
+<!-- 7. Roles + why -->
+<section class="page">
+  <div class="kicker">Who uses it</div>
+  <h2>The right view for every role</h2>
+  <p class="lead">Each person sees what their role needs. Access is set per role and can be limited to a branch.</p>
+  <table class="roles"><thead><tr><th>Role</th><th>What they do in the system</th></tr></thead><tbody>
+    <tr><td>Managing Director</td><td>Sees the control score, legal compliance and key risks for the company and each branch; approves documents and changes; receives the monthly management report.</td></tr>
+    <tr><td>HSEQ Manager</td><td>Runs the system: legal register and compliance calendar, documents, risk, audits, incidents, corrective actions, training, PPE, contractors and reports.</td></tr>
+    <tr><td>Safety Consultant (VDW)</td><td>Selects the applicable regulations, checks the legal wording, sets up the compliance work, audits and advises — and compares several client companies side by side, with visit reports.</td></tr>
+    <tr><td>Branch Manager</td><td>Manages the branch: inspections, defects, incidents, corrective actions, appointments and emergency readiness.</td></tr>
+    <tr><td>Supervisor</td><td>Inspections, toolbox talks, PPE issues and their team's tasks — from a computer or a phone.</td></tr>
+    <tr><td>Employee</td><td>Uses the phone app: scan and inspect, report incidents, read and sign documents, accept appointments and PPE with a signature, sign toolbox talks and risk assessments.</td></tr>
+    <tr><td>System Administrator</td><td>Company set-up: branches, users and roles, approval routes, checklists, risk matrix and notification settings — guided by a set-up checklist.</td></tr>
+  </tbody></table>
+  <div class="grp">Why companies use it</div>
+  <div class="band"><ul class="check">
+    <li><b>Know exactly what applies</b> — selected by a competent person from the regulations, not guessed.</li>
+    <li><b>Always ready for an inspection or audit</b> — evidence is linked to each requirement and easy to show.</li>
+    <li><b>Work gets done on time</b> — owners, due dates, reminders and escalation for everything that keeps you compliant.</li>
+    <li><b>Everyone takes part</b> — employees use their phones; signatures replace paper registers.</li>
+    <li><b>Management sees the truth</b> — a live control score per branch, trends and monthly reports.</li>
+  </ul></div>
+  <p class="disclaimer">The VDW Compliance Control System helps you identify, manage and evidence your health and safety compliance. It does not by itself guarantee legal compliance: the duties under the Occupational Health and Safety Act remain with the employer, and the system's interpretation of a regulation is always shown separately from the legal text.</p>
+  <div class="foot"><span>VDW Compliance Control System — product overview</span><span>7</span></div>
+</section>
+</body></html>
