@@ -2059,6 +2059,37 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await asUser('P-002');
   }
 
+  /* ---------------- Contractor upload link ---------------- */
+  {
+    await p.setViewportSize({ width: 1400, height: 950 }); await asUser('P-002'); await S(() => { S.ui.site = 'ALL'; save(); });
+    await go('#/contractors/CON-003');
+    ok('CP1 a contractor that is not in order shows "Not cleared to start work" and what is still needed', (await p.innerText('#content')).includes('Not cleared to start work') && await has('.sh-actions [data-act=cpShare]'));
+    await p.click('.sh-actions [data-act=cpShare]'); await p.waitForTimeout(150);
+    const link = await p.inputValue('#cpLink'), tok = link.split('#/cportal/')[1];
+    ok('CP2 "Share upload link" makes a private link for the contractor, valid for 30 days', /^cp[a-z0-9]{10,}$/.test(tok) && await S(`byId('contractors','CON-003').portal.expires === addDays(TODAY, 30)`), tok);
+    await p.click('.modal-foot .btn.primary'); await p.waitForTimeout(100);
+    await S(() => { S.ui.user = null; save(); }); await p.evaluate(t => { location.hash = '#/cportal/' + t; }, tok); await p.waitForTimeout(300);
+    ok('CP3 the contractor opens the link without an account and sees the documents required for their work', await has('.cp-page') && !(await has('#sidebar .nav-item')) && await S(() => document.querySelectorAll('.cp-doc').length) === await S(`reqsFor(byId('contractors','CON-003')).length`) && (await p.innerText('.cp-page')).includes('Policy does not cover work at height'));
+    const fp = require('path').join(require('os').tmpdir(), 'cp-test-' + Date.now() + '.pdf'); require('fs').writeFileSync(fp, '%PDF-1.4 test');
+    const rid = await S(() => document.querySelector('.cp-up').dataset.r);
+    await p.click(`.cp-up[data-r="${rid}"] [data-act=cpUpload]`); await p.waitForTimeout(100);
+    ok('CP4 an upload needs the file (and the expiry date when the document expires)', await S(`(byId('contractors','CON-003').docs || []).filter(d => d.req === '${rid}' && d.via === 'upload link').length`) === 0);
+    const rids = await S(() => [...document.querySelectorAll('.cp-up')].map(f => f.dataset.r));
+    for (const r of rids) { await p.setInputFiles(`.cp-up[data-r="${r}"] input[type=file]`, fp); const ex = await p.$(`.cp-up[data-r="${r}"] input[type=date]`); if (ex) await ex.fill(await S('addDays(TODAY, 300)')); await p.click(`.cp-up[data-r="${r}"] [data-act=cpUpload]`); await p.waitForTimeout(120); }
+    await p.fill('.cp-emp [name=name]', 'Sipho Khumalo'); await p.fill('.cp-emp [name=role]', 'Rigger'); await p.click('[data-act=cpEmp]'); await p.waitForTimeout(100);
+    ok('CP5 the contractor uploads each document and lists the people who will work on site; each upload waits for review', await S(`(() => { const c = byId('contractors','CON-003'); return reqsFor(c).every(r => ['Awaiting review', 'Approved', 'Expiring'].includes(docState(c, r))) && c.employees.some(e => e.name === 'Sipho Khumalo'); })()`) && !(await has('.cp-up')));
+    await S(() => { S.ui.user = 'P-002'; save(); location.hash = '#/contractors/CON-003'; }); await p.waitForTimeout(300);
+    ok('CP6 the contractor managers get a task to review the uploaded documents', await S(() => myTasks().some(t => t.title.startsWith('Review') && t.title.includes('Steel Racking'))));
+    let n = 0; while (await has('[data-act=conReview]') && n < 12) { await p.click('[data-act=conReview]'); await p.waitForTimeout(120); await msel('decision', 'Approved'); await mbtn('Save decision'); await p.waitForTimeout(400); n++; if (await has('.modal [name=start]')) break; }
+    ok('CP7 when the last document is approved, the reviewer is asked to clear the contractor to start work', await has('.modal [name=start]'), n);
+    await mfill('note', 'Report to reception at 07:00'); await mbtn('Clear to start work'); await p.waitForTimeout(150);
+    ok('CP8 the contractor is cleared to start work, on its page and on the link', await S(`conCleared(byId('contractors','CON-003'))`) && (await p.innerText('#content')).includes('Cleared to start work') && await (async () => { await p.evaluate(t => { location.hash = '#/cportal/' + t; }, tok); await p.waitForTimeout(200); return (await p.innerText('.cp-page')).includes('You are cleared to start work'); })());
+    await go('#/contractors/CON-003'); await p.click('.sh-actions [data-act=cpShare]'); await p.waitForTimeout(150); await mbtn('Revoke the link'); await p.waitForTimeout(100);
+    await p.evaluate(t => { location.hash = '#/cportal/' + t; }, tok); await p.waitForTimeout(200);
+    ok('CP9 a revoked link no longer works', (await p.innerText('#content')).includes('This link does not work'));
+    await go('#/dashboard');
+  }
+
   /* ---------------- Print output ---------------- */
   { await go('#/print/INS-1087'); await p.emulateMedia({ media: 'print' }); await p.pdf({ path: path.join(os.tmpdir(), 'vdw_inspection_report.pdf'), format: 'A4', printBackground: true }); await p.emulateMedia({ media: 'screen' }); }
 
