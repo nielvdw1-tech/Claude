@@ -6,6 +6,7 @@ for f in ['styles.css', 'script.js', 'assessment.js', 'assessment-data.js', 'boo
 shutil.copy(os.path.join(SRC, 'assets/vdw-logo.png'), site + '/assets/')
 shutil.copytree(os.path.join(SRC, 'assets/screenshots'), site + '/assets/screenshots', dirs_exist_ok=True)
 shutil.copytree(os.path.join(SRC, 'assets/photos'), site + '/assets/photos', dirs_exist_ok=True)
+shutil.copytree(os.path.join(SRC, 'assets/docs'), site + '/assets/docs', dirs_exist_ok=True)
 for f in ['gap-audit.html', 'safety-file.html', 'compliance-management.html', 'free-assessment.html', 'assessment.html', 'privacy.html', 'book.html', 'system.html']:
     t = open(os.path.join(SRC, f)).read()
     open(os.path.join(site, f), 'w').write(t)

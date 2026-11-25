@@ -836,3 +836,9 @@ body:has(.pdf-holder) { overflow-x: hidden; }
   .landing .header-phone { display: none; }
   .landing .logo img { height: 38px; }
 }
+.sys-download-note { margin: 10px 0 0; font-size: 13px; color: #9fb0c6; }
+.sys-download { max-width: 980px; margin: 40px auto 0; display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; border-left: 6px solid var(--orange); }
+.sys-download h3 { font-size: 22px; margin-bottom: 6px; }
+.sys-download p { margin: 0; }
+@media (min-width: 641px) and (max-width: 1100px) { .sys-hero .hero-actions { flex-wrap: wrap; } }
+@media (max-width: 640px) { .sys-download .btn { width: 100%; } }
