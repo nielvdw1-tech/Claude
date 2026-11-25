@@ -1377,8 +1377,8 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await asUser('P-001'); await go('#/admin/audittemplates'); await p.click(`[data-act=audTplApprove][data-id="${t.id}"]`); await p.waitForTimeout(100); await p.click('.modal-foot button:has-text("Approve")'); await p.waitForTimeout(150);
     ok('AD17 once someone else approves it, the checklist can be used', await S(`!!atCurrent(byId('auditTemplates','${t.id}'))`));
     // checklists are set up in Administration
-    await go('#/admin');
-    const atabs = await p.$$eval('.tabs [role=tab]', t => t.map(x => x.textContent.trim()));
+    await go('#/admin/templates');
+    const atabs = await p.$$eval('.adm-pages [role=tab]', t => t.map(x => x.textContent.trim()));
     ok('CL1 Administration has "Inspection checklists" and "Audit checklists" tabs', atabs.some(t => t.startsWith('Inspection checklists')) && atabs.some(t => t.startsWith('Audit checklists')), atabs.join('|'));
     await go('#/inspections'); const itabs = await p.$$eval('.tabs [role=tab]', t => t.map(x => x.textContent.trim()));
     await go('#/audits'); const utabs = await p.$$eval('.tabs [role=tab]', t => t.map(x => x.textContent.trim()));
@@ -1737,8 +1737,9 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await p.click('tbody tr.rowlink >> nth=0'); await p.waitForTimeout(120);
     ok('QA3 a supervisor can open the profile of someone in their team', /#\/people\/P-/.test(await S(() => location.hash)) && !(await p.innerText('#content')).includes('Page not found'));
     await asUser('P-002'); ok('QA4 "My team" is not in the menu of someone without a team', !(await has('#sidebar a[href="#/team"]')));
-    await go('#/admin/riskmatrix'); const grp = await p.$$eval('.adm-grp > span', x => x.map(e => e.textContent));
+    await go('#/admin/riskmatrix'); const grp = await p.$$eval('.adm-areas a', x => x.map(e => e.childNodes[0].textContent));
     ok('QA5 Administration tabs are grouped into sections', grp.includes('Company and people') && grp.includes('Checklists and types') && !grp.includes('Other'), grp.join('|'));
+    ok('QA5b the navigation is at the top: the areas, then the pages of the area, then the page itself below', await S(() => { const b = document.querySelector('.adm-bar'), h = document.querySelector('.adm-here'); return !!b && !!h && (b.compareDocumentPosition(h) & 4) && document.querySelector('.adm-areas a.active').textContent.startsWith('Risk, actions and incidents') && document.querySelector('.adm-pages a.active').getAttribute('href') === '#/admin/riskmatrix' && h.textContent.includes('Risk matrix') && !document.querySelector('.adm-nav'); }));
     // bulk PPE
     await go('#/ppe/issues'); await p.click('.fab-stack .fab:has-text("Issue PPE")'); await p.waitForTimeout(120); await msel('ppe', 'PPE-001'); await p.click('#ppeNeed'); await p.waitForTimeout(60);
     const ticked = await p.$$eval('#ppePeople input:checked', x => x.length); await mbtn('Issue'); await p.waitForTimeout(120);
