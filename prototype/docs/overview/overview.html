@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>VDW Compliance Control System — Product overview</title>
+<style>
+@page { size: A4; margin: 0; }
+:root { --navy: #0b1f4b; --ink: #16233f; --text: #36435c; --muted: #6b7890; --line: #e3e8f0; --soft: #f4f7fb; --blue: #1a6fe0; --blue2: #0a4fb8; --sky: #e9f1fe; --orange: #f08a24; --green: #13915a; --red: #d23f3f; --amber: #c98a0c; }
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body { font-family: 'Inter', 'Liberation Sans', Arial, sans-serif; color: var(--text); font-size: 10.3pt; line-height: 1.55; -webkit-print-color-adjust: exact; print-color-adjust: exact; font-feature-settings: 'cv11', 'ss01'; }
+.page { width: 210mm; height: 297mm; padding: 20mm 18mm 18mm; position: relative; page-break-after: always; overflow: hidden; background: #fff; }
+.page:last-child { page-break-after: auto; }
+.foot { position: absolute; left: 18mm; right: 18mm; bottom: 9mm; display: flex; justify-content: space-between; align-items: center; font-size: 7.4pt; color: #8b96aa; }
+.foot b { color: var(--navy); font-weight: 700; letter-spacing: .02em; }
+h1, h2, h3 { font-family: 'Inter Display', 'Inter', sans-serif; color: var(--navy); margin: 0; }
+h2 { font-size: 23pt; font-weight: 800; letter-spacing: -0.02em; line-height: 1.12; margin-bottom: 3.5mm; max-width: 165mm; }
+h3 { font-size: 12pt; font-weight: 750; letter-spacing: -0.005em; margin-bottom: 1.4mm; }
+h4 { font-family: 'Inter Display', 'Inter', sans-serif; font-size: 10pt; font-weight: 750; color: var(--navy); margin: 0 0 1mm; }
+p { margin: 0 0 2.8mm; }
+.kicker { display: inline-flex; align-items: center; gap: 2mm; font-size: 7.8pt; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; color: var(--blue); margin-bottom: 3mm; }
+.kicker::before { content: ''; width: 6mm; height: .7mm; background: var(--orange); border-radius: 1mm; }
+.lead { font-size: 12pt; line-height: 1.5; color: #2b3852; max-width: 162mm; margin-bottom: 7mm; }
+.small { font-size: 8.6pt; color: var(--muted); }
+ul { margin: 0; padding-left: 4.2mm; } li { margin: 0 0 1.3mm; }
+ul.tick { list-style: none; padding: 0; } ul.tick li { position: relative; padding-left: 6mm; }
+ul.tick li::before { content: ''; position: absolute; left: .6mm; top: 1.5mm; width: 2.6mm; height: 1.4mm; border-left: .55mm solid var(--green); border-bottom: .55mm solid var(--green); transform: rotate(-45deg); }
+.row { display: grid; gap: 7mm; } .c2 { grid-template-columns: 1fr 1fr; } .c3 { grid-template-columns: repeat(3, 1fr); } .c4 { grid-template-columns: repeat(4, 1fr); }
+.c-6-4 { grid-template-columns: 1.45fr 1fr; } .c-4-6 { grid-template-columns: 1fr 1.45fr; }
+.card { border: 1px solid var(--line); border-radius: 3.5mm; padding: 4.5mm 5mm; background: #fff; }
+.card.soft { background: var(--soft); border-color: #e8edf5; }
+.card.navy { background: var(--navy); border-color: var(--navy); color: #d6e2fb; } .card.navy h3, .card.navy h4 { color: #fff; }
+/* screenshot frames */
+.win { border-radius: 3mm; overflow: hidden; background: #fff; border: 1px solid #d8e0ec; box-shadow: 0 3mm 9mm rgba(11, 31, 75, .13), 0 .6mm 1.6mm rgba(11, 31, 75, .08); }
+.win .bar { height: 5.2mm; background: #edf1f7; border-bottom: 1px solid #dfe5ee; display: flex; align-items: center; gap: 1.3mm; padding-left: 3mm; }
+.win .bar i { width: 1.9mm; height: 1.9mm; border-radius: 50%; background: #c9d2df; display: block; }
+.win img { display: block; width: 100%; }
+.crop { overflow: hidden; } .crop img { object-fit: cover; object-position: top left; width: 100%; height: 100%; }
+.phone { border: 2.4mm solid #0c1429; border-radius: 8mm; overflow: hidden; background: #fff; box-shadow: 0 4mm 12mm rgba(11, 31, 75, .25); }
+.phone img { display: block; width: 100%; }
+.shot { border-radius: 2.6mm; overflow: hidden; border: 1px solid #dde4ee; box-shadow: 0 2mm 6mm rgba(11, 31, 75, .09); background: #fff; }
+.shot img { display: block; width: 100%; }
+.cap { font-size: 8.2pt; color: var(--muted); margin-top: 2.2mm; line-height: 1.45; } .cap b { color: var(--ink); }
+/* flows */
+.flow { display: flex; align-items: stretch; gap: 0; margin: 1mm 0 6mm; }
+.flow .st { flex: 1; background: var(--soft); border: 1px solid #e3e9f2; padding: 3mm 3.4mm; position: relative; font-size: 8.6pt; color: var(--text); line-height: 1.35; }
+.flow .st b { display: block; color: var(--navy); font-size: 9.3pt; margin-bottom: .6mm; }
+.flow .st:first-child { border-radius: 2.6mm 0 0 2.6mm; } .flow .st:last-child { border-radius: 0 2.6mm 2.6mm 0; }
+.flow .st + .st { border-left: none; }
+.flow .st:not(:last-child)::after { content: ''; position: absolute; right: -2.1mm; top: 50%; width: 3.6mm; height: 3.6mm; background: var(--soft); border-top: 1px solid #e3e9f2; border-right: 1px solid #e3e9f2; transform: translateY(-50%) rotate(45deg); z-index: 2; }
+.flow .st.hot { background: var(--sky); border-color: #cfe0fb; } .flow .st.hot:not(:last-child)::after { background: var(--sky); border-color: #cfe0fb; }
+.num { display: inline-grid; place-items: center; width: 6.4mm; height: 6.4mm; border-radius: 50%; background: var(--blue); color: #fff; font-weight: 800; font-size: 9pt; flex: none; }
+.num.o { background: var(--orange); }
+.feat { display: flex; gap: 3.2mm; align-items: flex-start; margin-bottom: 3.6mm; } .feat p { margin: 0; font-size: 9.4pt; } .feat h4 { margin-bottom: .4mm; }
+.tag { display: inline-block; font-size: 7.4pt; font-weight: 700; letter-spacing: .04em; padding: .7mm 2.2mm; border-radius: 10mm; background: var(--sky); color: var(--blue2); }
+.tag.o { background: #fff1e3; color: #b25e0b; }
+.quote { border-left: 1.2mm solid var(--orange); padding: 1mm 0 1mm 5mm; font-family: 'Inter Display', sans-serif; font-size: 13.5pt; font-weight: 650; color: var(--navy); line-height: 1.35; }
+.rule { height: 1px; background: var(--line); margin: 6mm 0; }
+/* cover */
+.cover { padding: 0; background: radial-gradient(120% 80% at 100% 100%, #1a6fe0 0%, rgba(26,111,224,0) 60%), linear-gradient(165deg, #081634 0%, #0b1f4b 45%, #0d3279 100%); color: #fff; }
+.cover .top { padding: 17mm 18mm 0; display: flex; justify-content: space-between; align-items: center; }
+.cover .logo { background: #fff; border-radius: 3.5mm; padding: 3mm 4.5mm; display: inline-flex; box-shadow: 0 2mm 6mm rgba(0,0,0,.25); } .cover .logo img { height: 13mm; display: block; }
+.cover .top span { font-size: 8pt; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; color: #a9c2ee; }
+.cover .body { padding: 26mm 18mm 0; }
+.cover h1 { font-size: 41pt; font-weight: 800; line-height: 1.02; letter-spacing: -0.03em; color: #fff; max-width: 160mm; }
+.cover h1 em { font-style: normal; color: #ffb066; }
+.cover .tag2 { margin-top: 7mm; font-size: 13.5pt; line-height: 1.45; color: #cfdcf6; max-width: 150mm; }
+.cover .act { margin-top: 9mm; display: inline-flex; gap: 2.5mm; align-items: center; font-size: 8.6pt; color: #e3ecff; border: 1px solid rgba(255,255,255,.28); border-radius: 10mm; padding: 2mm 4.5mm; }
+.cover .act i { width: 2mm; height: 2mm; border-radius: 50%; background: var(--orange); }
+.cover .lap { position: absolute; right: -30mm; bottom: 26mm; width: 182mm; }
+.cover .lap .win { border-color: rgba(255,255,255,.2); box-shadow: 0 10mm 30mm rgba(0,0,0,.5); }
+.cover .ph { position: absolute; left: 18mm; bottom: 14mm; width: 60mm; }
+.cover .ph .phone { box-shadow: 0 8mm 24mm rgba(0,0,0,.55); border-color: #050a17; }
+.cover .note { position: absolute; left: 82mm; bottom: 9mm; font-size: 7.2pt; color: #8ea6d3; }
+/* loop */
+.loop { display: grid; grid-template-columns: 1fr 1fr; gap: 10mm 14mm; position: relative; }
+.loop .card { padding: 5mm 5.5mm 4.5mm; } .loop .card h3 { display: flex; align-items: center; gap: 2.6mm; margin-bottom: 2mm; }
+.loop .card p { font-size: 9.4pt; margin: 0; } .loop .card:nth-child(odd) { padding-right: 7mm; } .loop .card:nth-child(even) { padding-left: 7mm; }
+.hub { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 19mm; height: 19mm; border-radius: 50%; background: var(--navy); color: #fff; display: grid; place-items: center; text-align: center; font-family: 'Inter Display', sans-serif; font-weight: 800; font-size: 8pt; line-height: 1.15; box-shadow: 0 0 0 2.5mm #fff, 0 3mm 8mm rgba(11,31,75,.25); }
+.hub small { display: block; font-weight: 500; color: #a9c2ee; font-size: 7pt; margin-top: .8mm; }
+/* compare */
+.cmp { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 9.4pt; }
+.cmp th { text-align: left; font-size: 7.8pt; letter-spacing: .12em; text-transform: uppercase; padding: 0 4mm 2.5mm; color: var(--muted); }
+.cmp th.yes { color: var(--blue); }
+.cmp td { padding: 3.2mm 4mm; vertical-align: top; border-top: 1px solid var(--line); line-height: 1.45; }
+.cmp td:first-child { color: #59657c; width: 46%; } .cmp td:last-child { color: var(--ink); font-weight: 550; background: #f6f9fe; }
+.cmp tr:last-child td { border-bottom: 1px solid var(--line); }
+.cmp td .x { color: var(--red); font-weight: 800; margin-right: 1.6mm; } .cmp td .v { color: var(--green); font-weight: 800; margin-right: 1.6mm; }
+/* roles */
+table.roles { width: 100%; border-collapse: collapse; font-size: 8.9pt; }
+table.roles td { padding: 2.6mm 3mm; border-bottom: 1px solid var(--line); vertical-align: top; line-height: 1.45; }
+table.roles td:first-child { font-weight: 750; color: var(--navy); width: 36mm; white-space: nowrap; }
+.mods { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3.2mm; }
+.mod { border: 1px solid var(--line); border-radius: 3mm; padding: 3.4mm 3.8mm; background: #fff; }
+.mod h4 { display: flex; align-items: center; gap: 2mm; } .mod h4 i { width: 2.2mm; height: 2.2mm; border-radius: .6mm; background: var(--blue); display: block; }
+.mod p { margin: 0; font-size: 8.6pt; line-height: 1.45; }
+.disc { font-size: 7.8pt; color: var(--muted); line-height: 1.5; border-top: 1px solid var(--line); padding-top: 3.5mm; }
+.stamp { position: absolute; right: 18mm; top: 20mm; }
+</style></head><body>
+
+<!-- 1 · COVER -->
+<section class="page cover">
+  <div class="top"><span class="logo"><img src="../brochure/vdw-logo.png" alt="VDW"></span><span>Product overview</span></div>
+  <div class="body">
+    <h1>VDW Compliance <em>Control</em> System</h1>
+    <div class="tag2">Know exactly what the law requires of your company. Prove that you comply. Stay compliant — every day, at every branch.</div>
+    <div class="act"><i></i> Occupational Health and Safety Act 85 of 1993 and its regulations · South Africa</div>
+  </div>
+  <div class="lap"><div class="win"><div class="bar"><i></i><i></i><i></i></div><div class="crop" style="height:112mm"><img src="img/dashboard.png" alt=""></div></div></div>
+  <div class="ph"><div class="phone"><img src="img/phone_home.png" alt=""></div></div>
+  <div class="note">Screens show fictional demonstration data.</div>
+</section>
+
+<!-- 2 · WHY -->
+<section class="page">
+  <div class="kicker">Why it matters</div>
+  <h2>Compliance is easy to lose sight of — until an inspector asks</h2>
+  <p class="lead">Most companies know they must comply with the Occupational Health and Safety Act. The hard part is knowing <b>exactly which regulations apply</b>, <b>what each one requires</b>, and keeping the <b>proof up to date</b> while people, equipment and documents change every week.</p>
+  <table class="cmp">
+    <tr><th>Without a system</th><th class="yes">With the VDW Compliance Control System</th></tr>
+    <tr><td><span class="x">✕</span>Requirements live in someone's head, a file or a spreadsheet.</td><td><span class="v">✓</span>Every applicable requirement is in one register, next to the official wording of the law.</td></tr>
+    <tr><td><span class="x">✕</span>Certificates, appointments and training expire unnoticed.</td><td><span class="v">✓</span>Due dates become tasks, reminders and escalations — before anything lapses.</td></tr>
+    <tr><td><span class="x">✕</span>Findings from inspections, audits and incidents are written down, then forgotten.</td><td><span class="v">✓</span>Every finding becomes a corrective action with an owner, a due date, evidence and independent verification.</td></tr>
+    <tr><td><span class="x">✕</span>Signed paper registers go missing.</td><td><span class="v">✓</span>People read, acknowledge and sign on their phones; attendance registers print with the signatures.</td></tr>
+    <tr><td><span class="x">✕</span>Proof is gathered in a rush when an inspector or auditor arrives.</td><td><span class="v">✓</span>Evidence is linked to the requirement as the work is done, and gaps are flagged on their own.</td></tr>
+    <tr><td><span class="x">✕</span>Management sees the real position only after something goes wrong.</td><td><span class="v">✓</span>A live control score per branch shows where you stand and what needs attention.</td></tr>
+  </table>
+  <div class="row c2" style="margin-top:10mm">
+    <div class="card navy"><div class="tag o" style="margin-bottom:2.5mm">Goal 1</div><h3>Know what you need to comply with</h3><p style="margin:0;color:#c6d5f3">A competent person selects the Act, the regulations and the sub-regulations that apply to your company. The system shows them in the official wording and works out what is needed to show compliance.</p></div>
+    <div class="card navy"><div class="tag o" style="margin-bottom:2.5mm">Goal 2</div><h3>Stay compliant over time</h3><p style="margin:0;color:#c6d5f3">Inspections, reviews, renewals, drills and training are scheduled and tracked. The daily work in the system feeds back into the compliance status — live.</p></div>
+  </div>
+  <div class="foot"><b>VDW COMPLIANCE CONTROL SYSTEM</b><span>2</span></div>
+</section>
+
+<!-- 3 · HOW IT WORKS -->
+<section class="page">
+  <div class="kicker">How it works</div>
+  <h2>One loop: identify, set up, run, prove</h2>
+  <p class="lead">The system follows the way compliance actually works. A professional decides what applies; the system turns that into work; the work produces the proof.</p>
+  <div class="loop">
+    <div class="card soft"><h3><span class="num">1</span>Identify</h3><p>A competent person — for example your VDW safety consultant — picks the Act or regulations in the legal library and ticks the sections and sub-regulations that apply. There is no generic questionnaire: a professional makes the call.</p></div>
+    <div class="card soft"><h3><span class="num">2</span>Set up</h3><p>For each requirement the system proposes what <b>shows</b> compliance (documents, appointments, training, certificates, inspections, records) and what <b>maintains</b> it (recurring inspections, drills, reviews, renewals), and schedules it in the compliance calendar.</p></div>
+    <div class="card soft"><h3><span class="num o">4</span>Prove</h3><p>Records feed back into the requirements register as they happen. Each requirement shows its live evidence, gaps are flagged automatically, and the control score shows the position per branch.</p></div>
+    <div class="card soft"><h3><span class="num">3</span>Run</h3><p>Day-to-day work happens in the modules — inspections, risk assessments, incidents, training, contractors and corrective actions — on a computer or on a phone at the workplace.</p></div>
+    <div class="hub">Live<br>status</div>
+  </div>
+  <div class="row c3" style="margin-top:7mm">
+    <div><h4>Your consultant</h4><p class="small" style="color:var(--text)">Selects the applicable legislation, checks the legal wording, sets up the company and reviews progress at each visit — for one client or many.</p></div>
+    <div><h4>Your managers</h4><p class="small" style="color:var(--text)">Run the system day to day: approve documents, plan inspections and audits, investigate incidents, close corrective actions.</p></div>
+    <div><h4>Your employees</h4><p class="small" style="color:var(--text)">Use their phones to inspect equipment, report incidents, read and sign documents, accept appointments and sign for PPE and talks.</p></div>
+  </div>
+  <div class="row c-4-6" style="align-items:center;margin-top:5mm">
+    <div class="quote">“Every feature serves one of two goals: know what you must comply with — and stay compliant.”</div>
+    <div class="shot crop" style="height:44mm"><img src="img/x_score.png" alt=""></div>
+  </div>
+  <p class="cap" style="text-align:right;margin-top:1.5mm">The control score combines six areas, each with its own weight. It is indicative and calculated from your own records.</p>
+  <div class="foot"><b>VDW COMPLIANCE CONTROL SYSTEM</b><span>3</span></div>
+</section>
+
+<!-- 4 · LEGAL -->
+<section class="page">
+  <div class="kicker">Legal requirements</div>
+  <h2>The law in its own words — and what it means for you, kept separate</h2>
+  <p class="lead">The legal library holds the Act and its regulations as <b>official wording, loaded from the official documents</b>. The competent person selects what applies; the system adds its interpretation, clearly labelled, next to the law — never in place of it.</p>
+  <div class="win" style="margin-bottom:6mm"><div class="bar"><i></i><i></i><i></i></div><div class="crop" style="height:92mm"><img src="img/c_regulation.png" alt=""></div></div>
+  <div class="row c3">
+    <div class="feat"><span class="num">1</span><div><h4>Official wording</h4><p>44 regulations and related documents loaded, each regulation and sub-regulation in the exact wording, with its source. Each one is checked against the original by a competent person before it is relied on.</p></div></div>
+    <div class="feat"><span class="num">2</span><div><h4>Select what applies</h4><p>Tick the regulations and sub-regulations that apply to the company. Amendments are shown on the regulation they change, so nothing is read out of date.</p></div></div>
+    <div class="feat"><span class="num">3</span><div><h4>System interpretation</h4><p>What the company must do and the evidence that shows it — marked <i>“System interpretation — not legal text”</i> — become compliance tasks in the compliance calendar.</p></div></div>
+  </div>
+  <div class="foot"><b>VDW COMPLIANCE CONTROL SYSTEM</b><span>4</span></div>
+</section>
+
+<!-- 5 · LIVE REGISTER -->
+<section class="page">
+  <div class="kicker">Requirements register</div>
+  <h2>A register that keeps itself up to date</h2>
+  <p class="lead">Records are linked to the legal requirement they support — straight from the record. Each requirement then shows its evidence <b>live</b>, and when evidence goes out of date the register says so before anyone has to look.</p>
+  <div class="shot" style="margin-bottom:3mm"><img src="img/x_evidence.png" alt=""></div>
+  <div class="shot"><img src="img/x_gap.png" alt=""></div>
+  <p class="cap"><b>Evidence from the system.</b> The procedure linked to this requirement is overdue for review, so the requirement shows a gap and counts as partially compliant until it is reviewed.</p>
+  <div class="row c-4-6" style="margin-top:7mm;align-items:start">
+    <div>
+      <h4>What can be linked</h4>
+      <ul class="tick" style="font-size:9.3pt">
+        <li>Policies, procedures and other controlled documents</li>
+        <li>Risk assessments</li>
+        <li>Legal appointments</li>
+        <li>Training courses and training records</li>
+        <li>Inspection schedules and inspections</li>
+        <li>Audits and emergency drills</li>
+        <li>Medical examinations and PPE issues</li>
+      </ul>
+    </div>
+    <div><div class="win"><div class="bar"><i></i><i></i><i></i></div><div class="crop" style="height:62mm"><img src="img/c_library.png" alt=""></div></div><p class="cap"><b>The legal library:</b> each document with its status, the copy it comes from and how much has been checked against the original.</p></div>
+  </div>
+  <div class="row c3" style="margin-top:8mm">
+    <div class="card soft"><h4>Gaps flagged automatically</h4><p class="small" style="color:var(--text);margin:0">A document past its review date, an expired certificate, an appointment not accepted, an overdue compliance task, or no evidence at all.</p></div>
+    <div class="card soft"><h4>An honest compliance figure</h4><p class="small" style="color:var(--text);margin:0">A requirement assessed as compliant drops to <i>partially compliant</i> while it has a gap, so the legal compliance figure reflects reality.</p></div>
+    <div class="card soft"><h4>Assessed by a person</h4><p class="small" style="color:var(--text);margin:0">Compliance is assessed and recorded by a named person, with history. The system supports the judgement — it does not replace it.</p></div>
+  </div>
+  <div class="foot"><b>VDW COMPLIANCE CONTROL SYSTEM</b><span>5</span></div>
+</section>
+
+<!-- 6 · DOCUMENTS -->
+<section class="page">
+  <div class="kicker">Document control</div>
+  <h2>Controlled documents, approved in sequence and read by the right people</h2>
+  <div class="flow">
+    <div class="st"><b>Upload</b>Number, title and revision read from the document header</div>
+    <div class="st hot"><b>Approve in order</b>Each approver on the route in turn; any can return it</div>
+    <div class="st"><b>Issue</b>The approved revision becomes the one in use</div>
+    <div class="st hot"><b>Read &amp; sign</b>The people who must read it sign on their phone</div>
+    <div class="st"><b>Review</b>Reminders before the review date; new revision</div>
+  </div>
+  <div class="row c-6-4" style="align-items:start">
+    <div class="win"><div class="bar"><i></i><i></i><i></i></div><div class="crop" style="height:112mm"><img src="img/c_document.png" alt=""></div></div>
+    <div>
+      <ul class="tick" style="font-size:9.3pt">
+        <li><b>Approval routes</b> per document category: several people, in a set order. Each signs off in turn.</li>
+        <li><b>Only the issued revision is used.</b> Downloads are stamped, and printed copies are marked uncontrolled.</li>
+        <li><b>Read and acknowledge:</b> choose roles or people; each opens the document, ticks that they understood it and signs. Optional reading-check questions for critical documents.</li>
+        <li><b>Change requests</b> from anyone who uses the document.</li>
+        <li><b>Periodic review</b> with reminders and escalation when it is overdue.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="row c-4-6" style="margin-top:6mm;align-items:center">
+    <div><span class="tag">New</span><h3 style="margin-top:2mm">Attendance registers on demand</h3><p style="font-size:9.4pt">Draw the register of any document, training session, course or Health and Safety Talk: who had to read or attend, who did, when — with the signatures. Print it or download it as a PDF.</p></div>
+    <div class="shot crop" style="height:62mm"><img src="img/x_attendance.png" alt=""></div>
+  </div>
+  <div class="foot"><b>VDW COMPLIANCE CONTROL SYSTEM</b><span>6</span></div>
+</section>
+
+<!-- 7 · RISK -->
+<section class="page">
+  <div class="kicker">Risk management</div>
+  <h2>Risk assessments done in the right order — and controls that actually get done</h2>
+  <p class="lead">Each hazard is assessed in one form, step by step. Only a complete assessment can be signed off, and every new control is followed through to evidence that it is in place.</p>
+  <div class="row c-4-6" style="align-items:start">
+    <div>
+      <div class="feat"><span class="num">1</span><div><h4>Hazard</h4><p>What can cause harm — from the hazard register or new.</p></div></div>
+      <div class="feat"><span class="num">2</span><div><h4>Risk</h4><p>What can happen.</p></div></div>
+      <div class="feat"><span class="num">3</span><div><h4>Consequence</h4><p>How bad it can be.</p></div></div>
+      <div class="feat"><span class="num">4</span><div><h4>Rating before controls</h4><p>Probability × impact on your own risk matrix.</p></div></div>
+      <div class="feat"><span class="num">5</span><div><h4>Hierarchy of control and controls</h4><p>Elimination, substitution, engineering, administrative, PPE — each control with a responsible person and date.</p></div></div>
+      <div class="feat"><span class="num">6</span><div><h4>Rating after controls</h4><p>The residual risk, never higher than before.</p></div></div>
+    </div>
+    <div class="win"><div class="bar"><i></i><i></i><i></i></div><div class="crop" style="height:122mm"><img src="img/c_hazardmodal.png" alt=""></div></div>
+  </div>
+  <div class="flow" style="margin-top:7mm">
+    <div class="st"><b>Submit for sign-off</b>Only when every hazard is complete</div>
+    <div class="st hot"><b>Team signs</b>The assessor and team members sign on screen or phone</div>
+    <div class="st"><b>Approve</b>A manager accepts the residual risks, with a reason</div>
+    <div class="st hot"><b>Controls → corrective actions</b>Evidence uploaded and independently verified</div>
+  </div>
+  <p class="small" style="color:var(--text)">Also: the hazard register, a configurable risk matrix with escalation of high and critical risks, reviews that keep every previous version, and a print in the company's own layout. When an incident is closed, the system asks whether the related risk assessment must be reviewed.</p>
+  <div class="foot"><b>VDW COMPLIANCE CONTROL SYSTEM</b><span>7</span></div>
+</section>
+
+<!-- 8 · ASSETS & ACTIONS -->
+<section class="page">
+  <div class="kicker">Assets, inspections and corrective actions</div>
+  <h2>Equipment that is inspected — and fixed</h2>
+  <p class="lead">Every piece of equipment has its required certificates, an inspection schedule and a QR label. A failed check never disappears: it becomes a defect and a corrective action that someone else verifies.</p>
+  <div class="row" style="grid-template-columns: 52mm 1fr; align-items:start; gap: 9mm">
+    <div><div class="phone"><img src="img/phone_qr.png" alt=""></div><p class="cap"><b>Scan the QR label</b> to see whether the equipment is safe to use, inspect it or report a defect.</p></div>
+    <div>
+      <div class="win" style="margin-bottom:5mm"><div class="bar"><i></i><i></i><i></i></div><div class="crop" style="height:64mm"><img src="img/c_assets.png" alt=""></div></div>
+      <div class="row c2" style="gap:5mm">
+        <div><h4>Inspections</h4><ul class="tick" style="font-size:9pt"><li>Controlled checklists per type of equipment</li><li>Inspect on the phone — also without signal</li><li>Inspection calendar and overdue alerts</li><li>Maintenance by date, hours or kilometres</li><li>Lifting equipment register</li></ul></div>
+        <div><h4>Defects and corrective actions</h4><ul class="tick" style="font-size:9pt"><li>A failed item becomes a defect and an action</li><li><b>A critical failure puts the equipment out of service</b> until the fix is verified</li><li>One action register for every module</li><li>Owner, due date, evidence, independent verification</li><li>Overdue actions escalate</li></ul></div>
+      </div>
+    </div>
+  </div>
+  <div class="win" style="margin-top:7mm"><div class="bar"><i></i><i></i><i></i></div><div class="crop" style="height:54mm"><img src="img/c_actions.png" alt=""></div></div>
+  <p class="cap"><b>Corrective actions</b> from inspections, audits, incidents, risk assessments, contractors and the legal register — in one place.</p>
+  <div class="foot"><b>VDW COMPLIANCE CONTROL SYSTEM</b><span>8</span></div>
+</section>
+
+<!-- 9 · INCIDENTS & AUDITS -->
+<section class="page">
+  <div class="kicker">Incidents and audits</div>
+  <h2>Learn from every incident. Check the system with audits.</h2>
+  <div class="row c2" style="align-items:start">
+    <div>
+      <div class="win" style="margin-bottom:5mm"><div class="bar"><i></i><i></i><i></i></div><div class="crop" style="height:86mm"><img src="img/c_incidents.png" alt=""></div></div>
+      <h3>Incident management</h3>
+      <div class="flow" style="margin:2mm 0 4mm"><div class="st"><b>Report</b>From a phone, with photos</div><div class="st hot"><b>Investigate</b>Witnesses, root cause</div><div class="st"><b>Act</b>Corrective actions</div><div class="st hot"><b>Close</b>Lessons learned</div></div>
+      <ul class="tick" style="font-size:9.2pt">
+        <li>Injury classification set by the company; shifts lost and LTIFR from hours worked</li>
+        <li>Signed witness statements and a guided root cause (5 whys), with direct and underlying causes</li>
+        <li>Tracker for external reporting, and incident costs</li>
+        <li>On closing, a prompt to review the related risk assessment</li>
+      </ul>
+    </div>
+    <div>
+      <div class="win" style="margin-bottom:5mm"><div class="bar"><i></i><i></i><i></i></div><div class="crop" style="height:86mm"><img src="img/c_audits.png" alt=""></div></div>
+      <h3>Audits</h3>
+      <p style="font-size:9.4pt">Ready-made audit checklists to adapt, and checklists you build yourself — with sections, weights and critical items.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:1.6mm;margin-bottom:4mm">
+        <span class="tag">Legal compliance</span><span class="tag">Housekeeping</span><span class="tag">Fire safety</span><span class="tag">Hazardous chemical substances</span><span class="tag">Stacking and storage</span><span class="tag">Emergency preparedness</span><span class="tag">PPE</span><span class="tag o">Your own</span>
+      </div>
+      <ul class="tick" style="font-size:9.2pt">
+        <li>Audit programme per branch, with due dates</li>
+        <li>Scoring, findings and corrective actions</li>
+        <li>Audit items can be linked to legal requirements</li>
+        <li>Audit report as a PDF</li>
+      </ul>
+    </div>
+  </div>
+  <div class="foot"><b>VDW COMPLIANCE CONTROL SYSTEM</b><span>9</span></div>
+</section>
+
+<!-- 10 · PEOPLE & CONTRACTORS -->
+<section class="page">
+  <div class="kicker">People and contractors</div>
+  <h2>The right people — appointed, trained, protected and cleared to work</h2>
+  <div class="mods" style="margin-bottom:8mm">
+    <div class="mod"><h4><i></i>Legal appointments</h4><p>Issued digitally; the employee reads, signs and accepts on their phone — or declines with a reason.</p></div>
+    <div class="mod"><h4><i></i>Training</h4><p>A training matrix by job, appointment or activity; sessions, certificates and expiry reminders.</p></div>
+    <div class="mod"><h4><i></i>Health and Safety Talks</h4><p>A library of talks; attendees sign on screen; the register prints on demand.</p></div>
+    <div class="mod"><h4><i></i>PPE</h4><p>Requirements per job, issues signed by the employee, replacement dates.</p></div>
+    <div class="mod"><h4><i></i>Medical surveillance</h4><p>Who needs which examination, fitness outcomes and restrictions — no clinical results kept.</p></div>
+    <div class="mod"><h4><i></i>Emergency</h4><p>Plans and assembly points per branch, marshals and first aiders, drills held and planned.</p></div>
+    <div class="mod"><h4><i></i>H&amp;S committee</h4><p>Representatives, meetings, minutes and representatives' inspections.</p></div>
+    <div class="mod"><h4><i></i>Permits to work</h4><p>Hot work, heights, confined spaces, isolation and excavation — issued, extended and closed out.</p></div>
+    <div class="mod"><h4><i></i>Hazardous substances</h4><p>Register with safety data sheets, storage, PPE and the related risk assessment.</p></div>
+  </div>
+  <div class="card soft" style="padding:6mm">
+    <div class="row" style="grid-template-columns: 1fr 50mm; gap: 8mm; align-items:start">
+      <div>
+        <span class="tag">New</span>
+        <h3 style="margin-top:2mm">Contractors upload their own documents</h3>
+        <p style="font-size:9.4pt">Choose the documents each contractor must provide, then share a private upload link. The contractor uploads everything — no account needed — and lists the people who will work on site.</p>
+        <div class="feat"><span class="num">1</span><div><h4>Choose the documents</h4><p>Ticked for you from the kind of work; change the list per contractor.</p></div></div>
+        <div class="feat"><span class="num">2</span><div><h4>Share the link</h4><p>Valid for 30 days; e-mailed to the contractor; can be revoked.</p></div></div>
+        <div class="feat"><span class="num">3</span><div><h4>Review each document</h4><p>Approve it, or reject it with a reason the contractor sees.</p></div></div>
+        <div class="feat"><span class="num o">4</span><div><h4>Cleared to start work</h4><p>When everything is approved — until a document expires.</p></div></div>
+      </div>
+      <div class="phone"><img src="img/phone_contractor.png" alt=""></div>
+    </div>
+  </div>
+  <div class="foot"><b>VDW COMPLIANCE CONTROL SYSTEM</b><span>10</span></div>
+</section>
+
+<!-- 11 · PHONE + MANAGEMENT -->
+<section class="page">
+  <div class="kicker">On the floor and in the office</div>
+  <h2>Built for the people who do the work — and those who answer for it</h2>
+  <p class="lead">Employees use their phones; managers and consultants see the whole picture. Everyone sees only what their role needs, for their own branch.</p>
+  <div class="row c3" style="gap:8mm;margin-bottom:5mm">
+    <div><div class="phone"><img src="img/phone_home.png" alt=""></div><p class="cap"><b>Home screen:</b> what needs attention, with Scan &amp; inspect and Report incident one tap away.</p></div>
+    <div><div class="phone"><img src="img/phone_qr.png" alt=""></div><p class="cap"><b>Scan equipment</b> to check it is safe, inspect it or report a defect.</p></div>
+    <div><div class="phone"><img src="img/phone_talks.png" alt=""></div><p class="cap"><b>My Health and Safety Talks</b>, appointments, PPE and documents to sign.</p></div>
+  </div>
+  <div class="row c2" style="gap:7mm">
+    <div class="card soft"><h4>For employees</h4><ul class="tick" style="font-size:9pt;margin-top:1.5mm"><li>Works on any phone and installs like an app</li><li>Inspections also without signal</li><li>Field screens in English, Afrikaans and isiZulu</li><li>Sign documents, appointments, PPE and talks on screen</li></ul></div>
+    <div class="card soft"><h4>For managers and consultants</h4><ul class="tick" style="font-size:9pt;margin-top:1.5mm"><li>A dashboard per role, with the control score per branch</li><li>Monthly management report as a PDF; weekly e-mail summary</li><li>Reports for every module, to PDF or Excel (CSV)</li><li>Consultants manage several client companies side by side</li></ul></div>
+  </div>
+  <div class="foot"><b>VDW COMPLIANCE CONTROL SYSTEM</b><span>11</span></div>
+</section>
+
+<!-- 12 · ROLES + START -->
+<section class="page">
+  <div class="kicker">Who uses it and how to start</div>
+  <h2>The right view for every role</h2>
+  <table class="roles" style="margin-bottom:8mm">
+    <tr><td>Managing Director</td><td>The control score, legal compliance and key risks for the company and each branch; approves documents and changes; receives the monthly management report.</td></tr>
+    <tr><td>HSEQ Manager</td><td>Runs the system: legal register and compliance calendar, documents, risk, audits, incidents, corrective actions, training, permits and contractors.</td></tr>
+    <tr><td>Safety Consultant</td><td>Selects the applicable legislation, checks the legal wording, sets up the company, does audits and advises — across several client companies.</td></tr>
+    <tr><td>Branch Manager</td><td>The branch's inspections, defects, incidents, corrective actions, contractors and emergency readiness.</td></tr>
+    <tr><td>Supervisor</td><td>Inspections, Health and Safety Talks, PPE issues and the team's tasks — from a computer or a phone.</td></tr>
+    <tr><td>Employee</td><td>The phone app: scan and inspect, report incidents, read and sign documents, accept appointments and sign for PPE and talks.</td></tr>
+    <tr><td>System Administrator</td><td>Branches, users and roles, approval routes, checklists and settings — guided by a set-up checklist.</td></tr>
+  </table>
+  <h3>Getting started</h3>
+  <div class="flow" style="margin-top:2.5mm">
+    <div class="st"><b>1 · Set up</b>Company, branches and users — imported from Excel</div>
+    <div class="st hot"><b>2 · Identify</b>The consultant selects the regulations that apply</div>
+    <div class="st"><b>3 · Load</b>Documents, equipment, appointments and training records</div>
+    <div class="st hot"><b>4 · Go live</b>Employees on their phones; the register fills itself</div>
+  </div>
+  <div class="card navy" style="margin-top:7mm;display:flex;gap:8mm;align-items:center">
+    <div style="flex:1"><h3 style="font-size:14pt">See it with your own company</h3><p style="margin:0;color:#c6d5f3">Ask your VDW safety consultant for a walk-through of the system with your own branches, legislation and documents.</p></div>
+    <span style="background:#fff;border-radius:3mm;padding:2.5mm 3.5mm;display:inline-flex"><img src="../brochure/vdw-logo.png" alt="VDW" style="height:11mm"></span>
+  </div>
+  <p class="disc" style="margin-top:8mm">The VDW Compliance Control System helps a company identify, manage and evidence its compliance with the Occupational Health and Safety Act and its regulations. It does not by itself guarantee legal compliance: the employer remains responsible for its statutory duties, and applicability and compliance are decided by a competent person. Legal text in the system is loaded from official documents and checked against the original; the system's interpretation of each requirement is always shown separately from the legal text. The system is being prepared for pilot use, so features and screens may change. All screens in this overview show fictional demonstration data.</p>
+  <div class="foot"><b>VDW COMPLIANCE CONTROL SYSTEM</b><span>12</span></div>
+</section>
+</body></html>
