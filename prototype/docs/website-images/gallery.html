@@ -1,0 +1,133 @@
+<title>VDW Website Images</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+/* Layout: a header band with the download-all actions, then a grid of image cards, each with its own download button. */
+:root {
+  --bg: #f4f7fb; --surface: #ffffff; --ink: #0b1f4b; --text: #36435c; --muted: #6b7890; --line: #e1e7f0;
+  --accent: #1a6fe0; --accent-ink: #ffffff; --accent-soft: #e8f1fe; --warm: #f08a24; --ok: #13915a; --bad: #c43a3a;
+  --sans: 'Inter', 'Segoe UI', Roboto, Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0b1424; --surface: #121e33; --ink: #eaf0fb; --text: #c3cee2; --muted: #8b98b2; --line: #24324c;
+  --accent: #4b93f2; --accent-ink: #06142b; --accent-soft: #16294a; --warm: #f5a052; --ok: #3cc488; --bad: #ef7373; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0b1424; --surface: #121e33; --ink: #eaf0fb; --text: #c3cee2; --muted: #8b98b2; --line: #24324c;
+  --accent: #4b93f2; --accent-ink: #06142b; --accent-soft: #16294a; --warm: #f5a052; --ok: #3cc488; --bad: #ef7373; color-scheme: dark }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 15px; line-height: 1.55; }
+.wrap { max-width: 1180px; margin: 0 auto; padding-block: 32px 56px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+header { display: flex; flex-wrap: wrap; gap: 18px 32px; align-items: flex-end; justify-content: space-between; margin-bottom: 28px; }
+.eyebrow { font-size: 12px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin: 0 0 6px; }
+h1 { margin: 0 0 6px; font-size: clamp(26px, 4vw, 36px); line-height: 1.12; letter-spacing: -0.02em; color: var(--ink); text-wrap: balance; font-weight: 800; }
+.lead { margin: 0; max-width: 62ch; }
+.all { display: flex; flex-wrap: wrap; gap: 10px; }
+button { font: inherit; cursor: pointer; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); padding: 9px 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; }
+button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+button:hover { border-color: var(--accent); }
+button:focus-visible { outline: 3px solid var(--accent-soft); outline-offset: 2px; }
+button[disabled] { opacity: .6; cursor: progress; }
+button svg { width: 16px; height: 16px; flex: none; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; min-width: 0; }
+.card img { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; background: var(--accent-soft); }
+.card.wide img { aspect-ratio: 16 / 9; }
+.card .body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+.card h2 { margin: 0; font-size: 16px; color: var(--ink); line-height: 1.3; }
+.card p { margin: 0; font-size: 13.5px; color: var(--muted); }
+.card .meta { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: auto; }
+.size { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.status { font-size: 13px; min-height: 1.2em; }
+.status.ok { color: var(--ok); } .status.bad { color: var(--bad); }
+.note { margin-top: 28px; font-size: 13.5px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; }
+#fallback { display: none; background: var(--accent-soft); color: var(--ink); border-radius: 10px; padding: 10px 14px; font-size: 14px; margin-bottom: 20px; }
+@media (max-width: 420px) { .grid { grid-template-columns: 1fr; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <p class="eyebrow">VDW Compliance Control System</p>
+      <h1>Website images</h1>
+      <p class="lead">Fourteen images of the system for your website, 2400 pixels wide. Download them one at a time, or all 14 at once as a zip file. All screens show fictional demonstration data.</p>
+    </div>
+    <div class="all">
+      <button class="primary" id="zipAll" type="button"></button>
+    </div>
+  </header>
+  <div id="fallback">Downloads are not available in this view. Press and hold an image (phone) or right-click it and choose "Save image as" (computer).</div>
+  <p class="status" id="allStatus" role="status"></p>
+  <div class="grid" id="grid"></div>
+  <p class="note">Each download asks you to confirm before the file is saved. On a phone, you can also press and hold an image and choose "Save image".</p>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+const IMAGES = [
+  ['01_hero_dashboard_and_phone', 'Dashboard and phone app', 'For the top of a page: the control score and the employee app.', true],
+  ['02_legal_library_official_wording', 'Legal library', 'A regulation in its official wording, with its source and check status.'],
+  ['03_live_legal_register_evidence', 'Live legal register', 'Evidence shown live under a requirement, with an automatic gap warning.'],
+  ['04_control_score_dashboard', 'Control score', 'The score for each of the six areas.'],
+  ['05_document_control_and_attendance', 'Document control', 'Approval route, read and sign, and the attendance register.'],
+  ['06_risk_assessment_workflow', 'Risk assessments', 'The five steps, and the hazard form in the order of the assessment.'],
+  ['07_assets_and_qr_inspections', 'Assets and inspections', 'The asset register, and the QR page on a phone.'],
+  ['08_corrective_actions', 'Corrective actions', 'One register for actions from every module.'],
+  ['09_incident_management', 'Incidents', 'Incident trends and the LTI frequency rate.'],
+  ['10_audits', 'Audits', 'The audit programme per branch.'],
+  ['11_contractors_upload_link', 'Contractors', "A contractor's documents, and their upload page on a phone."],
+  ['12_training_matrix', 'Training', 'The training matrix.'],
+  ['13_employee_phone_app', 'Phone app', 'Home, equipment QR page and Health and Safety Talks.'],
+  ['14_management_reports', 'Management reports', 'The control status overview report.'],
+];
+const DL_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/></svg>';
+const grid = document.getElementById('grid');
+const kb = n => n > 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.round(n / 1024) + ' KB';
+IMAGES.forEach(([file, title, text, wide], i) => {
+  const card = document.createElement('article'); card.className = 'card' + (wide ? ' wide' : '');
+  card.innerHTML = `<img src="jpg/${file}.jpg" alt="" loading="${i < 4 ? 'eager' : 'lazy'}" width="2400" height="${wide ? 1350 : 1800}"><div class="body"><h2></h2><p></p><div class="meta"><span class="size">${wide ? '2400 × 1350' : '2400 × 1800'} · JPG</span><button type="button" id="dl${i}" data-file="jpg/${file}.jpg" data-name="${file}.jpg">${DL_ICON} Download</button></div><div class="status" role="status"></div></div>`;
+  card.querySelector('img').alt = title;
+  card.querySelector('h2').textContent = title; card.querySelector('p').textContent = text;
+  grid.appendChild(card);
+});
+document.getElementById('zipAll').innerHTML = DL_ICON + ' Download all 14 images (zip)';
+
+let downloads = null, ready = false;
+const dlButtons = () => document.querySelectorAll('button[data-file]');
+(async () => {
+  try { downloads = window.claude && window.claude.use ? await window.claude.use('downloads') : null; } catch (e) { downloads = null; }
+  ready = true;
+  if (!downloads) { document.getElementById('fallback').style.display = 'block'; dlButtons().forEach(b => { b.hidden = true; }); document.getElementById('zipAll').hidden = true; }
+})();
+
+const MESSAGES = { declined: 'Not saved.', rate_limited: 'Another download is waiting for your answer. Try again in a moment.', too_large: 'This file is too large to save here.' };
+async function save(btn) {
+  const status = btn.closest('.card').querySelector('.status');
+  if (!downloads) { status.className = 'status bad'; status.textContent = ready ? 'Downloads are not available in this view.' : 'Still loading. Try again in a moment.'; return; }
+  btn.disabled = true; status.className = 'status'; status.textContent = 'Preparing…';
+  try {
+    const res = await fetch(btn.dataset.file); if (!res.ok) throw { code: 'fetch', message: 'The file could not be loaded.' };
+    const blob = await res.blob(); status.textContent = 'Confirm the download (' + kb(blob.size) + ').';
+    await downloads.save({ filename: btn.dataset.name, data: blob });
+    status.className = 'status ok'; status.textContent = 'Saved: ' + btn.dataset.name;
+  } catch (e) {
+    status.className = 'status bad'; status.textContent = MESSAGES[e && e.code] || (e && e.message) || 'The download did not work.';
+  } finally { btn.disabled = false; }
+}
+document.addEventListener('click', e => { const b = e.target.closest('button[data-file]'); if (b) save(b); });
+// all images in one zip, packed here in the browser
+document.getElementById('zipAll').addEventListener('click', async () => {
+  const btn = document.getElementById('zipAll'), status = document.getElementById('allStatus');
+  if (!downloads || !window.JSZip) { status.className = 'status bad'; status.textContent = 'Downloading all at once is not available here. Use the buttons under each image.'; return; }
+  btn.disabled = true; status.className = 'status';
+  try {
+    const zip = new JSZip();
+    for (let i = 0; i < IMAGES.length; i++) { status.textContent = `Packing image ${i + 1} of ${IMAGES.length}…`; const r = await fetch(`jpg/${IMAGES[i][0]}.jpg`); if (!r.ok) throw { message: 'An image could not be loaded.' }; zip.file(IMAGES[i][0] + '.jpg', await r.blob()); }
+    const blob = await zip.generateAsync({ type: 'blob', compression: 'STORE' });
+    status.textContent = 'Confirm the download (' + kb(blob.size) + ').';
+    await downloads.save({ filename: 'VDW_Compliance_Control_System_website_images.zip', data: blob });
+    status.className = 'status ok'; status.textContent = 'Saved: all 14 images.';
+  } catch (e) { status.className = 'status bad'; status.textContent = MESSAGES[e && e.code] || (e && e.message) || 'The download did not work.'; }
+  finally { btn.disabled = false; }
+});
+</script>
