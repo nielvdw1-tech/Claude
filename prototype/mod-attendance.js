@@ -32,7 +32,9 @@ function attDocRev(d, rev) {
 function attRegister(kind, id, q = {}) {
   if (kind === 'doc') {
     const d = byId('documents', id); if (!d) return null;
-    const r = attDocRev(d, q.rev); if (!r) return null;
+    const r = attDocRev(d, q.rev);
+    if (!r) return { kind, ref: d.number, title: d.title, back: '#/documents/' + d.id, meta: [['Document', `${d.number} ${d.title}`], ['Status', docStatus(d)], ['Branch', d.site === 'ALL' ? 'All branches' : sname(d.site)]],
+      cols: ['#', 'Name', 'Job title', 'Branch', 'Status', 'Read and signed on', 'Reading check'], rows: [], sigCol: true, summary: 'Not issued yet', note: 'This document has not been issued yet, so nobody has read and signed it. The register fills once it is issued and the people who must read it have signed.' };
     const inUse = r === docIssued(d), a = inUse ? ackState(d) : null, acks = r.acks || [];
     const req = a ? a.req : [], ids = req.concat(acks.map(x => x.by).filter(u => !req.includes(u)));
     const R2 = d.readers || {}, who = [(R2.roles || []).join(', '), (R2.people || []).map(pname).join(', ')].filter(Boolean).join(' · ');
@@ -42,8 +44,8 @@ function attRegister(kind, id, q = {}) {
     return { kind, ref: d.number, title: d.title, back: '#/documents/' + d.id,
       meta: [['Document', `${d.number} ${d.title}`], ['Revision', `${revLabel(r)}${inUse ? ' (in use)' : ' (not the revision in use)'}`], ['Effective', r.effective ? fmt(r.effective) : '—'], ['Branch', d.site === 'ALL' ? 'All branches' : sname(d.site)], ['Must be read by', who || '—'], ['Due', a ? fmt(a.due) : '—']],
       cols: ['#', 'Name', 'Job title', 'Branch', 'Status', 'Read and signed on', 'Reading check'], rows, sigCol: true,
-      summary: a ? `${done} of ${a.req.length} read and signed` : `${done} signed`,
-      note: inUse ? '' : 'This revision is no longer in use, so only the people who signed it are listed.',
+      summary: a ? `${done} of ${a.req.length} read and signed` : done ? `${done} signed` : inUse && !req.length ? 'Nobody set to read it yet' : 'Nobody signed',
+      note: !inUse ? 'This revision is no longer in use, so only the people who signed it are listed.' : !req.length ? 'Nobody has been set to read this document yet. On the document, use "Read and acknowledge" → "Set who must read it"; each person then gets a task to read and sign it, and appears here.' : '',
       revs: (d.revisions || []).filter(x => (x.acks || []).length || x === docIssued(d)).map(x => ({ rev: x.rev, label: revLabel(x), on: x === r })) };
   }
   if (kind === 'session') {
@@ -146,11 +148,34 @@ function attIndex() {
   if (attAllowed('talk') && typeof talks === 'function') talks().slice().sort((a, b) => b.date.localeCompare(a.date)).forEach(t => rows.push([ATT_KINDS.talk, t.id, t.topic, sname(t.site), fmt(t.date), (t.attendees || []).length, talkSigned(t), (t.attendees || []).length - talkSigned(t), open('talk', t.id)]));
   return rows;
 }
+/* ---------------- Choose what to draw a register for ---------------- */
+function attChoices(kind) {
+  if (kind === 'doc') return S.documents.filter(d => d.org === S.ui.org && inSite(d, S.ui.site)).sort((a, b) => a.number.localeCompare(b.number)).map(d => { const a = ackState(d); return { value: d.id, label: `${d.number} — ${d.title}${a ? ` (${a.done.length} of ${a.req.length} signed)` : docIssued(d) ? '' : ' (not issued)'}` }; });
+  if (kind === 'session') return (S.trainingSessions || []).filter(s => s.org === S.ui.org).sort((a, b) => b.date.localeCompare(a.date)).map(s => ({ value: s.id, label: `${fmt(s.held || s.date)} — ${(course(s.course) || {}).name || s.course} (${s.status === 'Completed' ? 'held' : 'scheduled'})` }));
+  if (kind === 'course') return courses().map(c => ({ value: c.id, label: c.name }));
+  if (kind === 'talk') return typeof talks === 'function' ? talks().slice().sort((a, b) => b.date.localeCompare(a.date)).map(t => ({ value: t.id, label: `${fmt(t.date)} — ${t.topic}` })) : [];
+  return [];
+}
+ACT.attPick = (el) => { const kinds = Object.keys(ATT_KINDS).filter(attAllowed), k0 = (el && el.dataset && el.dataset.kind) || 'doc';
+  if (!kinds.length) { toast('Your role cannot draw attendance registers.', 'error'); return; }
+  const itemOpts = k => attChoices(k).map(o => `<option value="${o.value}">${esc(o.label)}</option>`).join('');
+  openModal({ title: 'Draw an attendance register', sub: 'Choose the document, training or toolbox talk. The register shows who had to read or attend it, who did and signed, and when.', size: 'wide',
+    body: `<div class="form-grid">${fld({ name: 'kind', label: 'Register of', type: 'select', options: opts(kinds.map(k => ({ value: k, label: ATT_KINDS[k] })), kinds.includes(k0) ? k0 : kinds[0]), required: true, full: true })}
+      <div class="field full"><label for="attFind">Search</label><input id="attFind" type="text" placeholder="Type a number or part of the title…" autocomplete="off"></div>
+      <div class="field full"><label for="attItem">Which one<span class="req">*</span></label><select id="attItem" name="item" size="8" required></select><div class="hint" id="attCount"></div></div></div>`,
+    onOpen: m => { const ks = m.querySelector('[name=kind]'), sel = m.querySelector('#attItem'), find = m.querySelector('#attFind');
+      const fill = () => { const all = attChoices(ks.value), w = find.value.trim().toLowerCase(), L = all.filter(o => !w || o.label.toLowerCase().includes(w));
+        sel.innerHTML = L.map(o => `<option value="${o.value}">${esc(o.label)}</option>`).join(''); if (L.length) sel.selectedIndex = 0; m.querySelector('#attCount').textContent = `${L.length} of ${all.length}`; };
+      ks.addEventListener('change', () => { find.value = ''; fill(); }); find.addEventListener('input', fill); sel.addEventListener('dblclick', () => { if (sel.value) { closeModal(); navigate(`#/attendance/${ks.value}/${sel.value}`); } }); fill(); setTimeout(() => find.focus(), 30); },
+    buttons: [{ label: 'Open register', cls: 'primary', onClick: m => { const k = m.querySelector('[name=kind]').value, v = m.querySelector('#attItem').value; if (!v) { toast('Choose one from the list.', 'error'); return false; } navigate(`#/attendance/${k}/${v}`); } }] });
+};
+
 REPORTS.push(['attreg', 'Attendance registers']);
 const _buildReportBeforeAtt = buildReport;
 buildReport = function (key) {
   if (key !== 'attreg') return _buildReportBeforeAtt(key);
-  return { desc: 'Draw the attendance register of one specific document that had to be read and signed, a training session or course, or a toolbox talk. Open a register to print it or download it as a PDF with the signatures.',
+  return { pre: `<div class="btn-row mb no-print"><button class="btn primary" data-act="attPick" data-kind="doc">${icon('docs', 'sm')} Register of a document</button><button class="btn" data-act="attPick" data-kind="session">${icon('print', 'sm')} Of a training session or course</button><button class="btn" data-act="attPick" data-kind="talk">${icon('print', 'sm')} Of a toolbox talk</button></div>`,
+    desc: 'Draw the attendance register of one specific document that had to be read and signed, a training session or course, or a toolbox talk. Open a register to print it or download it as a PDF with the signatures.',
     ...tableRep(['Register', 'Reference', 'Subject', 'Branch / venue', 'Date / revision', 'Required', 'Attended / signed', 'Outstanding', ''], attIndex()) };
 };
 
@@ -158,7 +183,7 @@ buildReport = function (key) {
 const attBtn = (k, id, label = 'Attendance register') => attAllowed(k) ? `<a class="btn sm" href="#/attendance/${k}/${id}">${icon('print', 'sm')} ${label}</a>` : '';
 // Document: on the "Read and acknowledge" card, once there is a list or signatures
 const _ackCardBeforeAtt = ackCardHtml;
-ackCardHtml = function (d) { const h = _ackCardBeforeAtt(d); if (!ackState(d) && !(d.revisions || []).some(r => (r.acks || []).length)) return h;
+ackCardHtml = function (d) { const h = _ackCardBeforeAtt(d);
   return h.replace('<h2>Read and acknowledge</h2>', `<h2>Read and acknowledge</h2><span class="btn-row att-btns">${attBtn('doc', d.id)}`).replace(/(<span class="btn-row att-btns">[\s\S]*?)(<\/div><div class="card-body">)/, '$1</span>$2'); };
 // Training sessions: a sign-in sheet before, the attendance register after
 const _sessionsBeforeAtt = sessionsHtml;
@@ -180,3 +205,10 @@ MIGRATIONS.push(() => { if (S.migr && S.migr.att1) return; S.migr = S.migr || {}
     S.trainingSessions.push({ id: 'TS-002', org: 'ORG-1', course: 'CRS-004', date: day, held: day, provider: 'Fire safety provider (demo)', venue: 'Germiston yard', people: ppl, status: 'Completed', attended: 2, by: 'P-002' });
     ppl.slice(0, 2).forEach(id => S.trainingRecs.push({ id: nextId('TRN-', 'trainingRecs', 4), org: 'ORG-1', person: id, course: 'CRS-004', date: day, provider: 'Fire safety provider (demo)', expires: expiryFor('CRS-004', day), cert: null, result: '', assessedBy: null, session: 'TS-002', by: 'P-002', on: day })); }
 });
+
+// Document Manager: "Attendance register" next to Upload document, to choose any document
+const _docsBeforeAtt = ROUTES.documents;
+ROUTES.documents = (p, q) => { const r = _docsBeforeAtt(p, q); if (!r || !r.html || p[0] || !attAllowed('doc')) return r;
+  const b = `<button type="button" class="btn ghost fab" data-act="attPick" data-kind="doc" title="Attendance register of a document" aria-label="Attendance register of a document">${icon('print', 'sm')}<span>Attendance register</span></button>`;
+  if (/<div class="fab-stack[^"]*"[^>]*>/.test(r.html)) r.html = r.html.replace(/(<div class="fab-stack[^"]*"[^>]*>[\s\S]*?<\/button>)/, `$1${b}`); else r.html += `<div class="fab-stack">${b}</div>`;
+  return r; };

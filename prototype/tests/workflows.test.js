@@ -2038,6 +2038,12 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     ok('AR9 a course register lists everyone who attended the course, with the session and validity', (await p.innerText('.att-reg')).includes('TS-002'));
     await go('#/toolbox/TBT-001'); await p.click('a[href="#/attendance/talk/TBT-001"]'); await p.waitForTimeout(150);
     ok('AR10 a toolbox talk\'s register opens from the talk, with the signatures', await S(() => location.hash) === '#/attendance/talk/TBT-001' && await S(() => document.querySelectorAll('.att-tbl td.att-sig img').length) >= 2, (await S(() => location.hash)) + ' ' + (await S(() => document.querySelectorAll('.att-tbl td.att-sig img').length)));
+    await go('#/documents'); await p.click('.fab-stack [data-act=attPick]'); await p.waitForTimeout(150); await p.fill('#attFind', 'KIE-SWP-021'); await p.waitForTimeout(80);
+    const opt = await S(() => [...document.querySelectorAll('#attItem option')].map(o => o.textContent));
+    await mbtn('Open register'); await p.waitForTimeout(200);
+    ok('AR12 Document Manager → Attendance register: search any document and draw its register', opt.length === 1 && /KIE-SWP-021/.test(await p.innerText('.att-reg')) && /#\/attendance\/doc\//.test(await S(() => location.hash)), opt.join('|'));
+    const nd = await S(() => S.documents.find(d => d.org === 'ORG-1' && docIssued(d) && !requiredReaders(d).length).id); await go('#/documents/' + nd);
+    ok('AR13 every document has the Attendance register button, also when nobody has been set to read it (the register says how to set the list)', await has(`#ackCard a[href="#/attendance/doc/${nd}"]`) && (await (async () => { await go('#/attendance/doc/' + nd); return /Set who must read it/.test(await p.innerText('.att-reg')); })()));
     const emp = await S(() => S.people.find(x => x.org === 'ORG-1' && x.sysRole === 'Employee').id); await asUser(emp); await go('#/attendance/doc/DOC-001');
     ok('AR11 an employee cannot draw attendance registers', !(await has('.att-reg')) && /cannot draw|not available for your role/.test(await p.innerText('main')), emp + ' ' + (await S(() => location.hash)) + ' ' + (await p.innerText('main')).slice(0, 200).replace(/\n/g, ' | '));
     await asUser('P-002');
