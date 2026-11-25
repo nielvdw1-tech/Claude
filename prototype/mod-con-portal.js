@@ -106,3 +106,47 @@ ACT.cpEmp = (el) => { const c = cpFind(el.dataset.t); if (!cpValid(c)) { rerende
   save(); toast('Added.'); cpRender(el.dataset.t); };
 // a history line written through the link has no person: show the contractor
 const _pnameBeforeCp = pname; pname = function (id) { return id === 'CONTRACTOR' ? 'Contractor (upload link)' : _pnameBeforeCp(id); };
+
+/* ==========================================================================
+   Choosing the documents each contractor must submit
+   --------------------------------------------------------------------------
+   The kinds of work give a starting selection (Administration → Contractor
+   requirements), but each contractor has its own list: tick or untick any
+   document, or add a document that is not in the list (it is added to the
+   company's list for this contractor only).
+   ========================================================================== */
+const defaultReqs = c => conReqs().filter(r => r.work === 'All' || ((c && c.work) || []).includes(r.work));
+reqsFor = function (c) { if (c && Array.isArray(c.reqs)) return conReqs().filter(r => c.reqs.includes(r.id)); return defaultReqs(c); };
+function conReqPickHtml(c) {
+  const sel = c ? reqsFor(c).map(r => r.id) : defaultReqs({ work: [] }).map(r => r.id);
+  return `<div class="field full conreq-pick"><label>Documents this contractor must submit<span class="req">*</span></label>
+    <div class="hint">Ticked for you from the kinds of work. Untick what this contractor does not need, or tick more.</div>
+    <div class="chk-col">${conReqs().map(r => `<label class="check"><input type="checkbox" name="rq_${r.id}" data-work="${esc(r.work)}" ${sel.includes(r.id) ? 'checked' : ''}> <span>${esc(r.name)} <small class="muted">${r.work === 'All' ? 'usually for all contractors' : r.work === 'Selected only' ? 'only where selected' : 'usually for ' + esc(r.work)}${r.expires ? ' · expires' : ''}</small></span></label>`).join('')}</div>
+    <div class="conreq-new"><input type="text" name="rqNew" placeholder="Another document, e.g. Crane operator certificate"><label class="check"><input type="checkbox" name="rqNewExp"> <span>It expires</span></label></div></div>`;
+}
+function conReqRead(m) {
+  const ids = conReqs().filter(r => { const x = m.querySelector(`[name=rq_${r.id}]`); return x && x.checked; }).map(r => r.id);
+  const nm = (m.querySelector('[name=rqNew]') || {}).value; if (nm && nm.trim()) { const id = 'CR' + (Math.max(0, ...conReqs().map(r => +String(r.id).replace(/\D/g, '') || 0)) + 1);
+    S.config.contractorReqs.push({ id, name: nm.trim(), work: 'Selected only', expires: !!(m.querySelector('[name=rqNewExp]') || {}).checked }); ids.push(id); }
+  return ids;
+}
+// a kind of work ticked or unticked moves its documents along, unless they were changed by hand
+document.addEventListener('change', e => { const w = e.target; if (!w.closest || !w.closest('.modal') || !/^w_/.test(w.name || '')) return; const m = w.closest('.modal'), label = (w.closest('label') || {}).textContent.trim();
+  m.querySelectorAll(`.conreq-pick input[data-work]`).forEach(x => { if (x.dataset.work === label && !x.dataset.touched) x.checked = w.checked; }); });
+document.addEventListener('change', e => { const x = e.target; if (x.closest && x.closest('.conreq-pick') && x.dataset.work) x.dataset.touched = '1'; });
+const _conFormBeforePick = conForm; conForm = function (c) { return _conFormBeforePick(c).replace(/<\/div>$/, conReqPickHtml(c) + '</div>'); };
+const _conReadBeforePick = conRead; conRead = function (m) { const o = _conReadBeforePick(m); o.reqs = conReqRead(m); return o; };
+// at least one document, and the change is recorded
+const _conNewBeforePick = ACT.conNew; ACT.conNew = () => { _conNewBeforePick(); cpGuardModal(); };
+const _conEditBeforePick = ACT.conEdit; ACT.conEdit = (el) => { _conEditBeforePick(el); cpGuardModal(); };
+function cpGuardModal() { const m = document.querySelector('.modal:last-of-type') || document.querySelector('.modal'); if (!m) return; const b = m.querySelector('.modal-foot .btn.primary'); if (!b) return;
+  b.addEventListener('click', ev => { const n = m.querySelectorAll('.conreq-pick input[data-work]:checked').length + (((m.querySelector('[name=rqNew]') || {}).value || '').trim() ? 1 : 0); if (!n) { ev.stopImmediatePropagation(); ev.preventDefault(); toast('Choose at least one document the contractor must submit.', 'error'); } }, true); }
+ACT.cpReqs = (el) => { const c = byId('contractors', el.dataset.id), before = reqsFor(c).map(r => r.name);
+  openModal({ title: 'Documents this contractor must submit', sub: c.name, size: 'wide', body: `<div class="form-grid">${conReqPickHtml(c)}</div>`,
+    buttons: [{ label: 'Save', cls: 'primary', onClick: m => { const ids = conReqRead(m); if (!ids.length) { toast('Choose at least one document.', 'error'); return false; }
+      c.reqs = ids; const now = reqsFor(c).map(r => r.name), add = now.filter(x => !before.includes(x)), rem = before.filter(x => !now.includes(x));
+      conHist(c, `Documents required changed${add.length ? ' — added: ' + add.join(', ') : ''}${rem.length ? ' — removed: ' + rem.join(', ') : ''}`);
+      if (add.length && cpValid(c)) cpMail(c, `More documents needed — ${(orgOf(c.org) || {}).short || ''}`, `We also need: ${add.join(', ')}. Please upload them through your link:\n\n${cpLink(c)}`);
+      log(`Changed the documents required from ${c.name}`, '#/contractors/' + c.id); save(); rerender(); } }] }); };
+const _conBeforePick = ROUTES.contractors;
+ROUTES.contractors = (p, q) => { const r = _conBeforePick(p, q); if (r && r.html && p[0] && /^CON-/.test(p[0]) && canCon()) r.html = r.html.replace(/(<h2>Required documents<\/h2><span class="ch-sub">)[^<]*(<\/span>)/, `$1${reqsFor(byId('contractors', p[0])).length} document(s) chosen for this contractor$2<button class="btn sm" data-act="cpReqs" data-id="${p[0]}">${icon('edit', 'sm')} Choose documents</button>`); return r; };

@@ -2087,6 +2087,14 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await go('#/contractors/CON-003'); await p.click('.sh-actions [data-act=cpShare]'); await p.waitForTimeout(150); await mbtn('Revoke the link'); await p.waitForTimeout(100);
     await p.evaluate(t => { location.hash = '#/cportal/' + t; }, tok); await p.waitForTimeout(200);
     ok('CP9 a revoked link no longer works', (await p.innerText('#content')).includes('This link does not work'));
+    await go('#/contractors/CON-002'); await p.click('[data-act=cpReqs]'); await p.waitForTimeout(150);
+    await p.uncheck('.modal [name=rq_CR4]'); await mfill('rqNew', 'Pest control registration certificate'); await p.check('.modal [name=rqNewExp]'); await mbtn('Save'); await p.waitForTimeout(150);
+    ok('CP10 the documents a contractor must submit are chosen per contractor: untick one, add one that is not in the list', await S(`(() => { const n = reqsFor(byId('contractors','CON-002')).map(r => r.name); return !n.includes('Risk assessment for the work') && n.includes('Pest control registration certificate') && n.includes('Public liability insurance'); })()`) && (await p.innerText('#content')).includes('Pest control registration certificate'));
+    ok('CP11 the change is recorded, and the new document makes the contractor not compliant until it is approved', await S(`byId('contractors','CON-002').history.slice(-1)[0].text.includes('added: Pest control')`) && await S(`conCompliance(byId('contractors','CON-002'))`) === 'Not compliant');
+    await go('#/contractors'); await p.click('.fab-stack .fab'); await p.waitForTimeout(150); await mfill('name', 'Bright Sparks (fictional)'); await mfill('contact', 'Ann Lee');
+    await p.check('.modal [name=w_Electricalwork]'); await p.waitForTimeout(50); const ticked = await S(() => document.querySelector('.modal [name=rq_CR6]').checked); await p.uncheck('.modal [name=rq_CR5]'); await mbtn('Add'); await p.waitForTimeout(200);
+    const nid = await S(() => location.hash.split('/')[2]);
+    ok('CP12 a new contractor starts with the documents for its kinds of work ticked, and you change the list before saving', ticked && await S(`reqsFor(byId('contractors','${nid}')).map(r => r.id).join()`) === 'CR1,CR2,CR3,CR4,CR6');
     await go('#/dashboard');
   }
 

@@ -1664,3 +1664,7 @@ body.auth-mode .main { padding-top: 0; }
 .cp-up, .cp-emp { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: flex-end; } .cp-up .field, .cp-emp .field { margin: 0; flex: 1 1 200px; }
 .cp-why { margin: 0; } .cp-emps { margin: 0 0 12px; padding-left: 18px; } .cp-emps li { margin: 4px 0; }
 body.cp-mode #sidebar, body.cp-mode #topbar { display: none; }
+
+/* long file names wrap instead of widening the page */
+.link-list .ll-main, .link-list .ll-main b, .emp-list li b { min-width: 0; overflow-wrap: anywhere; }
+.conreq-pick .chk-col { max-height: 280px; } .conreq-new { display: flex; gap: 10px; align-items: center; margin-top: 8px; flex-wrap: wrap; } .conreq-new input[type=text] { flex: 1 1 260px; }
