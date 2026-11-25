@@ -802,3 +802,9 @@ body:has(.pdf-holder) { overflow-x: hidden; }
 .sys-start { list-style: none; padding: 0; }
 .feature-copy .sys-link { margin-left: 18px; }
 @media (max-width: 640px) { .feature-copy .sys-link { margin-left: 0; display: flex; } }
+.sys-wide { margin: 0 auto 32px; max-width: 1000px; }
+.sys-wide img, .sys-score img, .sys-phones img { width: 100%; height: auto; border-radius: 14px; border: 0; box-shadow: none; background: none; }
+.sys-phones { padding-top: 0; }
+.sys-contractors { grid-template-columns: 1fr; }
+.sys-contractor-wide { margin: 8px 0 0; max-width: none; }
+.sys-score { max-width: 900px; }

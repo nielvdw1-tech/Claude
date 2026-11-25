@@ -164,7 +164,7 @@ main = f'''<main id="main">
         <article class="card"><h3>Your employees</h3><p>Use their phones to inspect equipment, report incidents, read and sign documents, accept appointments and sign for PPE and talks.</p></article>
       </div>
       <figure class="sys-score">
-        {img('control-score', 'The control score: an overall score built from separate scores for documents, assets and inspections, corrective actions, incidents, legal compliance and safety programmes')}
+        {img('control-status', 'The control status overview: a 60% control score with the score and weight of each of the six areas')}
         <figcaption>The control score combines six areas (documents, assets &amp; inspections, corrective actions, incidents, legal compliance and safety programmes), each with its own weight. It is an indication calculated from your own records.</figcaption>
       </figure>
     </div>
@@ -201,6 +201,9 @@ main = f'''<main id="main">
     <div class="container">
       <p class="eyebrow text-center">People and contractors</p>
       <h2 class="section-title">The Right People: Appointed, Trained, Protected and Cleared to Work</h2>
+      <figure class="sys-wide sys-training">
+        {img('training-matrix', 'The training matrix: who needs which training, who has it, missing training and expired certificates')}
+      </figure>
       <div class="grid-3 sys-minis">
 {people_html}
       </div>
@@ -215,9 +218,8 @@ main = f'''<main id="main">
             <li><strong>Cleared to start work</strong> when everything is approved, until a document expires.</li>
           </ol>
         </div>
-        <figure class="shot-visual shot-phones sys-contractor-phone">
-          {TAG}
-          {img('contractor-phone', 'A contractor uploading the documents required before starting work, on a phone', 'shot-phone shot-phone-solo')}
+        <figure class="sys-wide sys-contractor-wide">
+          {img('contractor-portal', 'A contractor record showing required documents awaiting review, rejected or outstanding, next to the contractor upload page on a phone')}
         </figure>
       </div>
     </div>
@@ -230,8 +232,7 @@ main = f'''<main id="main">
       <h2 class="section-title">Built for the People Who Do the Work, and Those Who Answer for It</h2>
       <p class="section-sub">Employees use their phones; managers and consultants see the whole picture. Everyone sees only what their role needs, for their own branch.</p>
       <figure class="sys-phones">
-        {TAG}
-        {img('three-phones', 'Three phone screens: the employee home screen, scanning equipment, and Health and Safety Talks to sign')}
+        {img('phones-app', 'Three phone screens: the employee home screen, scanning a forklift QR label, and Health and Safety Talks to sign')}
       </figure>
       <div class="grid-2 sys-lists">
         <div class="card"><h3>For employees</h3><ul class="tick-list small">
