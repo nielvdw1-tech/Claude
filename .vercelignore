@@ -1,0 +1,11 @@
+# Files that are not part of the public website
+*.zip
+app
+supabase
+framework
+mobile-view
+linkedin-banners
+prototype/tools
+prototype/*.md
+prototype/assets/photos/README.md
+prototype/assets/screenshots/system/dims.json
