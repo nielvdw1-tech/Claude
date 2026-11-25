@@ -9,7 +9,7 @@
      the training is valid; before the session it prints as a sign-in sheet
      with an empty signature column;
    - training course: everyone with a training record for the course;
-   - toolbox talk: who attended and signed, with the signatures.
+   - Health and Safety Talk: who attended and signed, with the signatures.
    Each register opens as its own page (#/attendance/<kind>/<id>) with Print,
    PDF (signatures included) and CSV. Reports → Attendance registers lists
    every register that can be drawn. The registers come from the records in
@@ -17,7 +17,7 @@
    ========================================================================== */
 'use strict';
 
-const ATT_KINDS = { doc: 'Document read and signed', session: 'Training session', course: 'Training course', talk: 'Toolbox talk' };
+const ATT_KINDS = { doc: 'Document read and signed', session: 'Training session', course: 'Training course', talk: 'Health and Safety Talk' };
 const attPerson = id => byId('people', id) || {};
 const attBranch = id => { const x = attPerson(id); return x.site ? sname(x.site) : ''; };
 
@@ -75,7 +75,7 @@ function attRegister(kind, id, q = {}) {
     const t = byId('talks', id); if (!t) return null;
     const rows = (t.attendees || []).map((a, i) => ({ cells: [i + 1, pname(a.person), attPerson(a.person).jobTitle || '', attBranch(a.person), a.sig ? 'Signed' : 'Not signed', a.sig ? fmtTs(a.sig.ts) : ''], sig: a.sig ? a.sig.image : null, tone: a.sig ? 'green' : 'amber' }));
     return { kind, ref: t.id, title: t.topic, back: '#/toolbox/' + t.id,
-      meta: [['Toolbox talk', `${t.id} ${t.topic}`], ['Date', fmt(t.date)], ['Branch', sname(t.site)], ['Presenter', pname(t.presenter)], ['Status', t.status]],
+      meta: [['Health and Safety Talk', `${t.id} ${t.topic}`], ['Date', fmt(t.date)], ['Branch', sname(t.site)], ['Presenter', pname(t.presenter)], ['Status', t.status]],
       cols: ['#', 'Name', 'Job title', 'Branch', 'Status', 'Signed on'], rows, sigCol: true, blankSig: t.status !== 'Held',
       summary: `${talkSigned(t)} of ${(t.attendees || []).length} signed` };
   }
@@ -159,7 +159,7 @@ function attChoices(kind) {
 ACT.attPick = (el) => { const kinds = Object.keys(ATT_KINDS).filter(attAllowed), k0 = (el && el.dataset && el.dataset.kind) || 'doc';
   if (!kinds.length) { toast('Your role cannot draw attendance registers.', 'error'); return; }
   const itemOpts = k => attChoices(k).map(o => `<option value="${o.value}">${esc(o.label)}</option>`).join('');
-  openModal({ title: 'Draw an attendance register', sub: 'Choose the document, training or toolbox talk. The register shows who had to read or attend it, who did and signed, and when.', size: 'wide',
+  openModal({ title: 'Draw an attendance register', sub: 'Choose the document, training or Health and Safety Talk. The register shows who had to read or attend it, who did and signed, and when.', size: 'wide',
     body: `<div class="form-grid">${fld({ name: 'kind', label: 'Register of', type: 'select', options: opts(kinds.map(k => ({ value: k, label: ATT_KINDS[k] })), kinds.includes(k0) ? k0 : kinds[0]), required: true, full: true })}
       <div class="field full"><label for="attFind">Search</label><input id="attFind" type="text" placeholder="Type a number or part of the title…" autocomplete="off"></div>
       <div class="field full"><label for="attItem">Which one<span class="req">*</span></label><select id="attItem" name="item" size="8" required></select><div class="hint" id="attCount"></div></div></div>`,
@@ -174,8 +174,8 @@ REPORTS.push(['attreg', 'Attendance registers']);
 const _buildReportBeforeAtt = buildReport;
 buildReport = function (key) {
   if (key !== 'attreg') return _buildReportBeforeAtt(key);
-  return { pre: `<div class="btn-row mb no-print"><button class="btn primary" data-act="attPick" data-kind="doc">${icon('docs', 'sm')} Register of a document</button><button class="btn" data-act="attPick" data-kind="session">${icon('print', 'sm')} Of a training session or course</button><button class="btn" data-act="attPick" data-kind="talk">${icon('print', 'sm')} Of a toolbox talk</button></div>`,
-    desc: 'Draw the attendance register of one specific document that had to be read and signed, a training session or course, or a toolbox talk. Open a register to print it or download it as a PDF with the signatures.',
+  return { pre: `<div class="btn-row mb no-print"><button class="btn primary" data-act="attPick" data-kind="doc">${icon('docs', 'sm')} Register of a document</button><button class="btn" data-act="attPick" data-kind="session">${icon('print', 'sm')} Of a training session or course</button><button class="btn" data-act="attPick" data-kind="talk">${icon('print', 'sm')} Of a Health and Safety Talk</button></div>`,
+    desc: 'Draw the attendance register of one specific document that had to be read and signed, a training session or course, or a Health and Safety Talk. Open a register to print it or download it as a PDF with the signatures.',
     ...tableRep(['Register', 'Reference', 'Subject', 'Branch / venue', 'Date / revision', 'Required', 'Attended / signed', 'Outstanding', ''], attIndex()) };
 };
 
@@ -191,7 +191,7 @@ sessionsHtml = function () { let h = _sessionsBeforeAtt(); (S.trainingSessions |
 // Courses: everyone who attended the course
 const _coursesBeforeAtt = coursesHtml;
 coursesHtml = function () { let h = _coursesBeforeAtt(); courses().forEach(c => { if (!(S.trainingRecs || []).some(t => t.course === c.id)) return; const k = `<td data-label="Course"><b>${esc(c.name)}</b>`, i = h.indexOf(k); if (i > -1) h = h.slice(0, i) + k + `<div class="mt-s">${attBtn('course', c.id)}</div>` + h.slice(i + k.length); }); return h; };
-// Toolbox talk: on its attendance card
+// Health and Safety Talk: on its attendance card
 const _toolboxBeforeAtt = ROUTES.toolbox;
 ROUTES.toolbox = (p, q) => { const r = _toolboxBeforeAtt(p, q); if (r && r.html && p[0] && /^TBT-/.test(p[0])) r.html = r.html.replace(/(<h2>Attendance register<\/h2><span class="ch-sub">[^<]*<\/span>)/, `$1${attBtn('talk', p[0], 'Print / PDF')}`); return r; };
 

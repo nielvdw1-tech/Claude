@@ -216,7 +216,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await asUser('P-007'); await go('#/notifications/tasks');
     ok('E3 overdue inspection appears in the assignee task centre', (await p.innerText('#content')).includes('Inspect: Germiston warehouse & workshop'));
     await go('#/no-such-module'); ok('E4 an unknown page shows "Page not found"', (await p.innerText('#content')).includes('Page not found'));
-    ok('E5 navigation shows only the focused modules', (await p.$$eval('.nav-item span:not(.count)', e => e.map(x => x.textContent))).join('|') === 'Dashboard|Notifications & Tasks|My team|My appointments|My PPE|My training|Company Notices|Legal Requirements|Compliance Calendar|Risk Management|People Management|Training Management|Contractor Management|H&S Committee|Toolbox Talks|Document Manager|Assets & Equipment|Inspections|Maintenance & Defects|PPE Management|Hazardous Substances|Emergency Management|Permits to Work|Management of Change|Audits|Incident Management|Corrective Actions|Reports|Administration');
+    ok('E5 navigation shows only the focused modules', (await p.$$eval('.nav-item span:not(.count)', e => e.map(x => x.textContent))).join('|') === 'Dashboard|Notifications & Tasks|My team|My appointments|My PPE|My training|Company Notices|Legal Requirements|Compliance Calendar|Risk Management|People Management|Training Management|Contractor Management|H&S Committee|Health and Safety Talks|Document Manager|Assets & Equipment|Inspections|Maintenance & Defects|PPE Management|Hazardous Substances|Emergency Management|Permits to Work|Management of Change|Audits|Incident Management|Corrective Actions|Reports|Administration');
     await asUser('P-002'); await go('#/incidents'); await go('#/actions'); await btn('New action'); await mbtn('Continue'); await p.waitForTimeout(100); await mbtn('Raise action');
     ok('E6 form validation blocks empty required fields', await modalOpen() && (await p.$$('.modal .field.invalid')).length > 0); await p.keyboard.press('Escape');
     await asUser('P-009'); await go('#/documents/DOC-007');
@@ -304,7 +304,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     ok('H2 Safety Consultant can issue approved documents', await has('.sh-actions button:has-text("Issue for use"):not([disabled])'));
     await asUser('P-014'); await p.waitForTimeout(150);
     const nav = await p.$$eval('.nav-item span:not(.count)', e => e.map(x => x.textContent));
-    ok('H3 Employee sees only the field screens', nav.join('|') === 'Home|My appointments|My PPE|My training|Risk assessments|Toolbox talks|Notifications|Company notices|Documents to read|My inspections|My incident reports|Report incident' && !(await has('#globalSearch')), nav.join(' | '));
+    ok('H3 Employee sees only the field screens', nav.join('|') === 'Home|My appointments|My PPE|My training|Risk assessments|Health and Safety Talks|Notifications|Company notices|Documents to read|My inspections|My incident reports|Report incident' && !(await has('#globalSearch')), nav.join(' | '));
     await go('#/documents');
     ok('H4 other pages are closed to employees', (await p.innerText('#content')).includes('not available for your role'));
     await go('#/inspect/ISCH-04');
@@ -390,7 +390,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     ok('S5 after the Safety Consultant approves, the edited alert is published', (await S(`S.notices.find(n=>n.id==='${aid}').status`)) === 'Published' && (await S(`S.notices.find(n=>n.id==='${aid}').body`)).startsWith('Oil was spilled'));
     await asUser('P-014'); await p.waitForTimeout(150);
     ok('S6 employees at the branch now see the alert on their home screen', (await p.innerText('#content')).includes('Safety alert: Oil on floor at bay 4'));
-    await asUser('P-006'); await go('#/notices/NT-004'); await btn('Do not share'); await mfill('comment', 'Already covered in the toolbox talk.'); await mbtn('Do not share');
+    await asUser('P-006'); await go('#/notices/NT-004'); await btn('Do not share'); await mfill('comment', 'Already covered in the Health and Safety Talk.'); await mbtn('Do not share');
     ok('S7 an approver can decide not to share an alert; recorded on the incident', (await S("S.notices.find(n=>n.id==='NT-004').status")) === 'Not shared' && (await S("S.incidents.find(i=>i.id==='INC-2026-007').history.some(h=>h.action.includes('not shared'))")));
     await go('#/incidents/INC-2026-007');
     ok('S8 the incident page shows the alert status', (await p.innerText('#content')).includes('Safety alert to staff'));
@@ -1913,22 +1913,22 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await go('#/toolbox/TBT-001'); await p.click('[data-act=talkSign][data-p="P-008"]'); await p.waitForTimeout(150); await mbtn('Sign'); await p.waitForTimeout(80);
     const blocked = await S(() => !byId('talks', 'TBT-001').attendees.find(a => a.person === 'P-008').sig);
     await p.check('#ohsAck'); await sign(); await mbtn('Sign'); await p.waitForTimeout(150);
-    ok('D14 each attendee signs the toolbox talk register on the screen (tick + signature required)', blocked && await S(() => !!byId('talks', 'TBT-001').attendees.find(a => a.person === 'P-008').sig.image));
+    ok('D14 each attendee signs the Health and Safety Talk register on the screen (tick + signature required)', blocked && await S(() => !!byId('talks', 'TBT-001').attendees.find(a => a.person === 'P-008').sig.image));
     await go('#/toolbox'); await p.click('.fab-stack .fab'); await p.waitForTimeout(150);
     await p.setInputFiles('.modal [name=file]', { name: 'Talk_manual_handling.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4 demo') }); await mfill('topic', 'Manual handling'); await mbtn('Save'); await p.waitForTimeout(300);
-    ok('D14b a new toolbox talk can have its document uploaded, and the talk shows it with a "View" button', await S(() => { const t = S.talks[S.talks.length - 1]; return t.files.length === 1 && t.files[0].name === 'Talk_manual_handling.pdf'; }) && await has('.card .link-list .btn.primary'));
+    ok('D14b a new Health and Safety Talk can have its document uploaded, and the talk shows it with a "View" button', await S(() => { const t = S.talks[S.talks.length - 1]; return t.files.length === 1 && t.files[0].name === 'Talk_manual_handling.pdf'; }) && await has('.card .link-list .btn.primary'));
     await p.click('.card .link-list .btn.primary'); await p.waitForTimeout(400);
-    ok('D14c "View" opens the uploaded toolbox talk document', await modalOpen());
+    ok('D14c "View" opens the uploaded Health and Safety Talk document', await modalOpen());
     await p.keyboard.press('Escape'); await p.waitForTimeout(100);
     await S(() => { const t = byId('talks', 'TBT-002'); t.status = 'Held'; t.date = TODAY; t.attendees.forEach(x => { x.sig = null; }); save(); });
     await asUser('P-009'); await go('#/field');
-    ok('D14d an employee on the attendance list gets "Sign the toolbox talk register" on their home screen and a Toolbox talks tile', await has('.emp-todo a[href="#/mytalks/TBT-002"]') || await S(() => myTasks().some(t => t.link === '#/mytalks/TBT-002')));
-    ok('D14e the employee home has a "Toolbox talks" tile showing how many to sign', await has('.emp-grid a[href="#/mytalks"].t-warn'));
+    ok('D14d an employee on the attendance list gets "Sign the Health and Safety Talk register" on their home screen and a Health and Safety Talks tile', await has('.emp-todo a[href="#/mytalks/TBT-002"]') || await S(() => myTasks().some(t => t.link === '#/mytalks/TBT-002')));
+    ok('D14e the employee home has a "Health and Safety Talks" tile showing how many to sign', await has('.emp-grid a[href="#/mytalks"].t-warn'));
     await go('#/mytalks/TBT-002'); await p.click('.alert [data-act=talkSign]'); await p.waitForTimeout(150); await p.check('#ohsAck'); await sign(); await mbtn('Sign'); await p.waitForTimeout(150);
     ok('D14f the employee reads the talk, views its document and signs it themselves; the task disappears', await S(() => { const a = byId('talks', 'TBT-002').attendees.find(x => x.person === 'P-009'); return !!(a.sig && a.sig.collectedBy === 'P-009') && !myTasks().some(t => t.link === '#/mytalks/TBT-002'); }) && await has('.alert.success'));
     await asUser('P-002');
     await asUser('P-007'); await go('#/toolbox/library');
-    ok('D14g the toolbox talk library lists ready-made talks (topic, category, document) for managers and supervisors', (await p.$$('.tbl tbody tr')).length >= 10 && await has('[data-act=talkNew][data-lib]'));
+    ok('D14g the Health and Safety Talk library lists ready-made talks (topic, category, document) for managers and supervisors', (await p.$$('.tbl tbody tr')).length >= 10 && await has('[data-act=talkNew][data-lib]'));
     await p.click('[data-act=talkNew][data-lib="TBL-002"]'); await p.waitForTimeout(200);
     const pre = await S(() => [document.querySelector('.modal [name=topic]').value, document.querySelector('.modal [name=lib]').value]);
     await mbtn('Save'); await p.waitForTimeout(250);
@@ -1965,12 +1965,12 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
   {
     await p.setViewportSize({ width: 1400, height: 950 }); await asUser('P-002'); await S(() => { S.ui.site = 'ALL'; save(); }); await go('#/dashboard');
     const tiles = await p.$$eval('.dash-comp .kpi .k-label', e => e.map(x => x.textContent.trim()));
-    ok('L1 the dashboard shows tiles for the H&S committee, toolbox talks, permits, medical examinations and changes', ['H&S committee', 'Toolbox talks this month', 'Permits to work', 'Medical examinations', 'Changes in progress'].every(t => tiles.includes(t)), tiles.join('|'));
+    ok('L1 the dashboard shows tiles for the H&S committee, Health and Safety Talks, permits, medical examinations and changes', ['H&S committee', 'Health and Safety Talks this month', 'Permits to work', 'Medical examinations', 'Changes in progress'].every(t => tiles.includes(t)), tiles.join('|'));
     ok('L2 the control score has a sixth part, "Safety programmes", with its own weight', await has('.cs-part') && (await p.innerText('.cs-grid')).includes('Safety programmes') && await S(() => compliance('ALL').parts.programmes != null && S.config.complianceWeights.programmes === 10));
     const rep = []; for (const k of ['comrep', 'tbtrep', 'ptwrep', 'medrep', 'mocrep']) { await go('#/reports/' + k); if ((await p.$$('#content tbody tr')).length) rep.push(k); }
-    ok('L3 Reports has a report for each new module (committee, toolbox talks, permits, medical, change)', rep.length === 5, rep.join(','));
+    ok('L3 Reports has a report for each new module (committee, Health and Safety Talks, permits, medical, change)', rep.length === 5, rep.join(','));
     await go('#/people/P-009'); const prof = await p.innerText('.ohs-prof');
-    ok('L4 an employee\'s profile shows committee/representative, toolbox talks signed and medical status', prof.includes('Germiston health and safety committee') && prof.includes('Toolbox talks') && prof.includes('Fitness for operating lift trucks'));
+    ok('L4 an employee\'s profile shows committee/representative, Health and Safety Talks signed and medical status', prof.includes('Germiston health and safety committee') && prof.includes('Health and Safety Talks') && prof.includes('Fitness for operating lift trucks'));
     await asUser('P-007'); await go('#/people/P-009'); ok('L5 medical status is hidden on the profile from roles without the medical permission', !(await p.innerText('#content')).includes('Fitness for operating lift trucks')); await asUser('P-002');
     await go('#/contractors/CON-001'); ok('L6 a contractor\'s page lists its permits to work', (await p.innerText('#content')).includes('Permits to work') && await has('#content a[href^="#/permits/PTW-"]'));
     await go('#/admin/ohs'); await p.fill('#content [name=repMonths]', '2'); await p.fill('#content [name=pp0]', 'Area cleared\nExtinguisher present'); await p.click('[data-act=ohsSetSave]'); await p.waitForTimeout(150);
@@ -2029,7 +2029,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await p.setViewportSize({ width: 1400, height: 950 }); await asUser('P-002'); await S(() => { S.ui.site = 'ALL'; save(); });
     await go('#/reports/attreg');
     const hrefs = await S(() => [...document.querySelectorAll('a[href^="#/attendance/"]')].map(a => a.getAttribute('href')));
-    ok('AR1 Reports → Attendance registers lists the registers of documents to read, training sessions, courses and toolbox talks', ['#/attendance/doc/DOC-001', '#/attendance/session/TS-002', '#/attendance/course/CRS-004', '#/attendance/talk/TBT-001'].every(h => hrefs.includes(h)), hrefs.length);
+    ok('AR1 Reports → Attendance registers lists the registers of documents to read, training sessions, courses and Health and Safety Talks', ['#/attendance/doc/DOC-001', '#/attendance/session/TS-002', '#/attendance/course/CRS-004', '#/attendance/talk/TBT-001'].every(h => hrefs.includes(h)), hrefs.length);
     await go('#/documents/DOC-001');
     ok('AR2 the document\'s "Read and acknowledge" card has an Attendance register button', await has('#ackCard a[href="#/attendance/doc/DOC-001"]'));
     await go('#/attendance/doc/DOC-001'); const dt = await p.innerText('.att-reg');
@@ -2047,7 +2047,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await go('#/attendance/course/CRS-004');
     ok('AR9 a course register lists everyone who attended the course, with the session and validity', (await p.innerText('.att-reg')).includes('TS-002'));
     await go('#/toolbox/TBT-001'); await p.click('a[href="#/attendance/talk/TBT-001"]'); await p.waitForTimeout(150);
-    ok('AR10 a toolbox talk\'s register opens from the talk, with the signatures', await S(() => location.hash) === '#/attendance/talk/TBT-001' && await S(() => document.querySelectorAll('.att-tbl td.att-sig img').length) >= 2, (await S(() => location.hash)) + ' ' + (await S(() => document.querySelectorAll('.att-tbl td.att-sig img').length)));
+    ok('AR10 a Health and Safety Talk\'s register opens from the talk, with the signatures', await S(() => location.hash) === '#/attendance/talk/TBT-001' && await S(() => document.querySelectorAll('.att-tbl td.att-sig img').length) >= 2, (await S(() => location.hash)) + ' ' + (await S(() => document.querySelectorAll('.att-tbl td.att-sig img').length)));
     await go('#/documents'); await p.click('.fab-stack [data-act=attPick]'); await p.waitForTimeout(150); await p.fill('#attFind', 'KIE-SWP-021'); await p.waitForTimeout(80);
     const opt = await S(() => [...document.querySelectorAll('#attItem option')].map(o => o.textContent));
     await mbtn('Open register'); await p.waitForTimeout(200);

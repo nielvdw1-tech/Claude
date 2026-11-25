@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Connecting the new OHS modules (committee, toolbox talks, permits, medical
+   Connecting the new OHS modules (committee, Health and Safety Talks, permits, medical
    surveillance, management of change) to the rest of the system:
    - dashboard tiles under "Compliance management";
    - a sixth part of the control score, "Safety programmes";
@@ -9,7 +9,7 @@
    - the contractor's page (its permits to work);
    - Administration → "Safety programme settings" (permit types and their
      precautions, representatives' inspection interval, committee meeting
-     interval, toolbox talk categories) and the set-up checklist.
+     interval, Health and Safety Talk categories) and the set-up checklist.
    ========================================================================== */
 'use strict';
 
@@ -21,7 +21,7 @@ complianceSection = function () {
   { const C = committees(), od = C.filter(c => daysTo(comNextDue(c)) < 0).length, reps = [...new Set(shReps(S.ui.site))], ro = reps.filter(r => daysTo(repDue(r)) < 0).length;
     add('committee', kpi('H&S committee', od ? `${od} meeting(s) overdue` : C.length ? 'On schedule' : 'Not set up', `${reps.length} representative(s) · ${ro} inspection(s) overdue`, !C.length || od ? 'red' : ro ? 'amber' : 'green', '#/committee', 'people')); }
   { const T = talks(), month = TODAY.slice(0, 7), held = T.filter(t => t.status === 'Held' && t.date.slice(0, 7) === month).length, uns = T.filter(t => t.status === 'Held').reduce((n, t) => n + (t.attendees || []).filter(a => !a.sig).length, 0);
-    add('toolbox', kpi('Toolbox talks this month', held, `${uns} attendance signature(s) outstanding`, !held ? 'amber' : uns ? 'amber' : 'green', '#/toolbox', 'clipboard')); }
+    add('toolbox', kpi('Health and Safety Talks this month', held, `${uns} attendance signature(s) outstanding`, !held ? 'amber' : uns ? 'amber' : 'green', '#/toolbox', 'clipboard')); }
   { const P = permits(), exp = P.filter(ptwExpired).length, act = P.filter(x => x.status === 'Issued' && !ptwExpired(x)).length, req = P.filter(x => x.status === 'Requested').length;
     add('permits', kpi('Permits to work', exp ? `${exp} expired, not closed` : `${act} active`, `${req} awaiting issue`, exp ? 'red' : req ? 'amber' : 'green', exp ? '#/permits?fstatus=Expired%20—%20not%20closed' : '#/permits', 'lock')); }
   if (canMed()) { const m = medSummary(); add('medical', kpi('Medical examinations', m.bad, `missing or overdue · ${m.restricted} with restrictions`, m.bad ? 'red' : m.restricted ? 'amber' : 'green', '#/medical', 'shield')); }
@@ -40,7 +40,7 @@ function programmesPart(sid) {
   const inSid = x => x.org === S.ui.org && (sid === 'ALL' || !x.site || x.site === 'ALL' || x.site === sid), m = [];
   const C = (S.committees || []).filter(inSid); if (C.length) m.push(['Committee meetings on schedule', C.filter(c => daysTo(comNextDue(c)) >= 0).length, C.length, 'committee meeting(s) overdue']);
   const reps = [...new Set(shReps(sid))]; if (reps.length) m.push(['Representatives\' inspections on time', reps.filter(r => daysTo(repDue(r)) >= 0).length, reps.length, 'representative inspection(s) overdue']);
-  const att = (S.talks || []).filter(t => inSid(t) && t.status === 'Held' && daysTo(t.date) > -90).flatMap(t => t.attendees || []); if (att.length) m.push(['Toolbox talk attendance signed (90 days)', att.filter(a => a.sig).length, att.length, 'toolbox talk signature(s) outstanding']);
+  const att = (S.talks || []).filter(t => inSid(t) && t.status === 'Held' && daysTo(t.date) > -90).flatMap(t => t.attendees || []); if (att.length) m.push(['Health and Safety Talk attendance signed (90 days)', att.filter(a => a.sig).length, att.length, 'Health and Safety Talk signature(s) outstanding']);
   const P = (S.permits || []).filter(x => inSid(x) && ['Issued', 'Closed'].includes(x.status) && daysTo(x.validFrom.slice(0, 10)) > -90); if (P.length) m.push(['Permits closed out properly (90 days)', P.filter(x => !ptwExpired(x)).length, P.length, 'permit(s) expired without close-out']);
   const med = medSummary(sid); if (med.req) m.push(['Medical examinations current', med.ok, med.req, 'medical examination(s) missing or overdue']);
   if (!m.length) return null;
@@ -60,14 +60,14 @@ ROUTES.dashboard = (p, q) => { const r = _dashBeforeOhs(p, q); if (r && r.html &
 MIGRATIONS.push(() => { if (S.migr && S.migr.progScore) return; S.migr = S.migr || {}; S.migr.progScore = true; if (S.config.complianceWeights.programmes == null) S.config.complianceWeights.programmes = 10; });
 
 /* ---------- 3. Reports ---------- */
-REPORTS.push(['comrep', 'H&S committee and representatives'], ['tbtrep', 'Toolbox talk attendance'], ['ptwrep', 'Permit to work register'], ['medrep', 'Medical surveillance register'], ['mocrep', 'Management of change register']);
+REPORTS.push(['comrep', 'H&S committee and representatives'], ['tbtrep', 'Health and Safety Talk attendance'], ['ptwrep', 'Permit to work register'], ['medrep', 'Medical surveillance register'], ['mocrep', 'Management of change register']);
 const _buildReportBeforeOhs = buildReport;
 buildReport = function (key) {
   const B = (t, tone) => H(badge(t, tone || 'grey', true), t);
   switch (key) {
     case 'comrep': { const M = comMeetings(), R = repInsps(); return { desc: 'Committee meetings (planned and held, with their decisions) and the representatives\' workplace inspections (with their findings).',
       ...tableRep(['Record', 'Kind', 'Committee / representative', 'Branch', 'Date', 'Attended', 'Decisions / findings', 'Status'], M.map(m => [m.id, 'Committee meeting', (byId('committees', m.committee) || {}).name || '', m.site === 'ALL' ? 'All branches' : sname(m.site), fmt(m.date), (m.attendees || []).length, (m.findings || []).length, B(m.status, m.status === 'Held' ? 'green' : 'blue')]).concat(R.map(r => [r.id, 'Representative inspection', pname(r.rep), sname(r.site) + ' · ' + (r.area || ''), fmt(r.date), '', (r.findings || []).length, B('Recorded', 'green')]))) }; }
-    case 'tbtrep': { const T = talks().slice().sort((a, b) => b.date.localeCompare(a.date)); return { desc: 'Every toolbox talk with its presenter and attendance register: who attended and who signed.',
+    case 'tbtrep': { const T = talks().slice().sort((a, b) => b.date.localeCompare(a.date)); return { desc: 'Every Health and Safety Talk with its presenter and attendance register: who attended and who signed.',
       ...tableRep(['Talk', 'Topic', 'Branch', 'Date', 'Presenter', 'Attendees', 'Signed', 'Not signed', 'Status'], T.map(t => [t.id, t.topic, sname(t.site), fmt(t.date), pname(t.presenter), (t.attendees || []).length, talkSigned(t), (t.attendees || []).filter(a => !a.sig).map(a => pname(a.person)).join(', '), B(t.status, t.status === 'Held' ? 'green' : 'blue')])) }; }
     case 'ptwrep': { const P = permits().slice().sort((a, b) => b.id.localeCompare(a.id)); return { desc: 'Every permit to work: type, work, location, validity, who issued it and whether it was closed out.',
       ...tableRep(['Permit', 'Type', 'Work', 'Branch / location', 'From', 'Until', 'Performed by', 'Issued by', 'Closed out', 'Status'], P.map(x => [x.id, x.type, x.work, sname(x.site) + ' · ' + (x.location || ''), fmtTs(x.validFrom), fmtTs(x.validTo), x.contractor ? (byId('contractors', x.contractor) || {}).name || '' : pname(x.performer), x.issued ? pname(x.issued.by) : '', x.closed ? fmtTs(x.closed.ts) : '', B(ptwState(x), ptwExpired(x) ? 'red' : PTW_STATUS[x.status])])) }; }
@@ -90,10 +90,10 @@ ROUTES.people = (p, q) => { const r = _peopleBeforeOhs(p, q);
     const showMed = canMed() || x.id === S.ui.user, med = medFor(x);
     const rows = [];
     if (coms.length || isRep) rows.push(`<div>H&S committee</div><div>${coms.map(c => `<a href="#/committee/${c.id}">${esc(c.name)}</a> (${c.chair === x.id ? 'chair' : c.secretary === x.id ? 'secretary' : 'member'})`).join(', ') || '—'}${isRep ? ` <span class="tag">Health and safety representative</span> · next inspection ${dueText(repDue(x.id))}` : ''}</div>`);
-    rows.push(`<div>Toolbox talks</div><div>${T.length ? `${T.filter(t => (t.attendees.find(a => a.person === x.id) || {}).sig).length} of ${T.length} signed${T.length ? ` · last: <a href="#/toolbox/${T[0].id}">${esc(T[0].topic)}</a> (${fmt(T[0].date)})` : ''}` : 'None attended'}</div>`);
+    rows.push(`<div>Health and Safety Talks</div><div>${T.length ? `${T.filter(t => (t.attendees.find(a => a.person === x.id) || {}).sig).length} of ${T.length} signed${T.length ? ` · last: <a href="#/toolbox/${T[0].id}">${esc(T[0].topic)}</a> (${fmt(T[0].date)})` : ''}` : 'None attended'}</div>`);
     if (P.length) rows.push(`<div>Permits to work</div><div>${P.slice(0, 4).map(z => `<a href="#/permits/${z.id}">${z.id}</a> ${esc(z.type)} ${badge(ptwState(z), ptwExpired(z) ? 'red' : PTW_STATUS[z.status], true)}`).join('<br>')}${P.length > 4 ? `<br><span class="t-sub">and ${P.length - 4} more</span>` : ''}</div>`);
     if (showMed && med.length) rows.push(`<div>Medical surveillance</div><div>${med.map(m => { const st = medStatus(x.id, m.id), l = medLast(x.id, m.id); return `${badge(st, MED_TONE[st], true)} ${esc(m.name)}${l && l.restrictions ? ` <span class="t-sub">— ${esc(l.restrictions)}</span>` : ''}`; }).join('<br>')}</div>`);
-    const card = `<div class="card mt ohs-prof"><div class="card-head"><h2>Safety programmes</h2><span class="ch-sub">Committee, toolbox talks, permits${showMed ? ' and medical surveillance' : ''}</span></div><div class="card-body"><div class="kv">${rows.join('')}</div></div></div>`;
+    const card = `<div class="card mt ohs-prof"><div class="card-head"><h2>Safety programmes</h2><span class="ch-sub">Committee, Health and Safety Talks, permits${showMed ? ' and medical surveillance' : ''}</span></div><div class="card-body"><div class="kv">${rows.join('')}</div></div></div>`;
     r.html += card; }
   return r; };
 
@@ -111,7 +111,7 @@ function ohsSettingsHtml() { const ro = !canOhsSettings(), PT = ptwTypes();
   <form id="ohsSetForm" class="card"><div class="card-head"><h2>Intervals</h2></div><div class="card-body"><div class="form-grid">
     ${fld({ name: 'comMonths', label: 'New committees meet every (months)', type: 'number', min: 1, value: S.config.comMonths || 3, required: true })}
     ${fld({ name: 'repMonths', label: 'Representatives inspect the workplace every (months)', type: 'number', min: 1, value: S.config.repInspMonths || 1, required: true })}
-    ${fld({ name: 'talkCats', label: 'Toolbox talk categories (one per line)', type: 'textarea', rows: 5, value: (S.config.talkCats || TALK_CATS).join('\n'), full: true })}</div></div></form>
+    ${fld({ name: 'talkCats', label: 'Health and Safety Talk categories (one per line)', type: 'textarea', rows: 5, value: (S.config.talkCats || TALK_CATS).join('\n'), full: true })}</div></div></form>
   ${PT.map((t, i) => `<div class="card"><div class="card-head"><h2>Permit: ${esc(t.name)}</h2>${ro ? '' : `<button type="button" class="btn sm" data-act="ptwTypeRemove" data-i="${i}">Remove</button>`}</div><div class="card-body"><div class="form-grid">${fld({ name: 'pn' + i, label: 'Name', value: t.name, required: true })}${fld({ name: 'pp' + i, label: 'Precautions the issuer must confirm (one per line)', type: 'textarea', rows: Math.max(4, t.precautions.length + 1), value: t.precautions.join('\n'), required: true, full: true })}</div></div></div>`).join('')}
   ${ro ? '' : `<div class="btn-row"><button type="button" class="btn" data-act="ptwTypeAdd">${icon('plus', 'sm')} Add a permit type</button><button type="button" class="btn primary" data-act="ohsSetSave">Save settings</button></div>`}`; }
 ACT.ohsSetSave = () => { const root = document.getElementById('content'); if (!validateForm(root)) return; const v = readForm(root);
@@ -139,6 +139,6 @@ setupItems = function () { const it = _setupItemsBeforeOhs(), o = S.ui.org, site
   return it.concat([
     ['H&S committee set up', (S.committees || []).some(c => c.org === o), '#/committee', 'Members, chair and meeting interval'],
     ['Health and safety representatives appointed', shReps('ALL').length > 0, '#/people/appointments', 'Appointment type "Health and safety representative"'],
-    ['Toolbox talk library', (S.talkLib || []).some(x => x.org === o && !x.archived), '#/toolbox/library', 'Ready-made talks for supervisors'],
+    ['Health and Safety Talk library', (S.talkLib || []).some(x => x.org === o && !x.archived), '#/toolbox/library', 'Ready-made talks for supervisors'],
     ['Permit types and precautions', ptwTypes().length > 0, '#/admin/ohs', 'Hot work, heights, confined space…'],
     ['Medical surveillance', medReqs().length > 0, '#/medical/types', 'Examinations per job title'] ]); };
