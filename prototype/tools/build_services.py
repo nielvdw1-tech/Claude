@@ -66,6 +66,7 @@ def header(current):
       <ul>
         <li><a href="index.html">Home</a></li>
         {links}
+        <li><a href="system.html">The System</a></li>
         <li><a href="#faq">FAQ</a></li>
       </ul>
     </nav>
@@ -92,6 +93,7 @@ FOOTER = '''<footer class="site-footer">
         <li><a href="gap-audit.html">Multi-Branch Compliance Audit</a></li>
         <li><a href="safety-file.html">Compliance System Onboarding</a></li>
         <li><a href="compliance-management.html">Managed Compliance</a></li>
+        <li><a href="system.html">The VDW Compliance Control System</a></li>
         <li><a href="free-assessment.html">Free Compliance Check</a></li>
       </ul>
     </nav>
