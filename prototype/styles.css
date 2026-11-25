@@ -1668,3 +1668,4 @@ body.cp-mode #sidebar, body.cp-mode #topbar { display: none; }
 /* long file names wrap instead of widening the page */
 .link-list .ll-main, .link-list .ll-main b, .emp-list li b { min-width: 0; overflow-wrap: anywhere; }
 .conreq-pick .chk-col { max-height: 280px; } .conreq-new { display: flex; gap: 10px; align-items: center; margin-top: 8px; flex-wrap: wrap; } .conreq-new input[type=text] { flex: 1 1 260px; }
+.cp-doc { min-width: 0; } .cp-doc .t-sub, .cp-doc-h b { overflow-wrap: anywhere; } .cp-doc-h > div { min-width: 0; } .cp-doc-h .badge { flex: none; max-width: 45%; white-space: normal; text-align: center; }
