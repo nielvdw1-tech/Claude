@@ -35,6 +35,7 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
   const mfill = async (name, val) => { await p.fill(`.modal [name="${name}"]`, val); };
   const msel = async (name, val) => { await p.selectOption(`.modal [name="${name}"]`, val); };
   const mfile = async (sel = '.modal input[type=file]', name = 'evidence.pdf') => { await p.setInputFiles(sel, { name, mimeType: 'application/pdf', buffer: Buffer.from('demo evidence') }); };
+  const msel_page = async (sel, v) => { await p.selectOption(sel, v); await p.waitForTimeout(60); };
   const asUser = async (id) => { if ((await p.evaluate(() => S.ui.user)) === id) return; await act('[data-act=userMenu]'); await act(`.dropdown [data-act=switchUser][data-id="${id}"]`); };
   const sign = async () => { const b = await (await p.$('#sigPad')).boundingBox(); await p.mouse.move(b.x + 20, b.y + 100); await p.mouse.down(); for (let k = 1; k <= 12; k++) await p.mouse.move(b.x + 20 + k * 15, b.y + 100 - (k % 2) * 40); await p.mouse.up(); await p.waitForTimeout(50); };
   const modalOpen = async () => (await p.$('.modal')) !== null;
@@ -2096,6 +2097,61 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     const nid = await S(() => location.hash.split('/')[2]);
     ok('CP12 a new contractor starts with the documents for its kinds of work ticked, and you change the list before saving', ticked && await S(`reqsFor(byId('contractors','${nid}')).map(r => r.id).join()`) === 'CR1,CR2,CR3,CR4,CR6');
     await go('#/dashboard');
+  }
+
+  /* ---------------- Specification fixes ---------------- */
+  {
+    await p.setViewportSize({ width: 1400, height: 950 }); await asUser('P-002'); await S(() => { S.ui.site = 'ALL'; S.ui.org = 'ORG-1'; save(); });
+    await go('#/admin');
+    await p.click('[data-act=orgEdit][data-id="ORG-1"]'); await p.waitForTimeout(120); await mfill('phone', '011 555 0100'); await mfill('email', 'info@kestrel.demo'); await mfill('address', '12 Industry Road, Germiston'); await mbtn('Save'); await p.waitForTimeout(150);
+    ok('SF1 company contact details (telephone, e-mail, address) are recorded and shown', await S(() => S.orgs[0].phone === '011 555 0100' && S.orgs[0].address === '12 Industry Road, Germiston') && (await p.innerText('#content')).includes('12 Industry Road, Germiston'));
+    await p.click('[data-act=siteEdit][data-id="S-DBN"]'); await p.waitForTimeout(120); await mfill('address', '7 Harbour Road, Durban'); await mfill('activities', 'Workshop repairs and parts cleaning'); await mbtn('Save'); await p.waitForTimeout(150);
+    ok('SF2 each branch records its street address, the nature of its activities and operational information', await S(() => { const x = site('S-DBN'); return x.address === '7 Harbour Road, Durban' && x.activities === 'Workshop repairs and parts cleaning'; }) && (await p.innerText('#content')).includes('Workshop repairs and parts cleaning'));
+    await p.click('[data-act=siteActive][data-id="S-DBN"]'); await p.waitForTimeout(120); await mbtn('Deactivate');
+    ok('SF3a deactivating a branch needs a reason', await modalOpen());
+    await mfill('reason', 'Branch closed'); await mbtn('Deactivate'); await p.waitForTimeout(150);
+    const off = await S(() => [site('S-DBN').status, orgSites().some(x => x.id === 'S-DBN'), (site('S-DBN').history || []).some(h => /Deactivated: Branch closed/.test(h.text))]);
+    await p.click('[data-act=siteActive][data-id="S-DBN"]'); await p.waitForTimeout(120); await mfill('reason', 'Reopened'); await mbtn('Reactivate'); await p.waitForTimeout(150);
+    ok('SF3 a branch can be deactivated (it leaves the selectors and lists, its records stay, the change is in its history) and reactivated', off[0] === 'Inactive' && !off[1] && off[2] && await S(() => orgSites().some(x => x.id === 'S-DBN') && site('S-DBN').status === 'Active'), JSON.stringify(off));
+    await go('#/documents/DOC-002'); await S(() => ACT.docEdit({ dataset: { id: 'DOC-002' } })); await p.waitForTimeout(150); await mfill('description', 'How documents are numbered, approved, issued and reviewed'); await mbtn('Save'); await p.waitForTimeout(150);
+    ok('SF4 a document has a description, shown on the document and found by the search', await S(() => byId('documents', 'DOC-002').description === 'How documents are numbered, approved, issued and reviewed') && (await p.innerText('#content')).includes('How documents are numbered') && await (async () => { await go('#/documents'); await p.fill('.list-search input, [type=search]', 'numbered, approved'); await p.waitForTimeout(200); return (await p.innerText('#content')).includes('KIE-PRO-004'); })());
+    await go('#/dashboard'); await p.selectOption('#dashDept', 'Workshop & Service'); await p.waitForTimeout(250);
+    const dd = await S(() => { const all = S.documents.filter(d => inSite(d, 'ALL')).length; DASH_DEPT = S.ui.dashDept; const part = S.documents.filter(d => inSite(d, 'ALL')).length; DASH_DEPT = ''; return [S.ui.dashDept, all, part]; });
+    ok('SF5 the dashboard filters by department', dd[0] === 'Workshop & Service' && dd[2] < dd[1] && await has('.sf-deptbar .t-sub'), JSON.stringify(dd));
+    await p.selectOption('#dashDept', ''); await p.waitForTimeout(200);
+    await go('#/people/appointments'); const figs = await S(() => document.querySelector('.sf-figs').innerText);
+    ok('SF6 the appointment figures include the total, digital and uploaded appointments', /Total/.test(figs) && /Digital/.test(figs) && /Uploaded/.test(figs) && await S(() => { const t = +document.querySelector('.sf-figs div b').textContent; return t === S.appointments.filter(a => a.org === S.ui.org).length; }), figs.replace(/\n/g, ' '));
+    await p.click('a.sf-sort[href*="sort=employee"]'); await p.waitForTimeout(200); const asc = await S(() => [...document.querySelectorAll('tbody td[data-label=Employee] b')].map(x => x.textContent));
+    await p.click('a.sf-sort[href*="sort=employee"]'); await p.waitForTimeout(200); const desc = await S(() => [...document.querySelectorAll('tbody td[data-label=Employee] b')].map(x => x.textContent));
+    ok('SF7 the appointment register sorts by clicking a column, ascending then descending', asc.join() === asc.slice().sort((x, y) => x.localeCompare(y)).join() && desc.join() === asc.slice().reverse().join() && asc[0] !== desc[0]);
+    await go('#/admin/traincats'); await p.click('[data-act=tcatAdd]'); await p.waitForTimeout(120); await mfill('name', 'Working at heights'); await mbtn('Add'); await p.waitForTimeout(150);
+    await go('#/training/courses'); await p.click('.fab-stack .fab:has-text("New course")').catch(() => S(() => ACT.crsEdit())); await p.waitForTimeout(150);
+    const copts = await S(() => [...document.querySelectorAll('.modal [name=category] option')].map(o => o.value)); await S(() => closeModal());
+    ok('SF8 training categories are edited in Administration and offered on the course form', await S(() => S.config.trainingCats.includes('Working at heights')) && copts.includes('Working at heights'), copts.join('|'));
+    const rl = await S(() => { const ca = S.roles.find(r => r.name === 'Company Administrator'), au = S.roles.find(r => r.name === 'Auditor'); return [!!ca, ca && ca.perms.includes('admin'), ca && !ca.perms.includes('clients.manage'), !!au, au && au.perms.includes('area.audits'), au && !au.perms.includes('admin') && !au.perms.includes('doc.approve')]; });
+    ok('SF9 there are Company Administrator (own company, no other clients) and Auditor (audits, view, raise actions; no settings or approvals) roles', rl.every(Boolean), JSON.stringify(rl));
+    await S(() => { const src = S.audits[0]; S.audits.push(Object.assign(JSON.parse(JSON.stringify(src)), { id: 'AUD-SF1', auditor: 'P-002', status: 'In progress', answers: {}, completed: null, score: null, findingsList: [], sigAuditor: null })); save(); });
+    await go('#/audits/AUD-SF1'); const fpath = require('path').join(require('os').tmpdir(), 'sf-evidence-' + Date.now() + '.pdf'); require('fs').writeFileSync(fpath, '%PDF-1.4 evidence');
+    const fi = await p.$('input[data-audf]'); if (fi) { await fi.setInputFiles(fpath); await p.waitForTimeout(250); }
+    ok('SF10 an audit item takes evidence files as well as photos', !!fi && await S(() => Object.values(byId('audits', 'AUD-SF1').answers).some(a => (a.files || []).length === 1)) && await has('.au-files .file-chip'));
+    await S(() => { S.audits = S.audits.filter(a => a.id !== 'AUD-SF1'); save(); });
+    const ins = await S(() => (S.inspections.find(i => (i.results || []).some(r => r.result === 'Fail')) || {}).id);
+    await go('#/inspections/' + ins); await p.click('[data-act=hzFromInsp]'); await p.waitForTimeout(200);
+    const pre = await S(() => ['title', 'site', 'inspection'].map(n => (document.querySelector('.modal [name=' + n + ']') || {}).value));
+    await msel('category', 'Physical'); await mbtn('Record'); await p.waitForTimeout(200);
+    const hz = await S(() => { const h = S.hazards[S.hazards.length - 1]; return [h.inspection, h.inspItem, h.title]; });
+    await go('#/inspections/' + ins);
+    ok('SF11 a failed inspection item is recorded as a hazard in one click (filled in from the inspection) and then links to it', !!pre[0] && pre[2] === ins && hz[0] === ins && hz[1] > 0 && await has(`a[href^="#/risk/HZ-"]`) , JSON.stringify(pre) + ' ' + JSON.stringify(hz));
+    await go('#/reports/documents'); const total = await S(() => LAST_REPORT.csv.length - 1);
+    await msel_page('#rfStatus', 'Approved'); await p.click('[data-act=rfApply]'); await p.waitForTimeout(250);
+    const shown = await S(() => [LAST_REPORT.csv.length - 1, LAST_REPORT.csv.slice(1).every(r => r[5] === 'Approved'), document.querySelectorAll('#content tbody tr').length]);
+    ok('SF12 every report has date and status filters; the table and its exports follow them', await has('#rfFrom') && shown[0] < total && shown[1] && shown[2] === shown[0], total + ' → ' + JSON.stringify(shown));
+    const [xl] = await Promise.all([p.waitForEvent('download'), p.click('[data-act=repXlsx]')]);
+    ok('SF13 reports export to Excel (.xlsx)', /\.xlsx$/.test(xl.suggestedFilename()), xl.suggestedFilename());
+    await p.click('[data-act=rfClear]'); await p.waitForTimeout(150);
+    await go('#/documents/DOC-002');
+    ok('SF14 field-level change history: the record shows which field changed, from what to what, by whom and when', await has('.sf-fl') && await S(() => (S.fieldLog || []).some(e => e.id === 'DOC-002' && e.field === 'description' && /numbered/.test(e.to) && e.by === 'P-002')));
+    await go('#/admin/audit'); ok('SF15 the audit trail lists the field-level changes', (await p.innerText('#content')).includes('Field-level changes') && (await p.innerText('#content')).includes('DOC-002'));
   }
 
   /* ---------------- Print output ---------------- */

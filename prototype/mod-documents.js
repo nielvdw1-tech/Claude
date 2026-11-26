@@ -44,7 +44,7 @@ ROUTES.documents = (p, q) => {
   const over = active.filter(docReviewOverdue);
   const lv = listView('docs', {
     rows: docs, initial: { status: q.status || '', review: q.review || '', category: q.category || '' }, resetState: !!(q.status || q.review || q.category), placeholder: 'Search number, title, owner…',
-    search: d => d.number + ' ' + d.title + ' ' + pname(d.owner) + ' ' + d.category + ' ' + d.dept,
+    search: d => d.number + ' ' + d.title + ' ' + (d.description || '') + ' ' + pname(d.owner) + ' ' + d.category + ' ' + d.dept,
     href: d => '#/documents/' + d.id,
     rowClass: d => docReviewOverdue(d) ? 'row-red' : (curStep(docLatest(d)) || {}).person === S.ui.user ? 'row-amber' : '',
     filters: [
@@ -148,6 +148,7 @@ function docDetail(id) {
         <div>Effective date</div><div>${issued ? fmt(issued.effective) : '—'}</div>
         <div>Review frequency</div><div>${d.reviewMonths ? d.reviewMonths + ' months' : 'Not subject to periodic review'}</div>
         <div>Next review date</div><div>${docActive(d) && issued ? dueText(d.nextReview) : '—'}</div>
+        <div>Description</div><div>${d.description ? esc(d.description) : '<span class="muted">—</span>'}</div>
         <div>Expiry date</div><div>${d.expires ? dueText(d.expires) : '<span class="muted">Does not expire</span>'}</div>
         <div>Access classification</div><div>${esc(d.access)}</div>
         <div>File (${revLabel(latest)})</div><div>${fileChip(latest.file, { doc: d.id, ri: d.revisions.length - 1 })}</div>
@@ -219,7 +220,7 @@ function docForm(d) {
   return `<div class="form-grid">
     ${fld({ name: 'category', label: 'Category', type: 'select', options: opts(S.config.docCategories, cat), required: true })}
     ${fld({ name: 'number', label: 'Document number', value: d ? d.number : suggestDocNumber(cat), required: true, hint: d ? 'Changing the number keeps revision history.' : 'Suggested automatically from the category.' })}
-    ${fld({ name: 'title', label: 'Title', value: d ? d.title : '', required: true, full: true })}
+    ${fld({ name: 'title', label: 'Title', value: d ? d.title : '', required: true, full: true })}${fld({ name: 'description', label: 'Description (what the document covers)', type: 'textarea', rows: 2, value: d ? d.description || '' : '', full: true })}
     ${fld({ name: 'type', label: 'Type', type: 'select', options: opts(['Controlled document', 'Controlled record', 'External document'], d ? d.type : 'Controlled document'), required: true })}
     ${fld({ name: 'site', label: 'Applicable branch', type: 'select', options: siteOptions(d ? d.site : (S.ui.site || 'ALL')), required: true })}
     ${fld({ name: 'dept', label: 'Department', type: 'select', options: opts(S.departments, d ? d.dept : 'HSEQ'), required: true })}
@@ -248,7 +249,7 @@ ACT.newDoc = () => {
       const v = readForm(m); const id = nextId('DOC-', 'documents');
       const rev = { rev: Math.max(1, Math.round(+v.startRev || 1)), draft: 1, status: 'Draft', date: TODAY, effective: null, file: v.file, notes: v.notes, author: S.ui.user, route: [], history: [{ ts: nowTs(), by: S.ui.user, action: 'Document uploaded (draft)', comment: '' }] };
       headerHistory(m._hc, rev);
-      const d = { id, number: v.number, title: v.title, category: v.category, type: v.type, org: siteOrgOf(v.site), site: v.site, dept: v.dept, owner: v.owner, expires: v.expires || '', reviewMonths: Number(v.reviewMonths || 0), nextReview: null, access: v.access, revisions: [rev], related: [] };
+      const d = { id, number: v.number, title: v.title, description: v.description || '', category: v.category, type: v.type, org: siteOrgOf(v.site), site: v.site, dept: v.dept, owner: v.owner, expires: v.expires || '', reviewMonths: Number(v.reviewMonths || 0), nextReview: null, access: v.access, revisions: [rev], related: [] };
       S.documents.push(d);
       if (submit) { startRoute(rev); rev.history.push({ ts: nowTs(), by: S.ui.user, action: `Submitted for approval (${rev.route.length}-step route: ${rev.route.map(s => pname(s.person)).join(' → ')})`, comment: '' }); notifyCurrent(d); }
       log(`Uploaded ${d.number} ${d.title}${submit ? ' and submitted for approval' : ''}`, '#/documents/' + id); save();
@@ -260,7 +261,7 @@ ACT.docEdit = (el) => {
   const d = byId('documents', el.dataset.id);
   openModal({ title: 'Edit document details', sub: d.number, size: 'wide', body: docForm(d), buttons: [{ label: 'Save changes', cls: 'primary', onClick: m => {
     if (!validateForm(m)) return false; const v = readForm(m);
-    Object.assign(d, { number: v.number, title: v.title, category: v.category, type: v.type, site: v.site, org: siteOrgOf(v.site), dept: v.dept, owner: v.owner, expires: v.expires || '', reviewMonths: Number(v.reviewMonths || 0), access: v.access });
+    Object.assign(d, { number: v.number, title: v.title, description: v.description || '', category: v.category, type: v.type, site: v.site, org: siteOrgOf(v.site), dept: v.dept, owner: v.owner, expires: v.expires || '', reviewMonths: Number(v.reviewMonths || 0), access: v.access });
     docLatest(d).history.push({ ts: nowTs(), by: S.ui.user, action: 'Document details edited', comment: '' }); save(); toast('Document details saved.'); rerender();
   } }] });
 };
