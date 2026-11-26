@@ -26,7 +26,7 @@
   --line-strong: #C9D2E0;
   --fg: #0E1A33;
   --fg-2: #33405A;
-  --muted: #66728C;
+  --muted: #58647E;
   --faint: #97A1B6;
 
   /* Semantic state */
@@ -1687,3 +1687,14 @@ a.sf-sort span { opacity: .45; font-size: 10px; } a.sf-sort.on span { opacity: 1
 .sf-rf { flex-wrap: wrap; gap: 8px; align-items: center; }
 .sf-rf input, .sf-rf select { padding: 6px; border: 1px solid var(--grey-300, #cfd6e0); border-radius: 6px; font: inherit; }
 details.sf-fl > summary { cursor: pointer; list-style: none; } details.sf-fl > summary::-webkit-details-marker { display: none; }
+
+/* ---------- Accessibility (WCAG 2.1 AA contrast; links not told apart by colour alone) ---------- */
+.count, .dot.orange, .nav-item .count, .icon-btn .dot.orange { background: #C64F0E; }
+.btn.accent { background: #C64F0E; border-color: #C64F0E; }
+.sidebar .avatar { background: #0D5FD6; }
+.muted a, .t-sub a, .lead a, .page-note a, .hint a { text-decoration: underline; text-underline-offset: 2px; }
+.emp-tile.t-accent { background: #C64F0E; border-color: #C64F0E; }
+.emp-tile.t-accent small { color: #FFFFFF; }
+.tr-card { margin-top: 16px; }
+.tg-kind .tg-n { display: inline-block; margin-left: 6px; font-size: 12px; font-weight: 700; padding: 1px 8px; border-radius: 99px; background: var(--info-bg); color: var(--brand); }
+.tg-kind .n-meta { display: flex; gap: 8px; flex-wrap: wrap; }

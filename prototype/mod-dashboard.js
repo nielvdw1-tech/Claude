@@ -98,7 +98,7 @@ function columnChart(months, vals, opts) {
   const ticks = [0, max / 2, max].map(t => opts.decimal ? +t.toFixed(2) : t);
   return `<div class="vc" role="img" aria-label="${esc(opts.aria)}">
     <div class="vc-plot">${ticks.map(t => `<div class="vc-grid" style="bottom:${(t / max) * 100}%"><span>${t}</span></div>`).join('')}
-      <div class="vc-cols">${months.map((m, k) => `<div class="vc-col" tabindex="0" ${tip([[monthLabel(m, true), ''], [String(vals[k]), opts.unit], ...(opts.detail ? opts.detail(k) : [])])} aria-label="${esc(monthLabel(m, true))}: ${vals[k]} ${esc(opts.unit)}"${opts.href ? ` data-act="go" data-href="${opts.href}"` : ''}>
+      <div class="vc-cols">${months.map((m, k) => `<div class="vc-col" tabindex="0" ${tip([[monthLabel(m, true), ''], [String(vals[k]), opts.unit], ...(opts.detail ? opts.detail(k) : [])])} role="img" aria-label="${esc(monthLabel(m, true))}: ${vals[k]} ${esc(opts.unit)}"${opts.href ? ` data-act="go" data-href="${opts.href}"` : ''}>
         ${opts.missing && opts.missing(k) ? '<span class="vc-na" title="No data">?</span>' : `<span class="vc-bar${k === last ? ' cur' : ''}" style="height:${(vals[k] / max) * 100}%">${(k === hi || k === last) && vals[k] ? `<em>${vals[k]}</em>` : ''}</span>`}</div>`).join('')}</div>
     </div>
     <div class="vc-x">${months.map((m, k) => `<span>${k % 2 === last % 2 ? monthLabel(m, m.endsWith('-01') || k === 0) : ''}</span>`).join('')}</div>
@@ -111,7 +111,7 @@ function groupChart(months, series, opts) {
   const ticks = [0, max / 2, max];
   return `<div class="vc vc-grouped" role="img" aria-label="${esc(opts.aria)}">
     <div class="vc-plot">${ticks.map(t => `<div class="vc-grid" style="bottom:${(t / max) * 100}%"><span>${t}</span></div>`).join('')}
-      <div class="vc-cols">${months.map((m, k) => `<div class="vc-col" tabindex="0" ${tip([[(opts.label ? opts.label(k) : monthLabel(m, true)), ''], ...series.map(x => [String(x.vals[k]), x.name, x.v]), ...(opts.detail ? opts.detail(k) : [])])} aria-label="${esc(monthLabel(m, true))}: ${series.map(x => `${x.name} ${x.vals[k]}`).join(', ')}"${opts.href ? ` data-act="go" data-href="${opts.href}"` : ''}>
+      <div class="vc-cols">${months.map((m, k) => `<div class="vc-col" tabindex="0" ${tip([[(opts.label ? opts.label(k) : monthLabel(m, true)), ''], ...series.map(x => [String(x.vals[k]), x.name, x.v]), ...(opts.detail ? opts.detail(k) : [])])} role="img" aria-label="${esc(monthLabel(m, true))}: ${series.map(x => `${x.name} ${x.vals[k]}`).join(', ')}"${opts.href ? ` data-act="go" data-href="${opts.href}"` : ''}>
         <span class="vc-grp">${series.map(x => `<span class="vc-bar" style="height:${(x.vals[k] / max) * 100}%;background:var(${x.v})"></span>`).join('')}</span></div>`).join('')}</div>
     </div>
     <div class="vc-x">${months.map((m, k) => `<span>${k % 2 === last % 2 ? monthLabel(m, m.endsWith('-01') || k === 0) : ''}</span>`).join('')}</div>
