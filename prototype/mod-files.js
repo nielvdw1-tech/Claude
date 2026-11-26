@@ -130,7 +130,10 @@ async function openFileViewer(o) {
     if (kind === 'pdf') { box.innerHTML = `<div class="fv-msg">${icon('clock')} Rendering PDF…</div>`; await renderPdf(blob, box); }
     else if (kind === 'image') box.innerHTML = `<div class="fv-img"><img src="${url}" alt="${esc(o.name)}"></div>`;
     else if (kind === 'text') { const t = await blob.slice(0, 300000).text(); box.innerHTML = `<pre class="fv-text">${esc(t)}${blob.size > 300000 ? '\n\n… (preview truncated)' : ''}</pre>`; }
-    else msg('file', `<b>No preview for this file type.</b> PDFs, images and text files open here. Production would convert Word, Excel and PowerPoint files to PDF so they can be read in the browser.`);
+    else if (/\.docx$/i.test(o.name || '') || /wordprocessingml/.test(blob.type || o.type || '')) { box.innerHTML = `<div class="fv-msg">${icon('clock')} Opening the Word document…</div>`; await renderDocx(blob, box); }
+    else if (/\.xlsx$/i.test(o.name || '') || /spreadsheetml/.test(blob.type || o.type || '')) { box.innerHTML = `<div class="fv-msg">${icon('clock')} Opening the workbook…</div>`; renderRows(await readXlsx(blob), box, 'First worksheet'); }
+    else if (/\.csv$/i.test(o.name || '')) renderRows(parseCsv(await blob.slice(0, 2000000).text()), box, 'CSV file');
+    else msg('file', `<b>No preview for this file type.</b> PDFs, images, text, Word (.docx) and Excel (.xlsx, .csv) files open here. Older .doc and .xls files and PowerPoint files must be downloaded.`);
   } catch (e) {
     console.warn('Preview failed', e);
     msg('alert', `The preview could not be shown (${esc(e.message || 'unknown error')}). You can still download the file.`);
@@ -213,3 +216,24 @@ async function printFile(o) {
 }
 function docLatestFor(d, r) { return r || docLatest(d); }
 ACT.printDocFile = (el) => { const d = byId('documents', el.dataset.id), ri = el.dataset.ri != null ? +el.dataset.ri : d.revisions.length - 1, f = d.revisions[ri].file; if (!f) { toast('No file is attached to this revision yet.', 'error'); return; } printFile({ name: f.name, type: f.type, size: f.size, blob: f.blobId, seeded: f.seeded ? '1' : '', doc: d.id, ri }); };
+
+/* ---------- Word (.docx) and Excel (.xlsx / .csv) preview ---------- */
+// Word: converted with mammoth (vendor/office, BSD licence), then cleaned: no scripts, no event handlers, only safe links
+async function renderDocx(blob, box) {
+  await loadScript('vendor/office/mammoth.browser.min.js');
+  const res = await window.mammoth.convertToHtml({ arrayBuffer: await blob.arrayBuffer() });
+  const doc = new DOMParser().parseFromString(`<div>${res.value}</div>`, 'text/html'), root = doc.body.firstChild;
+  root.querySelectorAll('script, style, iframe, object, embed, form, link, meta').forEach(n => n.remove());
+  root.querySelectorAll('*').forEach(n => { [...n.attributes].forEach(a => { const k = a.name.toLowerCase(), v = (a.value || '').trim();
+    if (k.startsWith('on')) n.removeAttribute(a.name);
+    else if ((k === 'href' || k === 'src' || k === 'xlink:href') && !/^(https?:|mailto:|#)/i.test(v) && !(k === 'src' && /^data:image\//i.test(v))) n.removeAttribute(a.name); });
+    if (n.tagName === 'A') { n.setAttribute('target', '_blank'); n.setAttribute('rel', 'noopener noreferrer'); } });
+  box.innerHTML = `<div class="fv-docx">${root.innerHTML || '<p class="muted">The document has no text.</p>'}</div>`;
+}
+// Excel and CSV: shown as a table (first 500 rows)
+function renderRows(rows, box, label) {
+  rows = (rows || []).filter(r => r && r.some(c => String(c).trim()));
+  if (!rows.length) { box.innerHTML = `<div class="fv-msg">${icon('file')}<div>The ${esc(label.toLowerCase())} is empty.</div></div>`; return; }
+  const cols = Math.min(40, Math.max(...rows.map(r => r.length))), shown = rows.slice(0, 500);
+  box.innerHTML = `<div class="fv-sheet"><div class="t-sub">${esc(label)} · ${rows.length} row(s)${rows.length > 500 ? ' — first 500 shown' : ''}</div><div class="table-wrap"><table class="tbl compact"><thead><tr>${Array.from({ length: cols }, (_, i) => `<th>${esc(String(shown[0][i] == null ? '' : shown[0][i]))}</th>`).join('')}</tr></thead><tbody>${shown.slice(1).map(r => `<tr>${Array.from({ length: cols }, (_, i) => `<td>${esc(String(r[i] == null ? '' : r[i]))}</td>`).join('')}</tr>`).join('')}</tbody></table></div></div>`;
+}

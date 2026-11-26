@@ -1698,3 +1698,9 @@ details.sf-fl > summary { cursor: pointer; list-style: none; } details.sf-fl > s
 .tr-card { margin-top: 16px; }
 .tg-kind .tg-n { display: inline-block; margin-left: 6px; font-size: 12px; font-weight: 700; padding: 1px 8px; border-radius: 99px; background: var(--info-bg); color: var(--brand); }
 .tg-kind .n-meta { display: flex; gap: 8px; flex-wrap: wrap; }
+.fv-docx { background: #fff; color: #1b2336; padding: 28px 32px; max-width: 820px; margin: 0 auto; line-height: 1.55; font-size: 14px; border-radius: 6px; }
+.fv-docx table { border-collapse: collapse; margin: 8px 0; } .fv-docx td, .fv-docx th { border: 1px solid #d3d9e3; padding: 4px 8px; vertical-align: top; }
+.fv-docx img { max-width: 100%; height: auto; } .fv-docx h1 { font-size: 22px; } .fv-docx h2 { font-size: 18px; }
+.fv-sheet { background: #fff; padding: 12px; border-radius: 6px; } .fv-sheet .t-sub { margin-bottom: 6px; }
+.pf-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; } .pf-bar input[type=search] { flex: 1 1 260px; padding: 7px 10px; border: 1px solid var(--line-strong); border-radius: 8px; font: inherit; } .pf-bar select { padding: 7px; border: 1px solid var(--line-strong); border-radius: 8px; font: inherit; }
+.pf-links { margin-top: 10px; display: grid; gap: 4px; }
