@@ -302,7 +302,7 @@ Other pages are closed to employees. An inspection can only be started from the 
   - **Daily summary e-mail:** Notification settings → one daily summary instead of a separate e-mail per item (sign-in and password e-mails still go straight away).
   - **All files in one place:** Document Manager → All files lists every file kept anywhere in the system with the record it belongs to; possible duplicates are flagged. A risk assessment can link documents from the Document Manager instead of keeping another copy.
   - **Department filter** on every list whose records belong to a department.
-  - **Word (.docx) and Excel (.xlsx, .csv) preview** in the file viewer (Word via mammoth 1.12.3 in vendor/office, BSD licence; Excel with the prototype's own reader; Word output is cleaned of scripts and unsafe links).
+  - **Word (.docx) and Excel (.xlsx, .csv) preview** in the file viewer (Word via mammoth 1.12.3 in vendor/office, BSD licence, with its 14 raw control characters written as \xNN escapes so the file is plain text; Excel with the prototype's own reader; Word output is cleaned of scripts and unsafe links).
   - **Load a regulation from a PDF** on screen (Legal library → Load from PDF): the text is read, the numbered regulations are found for review, and each is added as "to check" until a competent person confirms it against the original. Scanned PDFs need OCR first (import tool).
   - **Per-person permissions** (allow or do not allow, on top of the role) and **invitations** (recorded, shown until the person signs in, can be resent).
   - **Appointments for contractor employees** (type, who appointed them, dates, signed letter).
