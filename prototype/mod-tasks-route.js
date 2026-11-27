@@ -84,11 +84,11 @@ function taskKind(t) {
   return k;
 }
 tasksHtml = function (q) {
-  const all = myTasks(), mods = [...new Set(all.map(t => taskModule(t.link)))].sort(), mod = q.mod || '', kind = q.kind || '';
+  const all = myTasks(), mods = [...new Set(all.map(t => taskModule(t.link)))].sort(), mod = (q.mod || '').replace(/\+/g, ' '), kind = (q.kind || '').replace(/\+/g, ' ');
   let list = mod ? all.filter(t => taskModule(t.link) === mod) : all; if (kind) list = list.filter(t => taskKind(t) === kind);
   const z = snoozed(), hidden = myTasksAll().filter(t => z[taskKey(t)] && z[taskKey(t)] > TODAY);
   const row = t => `<div class="notif"><div class="n-ic ic-${t.sev}">${icon('tasks')}</div><div class="n-body"><div class="n-title">${esc(t.title)}</div><div class="n-text">${esc(t.sub || '')}</div><div class="n-meta"><span>${esc(taskModule(t.link))}</span></div></div><div class="btn-row nowrap"><a class="btn sm primary" href="${t.link}">Open</a><button class="btn sm ghost" data-act="taskSnooze" data-k="${esc(taskKey(t))}" title="Hide this task for 7 days">Snooze 7 days</button></div></div>`;
-  const qs = o => '#/notifications/tasks?' + new URLSearchParams(Object.assign({}, mod ? { mod } : {}, o)).toString();
+  const qs = o => '#/notifications/tasks?' + new URLSearchParams(Object.assign({}, mod ? { mod } : {}, o)).toString().replace(/\+/g, '%20');
   const groupRow = (k, g) => { const red = g.filter(t => t.sev === 'red').length;
     return `<div class="notif tg-kind"><div class="n-ic ic-${red ? 'red' : g[0].sev}">${icon('tasks')}</div><div class="n-body"><div class="n-title">${esc(k)} <span class="tg-n">${g.length} items</span></div><div class="n-text">${esc(g.slice(0, 2).map(t => t.title).join(' · '))}${g.length > 2 ? ' …' : ''}</div><div class="n-meta"><span>${esc(taskModule(g[0].link))}</span>${red ? `<span class="due red">${red} overdue or urgent</span>` : ''}</div></div><div class="btn-row nowrap"><a class="btn sm primary" href="${qs({ kind: k })}">Show all ${g.length}</a></div></div>`; };
   const render = g => { if (kind) return g.map(row).join('');

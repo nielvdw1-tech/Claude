@@ -2154,6 +2154,65 @@ const ok = (name, cond, info = '') => { results.push(`${cond ? 'PASS' : 'FAIL'} 
     await go('#/admin/audit'); ok('SF15 the audit trail lists the field-level changes', (await p.innerText('#content')).includes('Field-level changes') && (await p.innerText('#content')).includes('DOC-002'));
   }
 
+  /* ---------------- Go-live readiness: accessibility, tasks, files, filters, previews, permissions ---------------- */
+  {
+    const FX = require('path').join(__dirname, 'fixtures');
+    await p.setViewportSize({ width: 1400, height: 950 }); await asUser('P-002'); await S(() => { S.ui.site = 'ALL'; S.ui.org = 'ORG-1'; S.ui.taskAll = false; save(); });
+    await go('#/admin/users');
+    ok('PI1 accessibility: role pickers are labelled and secondary text, counters and orange buttons meet WCAG AA contrast', await S(() => [...document.querySelectorAll('select[data-act-role]')].every(x => /^Role of /.test(x.getAttribute('aria-label') || ''))) && await S(() => getComputedStyle(document.documentElement).getPropertyValue('--muted').trim().toUpperCase() === '#58647E') && await S(() => { const c = document.querySelector('.nav-item .count'); return !c || getComputedStyle(c).backgroundColor === 'rgb(198, 79, 14)'; }));
+    const tr = await S(() => { S.ui.taskAll = false; const own = myTasks(), del = TR_DELEGATED.slice(); S.ui.taskAll = true; const all = myTasks(); S.ui.taskAll = false; return { own: own.length, del: del.length, all: all.length, delInc: del.some(t => /^#\/(incidents|permits)/.test(t.link)), delMine: del.some(t => /^#\/(me|myra)\//.test(t.link)) }; });
+    ok('PI2 company-wide roles keep their own tasks; routine branch items go to the branch manager (incident decisions and permits stay)', tr.del > 0 && tr.own + tr.del === tr.all && !tr.delInc && !tr.delMine, JSON.stringify(tr));
+    await go('#/notifications/tasks');
+    ok('PI3 the Tasks page shows the branch items per branch, with whom and how many are overdue, and can show them all', await has('.tr-card [data-act=trBranch]') && (await p.innerText('.tr-card')).includes('With the branch managers'));
+    await p.click('.tr-card [data-act=trToggle]'); await p.waitForTimeout(150); const allNow = await S(() => myTasks().length); await p.click('.tr-card [data-act=trToggle]'); await p.waitForTimeout(150);
+    ok('PI3b "Show branch items on my list too" puts them back', allNow === tr.all && await S(() => !S.ui.taskAll));
+    await S(() => { for (let i = 0; i < 5; i++) S.notices.push({ id: 'NT-PI' + i, org: 'ORG-1', title: 'Grouping test notice ' + i, priority: 'Normal', audience: 'ALL', ackRequired: true, acks: [], reads: [], body: 'x', publishedBy: 'P-001', publishedOn: TODAY, expires: null }); save(); });
+    await go('#/notifications/tasks'); await S(() => rerender()); await p.waitForTimeout(200);
+    const grp = await S(() => [...document.querySelectorAll('.tg-kind')].map(x => x.innerText).find(t => /Acknowledge notice/.test(t)) || '');
+    ok('PI4 tasks of the same kind show as one line with the count and "Show all"', /Acknowledge notice/.test(grp) && /items/.test(grp), grp.replace(/\n/g, ' ').slice(0, 120));
+    await p.click('.tg-kind a[href*="kind=Acknowledge%20notice"]'); await p.waitForTimeout(200);
+    const gn = +((/(\d+) items/.exec(grp) || [])[1] || 0), shownN = await S(() => document.querySelectorAll('#content .card .notif').length);
+    ok('PI4b "Show all" lists every task of that kind', gn >= 4 && shownN === gn && (await p.innerText('#content')).includes('Back to all tasks'), gn + ' in the group, ' + shownN + ' listed');
+    await S(() => { S.notices = S.notices.filter(n => !/^NT-PI/.test(n.id)); save(); });
+    await go('#/settings'); await p.check('#prefsForm [name=digest]'); await S(() => ACT.prefsSave());
+    const dg = await S(() => { const n0 = (S.outbox || []).length, k = S.ui.user; S.ui.user = 'P-001'; queueEmail(['P-002'], 'actions', 'Digest test one', 'x', '#/actions'); queueEmail(['P-002'], 'documents', 'Digest test two', 'x', '#/documents'); S.ui.user = k; const waiting = (S.mailDigest['P-002'] || []).length, direct = S.outbox.length - n0; flushDigest(true); const m = S.outbox[0]; return { waiting, direct, sub: m.subject, to: m.to }; });
+    await S(() => { const u = me(); u.emailPrefs.digest = false; save(); });
+    ok('PI5 a person can choose one daily summary e-mail instead of separate e-mails', dg.waiting === 2 && dg.direct === 0 && dg.sub === 'Daily summary: 2 updates' && dg.to === 'P-002', JSON.stringify(dg));
+    await go('#/documents/files'); const nf = await S(() => document.querySelector('.pf-bar .t-sub').textContent);
+    await p.click('a[href*="dup=1"]'); await p.waitForTimeout(200); const nd = await S(() => document.querySelector('.pf-bar .t-sub').textContent);
+    ok('PI6 Document Manager → All files lists every file in the system with the record it belongs to, and flags possible duplicates', /of \d+ file/.test(nf) && parseInt(nf) > 30 && parseInt(nd) > 0 && parseInt(nd) < parseInt(nf), nf + ' / ' + nd);
+    await go('#/risk/RA-001'); await p.click('[data-act=raDocLink]'); await p.waitForTimeout(120); await msel('doc', 'DOC-001'); await mbtn('Link'); await p.waitForTimeout(150);
+    ok('PI7 a risk assessment links a document from the Document Manager instead of keeping another copy', await S(() => (byId('riskAssessments', 'RA-001').docLinks || []).includes('DOC-001')) && await has('.pf-links a[href="#/documents/DOC-001"]'));
+    await go('#/documents'); const before = await S(() => document.querySelectorAll('#content tbody tr').length);
+    await p.selectOption('select[data-lvf=fdept]', 'HSEQ'); await p.waitForTimeout(250); const after = await S(() => document.querySelectorAll('#content tbody tr').length);
+    await p.selectOption('select[data-lvf=fdept]', ''); await p.waitForTimeout(150);
+    ok('PI8 lists filter by department', after > 0 && after < before, before + ' → ' + after);
+    await go('#/admin/users'); await p.click('[data-act=userPerms][data-id="P-007"]'); await p.waitForTimeout(150);
+    await p.selectOption('.modal [name="pp_doc_approve"]', 'allow'); await p.selectOption('.modal [name="pp_inspect"]', 'deny'); await mbtn('Save'); await p.waitForTimeout(150);
+    const pp = await S(() => { const k = S.ui.user; S.ui.user = 'P-007'; const r = [can('doc.approve'), can('inspect'), can('action.create')]; S.ui.user = k; return r; });
+    ok('PI9 permissions can be allowed or denied per person on top of the role', pp[0] === true && pp[1] === false && pp[2] === true && (await p.innerText('#content')).includes('Permissions (2)'), JSON.stringify(pp));
+    await S(() => { const u = person('P-007'); u.permAllow = []; u.permDeny = []; save(); });
+    await S(() => ACT.userNew()); await p.waitForTimeout(120); await mfill('name', 'Invite Test'); await mfill('email', 'invite.test@kestrel.demo'); await mfill('jobTitle', 'Storeman'); await mbtn('Add user'); await p.waitForTimeout(300); await S(() => { while (document.querySelector('.modal')) closeModal(); });
+    await go('#/admin/users'); const inv = await S(() => S.people.find(x => x.email === 'invite.test@kestrel.demo'));
+    ok('PI10 a new user\'s invitation is recorded, shown until they sign in, and can be resent', inv && inv.invite && inv.invite.count === 1 && (await p.innerText('#content')).includes('not signed in yet') && await has(`[data-act=userInvite][data-id="${inv.id}"]`));
+    await go('#/contractors/CON-001'); await p.click('[data-act=conEmpApt]'); await p.waitForTimeout(120); await msel('type', 'Construction supervisor'); await mfill('by', 'Hendrik Swart, owner'); await mbtn('Save'); await p.waitForTimeout(150);
+    ok('PI11 contractor employees can have appointments recorded (type, who appointed them, dates, signed letter)', await S(() => (byId('contractors', 'CON-001').employees[0].appointments || []).some(a => a.type === 'Construction supervisor' && a.by === 'Hendrik Swart, owner')) && (await p.innerText('#content')).includes('Construction supervisor'));
+    ok('PI12 maintenance records and committee meetings can be linked as legal evidence', await S(() => !!LK_KINDS['Maintenance record'] && !!LK_KINDS['Committee meeting'] && LK_KINDS['Maintenance record'].list().length > 0));
+    for (const [f, rx] of [['sample.docx', /Forklift pre-use check/], ['sample.xlsx', /FL-02/]]) {
+      await go('#/risk/RA-002'); await (await p.$('input[data-raev]')).setInputFiles(require('path').join(FX, f)); await p.waitForTimeout(500); await go('#/risk/RA-002');
+      await p.click(`.link-btn:has-text("${f}")`); await p.waitForTimeout(1500);
+      ok('PI13 ' + f + ' opens in the viewer (Word and Excel preview)', rx.test(await S(() => (document.querySelector('.fv-docx, .fv-sheet') || {}).innerText || '')));
+      await p.keyboard.press('Escape'); await S(() => { while (document.querySelector('.modal')) closeModal(); }); }
+    await go('#/legal/library'); await p.click('[data-act=legImportPdf]'); await p.waitForTimeout(150);
+    await p.setInputFiles('.modal [name=file]', require('path').join(FX, 'test-regulations-not-official.pdf')); await mfill('name', 'Test Regulations (not official)'); await mfill('sourceUrl', 'test fixture');
+    await p.click('.modal-foot .btn.primary'); await p.waitForTimeout(2500);
+    const found = await S(() => [...document.querySelectorAll('#pdfImpOut tbody tr')].map(r => r.cells[1].textContent + ' ' + r.cells[2].textContent));
+    await p.click('[data-act=pdfImpSave]'); await p.waitForTimeout(300);
+    const leg = await S(() => { const l = S.legislation.find(x => x.name === 'Test Regulations (not official)'); return l && { n: l.items.length, checked: l.items.filter(i => i.verifiedOn).length, src: l.items[0].source }; });
+    ok('PI14 a regulation is loaded from a text PDF on screen: the numbered regulations are found for review and added as "to check"', found.join('|') === 'Regulation 1 Definitions|Regulation 2 Scope of application|Regulation 3 Duties of employers|Regulation 4 Short title' && leg && leg.n === 4 && leg.checked === 0 && /page 1/.test(leg.src), found.join('|'));
+    await S(() => { S.legislation = S.legislation.filter(x => x.name !== 'Test Regulations (not official)'); save(); });
+  }
+
   /* ---------------- Print output ---------------- */
   { await go('#/print/INS-1087'); await p.emulateMedia({ media: 'print' }); await p.pdf({ path: path.join(os.tmpdir(), 'vdw_inspection_report.pdf'), format: 'A4', printBackground: true }); await p.emulateMedia({ media: 'screen' }); }
 

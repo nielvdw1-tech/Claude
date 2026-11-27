@@ -296,6 +296,19 @@ Other pages are closed to employees. An inspection can only be started from the 
 - **Incidents:** direct causes, underlying causes and contributing factors (next to the 5 Whys root cause).
 - **Audits ↔ legal requirements:** each audit checklist item can be linked to a legal requirement; the requirement shows the latest audit results of its linked items.
 - **Documents per contractor:** each contractor has its own list of documents to submit. The kinds of work tick a starting selection (Administration → Contractor requirements); in the add/edit form, or **Choose documents** on the contractor's page, you untick what that contractor does not need, tick more, or add a document that is not in the list (with whether it expires). Changes are recorded in the contractor's history, and if the contractor has an upload link they are e-mailed about added documents.
+- **Go-live readiness (27 Nov 2026):**
+  - **Accessibility:** colours, labels, chart and links fixed; an automated WCAG 2.1 AA check (axe) finds no problems on 15 key pages.
+  - **Tasks go to the right person:** company-wide roles (HSEQ Manager, Managing Director, consultant) keep their own tasks (what they own, approve, sign or investigate, incident decisions and permits); routine items about one branch go to that branch's manager, with a per-branch summary on the Tasks page and "Show branch items on my list too". Tasks of the same kind show as one line with the count, how many are overdue, and "Show all".
+  - **Daily summary e-mail:** Notification settings → one daily summary instead of a separate e-mail per item (sign-in and password e-mails still go straight away).
+  - **All files in one place:** Document Manager → All files lists every file kept anywhere in the system with the record it belongs to; possible duplicates are flagged. A risk assessment can link documents from the Document Manager instead of keeping another copy.
+  - **Department filter** on every list whose records belong to a department.
+  - **Word (.docx) and Excel (.xlsx, .csv) preview** in the file viewer (Word via mammoth 1.12.3 in vendor/office, BSD licence; Excel with the prototype's own reader; Word output is cleaned of scripts and unsafe links).
+  - **Load a regulation from a PDF** on screen (Legal library → Load from PDF): the text is read, the numbered regulations are found for review, and each is added as "to check" until a competent person confirms it against the original. Scanned PDFs need OCR first (import tool).
+  - **Per-person permissions** (allow or do not allow, on top of the role) and **invitations** (recorded, shown until the person signs in, can be resent).
+  - **Appointments for contractor employees** (type, who appointed them, dates, signed letter).
+  - **Maintenance records and committee meetings** can be linked as evidence on the legal register.
+  - Scale test: with 30× the demo data (600 people) every page draws in under half a second, but the data reaches the browser's 5 MB storage limit, so a real client needs the live system (GO-LIVE.md).
+  - `tests/qa-sweep.js`: every role, desktop and phone, every menu page and tab; reports script errors, error pages, pages wider than the screen and buttons outside their card.
 - **Specification fixes (26 Nov 2026), from the master specification check:**
   - Company contact details (contact person, telephone, e-mail, physical and postal address, website) under Administration → Organisations & sites → Company details.
   - Branches: street address, nature of the branch's activities and operational information; **deactivate and reactivate** a branch with a reason (it leaves the selectors, lists and comparisons; its records stay; the change is kept in its history).
@@ -501,6 +514,8 @@ prototype/
 ├── mod-ra-flow.js              Risk assessment workflow: hazard form in order, sign-off, approval, controls to corrective actions
 ├── mod-con-portal.js           Contractor upload link: contractors upload their documents, review, cleared to start work
 ├── mod-spec-fixes.js           Specification fixes: company/branch details, department filter, appointment figures and sorting, training categories, roles, audit evidence, hazards from inspections, report filters and Excel, field-level change history
+├── mod-tasks-route.js          Tasks to the right person, same-kind tasks grouped, daily summary e-mail
+├── mod-pilot.js                All files in one place, department filters, per-person permissions, invitations, contractor employee appointments, more legal evidence, regulation PDF import
 ├── mod-people.js                Employees, legal appointments (digital and uploaded), responsibilities, competency
 ├── mod-training.js              Training: courses, requirements, matrix, records, sessions, reminders
 ├── mod-risk.js                  Risk: hazard register, assessments, controls, reviews, configurable matrix

@@ -35,7 +35,7 @@ function filesHtml(q) {
   const list = all.filter(x => (!src || PF_SOURCE[x.coll][0] === src) && (!dup || x.copies > 1) && (!term || (x.f.name + ' ' + pfRecordLabel(x) + ' ' + (x.rec.id || '')).toLowerCase().includes(term)))
     .sort((a, b) => String(b.f.selectedOn || '').localeCompare(String(a.f.selectedOn || '')) || a.f.name.localeCompare(b.f.name));
   const sources = [...new Set(all.map(x => PF_SOURCE[x.coll][0]))].sort(), dups = all.filter(x => x.copies > 1).length;
-  const qs = o => '#/documents/files?' + new URLSearchParams(Object.assign({}, q, o)).toString();
+  const qs = o => '#/documents/files?' + new URLSearchParams(Object.assign({}, q, o)).toString().replace(/\+/g, '%20');
   return `${pageHead('All files', 'Every file kept anywhere in the system, in one list: with the record it belongs to, so evidence is easy to find during an audit. Files that look like copies of each other are flagged.', `<a class="btn" href="#/documents">${icon('docs', 'sm')} Document register</a>`, scopePill())}
     <div class="card"><div class="toolbar pf-bar"><input type="search" id="pfSearch" placeholder="Search file name or record…" value="${esc(q.q || '')}" aria-label="Search files"><select id="pfSrc" aria-label="Where the file is used"><option value="">Everywhere</option>${sources.map(s => `<option ${s === src ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select>
       <a class="btn sm ${dup ? 'primary' : ''}" href="${qs({ dup: dup ? '' : '1' })}">Possible duplicates (${dups})</a><span class="t-sub">${list.length} of ${all.length} file(s)</span></div>
@@ -49,8 +49,8 @@ ROUTES.documents = (p, q = {}) => {
   if (/<div class="fab-stack[^"]*"[^>]*>/.test(r.html)) r.html = r.html.replace(/(<div class="fab-stack[^"]*"[^>]*>)/, `$1${b}`); else r.html += `<div class="fab-stack">${b}</div>`;
   return r; };
 let PF_T = null;
-document.addEventListener('input', e => { if (e.target && e.target.id === 'pfSearch') { clearTimeout(PF_T); const v = e.target.value; PF_T = setTimeout(() => { const q = new URLSearchParams(location.hash.split('?')[1] || ''); q.set('q', v); history.replaceState(null, '', '#/documents/files?' + q.toString()); rerender(); const i = document.getElementById('pfSearch'); if (i) { i.focus(); i.setSelectionRange(v.length, v.length); } }, 250); } });
-document.addEventListener('change', e => { if (e.target && e.target.id === 'pfSrc') { const q = new URLSearchParams(location.hash.split('?')[1] || ''); q.set('src', e.target.value); navigate('#/documents/files?' + q.toString()); } });
+document.addEventListener('input', e => { if (e.target && e.target.id === 'pfSearch') { clearTimeout(PF_T); const v = e.target.value; PF_T = setTimeout(() => { const q = new URLSearchParams(location.hash.split('?')[1] || ''); q.set('q', v); history.replaceState(null, '', '#/documents/files?' + q.toString().replace(/\+/g, '%20')); rerender(); const i = document.getElementById('pfSearch'); if (i) { i.focus(); i.setSelectionRange(v.length, v.length); } }, 250); } });
+document.addEventListener('change', e => { if (e.target && e.target.id === 'pfSrc') { const q = new URLSearchParams(location.hash.split('?')[1] || ''); q.set('src', e.target.value); navigate('#/documents/files?' + q.toString().replace(/\+/g, '%20')); } });
 
 // A risk assessment links documents from the Document Manager instead of keeping another copy
 const _riskBeforePf = ROUTES.risk;

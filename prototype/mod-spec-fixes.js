@@ -107,7 +107,7 @@ appointmentsHtml = function (A, q) {
   const strip = `<div class="sf-figs" aria-label="Appointment figures">${figs.map(([k, v]) => `<div><b>${v}</b><span>${k}</span></div>`).join('')}</div>`;
   let table = rows.length ? aptTable(rows) : emptyList(A.length ? 'No appointments match these filters.' : 'No appointments yet.');
   const base = Object.assign({}, q); delete base.sort; delete base.dir;
-  const link = (label, k) => { const on = key === k, nd = on && dir === 1 ? 'desc' : 'asc', qs = new URLSearchParams(Object.assign({}, base, { sort: k, dir: nd })).toString();
+  const link = (label, k) => { const on = key === k, nd = on && dir === 1 ? 'desc' : 'asc', qs = new URLSearchParams(Object.assign({}, base, { sort: k, dir: nd })).toString().replace(/\+/g, '%20');
     return `<th aria-sort="${on ? (dir === 1 ? 'ascending' : 'descending') : 'none'}"><a class="sf-sort${on ? ' on' : ''}" href="#/people/appointments?${qs}">${label}<span aria-hidden="true">${on ? (dir === 1 ? '▲' : '▼') : '↕'}</span></a></th>`; };
   table = table.replace('<th>Employee</th>', link('Employee', 'employee')).replace('<th>Appointment</th>', link('Appointment', 'type')).replace('<th>Method</th>', link('Method', 'method')).replace('<th>Effective</th>', link('Effective', 'effective')).replace('<th>End</th>', link('End', 'end')).replace('<th>Status</th>', link('Status', 'status')).replace('<th>Accepted / signed</th>', link('Accepted / signed', 'accepted'));
   return `${strip}<div class="card">${regFilterBar('#/people/appointments', q, A, rows.length, APT_F, 'Search employee, number, type, reference…')}<div class="card-body flush">${table}</div></div>`;

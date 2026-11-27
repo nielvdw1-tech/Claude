@@ -175,7 +175,7 @@ function listActions() {
   const clone = (b, small = true) => { const n = b.cloneNode(true); n.classList.remove('fab'); if (small) n.classList.add('sm'); return n; };
   const missing = fabs.filter(b => !card.querySelector(`[data-act="${b.dataset.act}"]`));
   if (missing.length) { const bar = document.createElement('div'); bar.className = 'list-actions'; missing.forEach(b => bar.appendChild(clone(b))); card.insertBefore(bar, card.firstChild); }
-  card.querySelectorAll('.empty').forEach(e => { if (e.querySelector('.btn') || /match|filter/i.test(e.textContent)) return; const b = clone(fabs[0], false); b.classList.add('primary'); const w = document.createElement('div'); w.className = 'empty-cta'; w.appendChild(b); (e.querySelector('div') || e).appendChild(w); });
+  card.querySelectorAll('.empty:not(.cal-day)').forEach(e => { if (e.querySelector('.btn') || /match|filter/i.test(e.textContent)) return; const b = clone(fabs[0], false); b.classList.add('primary'); const w = document.createElement('div'); w.className = 'empty-cta'; w.appendChild(b); (e.querySelector('div') || e).appendChild(w); });
 }
 const _rerenderBeforeList = rerender;
 rerender = function (...a) { const r = _rerenderBeforeList.apply(this, a); try { listActions(); } catch (e) { console.error(e); } return r; };
